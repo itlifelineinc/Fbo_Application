@@ -90,7 +90,7 @@ const StudentsList: React.FC<StudentsListProps> = ({ students, onAddStudent, cur
         </div>
         <button 
             onClick={() => setIsFormOpen(true)}
-            className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg font-medium shadow-sm transition-colors flex items-center gap-2"
+            className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg font-medium shadow-sm transition-colors flex items-center justify-center gap-2 w-full md:w-auto"
         >
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5">
                 <path d="M10.75 4.75a.75.75 0 00-1.5 0v4.5h-4.5a.75.75 0 000 1.5h4.5v4.5a.75.75 0 001.5 0v-4.5h4.5a.75.75 0 000-1.5h-4.5v-4.5z" />
@@ -182,80 +182,82 @@ const StudentsList: React.FC<StudentsListProps> = ({ students, onAddStudent, cur
         </div>
       )}
 
-      {/* Students Table */}
+      {/* Students Table - Responsive Container */}
       <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
-        <table className="w-full">
-            <thead className="bg-slate-50 border-b border-slate-100">
-                <tr>
-                    <th className="text-left text-xs font-semibold text-slate-500 uppercase tracking-wider px-6 py-4">FBO Details</th>
-                    <th className="text-left text-xs font-semibold text-slate-500 uppercase tracking-wider px-6 py-4">Role / CC</th>
-                    {/* Super Admin Password Column */}
-                    {isSuperAdmin && <th className="text-left text-xs font-semibold text-slate-500 uppercase tracking-wider px-6 py-4">Password</th>}
-                    <th className="text-left text-xs font-semibold text-slate-500 uppercase tracking-wider px-6 py-4">Sponsor</th>
-                    <th className="text-left text-xs font-semibold text-slate-500 uppercase tracking-wider px-6 py-4">Training</th>
-                    {isAdmin && <th className="text-left text-xs font-semibold text-slate-500 uppercase tracking-wider px-6 py-4">Actions</th>}
-                </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
-                {filteredStudents.map(student => (
-                    <tr key={student.id} className="hover:bg-slate-50/50 transition-colors">
-                        <td className="px-6 py-4">
-                            <Link to={`/students/${student.id}`} className="flex items-center gap-3 group cursor-pointer">
-                                <div className="w-10 h-10 rounded-full bg-emerald-100 text-emerald-700 group-hover:bg-emerald-200 flex items-center justify-center text-sm font-bold transition-colors">
-                                    {student.name.charAt(0)}
-                                </div>
-                                <div>
-                                    <span className="block font-medium text-slate-700 group-hover:text-emerald-700 transition-colors">{student.name}</span>
-                                    <span className="text-xs font-mono text-slate-400">{student.handle}</span>
-                                </div>
-                            </Link>
-                        </td>
-                        <td className="px-6 py-4">
-                             <span className={`inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-medium border ${
-                                student.role === UserRole.SPONSOR ? 'bg-yellow-50 text-yellow-700 border-yellow-100' :
-                                student.role === UserRole.ADMIN ? 'bg-purple-50 text-purple-700 border-purple-100' :
-                                student.role === UserRole.SUPER_ADMIN ? 'bg-red-50 text-red-700 border-red-100' :
-                                'bg-slate-50 text-slate-600 border-slate-200'
-                             }`}>
-                                {student.role} ({student.caseCredits} CC)
-                            </span>
-                        </td>
-                        
-                        {/* Super Admin Password Display */}
-                        {isSuperAdmin && (
+        <div className="overflow-x-auto">
+            <table className="w-full min-w-[800px]">
+                <thead className="bg-slate-50 border-b border-slate-100">
+                    <tr>
+                        <th className="text-left text-xs font-semibold text-slate-500 uppercase tracking-wider px-6 py-4">FBO Details</th>
+                        <th className="text-left text-xs font-semibold text-slate-500 uppercase tracking-wider px-6 py-4">Role / CC</th>
+                        {/* Super Admin Password Column */}
+                        {isSuperAdmin && <th className="text-left text-xs font-semibold text-slate-500 uppercase tracking-wider px-6 py-4">Password</th>}
+                        <th className="text-left text-xs font-semibold text-slate-500 uppercase tracking-wider px-6 py-4">Sponsor</th>
+                        <th className="text-left text-xs font-semibold text-slate-500 uppercase tracking-wider px-6 py-4">Training</th>
+                        {isAdmin && <th className="text-left text-xs font-semibold text-slate-500 uppercase tracking-wider px-6 py-4">Actions</th>}
+                    </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                    {filteredStudents.map(student => (
+                        <tr key={student.id} className="hover:bg-slate-50/50 transition-colors">
                             <td className="px-6 py-4">
-                                <span className="font-mono text-xs bg-slate-100 px-2 py-1 rounded text-slate-600 border border-slate-200">
-                                    {student.password}
+                                <Link to={`/students/${student.id}`} className="flex items-center gap-3 group cursor-pointer">
+                                    <div className="w-10 h-10 rounded-full bg-emerald-100 text-emerald-700 group-hover:bg-emerald-200 flex items-center justify-center text-sm font-bold transition-colors">
+                                        {student.name.charAt(0)}
+                                    </div>
+                                    <div>
+                                        <span className="block font-medium text-slate-700 group-hover:text-emerald-700 transition-colors">{student.name}</span>
+                                        <span className="text-xs font-mono text-slate-400">{student.handle}</span>
+                                    </div>
+                                </Link>
+                            </td>
+                            <td className="px-6 py-4">
+                                <span className={`inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-medium border ${
+                                    student.role === UserRole.SPONSOR ? 'bg-yellow-50 text-yellow-700 border-yellow-100' :
+                                    student.role === UserRole.ADMIN ? 'bg-purple-50 text-purple-700 border-purple-100' :
+                                    student.role === UserRole.SUPER_ADMIN ? 'bg-red-50 text-red-700 border-red-100' :
+                                    'bg-slate-50 text-slate-600 border-slate-200'
+                                }`}>
+                                    {student.role} ({student.caseCredits} CC)
                                 </span>
                             </td>
-                        )}
+                            
+                            {/* Super Admin Password Display */}
+                            {isSuperAdmin && (
+                                <td className="px-6 py-4">
+                                    <span className="font-mono text-xs bg-slate-100 px-2 py-1 rounded text-slate-600 border border-slate-200">
+                                        {student.password}
+                                    </span>
+                                </td>
+                            )}
 
-                        <td className="px-6 py-4 text-sm font-mono text-emerald-600">{student.sponsorId || '-'}</td>
-                        <td className="px-6 py-4">
-                            <div className="flex items-center gap-3">
-                                <div className="flex-1 w-24 bg-slate-100 rounded-full h-2">
-                                    <div 
-                                        className="bg-emerald-500 h-2 rounded-full" 
-                                        style={{ width: `${student.progress}%` }}
-                                    ></div>
-                                </div>
-                                <span className="text-xs font-medium text-slate-600">{student.progress}%</span>
-                            </div>
-                        </td>
-                        {isAdmin && (
+                            <td className="px-6 py-4 text-sm font-mono text-emerald-600">{student.sponsorId || '-'}</td>
                             <td className="px-6 py-4">
-                                <button 
-                                    onClick={() => handleResetPassword(student)}
-                                    className="text-xs text-white bg-red-500 hover:bg-red-600 px-3 py-1 rounded transition-colors"
-                                >
-                                    Reset Pass
-                                </button>
+                                <div className="flex items-center gap-3">
+                                    <div className="flex-1 w-24 bg-slate-100 rounded-full h-2">
+                                        <div 
+                                            className="bg-emerald-500 h-2 rounded-full" 
+                                            style={{ width: `${student.progress}%` }}
+                                        ></div>
+                                    </div>
+                                    <span className="text-xs font-medium text-slate-600">{student.progress}%</span>
+                                </div>
                             </td>
-                        )}
-                    </tr>
-                ))}
-            </tbody>
-        </table>
+                            {isAdmin && (
+                                <td className="px-6 py-4">
+                                    <button 
+                                        onClick={() => handleResetPassword(student)}
+                                        className="text-xs text-white bg-red-500 hover:bg-red-600 px-3 py-1 rounded transition-colors"
+                                    >
+                                        Reset Pass
+                                    </button>
+                                </td>
+                            )}
+                        </tr>
+                    ))}
+                </tbody>
+            </table>
+        </div>
         {filteredStudents.length === 0 && (
              <div className="p-10 text-center text-slate-400">No users found matching your filters.</div>
         )}

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Student, UserRole } from '../types';
 
@@ -10,6 +10,7 @@ interface LayoutProps {
 
 const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout }) => {
   const location = useLocation();
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const isActive = (path: string) => location.pathname === path;
 
@@ -19,9 +20,24 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout }) => {
 
   return (
     <div className="flex h-screen bg-slate-50 overflow-hidden">
-      {/* Sidebar */}
-      <aside className="w-64 bg-emerald-900 text-white flex flex-col shadow-xl z-10">
-        <div className="p-6 border-b border-emerald-800">
+      
+      {/* Mobile Overlay */}
+      {isMobileMenuOpen && (
+        <div 
+          className="fixed inset-0 bg-black/50 z-20 lg:hidden backdrop-blur-sm transition-opacity"
+          onClick={() => setIsMobileMenuOpen(false)}
+        />
+      )}
+
+      {/* Sidebar - Responsive */}
+      <aside 
+        className={`
+          fixed lg:static inset-y-0 left-0 z-30 w-64 bg-emerald-900 text-white flex flex-col shadow-xl 
+          transform transition-transform duration-300 ease-in-out
+          ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
+        `}
+      >
+        <div className="p-6 border-b border-emerald-800 flex justify-between items-center">
           <div className="flex items-center gap-2 font-bold text-xl tracking-tight">
             <div className="w-8 h-8 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-full flex items-center justify-center text-emerald-900 shadow-lg">
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-5 h-5">
@@ -30,8 +46,15 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout }) => {
             </div>
             <span>FBO Academy</span>
           </div>
-          <div className="mt-4 flex items-center gap-3 bg-emerald-800/50 p-3 rounded-lg">
-             <div className="w-8 h-8 rounded-full bg-emerald-100 text-emerald-800 flex items-center justify-center font-bold text-xs">
+          {/* Mobile Close Button */}
+          <button onClick={() => setIsMobileMenuOpen(false)} className="lg:hidden text-emerald-300 hover:text-white">
+            <XMarkIcon />
+          </button>
+        </div>
+
+        <div className="px-6 py-4 bg-emerald-800/30">
+           <div className="flex items-center gap-3 bg-emerald-800/50 p-3 rounded-lg border border-emerald-800">
+             <div className="w-8 h-8 rounded-full bg-emerald-100 text-emerald-800 flex items-center justify-center font-bold text-xs flex-shrink-0">
                 {currentUser.name.charAt(0)}
              </div>
              <div className="overflow-hidden">
@@ -41,18 +64,42 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout }) => {
           </div>
         </div>
 
-        <nav className="flex-1 py-6 px-3 space-y-1">
-          <NavItem to="/dashboard" icon={<HomeIcon />} label="Dashboard" active={isActive('/dashboard')} />
-          <NavItem to="/courses" icon={<BookOpenIcon />} label="My Training" active={isActive('/courses') || location.pathname.startsWith('/classroom')} />
+        <nav className="flex-1 py-6 px-3 space-y-1 overflow-y-auto">
+          <NavItem 
+            to="/dashboard" 
+            icon={<HomeIcon />} 
+            label="Dashboard" 
+            active={isActive('/dashboard')} 
+            onClick={() => setIsMobileMenuOpen(false)}
+          />
+          <NavItem 
+            to="/courses" 
+            icon={<BookOpenIcon />} 
+            label="My Training" 
+            active={isActive('/courses') || location.pathname.startsWith('/classroom')} 
+            onClick={() => setIsMobileMenuOpen(false)}
+          />
           
           {/* Hide Students List from Students */}
           {!isStudent && (
-             <NavItem to="/students" icon={<UsersIcon />} label={isAdminOrSuper ? "All Students" : "My Team"} active={isActive('/students')} />
+             <NavItem 
+               to="/students" 
+               icon={<UsersIcon />} 
+               label={isAdminOrSuper ? "All Students" : "My Team"} 
+               active={isActive('/students')} 
+               onClick={() => setIsMobileMenuOpen(false)}
+             />
           )}
           
           {/* Admin Only */}
           {isAdminOrSuper && (
-             <NavItem to="/builder" icon={<SparklesIcon />} label="Course Builder" active={isActive('/builder')} />
+             <NavItem 
+               to="/builder" 
+               icon={<SparklesIcon />} 
+               label="Course Builder" 
+               active={isActive('/builder')} 
+               onClick={() => setIsMobileMenuOpen(false)}
+             />
           )}
         </nav>
 
@@ -68,18 +115,36 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout }) => {
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 overflow-auto relative">
-        <div className="max-w-7xl mx-auto p-8">
-          {children}
-        </div>
-      </main>
+      <div className="flex-1 flex flex-col h-screen overflow-hidden">
+        {/* Mobile Header */}
+        <header className="lg:hidden bg-white border-b border-slate-200 p-4 flex justify-between items-center z-10 shadow-sm">
+           <div className="flex items-center gap-2 font-bold text-lg text-emerald-900">
+             <div className="w-6 h-6 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-full flex items-center justify-center text-emerald-900 shadow-sm">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-3 h-3">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                </svg>
+             </div>
+             <span>FBO Academy</span>
+           </div>
+           <button onClick={() => setIsMobileMenuOpen(true)} className="text-slate-600 p-2 rounded-lg hover:bg-slate-100">
+             <Bars3Icon />
+           </button>
+        </header>
+
+        <main className="flex-1 overflow-auto scroll-smooth">
+          <div className="max-w-7xl mx-auto p-4 md:p-8">
+            {children}
+          </div>
+        </main>
+      </div>
     </div>
   );
 };
 
-const NavItem: React.FC<{ to: string; icon: React.ReactNode; label: string; active: boolean }> = ({ to, icon, label, active }) => (
+const NavItem: React.FC<{ to: string; icon: React.ReactNode; label: string; active: boolean; onClick?: () => void }> = ({ to, icon, label, active, onClick }) => (
   <Link
     to={to}
+    onClick={onClick}
     className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 group ${
       active 
         ? 'bg-emerald-800 text-white shadow-lg shadow-emerald-900/20' 
@@ -122,6 +187,18 @@ const ArrowRightOnRectangleIcon = () => (
     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
         <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75" />
     </svg>
+);
+
+const Bars3Icon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
+    <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+  </svg>
+);
+
+const XMarkIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
+    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+  </svg>
 );
 
 export default Layout;

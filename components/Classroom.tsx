@@ -62,27 +62,28 @@ const Classroom: React.FC<ClassroomProps> = ({ courses, onCompleteLesson }) => {
   }
 
   return (
-    <div className="flex h-[calc(100vh-4rem)] gap-6">
+    <div className="flex flex-col lg:flex-row lg:h-[calc(100vh-4rem)] gap-6">
       {/* Lesson Content */}
-      <div className="flex-1 bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden flex flex-col">
-        <div className="p-8 border-b border-slate-100">
+      <div className="flex-1 bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden flex flex-col h-auto lg:h-full">
+        <div className="p-6 md:p-8 border-b border-slate-100">
             <div className="flex items-center gap-2 text-sm text-slate-500 mb-2">
                 <span>{course.title}</span>
                 <span>/</span>
                 <span>{module.title}</span>
             </div>
-            <h1 className="text-3xl font-bold text-emerald-950">{lesson.title}</h1>
+            <h1 className="text-2xl md:text-3xl font-bold text-emerald-950">{lesson.title}</h1>
         </div>
-        <div className="flex-1 p-8 overflow-y-auto prose prose-emerald max-w-none">
+        {/* Content scrollable only on desktop, natural height on mobile */}
+        <div className="flex-1 p-6 md:p-8 lg:overflow-y-auto prose prose-emerald max-w-none">
             <p className="whitespace-pre-wrap leading-relaxed text-slate-700">{lesson.content}</p>
         </div>
-        <div className="p-6 bg-slate-50 border-t border-slate-100 flex justify-between items-center">
+        <div className="p-6 bg-slate-50 border-t border-slate-100 flex flex-col sm:flex-row gap-4 justify-between items-center">
              <div className="text-sm text-slate-500">
                 Estimated time: <span className="font-medium text-emerald-700">{lesson.durationMinutes} mins</span>
              </div>
              <button 
                 onClick={handleFinish}
-                className="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2.5 rounded-lg font-medium transition-colors shadow-sm"
+                className="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2.5 rounded-lg font-medium transition-colors shadow-sm"
              >
                 Complete Lesson
              </button>
@@ -90,8 +91,8 @@ const Classroom: React.FC<ClassroomProps> = ({ courses, onCompleteLesson }) => {
       </div>
 
       {/* AI Tutor Sidebar */}
-      <div className="w-96 bg-white rounded-2xl shadow-sm border border-slate-100 flex flex-col">
-        <div className="p-4 border-b border-slate-100 bg-gradient-to-r from-emerald-900 to-emerald-800 text-white rounded-t-2xl flex items-center justify-between">
+      <div className="w-full lg:w-96 bg-white rounded-2xl shadow-sm border border-slate-100 flex flex-col h-[500px] lg:h-full">
+        <div className="p-4 border-b border-slate-100 bg-gradient-to-r from-emerald-900 to-emerald-800 text-white lg:rounded-t-2xl rounded-t-2xl flex items-center justify-between">
             <div className="flex items-center gap-2">
                 <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
                 <span className="font-semibold">AI Tutor</span>

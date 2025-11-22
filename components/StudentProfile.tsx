@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Student, Course, UserRole } from '../types';
@@ -49,29 +50,31 @@ const StudentProfile: React.FC<StudentProfileProps> = ({ students, courses, curr
   const COLORS = ['#059669', '#cbd5e1'];
 
   return (
-    <div className="space-y-8 animate-fade-in">
+    <div className="space-y-6 md:space-y-8 animate-fade-in">
       {/* Breadcrumb */}
       <div className="flex items-center gap-2 text-sm text-slate-500">
         <Link to="/students" className="hover:text-emerald-600 transition-colors">Students</Link>
         <span>/</span>
-        <span className="text-emerald-900 font-medium">{student.name}</span>
+        <span className="text-emerald-900 font-medium truncate">{student.name}</span>
       </div>
 
       {/* Header Card */}
-      <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-8 relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-emerald-50 to-transparent rounded-bl-full -mr-16 -mt-16 pointer-events-none"></div>
+      <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 md:p-8 relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-emerald-50 to-transparent rounded-bl-full -mr-16 -mt-16 pointer-events-none opacity-50 md:opacity-100"></div>
         
-        <div className="flex flex-col md:flex-row gap-8 items-start relative z-10">
-          <div className="w-24 h-24 rounded-full bg-gradient-to-br from-emerald-100 to-emerald-200 text-emerald-800 flex items-center justify-center text-3xl font-bold shadow-inner border-4 border-white">
+        <div className="flex flex-col md:flex-row gap-6 md:gap-8 items-center md:items-start relative z-10">
+          {/* Avatar */}
+          <div className="w-20 h-20 md:w-24 md:h-24 rounded-full bg-gradient-to-br from-emerald-100 to-emerald-200 text-emerald-800 flex items-center justify-center text-2xl md:text-3xl font-bold shadow-inner border-4 border-white flex-shrink-0">
             {student.name.charAt(0)}
           </div>
           
-          <div className="flex-1 space-y-1">
-            <div className="flex items-center gap-3">
-              <h1 className="text-3xl font-bold text-emerald-950">{student.name}</h1>
+          {/* User Info */}
+          <div className="flex-1 space-y-3 text-center md:text-left w-full">
+            <div className="flex flex-col md:flex-row items-center md:items-start gap-2 md:gap-3">
+              <h1 className="text-2xl md:text-3xl font-bold text-emerald-950">{student.name}</h1>
               {isSponsor ? (
                 <span className="px-3 py-1 bg-yellow-100 text-yellow-800 text-xs font-bold rounded-full border border-yellow-200 uppercase tracking-wider flex items-center gap-1">
-                   <span className="text-lg">⭐</span> Sponsor (2CC+)
+                   <span className="text-base">⭐</span> Sponsor
                 </span>
               ) : (
                 <span className="px-3 py-1 bg-slate-100 text-slate-600 text-xs font-bold rounded-full border border-slate-200 uppercase tracking-wider">
@@ -79,13 +82,16 @@ const StudentProfile: React.FC<StudentProfileProps> = ({ students, courses, curr
                 </span>
               )}
             </div>
-            <p className="font-mono text-emerald-600 font-medium text-lg">{student.handle}</p>
+            <p className="font-mono text-emerald-600 font-medium text-base md:text-lg bg-emerald-50/50 inline-block px-2 rounded md:bg-transparent md:px-0">
+              {student.handle}
+            </p>
             
-            <div className="flex items-center gap-6 text-slate-500 text-sm mt-4">
-              <div className="flex items-center gap-1.5">
+            <div className="flex flex-col md:flex-row items-center gap-2 md:gap-6 text-slate-500 text-sm">
+              <div className="flex items-center gap-1.5 break-all justify-center md:justify-start">
                 <EnvelopeIcon />
                 {student.email}
               </div>
+              <div className="hidden md:block w-1 h-1 bg-slate-300 rounded-full"></div>
               <div className="flex items-center gap-1.5">
                 <span className="font-semibold text-slate-700">Invited by:</span>
                 <span className="font-mono text-emerald-600">{student.sponsorId || 'N/A'}</span>
@@ -93,7 +99,7 @@ const StudentProfile: React.FC<StudentProfileProps> = ({ students, courses, curr
             </div>
 
             {/* CC Progress for Students */}
-            <div className="mt-4 max-w-md">
+            <div className="mt-4 w-full md:max-w-md mx-auto md:mx-0">
                 <div className="flex justify-between text-xs mb-1 font-semibold">
                     <span>Case Credits (CC)</span>
                     <span className={student.caseCredits >= 2 ? 'text-green-600' : 'text-slate-500'}>{student.caseCredits.toFixed(1)} / 2.0 CC</span>
@@ -102,7 +108,7 @@ const StudentProfile: React.FC<StudentProfileProps> = ({ students, courses, curr
                     <div className={`h-2 rounded-full transition-all duration-500 ${isSponsor ? 'bg-yellow-400' : 'bg-emerald-500'}`} style={{ width: `${Math.min(100, (student.caseCredits / 2) * 100)}%` }}></div>
                 </div>
                 {!isSponsor && currentUser.id === student.id && (
-                    <button onClick={handleAddCC} className="mt-2 text-xs text-emerald-600 hover:underline">
+                    <button onClick={handleAddCC} className="mt-2 text-xs text-emerald-600 hover:underline w-full md:w-auto text-center md:text-left">
                         + Simulate 0.5CC Order
                     </button>
                 )}
@@ -110,35 +116,35 @@ const StudentProfile: React.FC<StudentProfileProps> = ({ students, courses, curr
           </div>
 
           {/* Right Stats */}
-          <div className="flex items-center gap-8 bg-slate-50 p-4 rounded-xl border border-slate-100">
-             <div className="text-center">
-                <div className="text-2xl font-bold text-emerald-600">{calculatedProgress}%</div>
-                <div className="text-xs text-slate-500 uppercase font-semibold tracking-wider">Total Progress</div>
+          <div className="w-full md:w-auto bg-slate-50 p-4 rounded-xl border border-slate-100 flex justify-around md:block md:space-y-2">
+             <div className="text-center md:mb-4">
+                <div className="text-xl md:text-2xl font-bold text-emerald-600">{calculatedProgress}%</div>
+                <div className="text-[10px] md:text-xs text-slate-500 uppercase font-semibold tracking-wider">Total Progress</div>
              </div>
-             <div className="w-px h-10 bg-slate-200"></div>
+             <div className="w-px h-10 bg-slate-200 md:hidden"></div>
              <div className="text-center">
-                <div className="text-2xl font-bold text-slate-800">{completedCount} <span className="text-slate-400 text-lg font-normal">/ {totalModulesCount}</span></div>
-                <div className="text-xs text-slate-500 uppercase font-semibold tracking-wider">Modules Done</div>
+                <div className="text-xl md:text-2xl font-bold text-slate-800">{completedCount} <span className="text-slate-400 text-base font-normal">/ {totalModulesCount}</span></div>
+                <div className="text-[10px] md:text-xs text-slate-500 uppercase font-semibold tracking-wider">Modules Done</div>
              </div>
           </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
         {/* Left Column: Course Progress & Credentials */}
         <div className="lg:col-span-2 space-y-6">
           
           {/* Credentials Card */}
           {canViewCredentials && (
-            <div className="bg-white rounded-xl shadow-sm border border-slate-100 p-6 flex items-center justify-between">
+            <div className="bg-white rounded-xl shadow-sm border border-slate-100 p-5 md:p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                 <div>
                     <h3 className="font-bold text-slate-800 mb-1">Security Credentials</h3>
                     <p className="text-xs text-slate-500">Access information for this account.</p>
                 </div>
-                <div className="flex items-center gap-4 bg-slate-50 px-4 py-2 rounded-lg border border-slate-200">
-                    <div className="text-right">
-                        <p className="text-xs text-slate-400 font-bold uppercase">Password</p>
-                        <p className="font-mono text-slate-800 font-medium min-w-[100px] text-right">
+                <div className="flex w-full sm:w-auto items-center justify-between gap-4 bg-slate-50 px-4 py-3 rounded-lg border border-slate-200">
+                    <div className="text-left sm:text-right flex-1">
+                        <p className="text-[10px] text-slate-400 font-bold uppercase">Password</p>
+                        <p className="font-mono text-slate-800 font-medium text-sm sm:text-base min-w-[100px]">
                             {showPassword ? student.password : '••••••••'}
                         </p>
                     </div>
@@ -152,7 +158,7 @@ const StudentProfile: React.FC<StudentProfileProps> = ({ students, courses, curr
             </div>
           )}
 
-          <h2 className="text-xl font-bold text-emerald-950">Enrolled Courses</h2>
+          <h2 className="text-lg md:text-xl font-bold text-emerald-950">Enrolled Courses</h2>
           {courses.map(course => {
             const totalCourseModules = course.modules.length;
             const completedInCourse = course.modules.filter(m => student.completedModules.includes(m.id)).length;
@@ -160,18 +166,18 @@ const StudentProfile: React.FC<StudentProfileProps> = ({ students, courses, curr
 
             return (
               <div key={course.id} className="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden">
-                <div className="p-6 bg-slate-50/50 border-b border-slate-100">
-                    <div className="flex justify-between items-start mb-4">
+                <div className="p-5 md:p-6 bg-slate-50/50 border-b border-slate-100">
+                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4">
                         <div>
-                            <h3 className="font-bold text-lg text-slate-800">{course.title}</h3>
-                            <p className="text-sm text-slate-500 line-clamp-1 mt-1">{course.description}</p>
+                            <h3 className="font-bold text-base md:text-lg text-slate-800">{course.title}</h3>
+                            <p className="text-xs md:text-sm text-slate-500 line-clamp-1 mt-1">{course.description}</p>
                         </div>
-                        <span className={`px-3 py-1 rounded-full text-xs font-bold border shadow-sm ${
+                        <span className={`px-3 py-1 rounded-full text-xs font-bold border shadow-sm self-start ${
                             courseProgress === 100 
                             ? 'bg-emerald-100 text-emerald-800 border-emerald-200' 
                             : 'bg-white text-slate-600 border-slate-200'
                         }`}>
-                            {courseProgress}% Complete
+                            {courseProgress}% Done
                         </span>
                     </div>
                     
@@ -193,7 +199,7 @@ const StudentProfile: React.FC<StudentProfileProps> = ({ students, courses, curr
                     return (
                       <div key={module.id} className="p-4 flex items-center justify-between group hover:bg-slate-50 transition-colors">
                          <div className="flex items-center gap-3">
-                            <div className={`w-6 h-6 rounded-full flex items-center justify-center border ${
+                            <div className={`w-6 h-6 md:w-7 md:h-7 rounded-full flex items-center justify-center border flex-shrink-0 ${
                               isCompleted 
                                 ? 'bg-emerald-500 border-emerald-500 text-white' 
                                 : 'bg-white border-slate-300 text-transparent'
@@ -201,16 +207,16 @@ const StudentProfile: React.FC<StudentProfileProps> = ({ students, courses, curr
                                <CheckIcon className="w-3.5 h-3.5" />
                             </div>
                             <div>
-                               <p className={`text-sm font-medium ${isCompleted ? 'text-emerald-900' : 'text-slate-600'}`}>
+                               <p className={`text-sm font-medium line-clamp-1 ${isCompleted ? 'text-emerald-900' : 'text-slate-600'}`}>
                                  {module.title}
                                </p>
                                <p className="text-xs text-slate-400">{module.lessons.length} lessons</p>
                             </div>
                          </div>
                          {isCompleted ? (
-                           <span className="text-xs font-medium text-emerald-600 bg-emerald-50 px-2 py-1 rounded">Completed</span>
+                           <span className="text-[10px] md:text-xs font-medium text-emerald-600 bg-emerald-50 px-2 py-1 rounded flex-shrink-0">Completed</span>
                          ) : (
-                           <span className="text-xs font-medium text-slate-400">Pending</span>
+                           <span className="text-[10px] md:text-xs font-medium text-slate-400 flex-shrink-0">Pending</span>
                          )}
                       </div>
                     );

@@ -71,7 +71,7 @@ const Classroom: React.FC<ClassroomProps> = ({ courses, onCompleteLesson }) => {
                 <span>/</span>
                 <span>{module.title}</span>
             </div>
-            <h1 className="text-2xl md:text-3xl font-bold text-emerald-950">{lesson.title}</h1>
+            <h1 className="text-2xl md:text-3xl font-bold text-emerald-950 font-heading">{lesson.title}</h1>
         </div>
         {/* Content scrollable only on desktop, natural height on mobile */}
         <div className="flex-1 p-6 md:p-8 lg:overflow-y-auto prose prose-emerald max-w-none">
@@ -95,7 +95,7 @@ const Classroom: React.FC<ClassroomProps> = ({ courses, onCompleteLesson }) => {
         <div className="p-4 border-b border-slate-100 bg-gradient-to-r from-emerald-900 to-emerald-800 text-white lg:rounded-t-2xl rounded-t-2xl flex items-center justify-between">
             <div className="flex items-center gap-2">
                 <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-                <span className="font-semibold">AI Tutor</span>
+                <span className="font-semibold font-heading">AI Tutor</span>
             </div>
             <span className="text-xs bg-white/20 px-2 py-1 rounded">Gemini 2.5</span>
         </div>

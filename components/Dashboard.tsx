@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, LineChart, Line } from 'recharts';
 import { Link, useNavigate } from 'react-router-dom';
@@ -39,7 +38,7 @@ const Dashboard: React.FC<DashboardProps> = ({ students, currentUser }) => {
   return (
     <div className="space-y-8 animate-fade-in">
       <header>
-        <h1 className="text-2xl md:text-3xl font-bold text-emerald-950">
+        <h1 className="text-2xl md:text-3xl font-bold text-emerald-950 font-heading">
             {isAdmin ? 'System Dashboard' : isSponsor ? 'Team Dashboard' : 'My Dashboard'}
         </h1>
         <p className="text-emerald-700 mt-2 text-sm md:text-base">
@@ -83,7 +82,7 @@ const Dashboard: React.FC<DashboardProps> = ({ students, currentUser }) => {
           {/* min-w-0 is crucial for Recharts to resize properly in a grid */}
           <div className="lg:col-span-2 bg-white p-6 rounded-2xl shadow-sm border border-slate-100 min-w-0">
             <div className="flex justify-between items-center mb-6">
-                <h2 className="text-lg md:text-xl font-bold text-slate-800">
+                <h2 className="text-lg md:text-xl font-bold text-slate-800 font-heading">
                     {isStudent ? 'Your Progress vs Goals' : 'Team Leaderboard'}
                 </h2>
             </div>
@@ -115,7 +114,7 @@ const Dashboard: React.FC<DashboardProps> = ({ students, currentUser }) => {
                 <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
                     <div className="flex items-center gap-3 mb-4 text-emerald-800">
                         <div className="bg-emerald-100 p-2 rounded-lg"><MagnifyingGlassIcon /></div>
-                        <h3 className="font-bold text-lg">Quick User Lookup</h3>
+                        <h3 className="font-bold text-lg font-heading">Quick User Lookup</h3>
                     </div>
                     <p className="text-sm text-slate-500 mb-4">Find users instantly to manage passwords or roles.</p>
                     <div className="flex gap-2">
@@ -135,7 +134,7 @@ const Dashboard: React.FC<DashboardProps> = ({ students, currentUser }) => {
                 <div className="bg-gradient-to-br from-emerald-600 to-teal-700 rounded-2xl shadow-lg p-6 text-white relative overflow-hidden group">
                     <div className="relative z-10 h-full flex flex-col justify-between">
                         <div>
-                            <h2 className="text-xl font-bold mb-2">Enroll New FBO</h2>
+                            <h2 className="text-xl font-bold mb-2 font-heading">Enroll New FBO</h2>
                             <p className="text-emerald-100 text-sm">Grow your business by inviting new members.</p>
                         </div>
                         
@@ -166,7 +165,7 @@ const Dashboard: React.FC<DashboardProps> = ({ students, currentUser }) => {
                     <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center text-emerald-600 mb-4">
                         <AcademicCapIcon />
                     </div>
-                    <h3 className="text-xl font-bold text-slate-800">Your Next Goal: 2CC</h3>
+                    <h3 className="text-xl font-bold text-slate-800 font-heading">Your Next Goal: 2CC</h3>
                     <p className="text-slate-500 mt-2 mb-6 text-sm">
                         Complete your training and accumulate 2 Case Credits to become a Sponsor and build your own team.
                     </p>
@@ -189,7 +188,7 @@ const StatCard: React.FC<{ title: string; value: string; icon: React.ReactNode; 
     </div>
     <div>
       <p className="text-sm font-medium text-slate-500">{title}</p>
-      <h3 className="text-2xl font-bold text-slate-800">{value}</h3>
+      <h3 className="text-2xl font-bold text-slate-800 font-heading">{value}</h3>
       <p className="text-xs text-emerald-600 font-medium mt-1">{trend}</p>
     </div>
   </div>

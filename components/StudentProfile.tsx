@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Student, Course, UserRole } from '../types';
@@ -64,14 +63,14 @@ const StudentProfile: React.FC<StudentProfileProps> = ({ students, courses, curr
         
         <div className="flex flex-col md:flex-row gap-6 md:gap-8 items-center md:items-start relative z-10">
           {/* Avatar */}
-          <div className="w-20 h-20 md:w-24 md:h-24 rounded-full bg-gradient-to-br from-emerald-100 to-emerald-200 text-emerald-800 flex items-center justify-center text-2xl md:text-3xl font-bold shadow-inner border-4 border-white flex-shrink-0">
+          <div className="w-20 h-20 md:w-24 md:h-24 rounded-full bg-gradient-to-br from-emerald-100 to-emerald-200 text-emerald-800 flex items-center justify-center text-2xl md:text-3xl font-bold shadow-inner border-4 border-white flex-shrink-0 font-heading">
             {student.name.charAt(0)}
           </div>
           
           {/* User Info */}
           <div className="flex-1 space-y-3 text-center md:text-left w-full">
             <div className="flex flex-col md:flex-row items-center md:items-start gap-2 md:gap-3">
-              <h1 className="text-2xl md:text-3xl font-bold text-emerald-950">{student.name}</h1>
+              <h1 className="text-2xl md:text-3xl font-bold text-emerald-950 font-heading">{student.name}</h1>
               {isSponsor ? (
                 <span className="px-3 py-1 bg-yellow-100 text-yellow-800 text-xs font-bold rounded-full border border-yellow-200 uppercase tracking-wider flex items-center gap-1">
                    <span className="text-base">⭐</span> Sponsor
@@ -118,12 +117,12 @@ const StudentProfile: React.FC<StudentProfileProps> = ({ students, courses, curr
           {/* Right Stats */}
           <div className="w-full md:w-auto bg-slate-50 p-4 rounded-xl border border-slate-100 flex justify-around md:block md:space-y-2">
              <div className="text-center md:mb-4">
-                <div className="text-xl md:text-2xl font-bold text-emerald-600">{calculatedProgress}%</div>
+                <div className="text-xl md:text-2xl font-bold text-emerald-600 font-heading">{calculatedProgress}%</div>
                 <div className="text-[10px] md:text-xs text-slate-500 uppercase font-semibold tracking-wider">Total Progress</div>
              </div>
              <div className="w-px h-10 bg-slate-200 md:hidden"></div>
              <div className="text-center">
-                <div className="text-xl md:text-2xl font-bold text-slate-800">{completedCount} <span className="text-slate-400 text-base font-normal">/ {totalModulesCount}</span></div>
+                <div className="text-xl md:text-2xl font-bold text-slate-800 font-heading">{completedCount} <span className="text-slate-400 text-base font-normal font-sans">/ {totalModulesCount}</span></div>
                 <div className="text-[10px] md:text-xs text-slate-500 uppercase font-semibold tracking-wider">Modules Done</div>
              </div>
           </div>
@@ -158,7 +157,7 @@ const StudentProfile: React.FC<StudentProfileProps> = ({ students, courses, curr
             </div>
           )}
 
-          <h2 className="text-lg md:text-xl font-bold text-emerald-950">Enrolled Courses</h2>
+          <h2 className="text-lg md:text-xl font-bold text-emerald-950 font-heading">Enrolled Courses</h2>
           {courses.map(course => {
             const totalCourseModules = course.modules.length;
             const completedInCourse = course.modules.filter(m => student.completedModules.includes(m.id)).length;
@@ -230,7 +229,7 @@ const StudentProfile: React.FC<StudentProfileProps> = ({ students, courses, curr
         {/* Right Column: Visual Stats */}
         <div className="space-y-6">
           <div className="bg-white rounded-xl shadow-sm border border-slate-100 p-6">
-            <h2 className="text-lg font-bold text-emerald-950 mb-4">Engagement Overview</h2>
+            <h2 className="text-lg font-bold text-emerald-950 mb-4 font-heading">Engagement Overview</h2>
             <div className="h-64 w-full relative">
                <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
@@ -256,7 +255,7 @@ const StudentProfile: React.FC<StudentProfileProps> = ({ students, courses, curr
               </ResponsiveContainer>
               <div className="absolute inset-0 flex items-center justify-center pointer-events-none pb-8">
                  <div className="text-center">
-                    <span className="block text-3xl font-bold text-emerald-800">{calculatedProgress}%</span>
+                    <span className="block text-3xl font-bold text-emerald-800 font-heading">{calculatedProgress}%</span>
                     <span className="text-xs text-slate-400">Total</span>
                  </div>
               </div>
@@ -265,7 +264,7 @@ const StudentProfile: React.FC<StudentProfileProps> = ({ students, courses, curr
 
           <div className="bg-gradient-to-br from-emerald-900 to-teal-900 rounded-xl shadow-lg p-6 text-white relative overflow-hidden">
              <div className="relative z-10">
-               <h3 className="font-bold text-lg mb-2">AI Tutor Stats</h3>
+               <h3 className="font-bold text-lg mb-2 font-heading">AI Tutor Stats</h3>
                <p className="text-emerald-100 text-sm mb-4">Based on recent interactions</p>
                
                <div className="space-y-3">
@@ -294,12 +293,6 @@ const EnvelopeIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
     <path d="M3 4a2 2 0 00-2 2v1.161l8.441 4.221a1.25 1.25 0 001.118 0L19 7.162V6a2 2 0 00-2-2H3z" />
     <path d="M19 8.839l-7.77 3.885a2.75 2.75 0 01-2.46 0L1 8.839V14a2 2 0 002 2h14a2 2 0 002-2V8.839z" />
-  </svg>
-);
-
-const CalendarIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
-    <path fillRule="evenodd" d="M5.75 2a.75.75 0 01.75.75V4h7V2.75a.75.75 0 011.5 0V4h.25A2.75 2.75 0 0118 6.75v8.5A2.75 2.75 0 0115.25 18H4.75A2.75 2.75 0 012 15.25v-8.5A2.75 2.75 0 014.75 4H5V2.75A.75.75 0 015.75 2zm-1 5.5c-.69 0-1.25.56-1.25 1.25v6.5c0 .69.56 1.25 1.25 1.25h10.5c.69 0 1.25-.56 1.25-1.25v-6.5c0-.69-.56-1.25-1.25-1.25H4.75z" clipRule="evenodd" />
   </svg>
 );
 

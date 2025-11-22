@@ -81,7 +81,7 @@ const StudentsList: React.FC<StudentsListProps> = ({ students, onAddStudent, cur
     <div className="space-y-6">
        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-            <h1 className="text-3xl font-bold text-emerald-950">
+            <h1 className="text-3xl font-bold text-emerald-950 font-heading">
                 {isAdmin ? "User Management" : "My Downline Team"}
             </h1>
             <p className="text-emerald-700 mt-1">
@@ -135,7 +135,7 @@ const StudentsList: React.FC<StudentsListProps> = ({ students, onAddStudent, cur
       {isFormOpen && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl p-8 max-w-md w-full shadow-2xl animate-fade-in">
-            <h2 className="text-xl font-bold text-slate-800 mb-4">Enroll New FBO</h2>
+            <h2 className="text-xl font-bold text-slate-800 mb-4 font-heading">Enroll New FBO</h2>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">Full Name</label>
@@ -202,7 +202,7 @@ const StudentsList: React.FC<StudentsListProps> = ({ students, onAddStudent, cur
                         <tr key={student.id} className="hover:bg-slate-50/50 transition-colors">
                             <td className="px-6 py-4">
                                 <Link to={`/students/${student.id}`} className="flex items-center gap-3 group cursor-pointer">
-                                    <div className="w-10 h-10 rounded-full bg-emerald-100 text-emerald-700 group-hover:bg-emerald-200 flex items-center justify-center text-sm font-bold transition-colors">
+                                    <div className="w-10 h-10 rounded-full bg-emerald-100 text-emerald-700 group-hover:bg-emerald-200 flex items-center justify-center text-sm font-bold transition-colors font-heading">
                                         {student.name.charAt(0)}
                                     </div>
                                     <div>

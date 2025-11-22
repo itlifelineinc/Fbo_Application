@@ -7,9 +7,10 @@ interface StudentsListProps {
   onAddStudent: (student: Student) => void;
   currentUser: Student;
   onUpdateStudent: (student: Student) => void;
+  onDeleteStudent: (studentId: string) => void;
 }
 
-const StudentsList: React.FC<StudentsListProps> = ({ students, onAddStudent, currentUser, onUpdateStudent }) => {
+const StudentsList: React.FC<StudentsListProps> = ({ students, onAddStudent, currentUser, onUpdateStudent, onDeleteStudent }) => {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [newStudentName, setNewStudentName] = useState('');
   const [newStudentEmail, setNewStudentEmail] = useState('');
@@ -68,13 +69,17 @@ const StudentsList: React.FC<StudentsListProps> = ({ students, onAddStudent, cur
   };
 
   const handleResetPassword = (student: Student) => {
+    if (!window.confirm(`Reset password for ${student.name}?`)) return;
     const tempPassword = `reset${Math.floor(1000 + Math.random() * 9000)}`;
     const updatedStudent = { ...student, password: tempPassword };
-    
-    // Call app-level update function
     onUpdateStudent(updatedStudent);
-    
     alert(`Password for ${student.name} reset to: ${tempPassword}`);
+  };
+
+  const handleDelete = (student: Student) => {
+    if (window.confirm(`Are you sure you want to delete ${student.name} (${student.handle})? This action cannot be undone.`)) {
+        onDeleteStudent(student.id);
+    }
   };
 
   return (
@@ -202,8 +207,12 @@ const StudentsList: React.FC<StudentsListProps> = ({ students, onAddStudent, cur
                         <tr key={student.id} className="hover:bg-slate-50/50 transition-colors">
                             <td className="px-6 py-4">
                                 <Link to={`/students/${student.id}`} className="flex items-center gap-3 group cursor-pointer">
-                                    <div className="w-10 h-10 rounded-full bg-emerald-100 text-emerald-700 group-hover:bg-emerald-200 flex items-center justify-center text-sm font-bold transition-colors font-heading">
-                                        {student.name.charAt(0)}
+                                    <div className="w-10 h-10 rounded-full bg-emerald-100 text-emerald-700 group-hover:bg-emerald-200 flex items-center justify-center text-sm font-bold transition-colors font-heading overflow-hidden">
+                                        {student.avatarUrl ? (
+                                            <img src={student.avatarUrl} alt={student.name} className="w-full h-full object-cover" />
+                                        ) : (
+                                            student.name.charAt(0)
+                                        )}
                                     </div>
                                     <div>
                                         <span className="block font-medium text-slate-700 group-hover:text-emerald-700 transition-colors">{student.name}</span>
@@ -245,12 +254,25 @@ const StudentsList: React.FC<StudentsListProps> = ({ students, onAddStudent, cur
                             </td>
                             {isAdmin && (
                                 <td className="px-6 py-4">
-                                    <button 
-                                        onClick={() => handleResetPassword(student)}
-                                        className="text-xs text-white bg-red-500 hover:bg-red-600 px-3 py-1 rounded transition-colors"
-                                    >
-                                        Reset Pass
-                                    </button>
+                                    <div className="flex gap-2">
+                                        {/* Only Super Admin can Reset Password and Delete */}
+                                        {isSuperAdmin && (
+                                            <>
+                                                <button 
+                                                    onClick={() => handleResetPassword(student)}
+                                                    className="text-xs text-slate-500 bg-slate-100 hover:bg-slate-200 px-2 py-1 rounded transition-colors"
+                                                >
+                                                    Reset
+                                                </button>
+                                                <button 
+                                                    onClick={() => handleDelete(student)}
+                                                    className="text-xs text-white bg-red-500 hover:bg-red-600 px-2 py-1 rounded transition-colors"
+                                                >
+                                                    Delete
+                                                </button>
+                                            </>
+                                        )}
+                                    </div>
                                 </td>
                             )}
                         </tr>

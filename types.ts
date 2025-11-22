@@ -23,6 +23,7 @@ export interface Student {
   sponsorId?: string; // The handle of their sponsor
   quizResults?: QuizResult[];
   caseCredits: number; // Threshold for becoming a Sponsor (>= 2)
+  avatarUrl?: string; // Profile picture data URL
 }
 
 export interface Lesson {

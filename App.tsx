@@ -47,7 +47,7 @@ const App: React.FC = () => {
     setStudents(prev => [...prev, newStudent]);
   };
 
-  // Function to update existing student data (e.g. Password Reset, CC update)
+  // Function to update existing student data (e.g. Password Reset, CC update, Avatar)
   const handleUpdateStudent = (updatedStudent: Student) => {
     setStudents(prev => prev.map(s => s.id === updatedStudent.id ? updatedStudent : s));
     
@@ -55,6 +55,11 @@ const App: React.FC = () => {
     if (currentUser && currentUser.id === updatedStudent.id) {
         setCurrentUser(updatedStudent);
     }
+  };
+
+  // Function to delete a student (Super Admin only)
+  const handleDeleteStudent = (studentId: string) => {
+    setStudents(prev => prev.filter(s => s.id !== studentId));
   };
 
   const handleCompleteLesson = (moduleId: string) => {
@@ -77,7 +82,7 @@ const App: React.FC = () => {
   // Simple Course List Component (Visible to all logged in)
   const CourseList: React.FC<{ courses: Course[] }> = ({ courses }) => (
     <div className="space-y-6">
-       <h1 className="text-3xl font-bold text-emerald-950">Training Courses</h1>
+       <h1 className="text-3xl font-bold text-emerald-950 font-heading">Training Courses</h1>
        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {courses.map(course => (
             <div key={course.id} className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden flex flex-col group hover:shadow-md transition-shadow">
@@ -132,6 +137,7 @@ const App: React.FC = () => {
                         students={students} 
                         onAddStudent={handleAddStudent} 
                         onUpdateStudent={handleUpdateStudent}
+                        onDeleteStudent={handleDeleteStudent}
                     />
                 ) : <Navigate to="/dashboard" />}
             </ProtectedRoute>

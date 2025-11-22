@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Student, Course, UserRole } from '../types';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
@@ -15,6 +15,9 @@ const StudentProfile: React.FC<StudentProfileProps> = ({ students, courses, curr
   const student = students.find(s => s.id === studentId);
   
   const [showPassword, setShowPassword] = useState(false);
+  const [isEditingPassword, setIsEditingPassword] = useState(false);
+  const [newPassword, setNewPassword] = useState('');
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   if (!student) {
     return (
@@ -31,8 +34,35 @@ const StudentProfile: React.FC<StudentProfileProps> = ({ students, courses, curr
     onUpdateStudent(updated);
   };
 
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const updated = { ...student, avatarUrl: reader.result as string };
+        onUpdateStudent(updated);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handlePasswordChange = () => {
+    if (newPassword.trim().length < 4) {
+        alert("Password must be at least 4 characters");
+        return;
+    }
+    const updated = { ...student, password: newPassword };
+    onUpdateStudent(updated);
+    setIsEditingPassword(false);
+    setNewPassword('');
+    alert("Password updated successfully!");
+  };
+
   const isSponsor = student.caseCredits >= 2;
-  const canViewCredentials = currentUser.id === student.id || currentUser.role === UserRole.SUPER_ADMIN || currentUser.role === UserRole.ADMIN;
+  const isOwnProfile = currentUser.id === student.id;
+  const isSuperAdmin = currentUser.role === UserRole.SUPER_ADMIN;
+  // Access control: Super Admin can see all, User can see own. Regular Admin cannot see passwords anymore.
+  const canViewCredentials = isOwnProfile || isSuperAdmin;
 
   // Calculate derived stats
   const allModules = courses.flatMap(c => c.modules);
@@ -63,12 +93,36 @@ const StudentProfile: React.FC<StudentProfileProps> = ({ students, courses, curr
         
         <div className="flex flex-col md:flex-row gap-6 md:gap-8 items-center md:items-start relative z-10">
           {/* Avatar */}
-          <div className="w-20 h-20 md:w-24 md:h-24 rounded-full bg-gradient-to-br from-emerald-100 to-emerald-200 text-emerald-800 flex items-center justify-center text-2xl md:text-3xl font-bold shadow-inner border-4 border-white flex-shrink-0 font-heading">
-            {student.name.charAt(0)}
+          <div className="relative group">
+            <div 
+                className={`w-24 h-24 md:w-32 md:h-32 rounded-full bg-slate-100 border-4 border-white shadow-lg overflow-hidden flex items-center justify-center ${isOwnProfile ? 'cursor-pointer' : ''}`}
+                onClick={() => isOwnProfile && fileInputRef.current?.click()}
+            >
+                {student.avatarUrl ? (
+                    <img src={student.avatarUrl} alt={student.name} className="w-full h-full object-cover" />
+                ) : (
+                    <div className="w-full h-full bg-gradient-to-br from-emerald-100 to-emerald-200 text-emerald-800 flex items-center justify-center text-3xl md:text-4xl font-bold font-heading">
+                        {student.name.charAt(0)}
+                    </div>
+                )}
+                {/* Edit Overlay */}
+                {isOwnProfile && (
+                    <div className="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity rounded-full">
+                        <CameraIcon />
+                    </div>
+                )}
+            </div>
+            <input 
+                type="file" 
+                ref={fileInputRef} 
+                className="hidden" 
+                accept="image/*"
+                onChange={handleFileChange}
+            />
           </div>
           
           {/* User Info */}
-          <div className="flex-1 space-y-3 text-center md:text-left w-full">
+          <div className="flex-1 space-y-3 text-center md:text-left w-full pt-2">
             <div className="flex flex-col md:flex-row items-center md:items-start gap-2 md:gap-3">
               <h1 className="text-2xl md:text-3xl font-bold text-emerald-950 font-heading">{student.name}</h1>
               {isSponsor ? (
@@ -106,7 +160,7 @@ const StudentProfile: React.FC<StudentProfileProps> = ({ students, courses, curr
                 <div className="w-full bg-slate-100 rounded-full h-2">
                     <div className={`h-2 rounded-full transition-all duration-500 ${isSponsor ? 'bg-yellow-400' : 'bg-emerald-500'}`} style={{ width: `${Math.min(100, (student.caseCredits / 2) * 100)}%` }}></div>
                 </div>
-                {!isSponsor && currentUser.id === student.id && (
+                {!isSponsor && isOwnProfile && (
                     <button onClick={handleAddCC} className="mt-2 text-xs text-emerald-600 hover:underline w-full md:w-auto text-center md:text-left">
                         + Simulate 0.5CC Order
                     </button>
@@ -133,27 +187,65 @@ const StudentProfile: React.FC<StudentProfileProps> = ({ students, courses, curr
         {/* Left Column: Course Progress & Credentials */}
         <div className="lg:col-span-2 space-y-6">
           
-          {/* Credentials Card */}
+          {/* Credentials Card - Only visible to Self or Super Admin */}
           {canViewCredentials && (
-            <div className="bg-white rounded-xl shadow-sm border border-slate-100 p-5 md:p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                <div>
-                    <h3 className="font-bold text-slate-800 mb-1">Security Credentials</h3>
-                    <p className="text-xs text-slate-500">Access information for this account.</p>
-                </div>
-                <div className="flex w-full sm:w-auto items-center justify-between gap-4 bg-slate-50 px-4 py-3 rounded-lg border border-slate-200">
-                    <div className="text-left sm:text-right flex-1">
-                        <p className="text-[10px] text-slate-400 font-bold uppercase">Password</p>
-                        <p className="font-mono text-slate-800 font-medium text-sm sm:text-base min-w-[100px]">
-                            {showPassword ? student.password : '••••••••'}
-                        </p>
+            <div className="bg-white rounded-xl shadow-sm border border-slate-100 p-5 md:p-6">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-4">
+                    <div>
+                        <h3 className="font-bold text-slate-800 mb-1">Security Credentials</h3>
+                        <p className="text-xs text-slate-500">Manage your password securely.</p>
                     </div>
-                    <button 
-                        onClick={() => setShowPassword(!showPassword)}
-                        className="text-emerald-600 hover:bg-emerald-100 p-2 rounded-full transition-colors"
-                    >
-                        {showPassword ? <EyeSlashIcon /> : <EyeIcon />}
-                    </button>
+                    
+                    {isOwnProfile && !isEditingPassword && (
+                        <button 
+                            onClick={() => setIsEditingPassword(true)}
+                            className="text-sm text-emerald-600 font-medium hover:text-emerald-700 underline"
+                        >
+                            Change Password
+                        </button>
+                    )}
                 </div>
+
+                {isEditingPassword ? (
+                    <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center bg-slate-50 p-4 rounded-lg border border-slate-200 transition-all">
+                        <input 
+                            type="password" 
+                            value={newPassword}
+                            onChange={(e) => setNewPassword(e.target.value)}
+                            placeholder="Enter new password"
+                            className="px-4 py-2 rounded-lg border border-slate-300 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 outline-none text-sm w-full sm:w-auto flex-1"
+                        />
+                        <div className="flex gap-2 w-full sm:w-auto">
+                            <button 
+                                onClick={() => setIsEditingPassword(false)}
+                                className="flex-1 sm:flex-none px-3 py-2 text-sm text-slate-600 hover:bg-slate-200 rounded-lg"
+                            >
+                                Cancel
+                            </button>
+                            <button 
+                                onClick={handlePasswordChange}
+                                className="flex-1 sm:flex-none px-4 py-2 text-sm bg-emerald-600 text-white hover:bg-emerald-700 rounded-lg shadow-sm"
+                            >
+                                Save
+                            </button>
+                        </div>
+                    </div>
+                ) : (
+                    <div className="flex w-full sm:w-auto items-center justify-between gap-4 bg-slate-50 px-4 py-3 rounded-lg border border-slate-200">
+                        <div className="text-left flex-1">
+                            <p className="text-[10px] text-slate-400 font-bold uppercase">Password</p>
+                            <p className="font-mono text-slate-800 font-medium text-sm sm:text-base">
+                                {showPassword ? student.password : '••••••••'}
+                            </p>
+                        </div>
+                        <button 
+                            onClick={() => setShowPassword(!showPassword)}
+                            className="text-emerald-600 hover:bg-emerald-100 p-2 rounded-full transition-colors"
+                        >
+                            {showPassword ? <EyeSlashIcon /> : <EyeIcon />}
+                        </button>
+                    </div>
+                )}
             </div>
           )}
 
@@ -313,6 +405,13 @@ const EyeSlashIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
     <path strokeLinecap="round" strokeLinejoin="round" d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88" />
   </svg>
+);
+
+const CameraIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-8 h-8 text-white">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M6.827 6.175A2.31 2.31 0 015.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 00-1.134-.175 2.31 2.31 0 01-1.64-1.055l-.822-1.316a2.192 2.192 0 00-1.736-1.039 48.774 48.774 0 00-5.232 0 2.192 2.192 0 00-1.736 1.039l-.821 1.316z" />
+        <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 12.75a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0zM18.75 10.5h.008v.008h-.008V10.5z" />
+    </svg>
 );
 
 export default StudentProfile;

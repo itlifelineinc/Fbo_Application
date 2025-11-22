@@ -26,6 +26,11 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
     }
   };
 
+  const fillSuperAdmin = () => {
+    setHandle('@forever_system');
+    setPassword('password123');
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-emerald-900 to-emerald-950 flex items-center justify-center p-4">
       <div className="max-w-md w-full bg-white rounded-3xl shadow-2xl p-8 md:p-10 animate-fade-in">
@@ -77,7 +82,15 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
               Sign In
             </button>
 
-            <div className="text-center pt-4">
+            <div className="flex flex-col gap-3 text-center pt-2">
+               <button 
+                type="button"
+                onClick={fillSuperAdmin}
+                className="text-xs text-slate-400 hover:text-emerald-600 transition-colors"
+              >
+                (Demo) Auto-fill Super Admin
+              </button>
+
               <button 
                 type="button"
                 onClick={() => setMode('RECOVERY')}

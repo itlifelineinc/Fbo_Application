@@ -43,7 +43,7 @@ const CourseBuilder: React.FC<CourseBuilderProps> = ({ onAddModule }) => {
 
       <div className="bg-white rounded-2xl shadow-lg p-8 border border-emerald-100">
         <label className="block text-sm font-medium text-emerald-900 mb-2">What should this training module be about?</label>
-        <div className="flex gap-3">
+        <div className="flex flex-col sm:flex-row gap-3">
           <input
             type="text"
             value={topic}
@@ -55,7 +55,7 @@ const CourseBuilder: React.FC<CourseBuilderProps> = ({ onAddModule }) => {
           <button
             onClick={handleGenerate}
             disabled={isLoading || !topic.trim()}
-            className={`px-6 py-3 rounded-xl font-semibold text-white shadow-md transition-all flex items-center gap-2
+            className={`px-6 py-3 rounded-xl font-semibold text-white shadow-md transition-all flex items-center justify-center gap-2
               ${isLoading 
                 ? 'bg-emerald-400 cursor-not-allowed' 
                 : 'bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 hover:shadow-lg active:scale-95'}`}

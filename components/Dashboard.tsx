@@ -36,12 +36,12 @@ const Dashboard: React.FC<DashboardProps> = ({ students, currentUser }) => {
   }));
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 animate-fade-in">
       <header>
-        <h1 className="text-3xl font-bold text-emerald-950">
+        <h1 className="text-2xl md:text-3xl font-bold text-emerald-950">
             {isAdmin ? 'System Dashboard' : isSponsor ? 'Team Dashboard' : 'My Dashboard'}
         </h1>
-        <p className="text-emerald-700 mt-2">
+        <p className="text-emerald-700 mt-2 text-sm md:text-base">
             {isAdmin 
                 ? "Platform-wide analytics and control center." 
                 : isSponsor 
@@ -52,7 +52,7 @@ const Dashboard: React.FC<DashboardProps> = ({ students, currentUser }) => {
       </header>
 
       {/* Stats Cards - Dynamic based on Role */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
         {!isStudent && (
             <StatCard 
             title={isAdmin ? "Total Users" : "Team Members"} 
@@ -75,9 +75,40 @@ const Dashboard: React.FC<DashboardProps> = ({ students, currentUser }) => {
         />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      {/* Main Grid Layout - Swapped columns for better spacing: Chart (Left 2/3), Widgets (Right 1/3) */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
           
-          <div className="space-y-6">
+          {/* Left Column: Charts & Data (Takes 2 columns on desktop, 1 on mobile) */}
+          {/* min-w-0 is crucial for Recharts to resize properly in a grid */}
+          <div className="lg:col-span-2 bg-white p-6 rounded-2xl shadow-sm border border-slate-100 min-w-0">
+            <div className="flex justify-between items-center mb-6">
+                <h2 className="text-lg md:text-xl font-bold text-slate-800">
+                    {isStudent ? 'Your Progress vs Goals' : 'Team Leaderboard'}
+                </h2>
+            </div>
+            <div className="h-64 md:h-80 w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                  <XAxis dataKey="name" axisLine={false} tickLine={false} dy={10} tick={{fill: '#64748b', fontSize: 12}} />
+                  <YAxis axisLine={false} tickLine={false} tick={{fill: '#64748b', fontSize: 12}} />
+                  <Tooltip 
+                    cursor={{fill: '#f1f5f9'}}
+                    contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                  />
+                  <Bar dataKey="progress" radius={[6, 6, 0, 0]} barSize={40}>
+                    {chartData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.progress > 80 ? '#059669' : '#10b981'} />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+
+          {/* Right Column: Widgets (Takes 1 column on desktop, stacks on mobile) */}
+          <div className="space-y-6 min-w-0">
+            
             {/* Quick User Search Widget (Super Admin Only) */}
             {isSuperAdmin && (
                 <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
@@ -89,9 +120,10 @@ const Dashboard: React.FC<DashboardProps> = ({ students, currentUser }) => {
                     <div className="flex gap-2">
                         <Link 
                             to="/students" 
-                            className="w-full bg-slate-800 hover:bg-slate-900 text-white font-medium py-2 px-4 rounded-lg transition-colors text-center text-sm"
+                            className="w-full bg-slate-800 hover:bg-slate-900 text-white font-medium py-2.5 px-4 rounded-xl transition-colors text-center text-sm flex items-center justify-center gap-2"
                         >
-                            Go to User Management
+                            <MagnifyingGlassIcon />
+                            Search Users
                         </Link>
                     </div>
                 </div>
@@ -103,20 +135,21 @@ const Dashboard: React.FC<DashboardProps> = ({ students, currentUser }) => {
                     <div className="relative z-10 h-full flex flex-col justify-between">
                         <div>
                             <h2 className="text-xl font-bold mb-2">Enroll New FBO</h2>
-                            <p className="text-emerald-100 text-sm">Send your unique handle to prospects or enroll them directly.</p>
+                            <p className="text-emerald-100 text-sm">Grow your business by inviting new members.</p>
                         </div>
                         
                         <div className="mt-6 p-4 bg-white/10 rounded-xl backdrop-blur-sm border border-white/20">
                             <div className="text-xs text-emerald-200 uppercase font-semibold tracking-wider mb-2">Your Sponsor Handle</div>
-                            <div className="flex gap-2 items-center bg-black/20 rounded-lg p-2 text-sm font-mono text-emerald-100 truncate">
-                                <span>{currentUser.handle}</span>
+                            <div className="flex gap-2 items-center bg-black/20 rounded-lg p-2 text-sm font-mono text-emerald-100 truncate w-full">
+                                <span className="truncate">{currentUser.handle}</span>
                             </div>
-                            <Link to="/join" className="block w-full mt-3 bg-white text-emerald-700 text-center py-2 rounded-lg font-bold hover:bg-emerald-50 transition-colors">
+                            <Link to="/join" className="block w-full mt-3 bg-white text-emerald-700 text-center py-2.5 rounded-xl font-bold hover:bg-emerald-50 transition-colors shadow-sm">
                                 Open Enrollment Form
                             </Link>
                         </div>
                     </div>
-                    <div className="absolute -right-6 -bottom-6 text-emerald-500/20 group-hover:scale-110 transition-transform duration-700">
+                    {/* Decorative Icon */}
+                    <div className="absolute -right-6 -bottom-6 text-emerald-500/20 group-hover:scale-110 transition-transform duration-700 pointer-events-none">
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-48 h-48">
                             <path d="M11.644 1.59a.75.75 0 01.712 0l9.75 5.25a.75.75 0 010 1.32l-9.75 5.25a.75.75 0 01-.712 0l-9.75-5.25a.75.75 0 010-1.32l9.75-5.25z" />
                             <path d="M3.265 10.602l7.668 4.129a2.25 2.25 0 002.134 0l7.668-4.13 1.37.739a.75.75 0 010 1.32l-9.75 5.25a.75.75 0 01-.71 0l-9.75-5.25a.75.75 0 010-1.32l1.37-.738z" />
@@ -142,31 +175,6 @@ const Dashboard: React.FC<DashboardProps> = ({ students, currentUser }) => {
                     <div className="mt-2 text-xs font-bold text-emerald-600">{currentUser.caseCredits} / 2.0 CC</div>
                 </div>
             )}
-          </div>
-
-          {/* Chart Section */}
-          <div className="lg:col-span-2 bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
-            <h2 className="text-xl font-bold text-slate-800 mb-6">
-                {isStudent ? 'Your Progress vs Goals' : 'Team Leaderboard'}
-            </h2>
-            <div className="h-64 w-full">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={chartData}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
-                  <XAxis dataKey="name" axisLine={false} tickLine={false} dy={10} />
-                  <YAxis axisLine={false} tickLine={false} />
-                  <Tooltip 
-                    cursor={{fill: '#f1f5f9'}}
-                    contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-                  />
-                  <Bar dataKey="progress" radius={[6, 6, 0, 0]} barSize={40}>
-                    {chartData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.progress > 80 ? '#059669' : '#10b981'} />
-                    ))}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
           </div>
       </div>
     </div>

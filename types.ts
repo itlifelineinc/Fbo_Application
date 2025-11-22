@@ -5,6 +5,15 @@ export enum UserRole {
   SUPER_ADMIN = 'SUPER_ADMIN' // Platform Owner
 }
 
+export enum CourseTrack {
+  BASICS = 'Forever Opportunity Basics',
+  PRODUCT = 'Product Mastery',
+  BUSINESS = 'Business Building & Recruiting',
+  SALES = 'Sales Techniques & Social Media',
+  RANK = 'Rank Advancement Strategies',
+  LEADERSHIP = 'Leadership & Team Building'
+}
+
 export interface QuizResult {
   question: string;
   answer: string;
@@ -51,8 +60,10 @@ export interface Student {
 export interface Lesson {
   id: string;
   title: string;
-  content: string; // Markdown content
+  type: 'TEXT' | 'VIDEO' | 'QUIZ';
+  content: string; // Markdown content or Video URL
   durationMinutes: number;
+  completed?: boolean;
 }
 
 export interface Module {
@@ -66,6 +77,7 @@ export interface Course {
   id: string;
   title: string;
   description: string;
+  track: CourseTrack;
   modules: Module[];
   thumbnailUrl: string;
 }

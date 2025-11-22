@@ -41,7 +41,6 @@ const Classroom: React.FC<ClassroomProps> = ({ courses, onCompleteLesson }) => {
     setQuestion('');
     setIsChatting(true);
 
-    // Convert internal chat to simpler format for service
     const contextHistory = chatHistory.map(msg => ({ role: msg.role === 'model' ? 'model' : 'user', text: msg.text }));
     
     const answer = await askAITutor(lesson.content, userMsg.text, contextHistory);
@@ -57,8 +56,7 @@ const Classroom: React.FC<ClassroomProps> = ({ courses, onCompleteLesson }) => {
 
   const handleFinish = () => {
       onCompleteLesson(module.id);
-      // In a real app, navigate to next lesson
-      alert("Lesson Completed! Progress saved.");
+      alert(`Lesson "${lesson.title}" Completed! Your sponsor will be notified.`);
   }
 
   return (
@@ -67,25 +65,44 @@ const Classroom: React.FC<ClassroomProps> = ({ courses, onCompleteLesson }) => {
       <div className="flex-1 bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden flex flex-col h-auto lg:h-full">
         <div className="p-6 md:p-8 border-b border-slate-100">
             <div className="flex items-center gap-2 text-sm text-slate-500 mb-2">
-                <span>{course.title}</span>
+                <span className="uppercase tracking-wider text-xs font-bold text-emerald-600">{course.track}</span>
                 <span>/</span>
                 <span>{module.title}</span>
             </div>
             <h1 className="text-2xl md:text-3xl font-bold text-emerald-950 font-heading">{lesson.title}</h1>
         </div>
-        {/* Content scrollable only on desktop, natural height on mobile */}
-        <div className="flex-1 p-6 md:p-8 lg:overflow-y-auto prose prose-emerald max-w-none">
-            <p className="whitespace-pre-wrap leading-relaxed text-slate-700">{lesson.content}</p>
+        
+        {/* Content Area */}
+        <div className="flex-1 p-6 md:p-8 lg:overflow-y-auto">
+            {lesson.type === 'VIDEO' ? (
+                <div className="aspect-video w-full rounded-xl overflow-hidden bg-black mb-6 shadow-lg">
+                    <iframe 
+                        width="100%" 
+                        height="100%" 
+                        src={lesson.content} 
+                        title={lesson.title} 
+                        frameBorder="0" 
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                        allowFullScreen
+                    ></iframe>
+                </div>
+            ) : (
+                <div className="prose prose-emerald max-w-none">
+                    <p className="whitespace-pre-wrap leading-relaxed text-slate-700">{lesson.content}</p>
+                </div>
+            )}
         </div>
+
         <div className="p-6 bg-slate-50 border-t border-slate-100 flex flex-col sm:flex-row gap-4 justify-between items-center">
              <div className="text-sm text-slate-500">
                 Estimated time: <span className="font-medium text-emerald-700">{lesson.durationMinutes} mins</span>
              </div>
              <button 
                 onClick={handleFinish}
-                className="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2.5 rounded-lg font-medium transition-colors shadow-sm"
+                className="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2.5 rounded-lg font-medium transition-colors shadow-sm flex items-center justify-center gap-2"
              >
-                Complete Lesson
+                <CheckCircleIcon />
+                Mark Complete
              </button>
         </div>
       </div>
@@ -142,9 +159,7 @@ const Classroom: React.FC<ClassroomProps> = ({ courses, onCompleteLesson }) => {
                     disabled={isChatting || !question.trim()}
                     className="bg-emerald-100 text-emerald-700 p-2 rounded-lg hover:bg-emerald-200 disabled:opacity-50 transition-colors"
                 >
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
-                        <path d="M3.478 2.405a.75.75 0 00-.926.94l2.432 7.905H13.5a.75.75 0 010 1.5H4.984l-2.432 7.905a.75.75 0 00.926.94 60.519 60.519 0 0018.445-8.986.75.75 0 000-1.218A60.517 60.517 0 003.478 2.405z" />
-                    </svg>
+                    <ArrowUpIcon />
                 </button>
             </div>
         </div>
@@ -152,5 +167,17 @@ const Classroom: React.FC<ClassroomProps> = ({ courses, onCompleteLesson }) => {
     </div>
   );
 };
+
+const CheckCircleIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+    </svg>
+);
+
+const ArrowUpIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 10.5L12 3m0 0l7.5 7.5M12 3v18" />
+    </svg>
+);
 
 export default Classroom;

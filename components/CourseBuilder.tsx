@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
-import { Module } from '../types';
+import { Module, CourseTrack } from '../types';
 import { generateModuleContent } from '../services/geminiService';
 
 interface CourseBuilderProps {
-  onAddModule: (module: Module) => void;
+  onAddModule: (module: Module, track?: CourseTrack) => void;
 }
 
 const CourseBuilder: React.FC<CourseBuilderProps> = ({ onAddModule }) => {
   const [topic, setTopic] = useState('');
+  const [selectedTrack, setSelectedTrack] = useState<CourseTrack>(CourseTrack.BASICS);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -20,10 +21,10 @@ const CourseBuilder: React.FC<CourseBuilderProps> = ({ onAddModule }) => {
     try {
       const newModule = await generateModuleContent(topic);
       if (newModule) {
-        // Ensure ID is unique if API returns duplicate or generic ID
         newModule.id = `m-${Date.now()}`;
-        onAddModule(newModule);
+        onAddModule(newModule, selectedTrack);
         setTopic('');
+        alert("Module generated and added to track!");
       } else {
         setError("Failed to generate content. Please check your API key or try a different topic.");
       }
@@ -42,13 +43,28 @@ const CourseBuilder: React.FC<CourseBuilderProps> = ({ onAddModule }) => {
       </div>
 
       <div className="bg-white rounded-2xl shadow-lg p-8 border border-emerald-100">
-        <label className="block text-sm font-medium text-emerald-900 mb-2">What should this training module be about?</label>
+        
+        {/* Track Selection */}
+        <div className="mb-6">
+            <label className="block text-sm font-medium text-emerald-900 mb-2">Select Course Track</label>
+            <select 
+                value={selectedTrack} 
+                onChange={(e) => setSelectedTrack(e.target.value as CourseTrack)}
+                className="w-full border border-slate-200 rounded-xl px-4 py-3 focus:border-emerald-500 outline-none bg-slate-50"
+            >
+                {Object.values(CourseTrack).map(track => (
+                    <option key={track} value={track}>{track}</option>
+                ))}
+            </select>
+        </div>
+
+        <label className="block text-sm font-medium text-emerald-900 mb-2">What should this module cover?</label>
         <div className="flex flex-col sm:flex-row gap-3">
           <input
             type="text"
             value={topic}
             onChange={(e) => setTopic(e.target.value)}
-            placeholder="e.g., How to host a product launch party..."
+            placeholder="e.g., Advanced Retailing Strategies..."
             className="flex-1 rounded-xl border-slate-200 shadow-sm focus:border-emerald-500 focus:ring focus:ring-emerald-200 transition-all px-4 py-3 outline-none border"
             disabled={isLoading}
           />
@@ -76,21 +92,6 @@ const CourseBuilder: React.FC<CourseBuilderProps> = ({ onAddModule }) => {
         {error && (
           <p className="text-red-500 text-sm mt-3 bg-red-50 p-3 rounded-lg">{error}</p>
         )}
-
-        <div className="mt-8 pt-8 border-t border-slate-100">
-          <h3 className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-4">Popular Ideas</h3>
-          <div className="flex flex-wrap gap-2">
-            {['Recruiting New FBOs', 'Social Media Marketing', 'Closing a Sale', 'Product Demo Tips'].map(tag => (
-              <button 
-                key={tag}
-                onClick={() => setTopic(tag)}
-                className="px-3 py-1.5 bg-slate-50 text-slate-600 text-sm rounded-full hover:bg-emerald-50 hover:text-emerald-700 transition-colors border border-slate-200"
-              >
-                {tag}
-              </button>
-            ))}
-          </div>
-        </div>
       </div>
     </div>
   );

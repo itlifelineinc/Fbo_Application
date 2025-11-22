@@ -11,7 +11,7 @@ import SalesPortal from './components/SalesPortal';
 import ChatPortal from './components/ChatPortal';
 import Login from './components/Login';
 import { INITIAL_COURSES, INITIAL_STUDENTS, INITIAL_MESSAGES } from './constants';
-import { Course, Module, Student, SaleRecord, UserRole, Message } from './types';
+import { Course, Module, Student, SaleRecord, UserRole, Message, CourseTrack } from './types';
 
 // --- Moved Components Outside App to prevent re-mounting on state changes ---
 
@@ -32,39 +32,59 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, currentUser, 
   );
 };
 
-const CourseList: React.FC<{ courses: Course[] }> = ({ courses }) => (
-  <div className="space-y-6">
-     <h1 className="text-3xl font-bold text-emerald-950 font-heading">Training Courses</h1>
-     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {courses.map(course => (
-          <div key={course.id} className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden flex flex-col group hover:shadow-md transition-shadow">
-             <div className="h-40 overflow-hidden relative">
-                <img src={course.thumbnailUrl} alt={course.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
-             </div>
-             <div className="p-6 flex-1 flex flex-col">
-                <h3 className="text-xl font-bold text-slate-800 mb-2">{course.title}</h3>
-                <p className="text-sm text-slate-500 mb-4 flex-1 line-clamp-2">{course.description}</p>
-                
-                <div className="space-y-2">
-                   <div className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Modules</div>
-                   {course.modules.map(m => (
-                      <Link 
-                        key={m.id} 
-                        to={`/classroom/${course.id}/${m.id}/${m.lessons[0].id}`}
-                        className="block p-3 rounded-lg bg-slate-50 hover:bg-emerald-50 hover:text-emerald-700 transition-colors text-sm font-medium text-slate-700 flex justify-between items-center"
-                      >
-                        <span>{m.title}</span>
-                        <span className="text-xs bg-white px-2 py-1 rounded border border-slate-200 text-slate-400">{m.lessons.length} lessons</span>
-                      </Link>
-                   ))}
+const CourseList: React.FC<{ courses: Course[] }> = ({ courses }) => {
+  // Group courses by track
+  const coursesByTrack = courses.reduce((acc, course) => {
+    if (!acc[course.track]) {
+      acc[course.track] = [];
+    }
+    acc[course.track].push(course);
+    return acc;
+  }, {} as Record<string, Course[]>);
+
+  return (
+    <div className="space-y-10">
+       <div className="text-center mb-8">
+          <h1 className="text-3xl font-bold text-emerald-950 font-heading">Training Portal</h1>
+          <p className="text-emerald-700 mt-2">Master the skills you need to grow your Forever business.</p>
+       </div>
+
+       {Object.keys(coursesByTrack).map((track) => (
+         <div key={track} className="space-y-4">
+            <h2 className="text-xl font-bold text-slate-800 border-l-4 border-emerald-500 pl-3 font-heading">{track}</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {coursesByTrack[track].map(course => (
+                <div key={course.id} className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden flex flex-col group hover:shadow-md transition-shadow">
+                  <div className="h-40 overflow-hidden relative">
+                      <img src={course.thumbnailUrl} alt={course.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
+                      <div className="absolute bottom-3 left-4 text-white font-bold font-heading text-lg shadow-black/50 drop-shadow-md">{course.title}</div>
+                  </div>
+                  <div className="p-6 flex-1 flex flex-col">
+                      <p className="text-sm text-slate-500 mb-4 flex-1 line-clamp-2">{course.description}</p>
+                      
+                      <div className="space-y-2">
+                        <div className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Modules ({course.modules.length})</div>
+                        {course.modules.map(m => (
+                            <Link 
+                              key={m.id} 
+                              to={`/classroom/${course.id}/${m.id}/${m.lessons[0].id}`}
+                              className="block p-3 rounded-lg bg-slate-50 hover:bg-emerald-50 hover:text-emerald-700 transition-colors text-sm font-medium text-slate-700 flex justify-between items-center"
+                            >
+                              <span className="truncate flex-1 mr-2">{m.title}</span>
+                              <span className="text-xs bg-white px-2 py-1 rounded border border-slate-200 text-slate-400 whitespace-nowrap">{m.lessons.length} lessons</span>
+                            </Link>
+                        ))}
+                      </div>
+                  </div>
                 </div>
-             </div>
-          </div>
-        ))}
-     </div>
-  </div>
-);
+              ))}
+            </div>
+         </div>
+       ))}
+    </div>
+  );
+};
 
 // --- Main App Component ---
 
@@ -77,7 +97,6 @@ const App: React.FC = () => {
   const [currentUser, setCurrentUser] = useState<Student | null>(null);
 
   const handleLogin = (handle: string, pass: string): boolean => {
-    // Add '@' if missing
     const formattedHandle = handle.startsWith('@') ? handle : `@${handle}`;
     const user = students.find(s => 
       s.handle.toLowerCase() === formattedHandle.toLowerCase() && 
@@ -95,9 +114,22 @@ const App: React.FC = () => {
     setCurrentUser(null);
   };
 
-  const handleAddModule = (newModule: Module) => {
+  const handleAddModule = (newModule: Module, track?: CourseTrack) => {
     const updatedCourses = [...courses];
-    updatedCourses[0].modules.push(newModule);
+    
+    // If admin provided a track, try to find a course in that track or create one
+    // For simplicity in this demo, we just add it to the first course that matches the track,
+    // or default to 'Welcome to Forever' if no track specified (or create new logic as needed)
+    // A robust system would let admins create COURSES, not just modules. 
+    // Here we assume modules are added to existing courses for simplicity.
+    
+    const targetCourseIndex = updatedCourses.findIndex(c => c.track === track);
+    if (targetCourseIndex !== -1) {
+        updatedCourses[targetCourseIndex].modules.push(newModule);
+    } else {
+        updatedCourses[0].modules.push(newModule); // Fallback
+    }
+
     setCourses(updatedCourses);
   };
 
@@ -105,58 +137,46 @@ const App: React.FC = () => {
     setStudents(prev => [...prev, newStudent]);
   };
 
-  // Function to update existing student data (e.g. Password Reset, CC update, Avatar)
   const handleUpdateStudent = (updatedStudent: Student) => {
     setStudents(prev => prev.map(s => s.id === updatedStudent.id ? updatedStudent : s));
-    
-    // If the updated user is the current user, update session state too
     if (currentUser && currentUser.id === updatedStudent.id) {
         setCurrentUser(updatedStudent);
     }
   };
 
-  // Function to delete a student (Super Admin only)
   const handleDeleteStudent = (studentId: string) => {
     setStudents(prev => prev.filter(s => s.id !== studentId));
   };
 
-  // Handle New Sale Submission
   const handleSubmitSale = (sale: SaleRecord) => {
     if (!currentUser) return;
-
-    // Create updated student object
     const updatedStudent = {
         ...currentUser,
         caseCredits: currentUser.caseCredits + sale.ccEarned,
         salesHistory: [sale, ...(currentUser.salesHistory || [])]
     };
-
-    // Update state
     handleUpdateStudent(updatedStudent);
   };
 
-  // Handle Chat Messaging
   const handleSendMessage = (newMessage: Message) => {
     setMessages(prev => [...prev, newMessage]);
   };
 
   const handleCompleteLesson = (moduleId: string) => {
-     // For demo, just log it. In real app, update currentUser + students list
+     // In a real app, this would update the specific user's progress.
+     // For this demo, we'll just update the currentUser state in memory if needed
+     // or trigger a notification.
      console.log("Lesson in module completed:", moduleId);
   };
 
   return (
     <HashRouter>
       <Routes>
-        {/* Public Routes */}
         <Route path="/join" element={<OnboardingWizard onEnroll={handleAddStudent} existingStudents={students} />} />
-        
-        {/* Root is Login if not authenticated, else redirect to dashboard */}
         <Route path="/" element={
            currentUser ? <Navigate to="/dashboard" replace /> : <Login onLogin={handleLogin} />
         } />
 
-        {/* Protected Routes */}
         <Route path="/dashboard" element={
             <ProtectedRoute currentUser={currentUser} onLogout={handleLogout}>
                 <Dashboard currentUser={currentUser!} students={students} />
@@ -180,7 +200,6 @@ const App: React.FC = () => {
             </ProtectedRoute>
         } />
         
-        {/* Only Admins & Sponsors can see list of students */}
         <Route path="/students" element={
             <ProtectedRoute currentUser={currentUser} onLogout={handleLogout}>
                 {currentUser?.role !== UserRole.STUDENT ? (
@@ -206,7 +225,6 @@ const App: React.FC = () => {
             </ProtectedRoute>
         } />
         
-        {/* Only Admins can use builder */}
         <Route path="/builder" element={
              <ProtectedRoute currentUser={currentUser} onLogout={handleLogout}>
                 {(currentUser?.role === UserRole.ADMIN || currentUser?.role === UserRole.SUPER_ADMIN) ? (

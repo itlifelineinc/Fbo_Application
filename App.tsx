@@ -7,9 +7,10 @@ import Classroom from './components/Classroom';
 import StudentsList from './components/StudentsList';
 import StudentProfile from './components/StudentProfile';
 import OnboardingWizard from './components/OnboardingWizard';
+import SalesPortal from './components/SalesPortal';
 import Login from './components/Login';
 import { INITIAL_COURSES, INITIAL_STUDENTS } from './constants';
-import { Course, Module, Student, UserRole } from './types';
+import { Course, Module, Student, SaleRecord, UserRole } from './types';
 
 const App: React.FC = () => {
   const [courses, setCourses] = useState<Course[]>(INITIAL_COURSES);
@@ -60,6 +61,21 @@ const App: React.FC = () => {
   // Function to delete a student (Super Admin only)
   const handleDeleteStudent = (studentId: string) => {
     setStudents(prev => prev.filter(s => s.id !== studentId));
+  };
+
+  // Handle New Sale Submission
+  const handleSubmitSale = (sale: SaleRecord) => {
+    if (!currentUser) return;
+
+    // Create updated student object
+    const updatedStudent = {
+        ...currentUser,
+        caseCredits: currentUser.caseCredits + sale.ccEarned,
+        salesHistory: [sale, ...(currentUser.salesHistory || [])]
+    };
+
+    // Update state
+    handleUpdateStudent(updatedStudent);
   };
 
   const handleCompleteLesson = (moduleId: string) => {
@@ -127,6 +143,7 @@ const App: React.FC = () => {
 
         {/* Protected Routes */}
         <Route path="/dashboard" element={<ProtectedRoute><Dashboard currentUser={currentUser!} students={students} /></ProtectedRoute>} />
+        <Route path="/sales" element={<ProtectedRoute><SalesPortal currentUser={currentUser!} onSubmitSale={handleSubmitSale} /></ProtectedRoute>} />
         
         {/* Only Admins & Sponsors can see list of students */}
         <Route path="/students" element={

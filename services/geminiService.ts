@@ -61,9 +61,6 @@ export const askAITutor = async (context: string, question: string, history: {ro
     If the answer is not in the context, use your general business knowledge but mention that it goes beyond the current lesson. keep answers concise (under 100 words).`;
 
     // Construct chat history for the model
-    // Note: The SDK chat format requires mapping our simplified history to the SDK's content format if using chats.create
-    // For a single turn with context, generateContent is sufficient and often simpler for "RAG-lite"
-    
     const response = await ai.models.generateContent({
       model: 'gemini-2.5-flash',
       contents: [
@@ -79,5 +76,49 @@ export const askAITutor = async (context: string, question: string, history: {ro
   } catch (error) {
     console.error("Gemini Tutor error:", error);
     return "Sorry, I'm having trouble connecting to the FBO network right now.";
+  }
+};
+
+// 3. Analyze Receipt Image
+export const analyzeReceipt = async (base64Image: string): Promise<{ amount: number, transactionId: string } | null> => {
+  try {
+    // Remove data URL prefix if present
+    const cleanBase64 = base64Image.split(',')[1] || base64Image;
+
+    const response = await ai.models.generateContent({
+      model: 'gemini-2.5-flash',
+      contents: [
+        {
+          parts: [
+            {
+                inlineData: {
+                    mimeType: 'image/jpeg', 
+                    data: cleanBase64
+                }
+            },
+            { text: "Analyze this receipt. Extract the Total Amount Paid (as a number) and the Transaction ID (or Receipt Number). Return JSON." }
+          ]
+        }
+      ],
+      config: {
+        responseMimeType: "application/json",
+        responseSchema: {
+            type: Type.OBJECT,
+            properties: {
+                amount: { type: Type.NUMBER },
+                transactionId: { type: Type.STRING }
+            },
+            required: ['amount']
+        }
+      }
+    });
+
+    if (response.text) {
+        return JSON.parse(response.text);
+    }
+    return null;
+  } catch (error) {
+    console.error("Gemini Receipt Analysis Error:", error);
+    return null;
   }
 };

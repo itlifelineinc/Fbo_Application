@@ -10,6 +10,17 @@ export interface QuizResult {
   answer: string;
 }
 
+export interface SaleRecord {
+  id: string;
+  date: string;
+  amount: number;
+  type: 'RETAIL' | 'WHOLESALE';
+  ccEarned: number;
+  receiptUrl?: string;
+  transactionId: string;
+  status: 'PENDING' | 'APPROVED' | 'REJECTED';
+}
+
 export interface Student {
   id: string;
   handle: string; // Unique identifier starting with @
@@ -24,6 +35,7 @@ export interface Student {
   quizResults?: QuizResult[];
   caseCredits: number; // Threshold for becoming a Sponsor (>= 2)
   avatarUrl?: string; // Profile picture data URL
+  salesHistory?: SaleRecord[]; // Record of submitted sales
 }
 
 export interface Lesson {

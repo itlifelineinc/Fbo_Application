@@ -1,0 +1,127 @@
+import React from 'react';
+import { Link, useLocation } from 'react-router-dom';
+import { Student, UserRole } from '../types';
+
+interface LayoutProps {
+  children: React.ReactNode;
+  currentUser: Student;
+  onLogout: () => void;
+}
+
+const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout }) => {
+  const location = useLocation();
+
+  const isActive = (path: string) => location.pathname === path;
+
+  // Role Checks
+  const isStudent = currentUser.role === UserRole.STUDENT;
+  const isAdminOrSuper = currentUser.role === UserRole.ADMIN || currentUser.role === UserRole.SUPER_ADMIN;
+
+  return (
+    <div className="flex h-screen bg-slate-50 overflow-hidden">
+      {/* Sidebar */}
+      <aside className="w-64 bg-emerald-900 text-white flex flex-col shadow-xl z-10">
+        <div className="p-6 border-b border-emerald-800">
+          <div className="flex items-center gap-2 font-bold text-xl tracking-tight">
+            <div className="w-8 h-8 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-full flex items-center justify-center text-emerald-900 shadow-lg">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-5 h-5">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+              </svg>
+            </div>
+            <span>FBO Academy</span>
+          </div>
+          <div className="mt-4 flex items-center gap-3 bg-emerald-800/50 p-3 rounded-lg">
+             <div className="w-8 h-8 rounded-full bg-emerald-100 text-emerald-800 flex items-center justify-center font-bold text-xs">
+                {currentUser.name.charAt(0)}
+             </div>
+             <div className="overflow-hidden">
+                <p className="text-xs font-medium truncate text-emerald-100">{currentUser.name}</p>
+                <p className="text-[10px] text-emerald-300 font-mono truncate">{currentUser.handle}</p>
+             </div>
+          </div>
+        </div>
+
+        <nav className="flex-1 py-6 px-3 space-y-1">
+          <NavItem to="/dashboard" icon={<HomeIcon />} label="Dashboard" active={isActive('/dashboard')} />
+          <NavItem to="/courses" icon={<BookOpenIcon />} label="My Training" active={isActive('/courses') || location.pathname.startsWith('/classroom')} />
+          
+          {/* Hide Students List from Students */}
+          {!isStudent && (
+             <NavItem to="/students" icon={<UsersIcon />} label={isAdminOrSuper ? "All Students" : "My Team"} active={isActive('/students')} />
+          )}
+          
+          {/* Admin Only */}
+          {isAdminOrSuper && (
+             <NavItem to="/builder" icon={<SparklesIcon />} label="Course Builder" active={isActive('/builder')} />
+          )}
+        </nav>
+
+        <div className="p-4 border-t border-emerald-800">
+          <button 
+            onClick={onLogout}
+            className="flex items-center gap-3 px-4 py-3 rounded-lg w-full text-emerald-300 hover:bg-emerald-800/50 hover:text-white transition-colors"
+          >
+            <ArrowRightOnRectangleIcon />
+            <span className="font-medium">Sign Out</span>
+          </button>
+        </div>
+      </aside>
+
+      {/* Main Content */}
+      <main className="flex-1 overflow-auto relative">
+        <div className="max-w-7xl mx-auto p-8">
+          {children}
+        </div>
+      </main>
+    </div>
+  );
+};
+
+const NavItem: React.FC<{ to: string; icon: React.ReactNode; label: string; active: boolean }> = ({ to, icon, label, active }) => (
+  <Link
+    to={to}
+    className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 group ${
+      active 
+        ? 'bg-emerald-800 text-white shadow-lg shadow-emerald-900/20' 
+        : 'text-emerald-100 hover:bg-emerald-800/50 hover:text-white'
+    }`}
+  >
+    <span className={`${active ? 'text-yellow-400' : 'text-emerald-400 group-hover:text-yellow-300'}`}>
+      {icon}
+    </span>
+    <span className="font-medium">{label}</span>
+  </Link>
+);
+
+// Icons
+const HomeIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+    <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" />
+  </svg>
+);
+
+const BookOpenIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+    <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" />
+  </svg>
+);
+
+const UsersIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+    <path strokeLinecap="round" strokeLinejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" />
+  </svg>
+);
+
+const SparklesIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+    <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.456-2.456L14.25 6l1.035-.259a3.375 3.375 0 002.456-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 00-2.456 2.456zM16.894 20.567L16.5 21.75l-.394-1.183a2.25 2.25 0 00-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 001.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 001.423 1.423l1.183.394-1.183.394a2.25 2.25 0 00-1.423 1.423z" />
+  </svg>
+);
+
+const ArrowRightOnRectangleIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75" />
+    </svg>
+);
+
+export default Layout;

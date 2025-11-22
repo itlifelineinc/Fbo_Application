@@ -9,9 +9,10 @@ import StudentProfile from './components/StudentProfile';
 import OnboardingWizard from './components/OnboardingWizard';
 import SalesPortal from './components/SalesPortal';
 import ChatPortal from './components/ChatPortal';
+import CommunityPortal from './components/CommunityPortal';
 import Login from './components/Login';
-import { INITIAL_COURSES, INITIAL_STUDENTS, INITIAL_MESSAGES } from './constants';
-import { Course, Module, Student, SaleRecord, UserRole, Message, CourseTrack } from './types';
+import { INITIAL_COURSES, INITIAL_STUDENTS, INITIAL_MESSAGES, INITIAL_POSTS, INITIAL_COHORTS } from './constants';
+import { Course, Module, Student, SaleRecord, UserRole, Message, CourseTrack, CommunityPost, CommunityComment, Cohort } from './types';
 
 // --- Moved Components Outside App to prevent re-mounting on state changes ---
 
@@ -92,6 +93,8 @@ const App: React.FC = () => {
   const [courses, setCourses] = useState<Course[]>(INITIAL_COURSES);
   const [students, setStudents] = useState<Student[]>(INITIAL_STUDENTS);
   const [messages, setMessages] = useState<Message[]>(INITIAL_MESSAGES);
+  const [posts, setPosts] = useState<CommunityPost[]>(INITIAL_POSTS);
+  const [cohorts, setCohorts] = useState<Cohort[]>(INITIAL_COHORTS);
   
   // Auth State
   const [currentUser, setCurrentUser] = useState<Student | null>(null);
@@ -116,20 +119,12 @@ const App: React.FC = () => {
 
   const handleAddModule = (newModule: Module, track?: CourseTrack) => {
     const updatedCourses = [...courses];
-    
-    // If admin provided a track, try to find a course in that track or create one
-    // For simplicity in this demo, we just add it to the first course that matches the track,
-    // or default to 'Welcome to Forever' if no track specified (or create new logic as needed)
-    // A robust system would let admins create COURSES, not just modules. 
-    // Here we assume modules are added to existing courses for simplicity.
-    
     const targetCourseIndex = updatedCourses.findIndex(c => c.track === track);
     if (targetCourseIndex !== -1) {
         updatedCourses[targetCourseIndex].modules.push(newModule);
     } else {
         updatedCourses[0].modules.push(newModule); // Fallback
     }
-
     setCourses(updatedCourses);
   };
 
@@ -162,10 +157,17 @@ const App: React.FC = () => {
     setMessages(prev => [...prev, newMessage]);
   };
 
+  const handleAddPost = (post: CommunityPost) => {
+      setPosts(prev => [post, ...prev]);
+  };
+
+  const handleAddComment = (postId: string, comment: CommunityComment) => {
+      setPosts(prev => prev.map(p => 
+          p.id === postId ? { ...p, comments: [...p.comments, comment] } : p
+      ));
+  };
+
   const handleCompleteLesson = (moduleId: string) => {
-     // In a real app, this would update the specific user's progress.
-     // For this demo, we'll just update the currentUser state in memory if needed
-     // or trigger a notification.
      console.log("Lesson in module completed:", moduleId);
   };
 
@@ -196,6 +198,18 @@ const App: React.FC = () => {
                     students={students} 
                     messages={messages} 
                     onSendMessage={handleSendMessage} 
+                />
+            </ProtectedRoute>
+        } />
+
+        <Route path="/community" element={
+            <ProtectedRoute currentUser={currentUser} onLogout={handleLogout}>
+                <CommunityPortal 
+                    currentUser={currentUser!}
+                    posts={posts}
+                    cohorts={cohorts}
+                    onAddPost={handleAddPost}
+                    onAddComment={handleAddComment}
                 />
             </ProtectedRoute>
         } />

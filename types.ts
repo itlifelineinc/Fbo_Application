@@ -55,6 +55,7 @@ export interface Student {
   caseCredits: number; // Threshold for becoming a Sponsor (>= 2)
   avatarUrl?: string; // Profile picture data URL
   salesHistory?: SaleRecord[]; // Record of submitted sales
+  cohortId?: string; // The ID of the training cohort they belong to
 }
 
 export interface Lesson {
@@ -86,4 +87,37 @@ export interface ChatMessage {
   role: 'user' | 'model';
   text: string;
   timestamp: number;
+}
+
+// Community Types
+export interface CommunityComment {
+  id: string;
+  authorHandle: string;
+  authorName: string;
+  authorAvatar?: string;
+  content: string;
+  timestamp: number;
+}
+
+export interface CommunityPost {
+  id: string;
+  authorHandle: string;
+  authorName: string;
+  authorRole: UserRole;
+  authorAvatar?: string;
+  content: string;
+  imageUrl?: string;
+  tags: string[]; // 'Product', 'Sales', 'Win', 'Question'
+  type: 'ANNOUNCEMENT' | 'QUESTION' | 'WIN' | 'DISCUSSION';
+  likes: number;
+  comments: CommunityComment[];
+  cohortId?: string; // If null, it's a Global Hub post
+  timestamp: number;
+}
+
+export interface Cohort {
+  id: string;
+  name: string;
+  description: string;
+  mentorHandle: string;
 }

@@ -1,4 +1,4 @@
-import { Course, Student, UserRole, Message, CourseTrack } from './types';
+import { Course, Student, UserRole, Message, CourseTrack, CommunityPost, Cohort } from './types';
 
 export const INITIAL_STUDENTS: Student[] = [
   {
@@ -15,6 +15,19 @@ export const INITIAL_STUDENTS: Student[] = [
     sponsorId: ''
   },
   {
+    id: 'admin_1',
+    handle: '@admin_support',
+    password: 'password123',
+    role: UserRole.ADMIN,
+    name: 'Support Admin',
+    email: 'support@fbo.com',
+    enrolledDate: '2021-01-01',
+    progress: 100,
+    completedModules: [],
+    caseCredits: 10,
+    sponsorId: '@forever_system'
+  },
+  {
     id: '1',
     handle: '@alice_success',
     password: 'password123',
@@ -26,7 +39,11 @@ export const INITIAL_STUDENTS: Student[] = [
     completedModules: ['m1'],
     sponsorId: '@forever_system',
     caseCredits: 4.5, 
-    quizResults: []
+    quizResults: [
+      { question: 'Primary Goal', answer: 'Financial Freedom' },
+      { question: 'Availability', answer: '10+ Hours/Week' }
+    ],
+    cohortId: 'cohort_jan_25'
   },
   {
     id: '2',
@@ -39,8 +56,30 @@ export const INITIAL_STUDENTS: Student[] = [
     progress: 15,
     completedModules: [],
     sponsorId: '@alice_success',
-    caseCredits: 0.5,
-    quizResults: []
+    caseCredits: 0.5, 
+    quizResults: [
+      { question: 'Primary Goal', answer: 'Extra Income' },
+      { question: 'Availability', answer: '5-10 Hours/Week' }
+    ],
+    cohortId: 'cohort_jan_25'
+  },
+  {
+    id: '3',
+    handle: '@charlie_diamond',
+    password: 'password123',
+    role: UserRole.SPONSOR,
+    name: 'Charlie Davis',
+    email: 'charlie@example.com',
+    enrolledDate: '2023-10-22',
+    progress: 88,
+    completedModules: ['m1', 'm2'],
+    sponsorId: '@forever_system',
+    caseCredits: 12.0, 
+    quizResults: [
+      { question: 'Primary Goal', answer: 'Product Discounts' },
+      { question: 'Availability', answer: '0-5 Hours/Week' }
+    ],
+    cohortId: 'cohort_feb_25'
   }
 ];
 
@@ -58,7 +97,7 @@ export const INITIAL_COURSES: Course[] = [
         description: 'Learn about Rex Maughan and the history of Aloe.',
         lessons: [
           { id: 'l1-1', title: 'Our Origins', type: 'TEXT', content: 'Forever Living Products was founded in 1978...', durationMinutes: 5 },
-          { id: 'l1-2', title: 'Vision & Values', type: 'VIDEO', content: 'https://www.youtube.com/embed/dQw4w9WgXcQ', durationMinutes: 10 } // Placeholder video
+          { id: 'l1-2', title: 'Vision & Values', type: 'VIDEO', content: 'https://www.youtube.com/embed/dQw4w9WgXcQ', durationMinutes: 10 } 
         ]
       }
     ]
@@ -177,5 +216,77 @@ export const INITIAL_MESSAGES: Message[] = [
         text: 'Thanks Alice! I am going through the product training now.',
         timestamp: Date.now() - 9000000,
         isRead: true
+    },
+    {
+        id: 'msg_3',
+        senderHandle: '@alice_success',
+        recipientHandle: 'GROUP_@alice_success',
+        text: 'Team meeting this Friday at 5 PM! We will discuss the new Aloe launch.',
+        timestamp: Date.now() - 500000,
+        isRead: false
+    }
+];
+
+export const INITIAL_COHORTS: Cohort[] = [
+    {
+        id: 'cohort_jan_25',
+        name: 'Cohort Jan 2025 - Detox',
+        description: 'Focus group for the new C9 Detox launch.',
+        mentorHandle: '@alice_success'
+    },
+    {
+        id: 'cohort_feb_25',
+        name: 'Cohort Feb 2025 - Skincare',
+        description: 'Mastering the infinite skincare range.',
+        mentorHandle: '@charlie_diamond'
+    }
+];
+
+export const INITIAL_POSTS: CommunityPost[] = [
+    {
+        id: 'post_1',
+        authorHandle: '@forever_system',
+        authorName: 'FBO Academy',
+        authorRole: UserRole.SUPER_ADMIN,
+        content: '🎉 Welcome to the new Global Community Hub! This is your place to connect, learn, and grow together.',
+        type: 'ANNOUNCEMENT',
+        tags: ['Update', 'Official'],
+        likes: 125,
+        comments: [],
+        timestamp: Date.now() - 86400000
+    },
+    {
+        id: 'post_2',
+        authorHandle: '@bob_builder',
+        authorName: 'Bob Smith',
+        authorRole: UserRole.STUDENT,
+        content: 'I just sold my first C9 pack! The customer found me via Instagram reels. Consitency pays off! 🚀',
+        type: 'WIN',
+        tags: ['Sales', 'Social Media', 'Win'],
+        likes: 14,
+        comments: [
+            {
+                id: 'c_1',
+                authorHandle: '@alice_success',
+                authorName: 'Alice Freeman',
+                content: 'Amazing work Bob! Keep that momentum going!',
+                timestamp: Date.now() - 3600000
+            }
+        ],
+        cohortId: 'cohort_jan_25', // Only visible in cohort
+        timestamp: Date.now() - 7200000
+    },
+    {
+        id: 'post_3',
+        authorHandle: '@bob_builder',
+        authorName: 'Bob Smith',
+        authorRole: UserRole.STUDENT,
+        content: 'Question about the Aloe Gel - A customer is asking if it is safe for kids. Can anyone clarify the dosage?',
+        type: 'QUESTION',
+        tags: ['Product Usage', 'Aloe Gel'],
+        likes: 2,
+        comments: [],
+        cohortId: 'cohort_jan_25',
+        timestamp: Date.now() - 100000
     }
 ];

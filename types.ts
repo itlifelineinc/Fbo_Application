@@ -21,6 +21,16 @@ export interface SaleRecord {
   status: 'PENDING' | 'APPROVED' | 'REJECTED';
 }
 
+export interface Message {
+  id: string;
+  senderHandle: string;
+  recipientHandle: string; // Can be a user handle OR a Group ID (e.g., 'GROUP_@sponsor')
+  text: string;
+  timestamp: number;
+  isRead: boolean;
+  isSystem?: boolean; // For broadcast notifications
+}
+
 export interface Student {
   id: string;
   handle: string; // Unique identifier starting with @

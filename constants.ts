@@ -1,4 +1,4 @@
-import { Course, Student, UserRole } from './types';
+import { Course, Student, UserRole, Message } from './types';
 
 export const INITIAL_STUDENTS: Student[] = [
   {
@@ -108,4 +108,31 @@ export const INITIAL_COURSES: Course[] = [
       }
     ]
   }
+];
+
+export const INITIAL_MESSAGES: Message[] = [
+    {
+        id: 'msg_1',
+        senderHandle: '@alice_success',
+        recipientHandle: '@bob_builder',
+        text: 'Welcome to the team Bob! Let me know if you need help with your first 2CC.',
+        timestamp: Date.now() - 10000000,
+        isRead: false
+    },
+    {
+        id: 'msg_2',
+        senderHandle: '@bob_builder',
+        recipientHandle: '@alice_success',
+        text: 'Thanks Alice! I am going through the product training now.',
+        timestamp: Date.now() - 9000000,
+        isRead: true
+    },
+    {
+        id: 'msg_3',
+        senderHandle: '@alice_success',
+        recipientHandle: 'GROUP_@alice_success',
+        text: 'Team meeting this Friday at 5 PM! We will discuss the new Aloe launch.',
+        timestamp: Date.now() - 500000,
+        isRead: false
+    }
 ];

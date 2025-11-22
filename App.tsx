@@ -8,13 +8,70 @@ import StudentsList from './components/StudentsList';
 import StudentProfile from './components/StudentProfile';
 import OnboardingWizard from './components/OnboardingWizard';
 import SalesPortal from './components/SalesPortal';
+import ChatPortal from './components/ChatPortal';
 import Login from './components/Login';
-import { INITIAL_COURSES, INITIAL_STUDENTS } from './constants';
-import { Course, Module, Student, SaleRecord, UserRole } from './types';
+import { INITIAL_COURSES, INITIAL_STUDENTS, INITIAL_MESSAGES } from './constants';
+import { Course, Module, Student, SaleRecord, UserRole, Message } from './types';
+
+// --- Moved Components Outside App to prevent re-mounting on state changes ---
+
+interface ProtectedRouteProps {
+  children: React.ReactNode;
+  currentUser: Student | null;
+  onLogout: () => void;
+}
+
+const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, currentUser, onLogout }) => {
+  if (!currentUser) {
+    return <Navigate to="/" replace />;
+  }
+  return (
+    <Layout currentUser={currentUser} onLogout={onLogout}>
+      {children}
+    </Layout>
+  );
+};
+
+const CourseList: React.FC<{ courses: Course[] }> = ({ courses }) => (
+  <div className="space-y-6">
+     <h1 className="text-3xl font-bold text-emerald-950 font-heading">Training Courses</h1>
+     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {courses.map(course => (
+          <div key={course.id} className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden flex flex-col group hover:shadow-md transition-shadow">
+             <div className="h-40 overflow-hidden relative">
+                <img src={course.thumbnailUrl} alt={course.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
+             </div>
+             <div className="p-6 flex-1 flex flex-col">
+                <h3 className="text-xl font-bold text-slate-800 mb-2">{course.title}</h3>
+                <p className="text-sm text-slate-500 mb-4 flex-1 line-clamp-2">{course.description}</p>
+                
+                <div className="space-y-2">
+                   <div className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Modules</div>
+                   {course.modules.map(m => (
+                      <Link 
+                        key={m.id} 
+                        to={`/classroom/${course.id}/${m.id}/${m.lessons[0].id}`}
+                        className="block p-3 rounded-lg bg-slate-50 hover:bg-emerald-50 hover:text-emerald-700 transition-colors text-sm font-medium text-slate-700 flex justify-between items-center"
+                      >
+                        <span>{m.title}</span>
+                        <span className="text-xs bg-white px-2 py-1 rounded border border-slate-200 text-slate-400">{m.lessons.length} lessons</span>
+                      </Link>
+                   ))}
+                </div>
+             </div>
+          </div>
+        ))}
+     </div>
+  </div>
+);
+
+// --- Main App Component ---
 
 const App: React.FC = () => {
   const [courses, setCourses] = useState<Course[]>(INITIAL_COURSES);
   const [students, setStudents] = useState<Student[]>(INITIAL_STUDENTS);
+  const [messages, setMessages] = useState<Message[]>(INITIAL_MESSAGES);
   
   // Auth State
   const [currentUser, setCurrentUser] = useState<Student | null>(null);
@@ -78,57 +135,15 @@ const App: React.FC = () => {
     handleUpdateStudent(updatedStudent);
   };
 
+  // Handle Chat Messaging
+  const handleSendMessage = (newMessage: Message) => {
+    setMessages(prev => [...prev, newMessage]);
+  };
+
   const handleCompleteLesson = (moduleId: string) => {
      // For demo, just log it. In real app, update currentUser + students list
      console.log("Lesson in module completed:", moduleId);
   };
-
-  // Protected Route Wrapper
-  const ProtectedRoute: React.FC<{children: React.ReactNode}> = ({children}) => {
-    if (!currentUser) {
-      return <Navigate to="/" replace />;
-    }
-    return (
-      <Layout currentUser={currentUser} onLogout={handleLogout}>
-        {children}
-      </Layout>
-    );
-  };
-
-  // Simple Course List Component (Visible to all logged in)
-  const CourseList: React.FC<{ courses: Course[] }> = ({ courses }) => (
-    <div className="space-y-6">
-       <h1 className="text-3xl font-bold text-emerald-950 font-heading">Training Courses</h1>
-       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {courses.map(course => (
-            <div key={course.id} className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden flex flex-col group hover:shadow-md transition-shadow">
-               <div className="h-40 overflow-hidden relative">
-                  <img src={course.thumbnailUrl} alt={course.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
-               </div>
-               <div className="p-6 flex-1 flex flex-col">
-                  <h3 className="text-xl font-bold text-slate-800 mb-2">{course.title}</h3>
-                  <p className="text-sm text-slate-500 mb-4 flex-1 line-clamp-2">{course.description}</p>
-                  
-                  <div className="space-y-2">
-                     <div className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Modules</div>
-                     {course.modules.map(m => (
-                        <Link 
-                          key={m.id} 
-                          to={`/classroom/${course.id}/${m.id}/${m.lessons[0].id}`}
-                          className="block p-3 rounded-lg bg-slate-50 hover:bg-emerald-50 hover:text-emerald-700 transition-colors text-sm font-medium text-slate-700 flex justify-between items-center"
-                        >
-                          <span>{m.title}</span>
-                          <span className="text-xs bg-white px-2 py-1 rounded border border-slate-200 text-slate-400">{m.lessons.length} lessons</span>
-                        </Link>
-                     ))}
-                  </div>
-               </div>
-            </div>
-          ))}
-       </div>
-    </div>
-  );
 
   return (
     <HashRouter>
@@ -142,18 +157,38 @@ const App: React.FC = () => {
         } />
 
         {/* Protected Routes */}
-        <Route path="/dashboard" element={<ProtectedRoute><Dashboard currentUser={currentUser!} students={students} /></ProtectedRoute>} />
-        <Route path="/sales" element={<ProtectedRoute><SalesPortal currentUser={currentUser!} onSubmitSale={handleSubmitSale} /></ProtectedRoute>} />
+        <Route path="/dashboard" element={
+            <ProtectedRoute currentUser={currentUser} onLogout={handleLogout}>
+                <Dashboard currentUser={currentUser!} students={students} />
+            </ProtectedRoute>
+        } />
+        
+        <Route path="/sales" element={
+            <ProtectedRoute currentUser={currentUser} onLogout={handleLogout}>
+                <SalesPortal currentUser={currentUser!} onSubmitSale={handleSubmitSale} />
+            </ProtectedRoute>
+        } />
+        
+        <Route path="/chat" element={
+            <ProtectedRoute currentUser={currentUser} onLogout={handleLogout}>
+                <ChatPortal 
+                    currentUser={currentUser!} 
+                    students={students} 
+                    messages={messages} 
+                    onSendMessage={handleSendMessage} 
+                />
+            </ProtectedRoute>
+        } />
         
         {/* Only Admins & Sponsors can see list of students */}
         <Route path="/students" element={
-            <ProtectedRoute>
+            <ProtectedRoute currentUser={currentUser} onLogout={handleLogout}>
                 {currentUser?.role !== UserRole.STUDENT ? (
                     <StudentsList 
                         currentUser={currentUser!} 
                         students={students} 
                         onAddStudent={handleAddStudent} 
-                        onUpdateStudent={handleUpdateStudent}
+                        onUpdateStudent={handleUpdateStudent} 
                         onDeleteStudent={handleDeleteStudent}
                     />
                 ) : <Navigate to="/dashboard" />}
@@ -161,7 +196,7 @@ const App: React.FC = () => {
         } />
         
         <Route path="/students/:studentId" element={
-            <ProtectedRoute>
+            <ProtectedRoute currentUser={currentUser} onLogout={handleLogout}>
                 <StudentProfile 
                     students={students} 
                     courses={courses} 
@@ -173,16 +208,23 @@ const App: React.FC = () => {
         
         {/* Only Admins can use builder */}
         <Route path="/builder" element={
-             <ProtectedRoute>
+             <ProtectedRoute currentUser={currentUser} onLogout={handleLogout}>
                 {(currentUser?.role === UserRole.ADMIN || currentUser?.role === UserRole.SUPER_ADMIN) ? (
                     <CourseBuilder onAddModule={handleAddModule} />
                 ) : <Navigate to="/dashboard" />}
              </ProtectedRoute>
         } />
         
-        <Route path="/courses" element={<ProtectedRoute><CourseList courses={courses} /></ProtectedRoute>} />
+        <Route path="/courses" element={
+            <ProtectedRoute currentUser={currentUser} onLogout={handleLogout}>
+                <CourseList courses={courses} />
+            </ProtectedRoute>
+        } />
+        
         <Route path="/classroom/:courseId/:moduleId/:lessonId" element={
-            <ProtectedRoute><Classroom courses={courses} onCompleteLesson={handleCompleteLesson} /></ProtectedRoute>
+            <ProtectedRoute currentUser={currentUser} onLogout={handleLogout}>
+                <Classroom courses={courses} onCompleteLesson={handleCompleteLesson} />
+            </ProtectedRoute>
         } />
       </Routes>
     </HashRouter>

@@ -15,7 +15,7 @@ const SalesPortal: React.FC<SalesPortalProps> = ({ currentUser, onSubmitSale }) 
   const [isScanning, setIsScanning] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Constants
+  // Constants based on FBO rules
   const RETAIL_DIVISOR = 346;
   const WHOLESALE_DIVISOR = 242;
 
@@ -34,14 +34,20 @@ const SalesPortal: React.FC<SalesPortalProps> = ({ currentUser, onSubmitSale }) 
         const base64 = reader.result as string;
         setReceiptImage(base64);
         
-        // Trigger AI Scan
+        // Trigger AI Scan using Gemini
         setIsScanning(true);
-        const result = await analyzeReceipt(base64);
-        setIsScanning(false);
-
-        if (result) {
-            if (result.amount) setAmount(result.amount.toString());
-            if (result.transactionId) setTransactionId(result.transactionId);
+        try {
+            const result = await analyzeReceipt(base64);
+            if (result) {
+                if (result.amount) setAmount(result.amount.toString());
+                if (result.transactionId) setTransactionId(result.transactionId);
+            } else {
+                console.log("AI could not extract data, please enter manually.");
+            }
+        } catch (e) {
+            console.error("Scan failed", e);
+        } finally {
+            setIsScanning(false);
         }
       };
       reader.readAsDataURL(file);
@@ -60,7 +66,7 @@ const SalesPortal: React.FC<SalesPortalProps> = ({ currentUser, onSubmitSale }) 
         ccEarned: currentCC,
         transactionId: transactionId,
         receiptUrl: receiptImage || undefined,
-        status: 'APPROVED' // Auto-approve for demo purposes
+        status: 'APPROVED' // In a real app, this might be PENDING
     };
 
     onSubmitSale(newSale);
@@ -69,7 +75,7 @@ const SalesPortal: React.FC<SalesPortalProps> = ({ currentUser, onSubmitSale }) 
     setAmount('');
     setTransactionId('');
     setReceiptImage(null);
-    alert(`Sale submitted! You earned ${currentCC} CC.`);
+    alert(`Sales Report Submitted! +${currentCC} CC added to your profile.`);
   };
 
   return (

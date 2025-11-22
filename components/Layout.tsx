@@ -52,16 +52,25 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout }) => {
           </button>
         </div>
 
+        {/* Clickable User Profile Section */}
         <div className="px-6 py-4 bg-emerald-800/30">
-           <div className="flex items-center gap-3 bg-emerald-800/50 p-3 rounded-lg border border-emerald-800">
-             <div className="w-8 h-8 rounded-full bg-emerald-100 text-emerald-800 flex items-center justify-center font-bold text-xs flex-shrink-0 font-heading">
-                {currentUser.name.charAt(0)}
+           <Link 
+             to={`/students/${currentUser.id}`}
+             onClick={() => setIsMobileMenuOpen(false)}
+             className="flex items-center gap-3 bg-emerald-800/50 p-3 rounded-lg border border-emerald-800 hover:bg-emerald-700/50 hover:border-emerald-600 transition-all cursor-pointer group"
+           >
+             <div className="w-8 h-8 rounded-full bg-emerald-100 text-emerald-800 flex items-center justify-center font-bold text-xs flex-shrink-0 font-heading overflow-hidden group-hover:scale-105 transition-transform">
+                {currentUser.avatarUrl ? (
+                    <img src={currentUser.avatarUrl} alt={currentUser.name} className="w-full h-full object-cover" />
+                ) : (
+                    currentUser.name.charAt(0)
+                )}
              </div>
              <div className="overflow-hidden">
-                <p className="text-xs font-medium truncate text-emerald-100">{currentUser.name}</p>
-                <p className="text-[10px] text-emerald-300 font-mono truncate">{currentUser.handle}</p>
+                <p className="text-xs font-medium truncate text-emerald-100 group-hover:text-white transition-colors">{currentUser.name}</p>
+                <p className="text-[10px] text-emerald-300 font-mono truncate group-hover:text-emerald-200 transition-colors">{currentUser.handle}</p>
              </div>
-          </div>
+          </Link>
         </div>
 
         <nav className="flex-1 py-6 px-3 space-y-1 overflow-y-auto">

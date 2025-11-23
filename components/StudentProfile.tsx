@@ -184,7 +184,7 @@ const StudentProfile: React.FC<StudentProfileProps> = ({ students, courses, curr
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
-        {/* Left Column: Course Progress & Credentials */}
+        {/* Left Column: Credentials (Course list removed from here) */}
         <div className="lg:col-span-2 space-y-6">
           
           {/* Credentials Card - Only visible to Self or Super Admin */}
@@ -248,74 +248,6 @@ const StudentProfile: React.FC<StudentProfileProps> = ({ students, courses, curr
                 )}
             </div>
           )}
-
-          <h2 className="text-lg md:text-xl font-bold text-emerald-950 font-heading">Enrolled Courses</h2>
-          {courses.map(course => {
-            const totalCourseModules = course.modules.length;
-            const completedInCourse = course.modules.filter(m => student.completedModules.includes(m.id)).length;
-            const courseProgress = totalCourseModules > 0 ? Math.round((completedInCourse / totalCourseModules) * 100) : 0;
-
-            return (
-              <div key={course.id} className="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden">
-                <div className="p-5 md:p-6 bg-slate-50/50 border-b border-slate-100">
-                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4">
-                        <div>
-                            <h3 className="font-bold text-base md:text-lg text-slate-800">{course.title}</h3>
-                            <p className="text-xs md:text-sm text-slate-500 line-clamp-1 mt-1">{course.description}</p>
-                        </div>
-                        <span className={`px-3 py-1 rounded-full text-xs font-bold border shadow-sm self-start ${
-                            courseProgress === 100 
-                            ? 'bg-emerald-100 text-emerald-800 border-emerald-200' 
-                            : 'bg-white text-slate-600 border-slate-200'
-                        }`}>
-                            {courseProgress}% Done
-                        </span>
-                    </div>
-                    
-                    <div className="w-full bg-slate-200 rounded-full h-2.5 mb-2">
-                        <div 
-                            className="bg-emerald-500 h-2.5 rounded-full transition-all duration-500" 
-                            style={{ width: `${courseProgress}%` }}
-                        ></div>
-                    </div>
-                    <div className="flex justify-between text-xs text-slate-500 font-medium">
-                        <span>{completedInCourse} of {totalCourseModules} modules completed</span>
-                        {courseProgress === 100 && <span className="text-emerald-600">Course Completed! 🏆</span>}
-                    </div>
-                </div>
-
-                <div className="divide-y divide-slate-100">
-                  {course.modules.map(module => {
-                    const isCompleted = student.completedModules.includes(module.id);
-                    return (
-                      <div key={module.id} className="p-4 flex items-center justify-between group hover:bg-slate-50 transition-colors">
-                         <div className="flex items-center gap-3">
-                            <div className={`w-6 h-6 md:w-7 md:h-7 rounded-full flex items-center justify-center border flex-shrink-0 ${
-                              isCompleted 
-                                ? 'bg-emerald-500 border-emerald-500 text-white' 
-                                : 'bg-white border-slate-300 text-transparent'
-                            }`}>
-                               <CheckIcon className="w-3.5 h-3.5" />
-                            </div>
-                            <div>
-                               <p className={`text-sm font-medium line-clamp-1 ${isCompleted ? 'text-emerald-900' : 'text-slate-600'}`}>
-                                 {module.title}
-                               </p>
-                               <p className="text-xs text-slate-400">{module.lessons.length} lessons</p>
-                            </div>
-                         </div>
-                         {isCompleted ? (
-                           <span className="text-[10px] md:text-xs font-medium text-emerald-600 bg-emerald-50 px-2 py-1 rounded flex-shrink-0">Completed</span>
-                         ) : (
-                           <span className="text-[10px] md:text-xs font-medium text-slate-400 flex-shrink-0">Pending</span>
-                         )}
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            );
-          })}
         </div>
 
         {/* Right Column: Visual Stats */}

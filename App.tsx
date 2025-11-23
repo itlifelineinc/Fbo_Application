@@ -159,22 +159,15 @@ const App: React.FC = () => {
       setPosts(prev => [post, ...prev]);
   };
 
-  // Updated Like Logic to Toggle
   const handleLikePost = (postId: string) => {
     if (!currentUser) return;
-    
     setPosts(prev => prev.map(p => {
         if (p.id === postId) {
             const hasLiked = p.likedBy.includes(currentUser.handle);
             const newLikedBy = hasLiked 
-                ? p.likedBy.filter(h => h !== currentUser.handle) // Unlike
-                : [...p.likedBy, currentUser.handle]; // Like
-            
-            return {
-                ...p,
-                likedBy: newLikedBy,
-                likes: newLikedBy.length
-            };
+                ? p.likedBy.filter(h => h !== currentUser.handle) 
+                : [...p.likedBy, currentUser.handle]; 
+            return { ...p, likedBy: newLikedBy, likes: newLikedBy.length };
         }
         return p;
     }));
@@ -200,7 +193,7 @@ const App: React.FC = () => {
 
         <Route path="/dashboard" element={
             <ProtectedRoute currentUser={currentUser} onLogout={handleLogout}>
-                <Dashboard currentUser={currentUser!} students={students} />
+                <Dashboard currentUser={currentUser!} students={students} courses={courses} />
             </ProtectedRoute>
         } />
         

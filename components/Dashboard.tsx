@@ -1,14 +1,15 @@
 import React, { useState } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, LineChart, Line } from 'recharts';
 import { Link, useNavigate } from 'react-router-dom';
-import { Student, UserRole } from '../types';
+import { Student, UserRole, Course } from '../types';
 
 interface DashboardProps {
   students: Student[];
   currentUser: Student;
+  courses: Course[];
 }
 
-const Dashboard: React.FC<DashboardProps> = ({ students, currentUser }) => {
+const Dashboard: React.FC<DashboardProps> = ({ students, currentUser, courses }) => {
   const navigate = useNavigate();
   const isStudent = currentUser.role === UserRole.STUDENT;
   const isSponsor = currentUser.role === UserRole.SPONSOR;
@@ -78,32 +79,83 @@ const Dashboard: React.FC<DashboardProps> = ({ students, currentUser }) => {
       {/* Main Grid Layout - Swapped columns for better spacing: Chart (Left 2/3), Widgets (Right 1/3) */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
           
-          {/* Left Column: Charts & Data (Takes 2 columns on desktop, 1 on mobile) */}
-          {/* min-w-0 is crucial for Recharts to resize properly in a grid */}
-          <div className="lg:col-span-2 bg-white p-6 rounded-2xl shadow-sm border border-slate-100 min-w-0">
-            <div className="flex justify-between items-center mb-6">
-                <h2 className="text-lg md:text-xl font-bold text-slate-800 font-heading">
-                    {isStudent ? 'Your Progress vs Goals' : 'Team Leaderboard'}
-                </h2>
+          {/* Left Column: Charts & Course List (Takes 2 columns on desktop, 1 on mobile) */}
+          <div className="lg:col-span-2 space-y-8 min-w-0">
+            
+            {/* Progress Chart */}
+            <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+                <div className="flex justify-between items-center mb-6">
+                    <h2 className="text-lg md:text-xl font-bold text-slate-800 font-heading">
+                        {isStudent ? 'Your Progress vs Goals' : 'Team Leaderboard'}
+                    </h2>
+                </div>
+                <div className="h-64 md:h-80 w-full">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                      <XAxis dataKey="name" axisLine={false} tickLine={false} dy={10} tick={{fill: '#64748b', fontSize: 12}} />
+                      <YAxis axisLine={false} tickLine={false} tick={{fill: '#64748b', fontSize: 12}} />
+                      <Tooltip 
+                        cursor={{fill: '#f1f5f9'}}
+                        contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                      />
+                      <Bar dataKey="progress" radius={[6, 6, 0, 0]} barSize={40}>
+                        {chartData.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.progress > 80 ? '#059669' : '#10b981'} />
+                        ))}
+                      </Bar>
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
             </div>
-            <div className="h-64 md:h-80 w-full">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
-                  <XAxis dataKey="name" axisLine={false} tickLine={false} dy={10} tick={{fill: '#64748b', fontSize: 12}} />
-                  <YAxis axisLine={false} tickLine={false} tick={{fill: '#64748b', fontSize: 12}} />
-                  <Tooltip 
-                    cursor={{fill: '#f1f5f9'}}
-                    contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-                  />
-                  <Bar dataKey="progress" radius={[6, 6, 0, 0]} barSize={40}>
-                    {chartData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.progress > 80 ? '#059669' : '#10b981'} />
-                    ))}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
+
+            {/* Enrolled Courses List */}
+            <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+                <h2 className="text-lg md:text-xl font-bold text-emerald-950 mb-4 font-heading">Enrolled Courses</h2>
+                <div className="space-y-4">
+                  {courses.map(course => {
+                    // Calculate progress logic
+                    const totalCourseModules = course.modules.length;
+                    const completedInCourse = course.modules.filter(m => currentUser.completedModules.includes(m.id)).length;
+                    const courseProgress = totalCourseModules > 0 ? Math.round((completedInCourse / totalCourseModules) * 100) : 0;
+
+                    return (
+                      <div key={course.id} className="border border-slate-100 rounded-xl p-4 hover:bg-slate-50 transition-colors flex flex-col sm:flex-row sm:items-center gap-4">
+                        {/* Thumbnail */}
+                        <div className="w-full sm:w-24 h-32 sm:h-16 rounded-lg bg-slate-200 overflow-hidden flex-shrink-0">
+                           <img src={course.thumbnailUrl} alt={course.title} className="w-full h-full object-cover" />
+                        </div>
+                        
+                        {/* Info */}
+                        <div className="flex-1 min-w-0">
+                           <div className="flex flex-wrap items-center gap-2 mb-1">
+                              <h3 className="font-bold text-slate-800 truncate text-sm md:text-base">{course.title}</h3>
+                              <span className="text-[10px] px-2 py-0.5 bg-slate-100 text-slate-500 rounded border border-slate-200">{course.track}</span>
+                           </div>
+                           
+                           {/* Progress Bar */}
+                           <div className="flex items-center gap-3">
+                             <div className="flex-1 h-2 bg-slate-200 rounded-full overflow-hidden">
+                                <div className="h-full bg-emerald-500 transition-all duration-500" style={{ width: `${courseProgress}%` }}></div>
+                             </div>
+                             <span className="text-xs font-bold text-emerald-700 w-10 text-right">{courseProgress}%</span>
+                           </div>
+                           <p className="text-xs text-slate-400 mt-1">{completedInCourse} of {totalCourseModules} modules completed</p>
+                        </div>
+
+                        {/* Action */}
+                        <Link 
+                            to={`/classroom/${course.id}/${course.modules[0]?.id}/${course.modules[0]?.lessons[0]?.id}`}
+                            className="w-full sm:w-auto bg-emerald-600 text-white text-sm font-bold py-2 px-4 rounded-lg hover:bg-emerald-700 transition-colors text-center whitespace-nowrap"
+                        >
+                            {courseProgress === 0 ? 'Start' : 'Continue'}
+                        </Link>
+                      </div>
+                    );
+                  })}
+                </div>
             </div>
+
           </div>
 
           {/* Right Column: Widgets (Takes 1 column on desktop, stacks on mobile) */}
@@ -114,7 +166,7 @@ const Dashboard: React.FC<DashboardProps> = ({ students, currentUser }) => {
                 <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
                     <div className="flex items-center gap-3 mb-4 text-emerald-800">
                         <div className="bg-emerald-100 p-2 rounded-lg"><MagnifyingGlassIcon /></div>
-                        <h3 className="font-bold text-lg font-heading">Quick User Lookup</h3>
+                        <h3 className="font-bold text-lg">Quick User Lookup</h3>
                     </div>
                     <p className="text-sm text-slate-500 mb-4">Find users instantly to manage passwords or roles.</p>
                     <div className="flex gap-2">

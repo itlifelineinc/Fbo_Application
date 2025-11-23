@@ -66,7 +66,7 @@ const Dashboard: React.FC<DashboardProps> = ({ students, currentUser, courses })
   const isAdmin = currentUser.role === UserRole.ADMIN || isSuperAdmin;
 
   // Filter Logic based on Role
-  let visibleStudents = students;
+  let visibleStudents = students || []; 
   if (isStudent) {
     visibleStudents = [currentUser]; // Can only see self
   } else if (isSponsor) {
@@ -75,20 +75,20 @@ const Dashboard: React.FC<DashboardProps> = ({ students, currentUser, courses })
   // Admin sees all (default)
 
   const averageProgress = visibleStudents.length > 0 
-    ? Math.round(visibleStudents.reduce((acc, s) => acc + s.progress, 0) / visibleStudents.length) 
+    ? Math.round(visibleStudents.reduce((acc, s) => acc + (s.progress || 0), 0) / visibleStudents.length) 
     : 0;
 
   // Chart Data for Team Leaderboard
   const chartData = visibleStudents.map(s => ({
-    name: s.name.split(' ')[0], 
-    progress: s.progress,
-    cc: s.caseCredits
+    name: s.name ? s.name.split(' ')[0] : 'Unknown', 
+    progress: s.progress || 0,
+    cc: s.caseCredits || 0
   }));
 
   // Personal Progress Data (Pie Chart)
-  const allModules = courses.flatMap(c => c.modules);
+  const allModules = courses.flatMap(c => c.modules || []);
   const totalModulesCount = allModules.length;
-  const completedCount = currentUser.completedModules.length;
+  const completedCount = currentUser.completedModules ? currentUser.completedModules.length : 0;
   const remainingCount = Math.max(0, totalModulesCount - completedCount);
   const calculatedProgress = totalModulesCount > 0 ? Math.round((completedCount / totalModulesCount) * 100) : 0;
 
@@ -108,8 +108,11 @@ const Dashboard: React.FC<DashboardProps> = ({ students, currentUser, courses })
 
   // Recommended Courses Logic
   const recommendedCourses = courses.filter(course => {
-      const isCompleted = course.modules.every(m => currentUser.completedModules.includes(m.id));
+      if (!course.modules) return false;
+      // Safely check completion using optional chaining
+      const isCompleted = course.modules.every(m => currentUser.completedModules?.includes(m.id));
       if (isCompleted) return false;
+      
       if (isStudent) return [CourseTrack.BASICS, CourseTrack.PRODUCT, CourseTrack.RANK].includes(course.track);
       return [CourseTrack.BUSINESS, CourseTrack.SALES, CourseTrack.LEADERSHIP].includes(course.track);
   }).slice(0, 2);
@@ -118,7 +121,7 @@ const Dashboard: React.FC<DashboardProps> = ({ students, currentUser, courses })
     <div className="space-y-8 animate-fade-in">
       <header>
         <h1 className="text-2xl md:text-3xl font-bold text-emerald-950 font-heading">
-            Welcome, {currentUser.name.split(' ')[0]}!
+            Welcome, {currentUser.name?.split(' ')[0]}!
         </h1>
         <p className="text-emerald-700 mt-2 text-sm md:text-base">
             {isAdmin 
@@ -148,7 +151,7 @@ const Dashboard: React.FC<DashboardProps> = ({ students, currentUser, courses })
         />
         <StatCard 
           title={isStudent ? "My CC" : "Total Team CC"} 
-          value={isStudent ? currentUser.caseCredits.toString() : visibleStudents.reduce((acc,s) => acc + s.caseCredits, 0).toFixed(1)} 
+          value={isStudent ? currentUser.caseCredits?.toString() : visibleStudents.reduce((acc,s) => acc + (s.caseCredits || 0), 0).toFixed(1)} 
           icon={<CurrencyDollarIcon />} 
           trend="Case Credits"
         />
@@ -194,8 +197,8 @@ const Dashboard: React.FC<DashboardProps> = ({ students, currentUser, courses })
                 {recommendedCourses.length > 0 ? (
                     <div className="space-y-4">
                     {recommendedCourses.map(course => {
-                        const totalCourseModules = course.modules.length;
-                        const completedInCourse = course.modules.filter(m => currentUser.completedModules.includes(m.id)).length;
+                        const totalCourseModules = course.modules?.length || 0;
+                        const completedInCourse = course.modules?.filter(m => currentUser.completedModules?.includes(m.id)).length || 0;
                         const courseProgress = totalCourseModules > 0 ? Math.round((completedInCourse / totalCourseModules) * 100) : 0;
 
                         return (
@@ -220,7 +223,7 @@ const Dashboard: React.FC<DashboardProps> = ({ students, currentUser, courses })
                             </div>
 
                             <Link 
-                                to={`/classroom/${course.id}/${course.modules[0]?.id}/${course.modules[0]?.lessons[0]?.id}`}
+                                to={`/classroom/${course.id}/${course.modules?.[0]?.id}/${course.modules?.[0]?.lessons?.[0]?.id}`}
                                 className="w-full sm:w-auto bg-slate-900 text-white text-sm font-bold py-3 px-6 rounded-xl hover:bg-slate-800 transition-colors text-center whitespace-nowrap shadow-md shadow-slate-200"
                             >
                                 {courseProgress === 0 ? 'Start Learning' : 'Continue'}
@@ -267,6 +270,7 @@ const Dashboard: React.FC<DashboardProps> = ({ students, currentUser, courses })
                     <span className="text-[10px] font-bold px-2 py-1 bg-slate-50 text-slate-400 rounded-md border border-slate-100 uppercase tracking-wide">Overview</span>
                 </div>
                 
+                {/* Fixed: Added min-w-0 to parent to prevent Recharts sizing issue */}
                 <div className="h-64 w-full relative z-10 min-w-0">
                    <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
@@ -285,16 +289,8 @@ const Dashboard: React.FC<DashboardProps> = ({ students, currentUser, courses })
                           <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />
                         ))}
                       </Pie>
-                      <Tooltip 
-                         contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)', padding: '8px 12px' }}
-                      />
-                      <Legend 
-                        verticalAlign="bottom" 
-                        height={36} 
-                        iconSize={8} 
-                        iconType="circle"
-                        wrapperStyle={{ paddingTop: '10px', fontSize: '12px', fontFamily: 'Jost, sans-serif' }}
-                      />
+                      <Tooltip contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)', padding: '8px 12px' }} />
+                      <Legend verticalAlign="bottom" height={36} iconSize={8} iconType="circle" wrapperStyle={{ paddingTop: '10px', fontSize: '12px', fontFamily: 'Jost, sans-serif' }} />
                     </PieChart>
                   </ResponsiveContainer>
                   <div className="absolute inset-0 flex items-center justify-center pointer-events-none pb-10">
@@ -329,15 +325,15 @@ const Dashboard: React.FC<DashboardProps> = ({ students, currentUser, courses })
                    <div className="space-y-4">
                      <div className="flex justify-between items-center text-sm border-b border-white/10 pb-3">
                         <span className="text-emerald-100 font-medium">Questions Asked</span>
-                        <span className="font-bold text-xl">{currentUser.learningStats.questionsAsked}</span>
+                        <span className="font-bold text-xl">{currentUser.learningStats?.questionsAsked || 0}</span>
                      </div>
                      <div className="flex justify-between items-center text-sm border-b border-white/10 pb-3">
                         <span className="text-emerald-100 font-medium">Total Time</span>
-                        <span className="font-bold text-xl">{formatTime(currentUser.learningStats.totalTimeSpent)}</span>
+                        <span className="font-bold text-xl">{formatTime(currentUser.learningStats?.totalTimeSpent || 0)}</span>
                      </div>
                      <div className="flex justify-between items-center text-sm pt-1">
                         <span className="text-emerald-100 font-medium">Learning Streak</span>
-                        <span className="font-bold text-yellow-400 flex items-center gap-1">{currentUser.learningStats.learningStreak} Days <span className="text-lg">🔥</span></span>
+                        <span className="font-bold text-yellow-400 flex items-center gap-1">{currentUser.learningStats?.learningStreak || 0} Days <span className="text-lg">🔥</span></span>
                      </div>
                    </div>
                  </div>

@@ -35,6 +35,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, currentUser, 
 
 const CourseList: React.FC<{ courses: Course[] }> = ({ courses }) => {
   const coursesByTrack = courses.reduce((acc, course) => {
+    if (!course) return acc; 
     if (!acc[course.track]) {
       acc[course.track] = [];
     }
@@ -64,15 +65,15 @@ const CourseList: React.FC<{ courses: Course[] }> = ({ courses }) => {
                       <p className="text-sm text-slate-500 mb-4 flex-1 line-clamp-2 dark:text-slate-400">{course.description}</p>
                       
                       <div className="space-y-2">
-                        <div className="text-xs font-semibold text-slate-400 uppercase tracking-wider dark:text-slate-500">Modules ({course.modules.length})</div>
-                        {course.modules.map(m => (
+                        <div className="text-xs font-semibold text-slate-400 uppercase tracking-wider dark:text-slate-500">Modules ({course.modules?.length || 0})</div>
+                        {course.modules?.map(m => (
                             <Link 
                               key={m.id} 
-                              to={`/classroom/${course.id}/${m.id}/${m.lessons[0].id}`}
+                              to={`/classroom/${course.id}/${m.id}/${m.lessons?.[0]?.id}`}
                               className="block p-3 rounded-lg bg-slate-50 hover:bg-emerald-50 hover:text-emerald-700 transition-colors text-sm font-medium text-slate-700 flex justify-between items-center dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-emerald-900/30 dark:hover:text-emerald-400"
                             >
                               <span className="truncate flex-1 mr-2">{m.title}</span>
-                              <span className="text-xs bg-white px-2 py-1 rounded border border-slate-200 text-slate-400 whitespace-nowrap dark:bg-slate-600 dark:border-slate-500 dark:text-slate-300">{m.lessons.length} lessons</span>
+                              <span className="text-xs bg-white px-2 py-1 rounded border border-slate-200 text-slate-400 whitespace-nowrap dark:bg-slate-600 dark:border-slate-500 dark:text-slate-300">{m.lessons?.length || 0} lessons</span>
                             </Link>
                         ))}
                       </div>
@@ -89,14 +90,15 @@ const CourseList: React.FC<{ courses: Course[] }> = ({ courses }) => {
 // --- Main App Component ---
 
 const App: React.FC = () => {
-  // Initialize State with Mock Data (Stand-alone Mode)
+  // Initialize State DIRECTLY with Mock Data (No fetching)
   const [courses, setCourses] = useState<Course[]>(INITIAL_COURSES);
   const [students, setStudents] = useState<Student[]>(INITIAL_STUDENTS);
   const [messages, setMessages] = useState<Message[]>(INITIAL_MESSAGES);
   const [posts, setPosts] = useState<CommunityPost[]>(INITIAL_POSTS);
   const [cohorts, setCohorts] = useState<Cohort[]>(INITIAL_COHORTS);
-  
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
+  
+  // Auth State
   const [currentUser, setCurrentUser] = useState<Student | null>(null);
 
   // Theme Effect
@@ -112,11 +114,9 @@ const App: React.FC = () => {
     setTheme(prev => prev === 'light' ? 'dark' : 'light');
   };
 
-  // 1. Authentication (Client-Side Logic)
+  // 1. Authentication (Purely Local)
   const handleLogin = async (handle: string, pass: string): Promise<boolean> => {
-    // Simulate network delay
-    await new Promise(resolve => setTimeout(resolve, 500));
-
+    // Instant check against local state
     const formattedHandle = handle.startsWith('@') ? handle : `@${handle}`;
     
     const user = students.find(s => 
@@ -125,7 +125,7 @@ const App: React.FC = () => {
     );
 
     if (user) {
-        // Local Streak Logic
+        // Local Streak Logic calculation
         const today = new Date().toISOString().split('T')[0];
         let newStreak = user.learningStats?.learningStreak || 0;
         const lastLogin = user.learningStats?.lastLoginDate || '';
@@ -148,7 +148,7 @@ const App: React.FC = () => {
             }
         };
 
-        // Update both local state and current user
+        // Update state
         setStudents(prev => prev.map(s => s.id === updatedUser.id ? updatedUser : s));
         setCurrentUser(updatedUser);
         return true;
@@ -160,7 +160,7 @@ const App: React.FC = () => {
     setCurrentUser(null);
   };
 
-  // 2. Data Management (Client-Side State Updates)
+  // 2. Data Management (Purely Local State Updates)
 
   const handleAddModule = (newModule: Module, track?: CourseTrack) => {
     const updatedCourses = [...courses];
@@ -193,7 +193,7 @@ const App: React.FC = () => {
     
     const updatedStudent = {
         ...currentUser,
-        caseCredits: currentUser.caseCredits + sale.ccEarned,
+        caseCredits: (currentUser.caseCredits || 0) + sale.ccEarned,
         salesHistory: [sale, ...(currentUser.salesHistory || [])]
     };
 
@@ -245,8 +245,10 @@ const App: React.FC = () => {
         ...currentUser,
         learningStats: {
             ...currentUser.learningStats,
-            totalTimeSpent: currentUser.learningStats.totalTimeSpent + seconds,
-            questionsAsked: currentUser.learningStats.questionsAsked + questions
+            totalTimeSpent: (currentUser.learningStats?.totalTimeSpent || 0) + seconds,
+            questionsAsked: (currentUser.learningStats?.questionsAsked || 0) + questions,
+            learningStreak: currentUser.learningStats?.learningStreak || 0,
+            lastLoginDate: currentUser.learningStats?.lastLoginDate || ''
         }
     };
     handleUpdateStudent(updatedStudent);
@@ -254,11 +256,11 @@ const App: React.FC = () => {
 
   const handleCompleteLesson = (moduleId: string) => {
      if(!currentUser) return;
-     if(!currentUser.completedModules.includes(moduleId)) {
+     if(!currentUser.completedModules?.includes(moduleId)) {
          const updatedStudent = {
              ...currentUser,
-             completedModules: [...currentUser.completedModules, moduleId],
-             progress: Math.min(100, currentUser.progress + 5)
+             completedModules: [...(currentUser.completedModules || []), moduleId],
+             progress: Math.min(100, (currentUser.progress || 0) + 5)
          };
          handleUpdateStudent(updatedStudent);
      }

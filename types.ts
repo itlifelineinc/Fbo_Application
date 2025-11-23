@@ -66,13 +66,27 @@ export interface Student {
   learningStats: LearningStats;
 }
 
+export interface QuestionItem {
+  question: string;
+  options: string[];
+  correctAnswer: number; // Index of correct option
+}
+
 export interface Lesson {
   id: string;
   title: string;
   type: 'TEXT' | 'VIDEO' | 'QUIZ';
-  content: string; // Markdown content or Video URL
+  content: string; // Core Markdown content or Video URL
   durationMinutes: number;
   completed?: boolean;
+  
+  // Modern Chapter Structure Fields
+  headerImageUrl?: string;
+  summary?: string;
+  objectives?: string[];
+  actionSteps?: string[]; // Checklist items
+  pdfUrl?: string;
+  quizQuestions?: QuestionItem[]; // Mini knowledge check
 }
 
 export interface Module {

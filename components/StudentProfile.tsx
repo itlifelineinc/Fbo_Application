@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Student, Course, UserRole } from '../types';
-import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
+// Removed Recharts import as stats moved to dashboard
 
 interface StudentProfileProps {
   students: Student[];
@@ -64,19 +64,11 @@ const StudentProfile: React.FC<StudentProfileProps> = ({ students, courses, curr
   // Access control: Super Admin can see all, User can see own. Regular Admin cannot see passwords anymore.
   const canViewCredentials = isOwnProfile || isSuperAdmin;
 
-  // Calculate derived stats
+  // Stats moved to dashboard
   const allModules = courses.flatMap(c => c.modules);
   const totalModulesCount = allModules.length;
   const completedCount = student.completedModules.length;
-  const remainingCount = Math.max(0, totalModulesCount - completedCount);
   const calculatedProgress = totalModulesCount > 0 ? Math.round((completedCount / totalModulesCount) * 100) : 0;
-
-  const chartData = [
-    { name: 'Completed', value: completedCount },
-    { name: 'Remaining', value: remainingCount },
-  ];
-  
-  const COLORS = ['#059669', '#cbd5e1'];
 
   return (
     <div className="space-y-6 md:space-y-8 animate-fade-in">
@@ -183,9 +175,9 @@ const StudentProfile: React.FC<StudentProfileProps> = ({ students, courses, curr
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
-        {/* Left Column: Credentials (Course list removed from here) */}
-        <div className="lg:col-span-2 space-y-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8">
+        {/* Left Column: Credentials */}
+        <div className="space-y-6">
           
           {/* Credentials Card - Only visible to Self or Super Admin */}
           {canViewCredentials && (
@@ -213,7 +205,7 @@ const StudentProfile: React.FC<StudentProfileProps> = ({ students, courses, curr
                             value={newPassword}
                             onChange={(e) => setNewPassword(e.target.value)}
                             placeholder="Enter new password"
-                            className="px-4 py-2 rounded-lg border border-slate-300 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 outline-none text-sm w-full sm:w-auto flex-1"
+                            className="px-4 py-2 rounded-lg border border-slate-300 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 outline-none text-sm w-full sm:w-auto flex-1 bg-white text-slate-900"
                         />
                         <div className="flex gap-2 w-full sm:w-auto">
                             <button 
@@ -249,65 +241,6 @@ const StudentProfile: React.FC<StudentProfileProps> = ({ students, courses, curr
             </div>
           )}
         </div>
-
-        {/* Right Column: Visual Stats */}
-        <div className="space-y-6">
-          <div className="bg-white rounded-xl shadow-sm border border-slate-100 p-6">
-            <h2 className="text-lg font-bold text-emerald-950 mb-4 font-heading">Engagement Overview</h2>
-            <div className="h-64 w-full relative">
-               <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={chartData}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={60}
-                    outerRadius={80}
-                    paddingAngle={5}
-                    dataKey="value"
-                    stroke="none"
-                  >
-                    {chartData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                    ))}
-                  </Pie>
-                  <Tooltip 
-                     contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-                  />
-                  <Legend verticalAlign="bottom" height={36} />
-                </PieChart>
-              </ResponsiveContainer>
-              <div className="absolute inset-0 flex items-center justify-center pointer-events-none pb-8">
-                 <div className="text-center">
-                    <span className="block text-3xl font-bold text-emerald-800 font-heading">{calculatedProgress}%</span>
-                    <span className="text-xs text-slate-400">Total</span>
-                 </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-gradient-to-br from-emerald-900 to-teal-900 rounded-xl shadow-lg p-6 text-white relative overflow-hidden">
-             <div className="relative z-10">
-               <h3 className="font-bold text-lg mb-2 font-heading">AI Tutor Stats</h3>
-               <p className="text-emerald-100 text-sm mb-4">Based on recent interactions</p>
-               
-               <div className="space-y-3">
-                 <div className="flex justify-between items-center text-sm border-b border-white/10 pb-2">
-                    <span className="text-emerald-200">Questions Asked</span>
-                    <span className="font-semibold">12</span>
-                 </div>
-                 <div className="flex justify-between items-center text-sm border-b border-white/10 pb-2">
-                    <span className="text-emerald-200">Avg. Lesson Time</span>
-                    <span className="font-semibold">8m 45s</span>
-                 </div>
-                 <div className="flex justify-between items-center text-sm">
-                    <span className="text-emerald-200">Learning Streak</span>
-                    <span className="font-semibold text-yellow-400">3 Days 🔥</span>
-                 </div>
-               </div>
-             </div>
-          </div>
-        </div>
       </div>
     </div>
   );
@@ -317,12 +250,6 @@ const EnvelopeIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
     <path d="M3 4a2 2 0 00-2 2v1.161l8.441 4.221a1.25 1.25 0 001.118 0L19 7.162V6a2 2 0 00-2-2H3z" />
     <path d="M19 8.839l-7.77 3.885a2.75 2.75 0 01-2.46 0L1 8.839V14a2 2 0 002 2h14a2 2 0 002-2V8.839z" />
-  </svg>
-);
-
-const CheckIcon = ({ className }: { className?: string }) => (
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className={className || "w-5 h-5"}>
-    <path fillRule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z" clipRule="evenodd" />
   </svg>
 );
 

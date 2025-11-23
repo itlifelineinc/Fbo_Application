@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, LineChart, Line } from 'recharts';
+import React from 'react';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, PieChart, Pie, Legend } from 'recharts';
 import { Link, useNavigate } from 'react-router-dom';
-import { Student, UserRole, Course } from '../types';
+import { Student, UserRole, Course, CourseTrack } from '../types';
 
 interface DashboardProps {
   students: Student[];
@@ -29,30 +29,59 @@ const Dashboard: React.FC<DashboardProps> = ({ students, currentUser, courses })
     ? Math.round(visibleStudents.reduce((acc, s) => acc + s.progress, 0) / visibleStudents.length) 
     : 0;
 
-  // Chart Data
+  // Chart Data for Team Leaderboard
   const chartData = visibleStudents.map(s => ({
     name: s.name.split(' ')[0], 
     progress: s.progress,
     cc: s.caseCredits
   }));
 
+  // Personal Progress Data (Pie Chart)
+  const allModules = courses.flatMap(c => c.modules);
+  const totalModulesCount = allModules.length;
+  const completedCount = currentUser.completedModules.length;
+  const remainingCount = Math.max(0, totalModulesCount - completedCount);
+  const calculatedProgress = totalModulesCount > 0 ? Math.round((completedCount / totalModulesCount) * 100) : 0;
+
+  const pieData = [
+    { name: 'Completed', value: completedCount },
+    { name: 'Remaining', value: remainingCount },
+  ];
+  const PIE_COLORS = ['#059669', '#e2e8f0'];
+
+  // Recommended Courses Logic
+  const recommendedCourses = courses.filter(course => {
+      // Basic filters: Course must have modules and not be fully completed
+      const isCompleted = course.modules.every(m => currentUser.completedModules.includes(m.id));
+      if (isCompleted) return false;
+
+      // Role-based recommendations
+      if (isStudent) {
+          // Students need Basics and Product knowledge first
+          return [CourseTrack.BASICS, CourseTrack.PRODUCT, CourseTrack.RANK].includes(course.track);
+      } else {
+          // Sponsors/Admins need Business, Sales, Leadership
+          return [CourseTrack.BUSINESS, CourseTrack.SALES, CourseTrack.LEADERSHIP].includes(course.track);
+      }
+  }).slice(0, 2); // Limit to 2 recommendations
+
   return (
     <div className="space-y-8 animate-fade-in">
       <header>
         <h1 className="text-2xl md:text-3xl font-bold text-emerald-950 font-heading">
-            {isAdmin ? 'System Dashboard' : isSponsor ? 'Team Dashboard' : 'My Dashboard'}
+            Welcome, {currentUser.name.split(' ')[0]}!
         </h1>
         <p className="text-emerald-700 mt-2 text-sm md:text-base">
             {isAdmin 
                 ? "Platform-wide analytics and control center." 
                 : isSponsor 
                 ? `Tracking ${visibleStudents.length} members in your downline.` 
-                : "Your personal growth and learning tracker."
+                : "Here is your progress overview for today."
             }
         </p>
       </header>
 
-      {/* Stats Cards - Dynamic based on Role */}
+      {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
         {!isStudent && (
             <StatCard 
@@ -64,7 +93,7 @@ const Dashboard: React.FC<DashboardProps> = ({ students, currentUser, courses })
         )}
         <StatCard 
           title={isStudent ? "My Completion" : "Avg. Team Completion"} 
-          value={isStudent ? `${currentUser.progress}%` : `${averageProgress}%`} 
+          value={isStudent ? `${calculatedProgress}%` : `${averageProgress}%`} 
           icon={<ChartBarIcon />}
           trend="Based on assigned courses" 
         />
@@ -76,17 +105,17 @@ const Dashboard: React.FC<DashboardProps> = ({ students, currentUser, courses })
         />
       </div>
 
-      {/* Main Grid Layout - Swapped columns for better spacing: Chart (Left 2/3), Widgets (Right 1/3) */}
+      {/* Main Grid Layout - Chart Left (2/3), Widgets Right (1/3) */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
           
-          {/* Left Column: Charts & Course List (Takes 2 columns on desktop, 1 on mobile) */}
+          {/* Left Column: Charts & Course List */}
           <div className="lg:col-span-2 space-y-8 min-w-0">
             
-            {/* Progress Chart */}
+            {/* Progress Chart (Team or Personal) */}
             <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
                 <div className="flex justify-between items-center mb-6">
                     <h2 className="text-lg md:text-xl font-bold text-slate-800 font-heading">
-                        {isStudent ? 'Your Progress vs Goals' : 'Team Leaderboard'}
+                        {isStudent ? 'Your Progress' : 'Team Leaderboard'}
                     </h2>
                 </div>
                 <div className="h-64 md:h-80 w-full">
@@ -109,56 +138,56 @@ const Dashboard: React.FC<DashboardProps> = ({ students, currentUser, courses })
                 </div>
             </div>
 
-            {/* Enrolled Courses List */}
+            {/* Recommended Courses List */}
             <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
-                <h2 className="text-lg md:text-xl font-bold text-emerald-950 mb-4 font-heading">Enrolled Courses</h2>
-                <div className="space-y-4">
-                  {courses.map(course => {
-                    // Calculate progress logic
-                    const totalCourseModules = course.modules.length;
-                    const completedInCourse = course.modules.filter(m => currentUser.completedModules.includes(m.id)).length;
-                    const courseProgress = totalCourseModules > 0 ? Math.round((completedInCourse / totalCourseModules) * 100) : 0;
+                <h2 className="text-lg md:text-xl font-bold text-emerald-950 mb-4 font-heading">Recommended for You</h2>
+                {recommendedCourses.length > 0 ? (
+                    <div className="space-y-4">
+                    {recommendedCourses.map(course => {
+                        const totalCourseModules = course.modules.length;
+                        const completedInCourse = course.modules.filter(m => currentUser.completedModules.includes(m.id)).length;
+                        const courseProgress = totalCourseModules > 0 ? Math.round((completedInCourse / totalCourseModules) * 100) : 0;
 
-                    return (
-                      <div key={course.id} className="border border-slate-100 rounded-xl p-4 hover:bg-slate-50 transition-colors flex flex-col sm:flex-row sm:items-center gap-4">
-                        {/* Thumbnail */}
-                        <div className="w-full sm:w-24 h-32 sm:h-16 rounded-lg bg-slate-200 overflow-hidden flex-shrink-0">
-                           <img src={course.thumbnailUrl} alt={course.title} className="w-full h-full object-cover" />
-                        </div>
-                        
-                        {/* Info */}
-                        <div className="flex-1 min-w-0">
-                           <div className="flex flex-wrap items-center gap-2 mb-1">
-                              <h3 className="font-bold text-slate-800 truncate text-sm md:text-base">{course.title}</h3>
-                              <span className="text-[10px] px-2 py-0.5 bg-slate-100 text-slate-500 rounded border border-slate-200">{course.track}</span>
-                           </div>
-                           
-                           {/* Progress Bar */}
-                           <div className="flex items-center gap-3">
-                             <div className="flex-1 h-2 bg-slate-200 rounded-full overflow-hidden">
-                                <div className="h-full bg-emerald-500 transition-all duration-500" style={{ width: `${courseProgress}%` }}></div>
-                             </div>
-                             <span className="text-xs font-bold text-emerald-700 w-10 text-right">{courseProgress}%</span>
-                           </div>
-                           <p className="text-xs text-slate-400 mt-1">{completedInCourse} of {totalCourseModules} modules completed</p>
-                        </div>
+                        return (
+                        <div key={course.id} className="border border-slate-100 rounded-xl p-4 hover:bg-slate-50 transition-colors flex flex-col sm:flex-row sm:items-center gap-4">
+                            <div className="w-full sm:w-24 h-32 sm:h-16 rounded-lg bg-slate-200 overflow-hidden flex-shrink-0">
+                            <img src={course.thumbnailUrl} alt={course.title} className="w-full h-full object-cover" />
+                            </div>
+                            
+                            <div className="flex-1 min-w-0">
+                            <div className="flex flex-wrap items-center gap-2 mb-1">
+                                <h3 className="font-bold text-slate-800 truncate text-sm md:text-base">{course.title}</h3>
+                                <span className="text-[10px] px-2 py-0.5 bg-slate-100 text-slate-500 rounded border border-slate-200">{course.track}</span>
+                            </div>
+                            
+                            <div className="flex items-center gap-3">
+                                <div className="flex-1 h-2 bg-slate-200 rounded-full overflow-hidden">
+                                    <div className="h-full bg-emerald-500 transition-all duration-500" style={{ width: `${courseProgress}%` }}></div>
+                                </div>
+                                <span className="text-xs font-bold text-emerald-700 w-10 text-right">{courseProgress}%</span>
+                            </div>
+                            <p className="text-xs text-slate-400 mt-1">{completedInCourse} of {totalCourseModules} modules completed</p>
+                            </div>
 
-                        {/* Action */}
-                        <Link 
-                            to={`/classroom/${course.id}/${course.modules[0]?.id}/${course.modules[0]?.lessons[0]?.id}`}
-                            className="w-full sm:w-auto bg-emerald-600 text-white text-sm font-bold py-2 px-4 rounded-lg hover:bg-emerald-700 transition-colors text-center whitespace-nowrap"
-                        >
-                            {courseProgress === 0 ? 'Start' : 'Continue'}
-                        </Link>
-                      </div>
-                    );
-                  })}
-                </div>
+                            <Link 
+                                to={`/classroom/${course.id}/${course.modules[0]?.id}/${course.modules[0]?.lessons[0]?.id}`}
+                                className="w-full sm:w-auto bg-emerald-600 text-white text-sm font-bold py-2 px-4 rounded-lg hover:bg-emerald-700 transition-colors text-center whitespace-nowrap"
+                            >
+                                {courseProgress === 0 ? 'Start' : 'Continue'}
+                            </Link>
+                        </div>
+                        );
+                    })}
+                    </div>
+                ) : (
+                    <div className="text-center py-8 text-slate-400 text-sm">
+                        No specific recommendations at this moment. Great job staying up to date!
+                    </div>
+                )}
             </div>
-
           </div>
 
-          {/* Right Column: Widgets (Takes 1 column on desktop, stacks on mobile) */}
+          {/* Right Column: Widgets */}
           <div className="space-y-6 min-w-0">
             
             {/* Quick User Search Widget (Super Admin Only) */}
@@ -166,9 +195,8 @@ const Dashboard: React.FC<DashboardProps> = ({ students, currentUser, courses })
                 <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
                     <div className="flex items-center gap-3 mb-4 text-emerald-800">
                         <div className="bg-emerald-100 p-2 rounded-lg"><MagnifyingGlassIcon /></div>
-                        <h3 className="font-bold text-lg">Quick User Lookup</h3>
+                        <h3 className="font-bold text-lg font-heading">Quick User Lookup</h3>
                     </div>
-                    <p className="text-sm text-slate-500 mb-4">Find users instantly to manage passwords or roles.</p>
                     <div className="flex gap-2">
                         <Link 
                             to="/students" 
@@ -181,21 +209,82 @@ const Dashboard: React.FC<DashboardProps> = ({ students, currentUser, courses })
                 </div>
             )}
 
-            {/* Recruitment Widget - Visible to Sponsor & Admin */}
+            {/* Engagement Overview (Pie Chart) - Moved from Profile */}
+            <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
+                <h2 className="text-lg font-bold text-emerald-950 mb-4 font-heading">Engagement Overview</h2>
+                <div className="h-48 w-full relative">
+                   <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={pieData}
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={50}
+                        outerRadius={70}
+                        paddingAngle={5}
+                        dataKey="value"
+                        stroke="none"
+                      >
+                        {pieData.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />
+                        ))}
+                      </Pie>
+                      <Tooltip 
+                         contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                      />
+                      <Legend verticalAlign="bottom" height={36} iconSize={8} />
+                    </PieChart>
+                  </ResponsiveContainer>
+                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none pb-8">
+                     <div className="text-center">
+                        <span className="block text-2xl font-bold text-emerald-800 font-heading">{calculatedProgress}%</span>
+                        <span className="text-[10px] text-slate-400 uppercase tracking-wider">Total</span>
+                     </div>
+                  </div>
+                </div>
+                <p className="text-xs text-center text-slate-500 mt-2">
+                    {completedCount} modules completed out of {totalModulesCount} total available.
+                </p>
+            </div>
+
+            {/* AI Tutor Stats - Moved from Profile */}
+            <div className="bg-gradient-to-br from-emerald-900 to-teal-900 rounded-2xl shadow-lg p-6 text-white relative overflow-hidden">
+                 <div className="relative z-10">
+                   <h3 className="font-bold text-lg mb-2 font-heading">AI Tutor Stats</h3>
+                   <p className="text-emerald-100 text-sm mb-4">Based on recent interactions</p>
+                   
+                   <div className="space-y-3">
+                     <div className="flex justify-between items-center text-sm border-b border-white/10 pb-2">
+                        <span className="text-emerald-200">Questions Asked</span>
+                        <span className="font-semibold">12</span>
+                     </div>
+                     <div className="flex justify-between items-center text-sm border-b border-white/10 pb-2">
+                        <span className="text-emerald-200">Avg. Lesson Time</span>
+                        <span className="font-semibold">8m 45s</span>
+                     </div>
+                     <div className="flex justify-between items-center text-sm">
+                        <span className="text-emerald-200">Learning Streak</span>
+                        <span className="font-semibold text-yellow-400">3 Days 🔥</span>
+                     </div>
+                   </div>
+                 </div>
+            </div>
+
+            {/* Enrollment Widget - Fixed Height Issue */}
             {!isStudent && (
-                <div className="bg-gradient-to-br from-emerald-600 to-teal-700 rounded-2xl shadow-lg p-6 text-white relative overflow-hidden group">
-                    <div className="relative z-10 h-full flex flex-col justify-between">
+                <div className="bg-gradient-to-br from-emerald-600 to-teal-700 rounded-2xl shadow-lg p-6 text-white relative overflow-hidden group h-auto">
+                    <div className="relative z-10 flex flex-col justify-between gap-6">
                         <div>
                             <h2 className="text-xl font-bold mb-2 font-heading">Enroll New FBO</h2>
                             <p className="text-emerald-100 text-sm">Grow your business by inviting new members.</p>
                         </div>
                         
-                        <div className="mt-6 p-4 bg-white/10 rounded-xl backdrop-blur-sm border border-white/20">
+                        <div className="bg-white/10 rounded-xl backdrop-blur-sm border border-white/20 p-4">
                             <div className="text-xs text-emerald-200 uppercase font-semibold tracking-wider mb-2">Your Sponsor Handle</div>
-                            <div className="flex gap-2 items-center bg-black/20 rounded-lg p-2 text-sm font-mono text-emerald-100 truncate w-full">
+                            <div className="flex gap-2 items-center bg-black/20 rounded-lg p-2 text-sm font-mono text-emerald-100 truncate w-full mb-3">
                                 <span className="truncate">{currentUser.handle}</span>
                             </div>
-                            <Link to="/join" className="block w-full mt-3 bg-white text-emerald-700 text-center py-2.5 rounded-xl font-bold hover:bg-emerald-50 transition-colors shadow-sm">
+                            <Link to="/join" className="block w-full bg-white text-emerald-700 text-center py-2.5 rounded-xl font-bold hover:bg-emerald-50 transition-colors shadow-sm text-sm">
                                 Open Enrollment Form
                             </Link>
                         </div>
@@ -213,7 +302,7 @@ const Dashboard: React.FC<DashboardProps> = ({ students, currentUser, courses })
             
              {/* If Student, show personal Next Steps */}
             {isStudent && (
-                <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 flex flex-col justify-center items-center text-center">
+                <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 flex flex-col justify-center items-center text-center h-auto">
                     <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center text-emerald-600 mb-4">
                         <AcademicCapIcon />
                     </div>

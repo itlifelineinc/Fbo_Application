@@ -7,14 +7,16 @@ interface CommunityPortalProps {
   cohorts: Cohort[];
   onAddPost: (post: CommunityPost) => void;
   onAddComment: (postId: string, comment: CommunityComment) => void;
+  onLikePost: (postId: string) => void;
 }
 
-const CommunityPortal: React.FC<CommunityPortalProps> = ({ currentUser, posts, cohorts, onAddPost, onAddComment }) => {
+const CommunityPortal: React.FC<CommunityPortalProps> = ({ currentUser, posts, cohorts, onAddPost, onAddComment, onLikePost }) => {
   // 'GLOBAL' or cohortId
   const [activeTab, setActiveTab] = useState<string>('GLOBAL');
   const [newPostContent, setNewPostContent] = useState('');
   const [newPostType, setNewPostType] = useState<'QUESTION' | 'WIN' | 'DISCUSSION' | 'ANNOUNCEMENT'>('DISCUSSION');
   const [newPostTags, setNewPostTags] = useState<string[]>([]);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   // Filter logic
   const visiblePosts = posts.filter(post => {
@@ -51,18 +53,33 @@ const CommunityPortal: React.FC<CommunityPortalProps> = ({ currentUser, posts, c
   };
 
   return (
-    <div className="h-[calc(100vh-8rem)] flex flex-col md:flex-row bg-slate-50 rounded-2xl overflow-hidden animate-fade-in">
+    <div className="h-[calc(100vh-8rem)] flex flex-col md:flex-row bg-slate-50 rounded-2xl overflow-hidden animate-fade-in relative">
       
-      {/* Sidebar Navigation */}
-      <div className="w-full md:w-64 bg-white border-r border-slate-200 flex flex-col">
-        <div className="p-6 border-b border-slate-100">
+      {/* Mobile Sidebar Overlay */}
+      {isSidebarOpen && (
+        <div 
+          className="absolute inset-0 bg-black/50 z-20 md:hidden backdrop-blur-sm transition-opacity"
+          onClick={() => setIsSidebarOpen(false)}
+        />
+      )}
+
+      {/* Sidebar Navigation (Responsive) */}
+      <div className={`
+          absolute inset-y-0 left-0 z-30 w-64 bg-white border-r border-slate-200 flex flex-col transition-transform duration-300 ease-in-out
+          md:static md:translate-x-0
+          ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}
+      `}>
+        <div className="p-6 border-b border-slate-100 flex justify-between items-center">
              <h2 className="font-bold text-lg text-emerald-900 font-heading flex items-center gap-2">
                 <GlobeAltIcon /> Community
              </h2>
+             <button onClick={() => setIsSidebarOpen(false)} className="md:hidden text-slate-400 hover:text-slate-600">
+                <XMarkIcon />
+             </button>
         </div>
         <div className="p-4 space-y-1 flex-1 overflow-y-auto">
             <button 
-                onClick={() => setActiveTab('GLOBAL')}
+                onClick={() => { setActiveTab('GLOBAL'); setIsSidebarOpen(false); }}
                 className={`w-full text-left px-4 py-3 rounded-xl text-sm font-medium transition-all flex items-center gap-3 ${
                     activeTab === 'GLOBAL' ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' : 'text-slate-600 hover:bg-slate-50'
                 }`}
@@ -75,7 +92,7 @@ const CommunityPortal: React.FC<CommunityPortalProps> = ({ currentUser, posts, c
             <div className="pt-4 pb-2 px-2 text-xs font-bold text-slate-400 uppercase tracking-wider">My Learning Group</div>
             {myCohort ? (
                 <button 
-                    onClick={() => setActiveTab(myCohort.id)}
+                    onClick={() => { setActiveTab(myCohort.id); setIsSidebarOpen(false); }}
                     className={`w-full text-left px-4 py-3 rounded-xl text-sm font-medium transition-all flex items-center gap-3 ${
                         activeTab === myCohort.id ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' : 'text-slate-600 hover:bg-slate-50'
                     }`}
@@ -97,7 +114,7 @@ const CommunityPortal: React.FC<CommunityPortalProps> = ({ currentUser, posts, c
                     {cohorts.filter(c => c.id !== currentUser.cohortId).map(c => (
                          <button 
                             key={c.id}
-                            onClick={() => setActiveTab(c.id)}
+                            onClick={() => { setActiveTab(c.id); setIsSidebarOpen(false); }}
                             className={`w-full text-left px-4 py-3 rounded-xl text-sm font-medium transition-all flex items-center gap-3 ${
                                 activeTab === c.id ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' : 'text-slate-600 hover:bg-slate-50'
                             }`}
@@ -112,19 +129,24 @@ const CommunityPortal: React.FC<CommunityPortalProps> = ({ currentUser, posts, c
       </div>
 
       {/* Main Feed Area */}
-      <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
+      <div className="flex-1 flex flex-col md:flex-row overflow-hidden w-full">
           
           {/* Feed */}
           <div className="flex-1 flex flex-col min-w-0 bg-slate-50">
               {/* Header */}
               <div className="bg-white p-4 border-b border-slate-200 shadow-sm z-10 flex justify-between items-center">
-                  <div>
-                    <h3 className="font-bold text-lg text-slate-800 font-heading">
-                        {activeTab === 'GLOBAL' ? 'Global Community Hub' : cohorts.find(c => c.id === activeTab)?.name}
-                    </h3>
-                    <p className="text-xs text-slate-500">
-                        {activeTab === 'GLOBAL' ? 'Updates for everyone' : `Mentored by ${cohorts.find(c => c.id === activeTab)?.mentorHandle}`}
-                    </p>
+                  <div className="flex items-center gap-3">
+                    <button onClick={() => setIsSidebarOpen(true)} className="md:hidden text-slate-500 p-1 hover:bg-slate-100 rounded-lg">
+                        <Bars3Icon />
+                    </button>
+                    <div>
+                        <h3 className="font-bold text-base md:text-lg text-slate-800 font-heading line-clamp-1">
+                            {activeTab === 'GLOBAL' ? 'Global Community Hub' : cohorts.find(c => c.id === activeTab)?.name}
+                        </h3>
+                        <p className="text-xs text-slate-500 hidden md:block">
+                            {activeTab === 'GLOBAL' ? 'Updates for everyone' : `Mentored by ${cohorts.find(c => c.id === activeTab)?.mentorHandle}`}
+                        </p>
+                    </div>
                   </div>
                   {activeTab === 'GLOBAL' && !isSuperAdmin && (
                       <span className="text-xs bg-slate-100 text-slate-500 px-2 py-1 rounded">Read Only</span>
@@ -138,8 +160,8 @@ const CommunityPortal: React.FC<CommunityPortalProps> = ({ currentUser, posts, c
                   {(activeTab !== 'GLOBAL' || isSuperAdmin) && (
                       <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4">
                           <div className="flex gap-3">
-                              <div className="w-10 h-10 rounded-full bg-emerald-100 text-emerald-800 flex items-center justify-center font-bold text-sm flex-shrink-0">
-                                  {currentUser.name.charAt(0)}
+                              <div className="w-10 h-10 rounded-full bg-emerald-100 text-emerald-800 flex items-center justify-center font-bold text-sm flex-shrink-0 overflow-hidden">
+                                  {currentUser.avatarUrl ? <img src={currentUser.avatarUrl} className="w-full h-full object-cover" /> : currentUser.name.charAt(0)}
                               </div>
                               <div className="flex-1">
                                   <textarea 
@@ -148,13 +170,13 @@ const CommunityPortal: React.FC<CommunityPortalProps> = ({ currentUser, posts, c
                                     placeholder={activeTab === 'GLOBAL' ? "Post an announcement..." : "Ask a question, share a win, or start a discussion..."}
                                     className="w-full border border-slate-200 rounded-lg p-3 text-sm focus:outline-none focus:border-emerald-500 min-h-[80px] resize-none"
                                   />
-                                  <div className="flex justify-between items-center mt-3">
-                                      <div className="flex gap-2">
+                                  <div className="flex flex-wrap justify-between items-center mt-3 gap-2">
+                                      <div className="flex gap-2 overflow-x-auto pb-1 no-scrollbar">
                                           {/* Post Type Selectors */}
                                           {activeTab !== 'GLOBAL' && (
                                               <>
-                                                <button onClick={() => setNewPostType('QUESTION')} className={`text-xs px-3 py-1 rounded-full border ${newPostType === 'QUESTION' ? 'bg-orange-50 border-orange-200 text-orange-700' : 'border-slate-200 text-slate-500'}`}>Question</button>
-                                                <button onClick={() => setNewPostType('WIN')} className={`text-xs px-3 py-1 rounded-full border ${newPostType === 'WIN' ? 'bg-green-50 border-green-200 text-green-700' : 'border-slate-200 text-slate-500'}`}>Win</button>
+                                                <button onClick={() => setNewPostType('QUESTION')} className={`text-xs px-3 py-1 rounded-full border whitespace-nowrap ${newPostType === 'QUESTION' ? 'bg-orange-50 border-orange-200 text-orange-700' : 'border-slate-200 text-slate-500'}`}>Question</button>
+                                                <button onClick={() => setNewPostType('WIN')} className={`text-xs px-3 py-1 rounded-full border whitespace-nowrap ${newPostType === 'WIN' ? 'bg-green-50 border-green-200 text-green-700' : 'border-slate-200 text-slate-500'}`}>Win</button>
                                               </>
                                           )}
                                           {isSuperAdmin && activeTab === 'GLOBAL' && (
@@ -164,7 +186,7 @@ const CommunityPortal: React.FC<CommunityPortalProps> = ({ currentUser, posts, c
                                       <button 
                                         onClick={handleCreatePost}
                                         disabled={!newPostContent.trim()}
-                                        className="bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-emerald-700 disabled:opacity-50 transition-colors"
+                                        className="bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-emerald-700 disabled:opacity-50 transition-colors ml-auto"
                                       >
                                           Post
                                       </button>
@@ -176,7 +198,7 @@ const CommunityPortal: React.FC<CommunityPortalProps> = ({ currentUser, posts, c
 
                   {/* Posts List */}
                   {visiblePosts.length > 0 ? visiblePosts.map(post => (
-                      <PostItem key={post.id} post={post} currentUser={currentUser} onAddComment={onAddComment} />
+                      <PostItem key={post.id} post={post} currentUser={currentUser} onAddComment={onAddComment} onLikePost={onLikePost} />
                   )) : (
                       <div className="text-center py-10 text-slate-400">
                           <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -209,7 +231,7 @@ const CommunityPortal: React.FC<CommunityPortalProps> = ({ currentUser, posts, c
   );
 };
 
-const PostItem: React.FC<{ post: CommunityPost; currentUser: Student; onAddComment: (id: string, c: CommunityComment) => void }> = ({ post, currentUser, onAddComment }) => {
+const PostItem: React.FC<{ post: CommunityPost; currentUser: Student; onAddComment: (id: string, c: CommunityComment) => void; onLikePost: (id: string) => void }> = ({ post, currentUser, onAddComment, onLikePost }) => {
     const [commentText, setCommentText] = useState('');
     const [showComments, setShowComments] = useState(false);
 
@@ -247,7 +269,7 @@ const PostItem: React.FC<{ post: CommunityPost; currentUser: Student; onAddComme
                         {post.authorAvatar ? <img src={post.authorAvatar} className="w-full h-full object-cover"/> : <span className="font-bold text-slate-500">{post.authorName.charAt(0)}</span>}
                      </div>
                      <div>
-                         <div className="flex items-center gap-2">
+                         <div className="flex items-center gap-2 flex-wrap">
                             <h4 className="font-bold text-slate-800 text-sm">{post.authorName}</h4>
                             <span className={`text-[10px] px-1.5 py-0.5 rounded border ${post.authorRole === 'STUDENT' ? 'bg-slate-50 text-slate-500 border-slate-200' : 'bg-emerald-50 text-emerald-700 border-emerald-200'}`}>{post.authorRole}</span>
                          </div>
@@ -261,7 +283,7 @@ const PostItem: React.FC<{ post: CommunityPost; currentUser: Student; onAddComme
             
             {/* Tags */}
             {post.tags.length > 0 && (
-                <div className="flex gap-2 mb-4">
+                <div className="flex gap-2 mb-4 flex-wrap">
                     {post.tags.map(tag => (
                         <span key={tag} className="text-xs text-slate-500 bg-slate-100 px-2 py-1 rounded">#{tag}</span>
                     ))}
@@ -270,7 +292,10 @@ const PostItem: React.FC<{ post: CommunityPost; currentUser: Student; onAddComme
 
             {/* Actions */}
             <div className="flex items-center gap-4 pt-3 border-t border-slate-100">
-                 <button className="flex items-center gap-1.5 text-slate-500 hover:text-red-500 transition-colors text-xs font-medium">
+                 <button 
+                    onClick={() => onLikePost(post.id)}
+                    className="flex items-center gap-1.5 text-slate-500 hover:text-red-500 transition-colors text-xs font-medium"
+                 >
                     <HeartIcon /> {post.likes} Likes
                  </button>
                  <button onClick={() => setShowComments(!showComments)} className="flex items-center gap-1.5 text-slate-500 hover:text-blue-500 transition-colors text-xs font-medium">
@@ -283,11 +308,11 @@ const PostItem: React.FC<{ post: CommunityPost; currentUser: Student; onAddComme
                 <div className="mt-4 space-y-4 bg-slate-50 p-3 rounded-lg">
                     {post.comments.map(comment => (
                         <div key={comment.id} className="flex gap-3 items-start">
-                             <div className="w-6 h-6 rounded-full bg-white border border-slate-200 flex items-center justify-center text-xs font-bold shrink-0">
-                                {comment.authorName.charAt(0)}
+                             <div className="w-6 h-6 rounded-full bg-white border border-slate-200 flex items-center justify-center text-xs font-bold shrink-0 overflow-hidden">
+                                {comment.authorAvatar ? <img src={comment.authorAvatar} className="w-full h-full object-cover"/> : comment.authorName.charAt(0)}
                              </div>
                              <div>
-                                 <div className="flex items-baseline gap-2">
+                                 <div className="flex items-baseline gap-2 flex-wrap">
                                      <span className="text-xs font-bold text-slate-700">{comment.authorName}</span>
                                      <span className="text-[10px] text-slate-400">{new Date(comment.timestamp).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</span>
                                  </div>
@@ -346,6 +371,18 @@ const ChatBubbleLeftIcon = () => (
     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4">
         <path strokeLinecap="round" strokeLinejoin="round" d="M7.5 8.25h9m-9 3H12m-9.75 1.51c0 1.6 1.123 2.994 2.707 3.227 1.129.166 2.27.293 3.423.379.35.026.67.21.865.501L12 21l2.755-4.133a1.14 1.14 0 01.865-.501 48.172 48.172 0 003.423-.379c1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0012 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018z" />
     </svg>
+);
+
+const Bars3Icon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
+    <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+  </svg>
+);
+
+const XMarkIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
+    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+  </svg>
 );
 
 export default CommunityPortal;

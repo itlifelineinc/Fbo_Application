@@ -161,6 +161,12 @@ const App: React.FC = () => {
       setPosts(prev => [post, ...prev]);
   };
 
+  const handleLikePost = (postId: string) => {
+    setPosts(prev => prev.map(p => 
+        p.id === postId ? { ...p, likes: p.likes + 1 } : p
+    ));
+  };
+
   const handleAddComment = (postId: string, comment: CommunityComment) => {
       setPosts(prev => prev.map(p => 
           p.id === postId ? { ...p, comments: [...p.comments, comment] } : p
@@ -210,6 +216,7 @@ const App: React.FC = () => {
                     cohorts={cohorts}
                     onAddPost={handleAddPost}
                     onAddComment={handleAddComment}
+                    onLikePost={handleLikePost}
                 />
             </ProtectedRoute>
         } />

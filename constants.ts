@@ -251,7 +251,7 @@ export const INITIAL_POSTS: CommunityPost[] = [
         content: '🎉 Welcome to the new Global Community Hub! This is your place to connect, learn, and grow together.',
         type: 'ANNOUNCEMENT',
         tags: ['Update', 'Official'],
-        likes: 125,
+        likedBy: ['@alice_success', '@bob_builder'],
         comments: [],
         timestamp: Date.now() - 86400000
     },
@@ -263,7 +263,7 @@ export const INITIAL_POSTS: CommunityPost[] = [
         content: 'I just sold my first C9 pack! The customer found me via Instagram reels. Consitency pays off! 🚀',
         type: 'WIN',
         tags: ['Sales', 'Social Media', 'Win'],
-        likes: 14,
+        likedBy: ['@alice_success'],
         comments: [
             {
                 id: 'c_1',
@@ -273,7 +273,7 @@ export const INITIAL_POSTS: CommunityPost[] = [
                 timestamp: Date.now() - 3600000
             }
         ],
-        cohortId: 'cohort_jan_25', // Only visible in cohort
+        cohortId: 'cohort_jan_25', 
         timestamp: Date.now() - 7200000
     },
     {
@@ -284,7 +284,7 @@ export const INITIAL_POSTS: CommunityPost[] = [
         content: 'Question about the Aloe Gel - A customer is asking if it is safe for kids. Can anyone clarify the dosage?',
         type: 'QUESTION',
         tags: ['Product Usage', 'Aloe Gel'],
-        likes: 2,
+        likedBy: [],
         comments: [],
         cohortId: 'cohort_jan_25',
         timestamp: Date.now() - 100000

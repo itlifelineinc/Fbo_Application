@@ -192,7 +192,7 @@ const ChatPortal: React.FC<ChatPortalProps> = ({ currentUser, students, messages
                         value={newMessage} 
                         onChange={(e) => setNewMessage(e.target.value)}
                         placeholder="Type your broadcast message here..."
-                        className="w-full p-3 border border-slate-200 rounded-lg focus:outline-none focus:border-emerald-500 h-24 resize-none"
+                        className="w-full p-3 border border-slate-200 rounded-lg focus:outline-none focus:border-emerald-500 h-24 resize-none bg-white text-slate-900"
                     />
                     <div className="flex justify-end mt-2">
                         <button 
@@ -254,7 +254,7 @@ const ChatPortal: React.FC<ChatPortalProps> = ({ currentUser, students, messages
                             onChange={(e) => setNewMessage(e.target.value)}
                             onKeyDown={(e) => e.key === 'Enter' && handleSend()}
                             placeholder="Type a message..."
-                            className="flex-1 border border-slate-200 rounded-full px-4 py-3 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 bg-slate-50"
+                            className="flex-1 border border-slate-200 rounded-full px-4 py-3 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 bg-white text-slate-900"
                         />
                         <button 
                             onClick={handleSend}

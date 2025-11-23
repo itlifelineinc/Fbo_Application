@@ -112,7 +112,7 @@ const StudentsList: React.FC<StudentsListProps> = ({ students, onAddStudent, cur
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 placeholder="Search by name or handle..."
-                className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-50"
+                className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-50 bg-white text-slate-900"
             />
             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 absolute left-3 top-2.5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -124,7 +124,7 @@ const StudentsList: React.FC<StudentsListProps> = ({ students, onAddStudent, cur
                 <select 
                     value={filterRole}
                     onChange={(e) => setFilterRole(e.target.value)}
-                    className="w-full p-2 border border-slate-200 rounded-lg focus:outline-none focus:border-emerald-500 bg-white"
+                    className="w-full p-2 border border-slate-200 rounded-lg focus:outline-none focus:border-emerald-500 bg-white text-slate-900"
                 >
                     <option value="ALL">All Roles</option>
                     <option value={UserRole.STUDENT}>Students</option>
@@ -149,7 +149,7 @@ const StudentsList: React.FC<StudentsListProps> = ({ students, onAddStudent, cur
                   required
                   value={newStudentName}
                   onChange={(e) => setNewStudentName(e.target.value)}
-                  className="w-full border border-slate-200 rounded-lg px-3 py-2 focus:ring-2 focus:ring-emerald-500 outline-none"
+                  className="w-full border border-slate-200 rounded-lg px-3 py-2 focus:ring-2 focus:ring-emerald-500 outline-none bg-white text-slate-900"
                   placeholder="Jane Doe"
                 />
               </div>
@@ -160,7 +160,7 @@ const StudentsList: React.FC<StudentsListProps> = ({ students, onAddStudent, cur
                   required
                   value={newStudentEmail}
                   onChange={(e) => setNewStudentEmail(e.target.value)}
-                  className="w-full border border-slate-200 rounded-lg px-3 py-2 focus:ring-2 focus:ring-emerald-500 outline-none"
+                  className="w-full border border-slate-200 rounded-lg px-3 py-2 focus:ring-2 focus:ring-emerald-500 outline-none bg-white text-slate-900"
                   placeholder="jane@example.com"
                 />
               </div>

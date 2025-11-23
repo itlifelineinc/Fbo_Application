@@ -34,7 +34,6 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, currentUser, 
 };
 
 const CourseList: React.FC<{ courses: Course[] }> = ({ courses }) => {
-  // Group courses by track
   const coursesByTrack = courses.reduce((acc, course) => {
     if (!acc[course.track]) {
       acc[course.track] = [];
@@ -63,7 +62,6 @@ const CourseList: React.FC<{ courses: Course[] }> = ({ courses }) => {
                   </div>
                   <div className="p-6 flex-1 flex flex-col">
                       <p className="text-sm text-slate-500 mb-4 flex-1 line-clamp-2">{course.description}</p>
-                      
                       <div className="space-y-2">
                         <div className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Modules ({course.modules.length})</div>
                         {course.modules.map(m => (
@@ -161,10 +159,25 @@ const App: React.FC = () => {
       setPosts(prev => [post, ...prev]);
   };
 
+  // Updated Like Logic to Toggle
   const handleLikePost = (postId: string) => {
-    setPosts(prev => prev.map(p => 
-        p.id === postId ? { ...p, likes: p.likes + 1 } : p
-    ));
+    if (!currentUser) return;
+    
+    setPosts(prev => prev.map(p => {
+        if (p.id === postId) {
+            const hasLiked = p.likedBy.includes(currentUser.handle);
+            const newLikedBy = hasLiked 
+                ? p.likedBy.filter(h => h !== currentUser.handle) // Unlike
+                : [...p.likedBy, currentUser.handle]; // Like
+            
+            return {
+                ...p,
+                likedBy: newLikedBy,
+                likes: newLikedBy.length
+            };
+        }
+        return p;
+    }));
   };
 
   const handleAddComment = (postId: string, comment: CommunityComment) => {

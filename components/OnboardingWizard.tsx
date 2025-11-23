@@ -184,7 +184,7 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onEnroll, existingS
                         value={sponsorHandle}
                         onChange={(e) => setSponsorHandle(e.target.value)}
                         placeholder="@alice_success"
-                        className={`w-full text-center text-xl font-bold font-mono border-2 rounded-xl py-4 focus:ring-4 outline-none transition-all ${
+                        className={`w-full text-center text-xl font-bold font-mono border-2 rounded-xl py-4 focus:ring-4 outline-none transition-all bg-white text-slate-900 ${
                             sponsorError ? 'border-red-200 focus:border-red-500 focus:ring-red-100' : 'border-slate-200 focus:border-emerald-500 focus:ring-emerald-100'
                         }`}
                     />
@@ -224,7 +224,7 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onEnroll, existingS
                         type="text"
                         value={name}
                         onChange={(e) => setName(e.target.value)} 
-                        className="w-full border border-slate-200 rounded-xl px-4 py-3 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 outline-none"
+                        className="w-full border border-slate-200 rounded-xl px-4 py-3 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 outline-none bg-white text-slate-900"
                         placeholder="Jane Doe"
                     />
                 </div>
@@ -234,7 +234,7 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onEnroll, existingS
                         type="email"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)} 
-                        className="w-full border border-slate-200 rounded-xl px-4 py-3 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 outline-none"
+                        className="w-full border border-slate-200 rounded-xl px-4 py-3 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 outline-none bg-white text-slate-900"
                         placeholder="jane@example.com"
                     />
                 </div>
@@ -244,7 +244,7 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onEnroll, existingS
                         type="password"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)} 
-                        className="w-full border border-slate-200 rounded-xl px-4 py-3 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 outline-none"
+                        className="w-full border border-slate-200 rounded-xl px-4 py-3 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 outline-none bg-white text-slate-900"
                         placeholder="••••••••"
                     />
                 </div>

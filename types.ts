@@ -109,7 +109,7 @@ export interface CommunityPost {
   imageUrl?: string;
   tags: string[]; // 'Product', 'Sales', 'Win', 'Question'
   type: 'ANNOUNCEMENT' | 'QUESTION' | 'WIN' | 'DISCUSSION';
-  likes: number;
+  likedBy: string[]; // Array of user handles who liked the post
   comments: CommunityComment[];
   cohortId?: string; // If null, it's a Global Hub post
   timestamp: number;

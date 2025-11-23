@@ -143,7 +143,7 @@ const SalesPortal: React.FC<SalesPortalProps> = ({ currentUser, onSubmitSale }) 
                             value={transactionId}
                             onChange={(e) => setTransactionId(e.target.value)}
                             placeholder="e.g. TXN-123456"
-                            className="w-full border border-slate-200 rounded-xl px-4 py-3 focus:border-emerald-500 outline-none font-mono text-sm"
+                            className="w-full border border-slate-200 rounded-xl px-4 py-3 focus:border-emerald-500 outline-none font-mono text-sm bg-white text-slate-900"
                             required
                         />
                     </div>
@@ -152,7 +152,7 @@ const SalesPortal: React.FC<SalesPortalProps> = ({ currentUser, onSubmitSale }) 
                         <select 
                             value={saleType}
                             onChange={(e) => setSaleType(e.target.value as any)}
-                            className="w-full border border-slate-200 rounded-xl px-4 py-3 focus:border-emerald-500 outline-none bg-white"
+                            className="w-full border border-slate-200 rounded-xl px-4 py-3 focus:border-emerald-500 outline-none bg-white text-slate-900"
                         >
                             <option value="RETAIL">Retail (1CC = ${RETAIL_DIVISOR})</option>
                             <option value="WHOLESALE">Wholesale (1CC = ${WHOLESALE_DIVISOR})</option>
@@ -169,7 +169,7 @@ const SalesPortal: React.FC<SalesPortalProps> = ({ currentUser, onSubmitSale }) 
                             value={amount}
                             onChange={(e) => setAmount(e.target.value)}
                             placeholder="0.00"
-                            className="w-full border border-slate-200 rounded-xl pl-8 pr-4 py-3 focus:border-emerald-500 outline-none font-bold text-lg"
+                            className="w-full border border-slate-200 rounded-xl pl-8 pr-4 py-3 focus:border-emerald-500 outline-none font-bold text-lg bg-white text-slate-900"
                             step="0.01"
                             required
                         />

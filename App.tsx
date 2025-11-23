@@ -89,14 +89,14 @@ const CourseList: React.FC<{ courses: Course[] }> = ({ courses }) => {
 // --- Main App Component ---
 
 const App: React.FC = () => {
+  // Initialize State with Mock Data (Stand-alone Mode)
   const [courses, setCourses] = useState<Course[]>(INITIAL_COURSES);
   const [students, setStudents] = useState<Student[]>(INITIAL_STUDENTS);
   const [messages, setMessages] = useState<Message[]>(INITIAL_MESSAGES);
   const [posts, setPosts] = useState<CommunityPost[]>(INITIAL_POSTS);
   const [cohorts, setCohorts] = useState<Cohort[]>(INITIAL_COHORTS);
-  const [theme, setTheme] = useState<'light' | 'dark'>('light');
   
-  // Auth State
+  const [theme, setTheme] = useState<'light' | 'dark'>('light');
   const [currentUser, setCurrentUser] = useState<Student | null>(null);
 
   // Theme Effect
@@ -112,39 +112,45 @@ const App: React.FC = () => {
     setTheme(prev => prev === 'light' ? 'dark' : 'light');
   };
 
-  const handleLogin = (handle: string, pass: string): boolean => {
+  // 1. Authentication (Client-Side Logic)
+  const handleLogin = async (handle: string, pass: string): Promise<boolean> => {
+    // Simulate network delay
+    await new Promise(resolve => setTimeout(resolve, 500));
+
     const formattedHandle = handle.startsWith('@') ? handle : `@${handle}`;
+    
     const user = students.find(s => 
       s.handle.toLowerCase() === formattedHandle.toLowerCase() && 
       s.password === pass
     );
 
     if (user) {
-        // Login Streak Calculation
+        // Local Streak Logic
         const today = new Date().toISOString().split('T')[0];
-        let newStreak = user.learningStats.learningStreak;
-        const lastLogin = user.learningStats.lastLoginDate;
+        let newStreak = user.learningStats?.learningStreak || 0;
+        const lastLogin = user.learningStats?.lastLoginDate || '';
 
         if (lastLogin !== today) {
             const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
             if (lastLogin === yesterday) {
                 newStreak += 1;
             } else {
-                newStreak = 1; // Reset streak
+                newStreak = 1;
             }
         }
         
         const updatedUser = {
             ...user,
             learningStats: {
-                ...user.learningStats,
+                ...(user.learningStats || { totalTimeSpent: 0, questionsAsked: 0 }),
                 learningStreak: newStreak,
                 lastLoginDate: today
             }
         };
 
+        // Update both local state and current user
+        setStudents(prev => prev.map(s => s.id === updatedUser.id ? updatedUser : s));
         setCurrentUser(updatedUser);
-        handleUpdateStudent(updatedUser); // Persist
         return true;
     }
     return false;
@@ -154,13 +160,15 @@ const App: React.FC = () => {
     setCurrentUser(null);
   };
 
+  // 2. Data Management (Client-Side State Updates)
+
   const handleAddModule = (newModule: Module, track?: CourseTrack) => {
     const updatedCourses = [...courses];
     const targetCourseIndex = updatedCourses.findIndex(c => c.track === track);
     if (targetCourseIndex !== -1) {
         updatedCourses[targetCourseIndex].modules.push(newModule);
     } else {
-        updatedCourses[0].modules.push(newModule); // Fallback
+        updatedCourses[0].modules.push(newModule);
     }
     setCourses(updatedCourses);
   };
@@ -182,11 +190,18 @@ const App: React.FC = () => {
 
   const handleSubmitSale = (sale: SaleRecord) => {
     if (!currentUser) return;
+    
     const updatedStudent = {
         ...currentUser,
         caseCredits: currentUser.caseCredits + sale.ccEarned,
         salesHistory: [sale, ...(currentUser.salesHistory || [])]
     };
+
+    // Auto-promote logic
+    if (updatedStudent.role === UserRole.STUDENT && updatedStudent.caseCredits >= 2) {
+        updatedStudent.role = UserRole.SPONSOR;
+    }
+
     handleUpdateStudent(updatedStudent);
   };
 
@@ -200,13 +215,19 @@ const App: React.FC = () => {
 
   const handleLikePost = (postId: string) => {
     if (!currentUser) return;
+
     setPosts(prev => prev.map(p => {
         if (p.id === postId) {
             const hasLiked = p.likedBy.includes(currentUser.handle);
             const newLikedBy = hasLiked 
                 ? p.likedBy.filter(h => h !== currentUser.handle) 
                 : [...p.likedBy, currentUser.handle]; 
-            return { ...p, likedBy: newLikedBy, likes: newLikedBy.length };
+            
+            return { 
+                ...p, 
+                likedBy: newLikedBy, 
+                likes: newLikedBy.length 
+            };
         }
         return p;
     }));
@@ -218,7 +239,6 @@ const App: React.FC = () => {
       ));
   };
 
-  // Track Stats Logic
   const handleUpdateStats = (seconds: number, questions: number) => {
     if (!currentUser) return;
     const updatedStudent = {
@@ -233,7 +253,15 @@ const App: React.FC = () => {
   };
 
   const handleCompleteLesson = (moduleId: string) => {
-     console.log("Lesson in module completed:", moduleId);
+     if(!currentUser) return;
+     if(!currentUser.completedModules.includes(moduleId)) {
+         const updatedStudent = {
+             ...currentUser,
+             completedModules: [...currentUser.completedModules, moduleId],
+             progress: Math.min(100, currentUser.progress + 5)
+         };
+         handleUpdateStudent(updatedStudent);
+     }
   };
 
   return (

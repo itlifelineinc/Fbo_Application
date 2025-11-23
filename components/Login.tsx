@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 
 interface LoginProps {
-  onLogin: (handle: string, pass: string) => boolean;
+  onLogin: (handle: string, pass: string) => Promise<boolean>;
 }
 
 const Login: React.FC<LoginProps> = ({ onLogin }) => {
@@ -10,16 +10,26 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
   const [mode, setMode] = useState<'LOGIN' | 'RECOVERY'>('LOGIN');
   const [recoveryEmail, setRecoveryEmail] = useState('');
   const [recoverySent, setRecoverySent] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError('');
+    
     if (mode === 'LOGIN') {
-      const success = onLogin(handle, password);
-      if (!success) {
-        setError("Invalid Handle or Password. Please try again.");
+      setLoading(true);
+      try {
+        const success = await onLogin(handle, password);
+        if (!success) {
+          setError("Invalid Handle or Password. Please try again.");
+        }
+      } catch (err) {
+        setError("An error occurred during login. Please try again.");
+      } finally {
+        setLoading(false);
       }
     } else {
       // Simulate password recovery
@@ -76,20 +86,21 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-3 text-slate-400 hover:text-slate-600"
+                  className="absolute right-3 top-3 text-slate-400 hover:text-slate-600 p-1"
                 >
                    {showPassword ? <EyeSlashIcon /> : <EyeIcon />}
                 </button>
               </div>
             </div>
             
-            {error && <p className="text-red-500 text-sm font-medium text-center">{error}</p>}
+            {error && <p className="text-red-500 text-sm font-medium text-center bg-red-50 p-2 rounded-lg border border-red-100">{error}</p>}
 
             <button
               type="submit"
-              className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3.5 rounded-xl shadow-lg transform active:scale-95 transition-all"
+              disabled={loading}
+              className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3.5 rounded-xl shadow-lg transform active:scale-95 transition-all disabled:opacity-70 disabled:cursor-not-allowed flex justify-center"
             >
-              Sign In
+              {loading ? 'Signing in...' : 'Sign In'}
             </button>
 
             <div className="flex flex-col gap-3 text-center pt-2">

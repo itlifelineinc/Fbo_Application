@@ -1,16 +1,17 @@
 import React, { useState, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Student, Course, UserRole } from '../types';
-// Removed Recharts import as stats moved to dashboard
 
 interface StudentProfileProps {
   students: Student[];
   courses: Course[];
   currentUser: Student;
   onUpdateStudent: (student: Student) => void;
+  theme: 'light' | 'dark';
+  onToggleTheme: () => void;
 }
 
-const StudentProfile: React.FC<StudentProfileProps> = ({ students, courses, currentUser, onUpdateStudent }) => {
+const StudentProfile: React.FC<StudentProfileProps> = ({ students, courses, currentUser, onUpdateStudent, theme, onToggleTheme }) => {
   const { studentId } = useParams();
   const student = students.find(s => s.id === studentId);
   
@@ -21,9 +22,9 @@ const StudentProfile: React.FC<StudentProfileProps> = ({ students, courses, curr
 
   if (!student) {
     return (
-      <div className="flex flex-col items-center justify-center h-64 text-slate-500">
+      <div className="flex flex-col items-center justify-center h-64 text-slate-500 dark:text-slate-400">
         <p className="text-lg mb-4">Student not found.</p>
-        <Link to="/students" className="text-emerald-600 hover:underline">Back to Students List</Link>
+        <Link to="/students" className="text-emerald-600 hover:underline dark:text-emerald-400">Back to Students List</Link>
       </div>
     );
   }
@@ -64,36 +65,30 @@ const StudentProfile: React.FC<StudentProfileProps> = ({ students, courses, curr
   // Access control: Super Admin can see all, User can see own. Regular Admin cannot see passwords anymore.
   const canViewCredentials = isOwnProfile || isSuperAdmin;
 
-  // Stats moved to dashboard
-  const allModules = courses.flatMap(c => c.modules);
-  const totalModulesCount = allModules.length;
-  const completedCount = student.completedModules.length;
-  const calculatedProgress = totalModulesCount > 0 ? Math.round((completedCount / totalModulesCount) * 100) : 0;
-
   return (
     <div className="space-y-6 md:space-y-8 animate-fade-in">
       {/* Breadcrumb */}
-      <div className="flex items-center gap-2 text-sm text-slate-500">
-        <Link to="/students" className="hover:text-emerald-600 transition-colors">Students</Link>
+      <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
+        <Link to="/students" className="hover:text-emerald-600 transition-colors dark:hover:text-emerald-400">Students</Link>
         <span>/</span>
-        <span className="text-emerald-900 font-medium truncate">{student.name}</span>
+        <span className="text-emerald-900 font-medium truncate dark:text-emerald-200">{student.name}</span>
       </div>
 
       {/* Header Card */}
-      <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 md:p-8 relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-emerald-50 to-transparent rounded-bl-full -mr-16 -mt-16 pointer-events-none opacity-50 md:opacity-100"></div>
+      <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 md:p-8 relative overflow-hidden dark:bg-slate-800 dark:border-slate-700">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-emerald-50 to-transparent rounded-bl-full -mr-16 -mt-16 pointer-events-none opacity-50 md:opacity-100 dark:from-emerald-900/30"></div>
         
         <div className="flex flex-col md:flex-row gap-6 md:gap-8 items-center md:items-start relative z-10">
           {/* Avatar */}
           <div className="relative group">
             <div 
-                className={`w-24 h-24 md:w-32 md:h-32 rounded-full bg-slate-100 border-4 border-white shadow-lg overflow-hidden flex items-center justify-center ${isOwnProfile ? 'cursor-pointer' : ''}`}
+                className={`w-24 h-24 md:w-32 md:h-32 rounded-full bg-slate-100 border-4 border-white shadow-lg overflow-hidden flex items-center justify-center dark:bg-slate-700 dark:border-slate-600 ${isOwnProfile ? 'cursor-pointer' : ''}`}
                 onClick={() => isOwnProfile && fileInputRef.current?.click()}
             >
                 {student.avatarUrl ? (
                     <img src={student.avatarUrl} alt={student.name} className="w-full h-full object-cover" />
                 ) : (
-                    <div className="w-full h-full bg-gradient-to-br from-emerald-100 to-emerald-200 text-emerald-800 flex items-center justify-center text-3xl md:text-4xl font-bold font-heading">
+                    <div className="w-full h-full bg-gradient-to-br from-emerald-100 to-emerald-200 text-emerald-800 flex items-center justify-center text-3xl md:text-4xl font-bold font-heading dark:from-emerald-800 dark:to-emerald-900 dark:text-emerald-200">
                         {student.name.charAt(0)}
                     </div>
                 )}
@@ -116,82 +111,68 @@ const StudentProfile: React.FC<StudentProfileProps> = ({ students, courses, curr
           {/* User Info */}
           <div className="flex-1 space-y-3 text-center md:text-left w-full pt-2">
             <div className="flex flex-col md:flex-row items-center md:items-start gap-2 md:gap-3">
-              <h1 className="text-2xl md:text-3xl font-bold text-emerald-950 font-heading">{student.name}</h1>
+              <h1 className="text-2xl md:text-3xl font-bold text-emerald-950 font-heading dark:text-white">{student.name}</h1>
               {isSponsor ? (
-                <span className="px-3 py-1 bg-yellow-100 text-yellow-800 text-xs font-bold rounded-full border border-yellow-200 uppercase tracking-wider flex items-center gap-1">
+                <span className="px-3 py-1 bg-yellow-100 text-yellow-800 text-xs font-bold rounded-full border border-yellow-200 uppercase tracking-wider flex items-center gap-1 dark:bg-yellow-900/30 dark:text-yellow-300 dark:border-yellow-800">
                    <span className="text-base">⭐</span> Sponsor
                 </span>
               ) : (
-                <span className="px-3 py-1 bg-slate-100 text-slate-600 text-xs font-bold rounded-full border border-slate-200 uppercase tracking-wider">
+                <span className="px-3 py-1 bg-slate-100 text-slate-600 text-xs font-bold rounded-full border border-slate-200 uppercase tracking-wider dark:bg-slate-700 dark:text-slate-300 dark:border-slate-600">
                   Student
                 </span>
               )}
             </div>
-            <p className="font-mono text-emerald-600 font-medium text-base md:text-lg bg-emerald-50/50 inline-block px-2 rounded md:bg-transparent md:px-0">
+            <p className="font-mono text-emerald-600 font-medium text-base md:text-lg bg-emerald-50/50 inline-block px-2 rounded md:bg-transparent md:px-0 dark:text-emerald-400 dark:bg-emerald-900/30">
               {student.handle}
             </p>
             
-            <div className="flex flex-col md:flex-row items-center gap-2 md:gap-6 text-slate-500 text-sm">
+            <div className="flex flex-col md:flex-row items-center gap-2 md:gap-6 text-slate-500 text-sm dark:text-slate-400">
               <div className="flex items-center gap-1.5 break-all justify-center md:justify-start">
                 <EnvelopeIcon />
                 {student.email}
               </div>
-              <div className="hidden md:block w-1 h-1 bg-slate-300 rounded-full"></div>
+              <div className="hidden md:block w-1 h-1 bg-slate-300 rounded-full dark:bg-slate-600"></div>
               <div className="flex items-center gap-1.5">
-                <span className="font-semibold text-slate-700">Invited by:</span>
-                <span className="font-mono text-emerald-600">{student.sponsorId || 'N/A'}</span>
+                <span className="font-semibold text-slate-700 dark:text-slate-300">Invited by:</span>
+                <span className="font-mono text-emerald-600 dark:text-emerald-400">{student.sponsorId || 'N/A'}</span>
               </div>
             </div>
 
             {/* CC Progress for Students */}
             <div className="mt-4 w-full md:max-w-md mx-auto md:mx-0">
                 <div className="flex justify-between text-xs mb-1 font-semibold">
-                    <span>Case Credits (CC)</span>
-                    <span className={student.caseCredits >= 2 ? 'text-green-600' : 'text-slate-500'}>{student.caseCredits.toFixed(1)} / 2.0 CC</span>
+                    <span className="dark:text-slate-300">Case Credits (CC)</span>
+                    <span className={student.caseCredits >= 2 ? 'text-green-600 dark:text-green-400' : 'text-slate-500 dark:text-slate-400'}>{student.caseCredits.toFixed(1)} / 2.0 CC</span>
                 </div>
-                <div className="w-full bg-slate-100 rounded-full h-2">
+                <div className="w-full bg-slate-100 rounded-full h-2 dark:bg-slate-700">
                     <div className={`h-2 rounded-full transition-all duration-500 ${isSponsor ? 'bg-yellow-400' : 'bg-emerald-500'}`} style={{ width: `${Math.min(100, (student.caseCredits / 2) * 100)}%` }}></div>
                 </div>
                 {!isSponsor && isOwnProfile && (
-                    <button onClick={handleAddCC} className="mt-2 text-xs text-emerald-600 hover:underline w-full md:w-auto text-center md:text-left">
+                    <button onClick={handleAddCC} className="mt-2 text-xs text-emerald-600 hover:underline w-full md:w-auto text-center md:text-left dark:text-emerald-400">
                         + Simulate 0.5CC Order
                     </button>
                 )}
             </div>
           </div>
-
-          {/* Right Stats */}
-          <div className="w-full md:w-auto bg-slate-50 p-4 rounded-xl border border-slate-100 flex justify-around md:block md:space-y-2">
-             <div className="text-center md:mb-4">
-                <div className="text-xl md:text-2xl font-bold text-emerald-600 font-heading">{calculatedProgress}%</div>
-                <div className="text-[10px] md:text-xs text-slate-500 uppercase font-semibold tracking-wider">Total Progress</div>
-             </div>
-             <div className="w-px h-10 bg-slate-200 md:hidden"></div>
-             <div className="text-center">
-                <div className="text-xl md:text-2xl font-bold text-slate-800 font-heading">{completedCount} <span className="text-slate-400 text-base font-normal font-sans">/ {totalModulesCount}</span></div>
-                <div className="text-[10px] md:text-xs text-slate-500 uppercase font-semibold tracking-wider">Modules Done</div>
-             </div>
-          </div>
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8">
-        {/* Left Column: Credentials */}
         <div className="space-y-6">
           
-          {/* Credentials Card - Only visible to Self or Super Admin */}
+          {/* Credentials Card */}
           {canViewCredentials && (
-            <div className="bg-white rounded-xl shadow-sm border border-slate-100 p-5 md:p-6">
+            <div className="bg-white rounded-xl shadow-sm border border-slate-100 p-5 md:p-6 dark:bg-slate-800 dark:border-slate-700">
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-4">
                     <div>
-                        <h3 className="font-bold text-slate-800 mb-1">Security Credentials</h3>
-                        <p className="text-xs text-slate-500">Manage your password securely.</p>
+                        <h3 className="font-bold text-slate-800 mb-1 dark:text-slate-100">Security Credentials</h3>
+                        <p className="text-xs text-slate-500 dark:text-slate-400">Manage your password securely.</p>
                     </div>
                     
                     {isOwnProfile && !isEditingPassword && (
                         <button 
                             onClick={() => setIsEditingPassword(true)}
-                            className="text-sm text-emerald-600 font-medium hover:text-emerald-700 underline"
+                            className="text-sm text-emerald-600 font-medium hover:text-emerald-700 underline dark:text-emerald-400"
                         >
                             Change Password
                         </button>
@@ -199,18 +180,18 @@ const StudentProfile: React.FC<StudentProfileProps> = ({ students, courses, curr
                 </div>
 
                 {isEditingPassword ? (
-                    <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center bg-slate-50 p-4 rounded-lg border border-slate-200 transition-all">
+                    <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center bg-slate-50 p-4 rounded-lg border border-slate-200 transition-all dark:bg-slate-700/50 dark:border-slate-600">
                         <input 
                             type="password" 
                             value={newPassword}
                             onChange={(e) => setNewPassword(e.target.value)}
                             placeholder="Enter new password"
-                            className="px-4 py-2 rounded-lg border border-slate-300 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 outline-none text-sm w-full sm:w-auto flex-1 bg-white text-slate-900"
+                            className="px-4 py-2 rounded-lg border border-slate-300 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 outline-none text-sm w-full sm:w-auto flex-1 bg-white text-slate-900 dark:bg-slate-700 dark:text-white dark:border-slate-500"
                         />
                         <div className="flex gap-2 w-full sm:w-auto">
                             <button 
                                 onClick={() => setIsEditingPassword(false)}
-                                className="flex-1 sm:flex-none px-3 py-2 text-sm text-slate-600 hover:bg-slate-200 rounded-lg"
+                                className="flex-1 sm:flex-none px-3 py-2 text-sm text-slate-600 hover:bg-slate-200 rounded-lg dark:text-slate-300 dark:hover:bg-slate-600"
                             >
                                 Cancel
                             </button>
@@ -223,22 +204,43 @@ const StudentProfile: React.FC<StudentProfileProps> = ({ students, courses, curr
                         </div>
                     </div>
                 ) : (
-                    <div className="flex w-full sm:w-auto items-center justify-between gap-4 bg-slate-50 px-4 py-3 rounded-lg border border-slate-200">
+                    <div className="flex w-full sm:w-auto items-center justify-between gap-4 bg-slate-50 px-4 py-3 rounded-lg border border-slate-200 dark:bg-slate-700/50 dark:border-slate-600">
                         <div className="text-left flex-1">
-                            <p className="text-[10px] text-slate-400 font-bold uppercase">Password</p>
-                            <p className="font-mono text-slate-800 font-medium text-sm sm:text-base">
+                            <p className="text-[10px] text-slate-400 font-bold uppercase dark:text-slate-400">Password</p>
+                            <p className="font-mono text-slate-800 font-medium text-sm sm:text-base dark:text-slate-200">
                                 {showPassword ? student.password : '••••••••'}
                             </p>
                         </div>
                         <button 
                             onClick={() => setShowPassword(!showPassword)}
-                            className="text-emerald-600 hover:bg-emerald-100 p-2 rounded-full transition-colors"
+                            className="text-emerald-600 hover:bg-emerald-100 p-2 rounded-full transition-colors dark:text-emerald-400 dark:hover:bg-emerald-900/30"
                         >
                             {showPassword ? <EyeSlashIcon /> : <EyeIcon />}
                         </button>
                     </div>
                 )}
             </div>
+          )}
+
+          {/* App Settings Card */}
+          {isOwnProfile && (
+             <div className="bg-white rounded-xl shadow-sm border border-slate-100 p-5 md:p-6 dark:bg-slate-800 dark:border-slate-700">
+                <div className="flex items-center justify-between">
+                    <div>
+                        <h3 className="font-bold text-slate-800 mb-1 dark:text-slate-100">App Settings</h3>
+                        <p className="text-xs text-slate-500 dark:text-slate-400">Customize your viewing experience.</p>
+                    </div>
+                    <div className="flex items-center gap-3">
+                        <span className="text-sm font-medium text-slate-600 dark:text-slate-300">{theme === 'light' ? 'Light Mode' : 'Dark Mode'}</span>
+                        <button 
+                            onClick={onToggleTheme}
+                            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 ${theme === 'dark' ? 'bg-emerald-600' : 'bg-slate-200'}`}
+                        >
+                            <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${theme === 'dark' ? 'translate-x-6' : 'translate-x-1'}`} />
+                        </button>
+                    </div>
+                </div>
+             </div>
           )}
         </div>
       </div>

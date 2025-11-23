@@ -12,20 +12,8 @@ export const INITIAL_STUDENTS: Student[] = [
     progress: 100,
     completedModules: [],
     caseCredits: 100, 
-    sponsorId: ''
-  },
-  {
-    id: 'admin_1',
-    handle: '@admin_support',
-    password: 'password123',
-    role: UserRole.ADMIN,
-    name: 'Support Admin',
-    email: 'support@fbo.com',
-    enrolledDate: '2021-01-01',
-    progress: 100,
-    completedModules: [],
-    caseCredits: 10,
-    sponsorId: '@forever_system'
+    sponsorId: '',
+    learningStats: { totalTimeSpent: 0, questionsAsked: 0, learningStreak: 0, lastLoginDate: '' }
   },
   {
     id: '1',
@@ -43,7 +31,8 @@ export const INITIAL_STUDENTS: Student[] = [
       { question: 'Primary Goal', answer: 'Financial Freedom' },
       { question: 'Availability', answer: '10+ Hours/Week' }
     ],
-    cohortId: 'cohort_jan_25'
+    cohortId: 'cohort_jan_25',
+    learningStats: { totalTimeSpent: 12000, questionsAsked: 45, learningStreak: 12, lastLoginDate: '2023-10-25' }
   },
   {
     id: '2',
@@ -61,7 +50,8 @@ export const INITIAL_STUDENTS: Student[] = [
       { question: 'Primary Goal', answer: 'Extra Income' },
       { question: 'Availability', answer: '5-10 Hours/Week' }
     ],
-    cohortId: 'cohort_jan_25'
+    cohortId: 'cohort_jan_25',
+    learningStats: { totalTimeSpent: 3600, questionsAsked: 12, learningStreak: 3, lastLoginDate: '2023-10-27' }
   },
   {
     id: '3',
@@ -79,7 +69,8 @@ export const INITIAL_STUDENTS: Student[] = [
       { question: 'Primary Goal', answer: 'Product Discounts' },
       { question: 'Availability', answer: '0-5 Hours/Week' }
     ],
-    cohortId: 'cohort_feb_25'
+    cohortId: 'cohort_feb_25',
+    learningStats: { totalTimeSpent: 8500, questionsAsked: 5, learningStreak: 5, lastLoginDate: '2023-10-26' }
   }
 ];
 

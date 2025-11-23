@@ -1,17 +1,18 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { Course, ChatMessage } from '../types';
+import { Course, ChatMessage, Student } from '../types';
 import { askAITutor } from '../services/geminiService';
 
 interface ClassroomProps {
   courses: Course[];
   onCompleteLesson: (moduleId: string) => void;
+  onUpdateStats: (seconds: number, questions: number) => void;
 }
 
-const Classroom: React.FC<ClassroomProps> = ({ courses, onCompleteLesson }) => {
+const Classroom: React.FC<ClassroomProps> = ({ courses, onCompleteLesson, onUpdateStats }) => {
   const { courseId, moduleId, lessonId } = useParams();
   
-  // Derived state based on URL params
+  // Derived state
   const course = courses.find(c => c.id === courseId);
   const module = course?.modules.find(m => m.id === moduleId);
   const lesson = module?.lessons.find(l => l.id === lessonId);
@@ -20,6 +21,41 @@ const Classroom: React.FC<ClassroomProps> = ({ courses, onCompleteLesson }) => {
   const [question, setQuestion] = useState('');
   const [isChatting, setIsChatting] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
+  
+  // Stats Tracking
+  const [sessionSeconds, setSessionSeconds] = useState(0);
+  const [sessionQuestions, setSessionQuestions] = useState(0);
+
+  // Timer Effect
+  useEffect(() => {
+    const interval = setInterval(() => {
+        setSessionSeconds(prev => prev + 1);
+    }, 1000);
+
+    // Cleanup: Update parent stats when component unmounts or lesson changes
+    return () => {
+        clearInterval(interval);
+    };
+  }, []);
+
+  // Sync stats to parent on unmount or lesson change (using a ref to capture latest state in cleanup would be ideal, 
+  // but for simplicity we'll just trigger an update every X seconds or manual sync. 
+  // Better approach: use a separate useEffect for unmount with refs)
+  const statsRef = useRef({ seconds: 0, questions: 0 });
+  
+  useEffect(() => {
+      statsRef.current.seconds = sessionSeconds;
+      statsRef.current.questions = sessionQuestions;
+  }, [sessionSeconds, sessionQuestions]);
+
+  useEffect(() => {
+      return () => {
+          // On unmount, save accumulated stats
+          if (statsRef.current.seconds > 0 || statsRef.current.questions > 0) {
+             onUpdateStats(statsRef.current.seconds, statsRef.current.questions);
+          }
+      }
+  }, []); // Empty dependency to run only on mount/unmount of the whole component instance effectively
 
   // Auto-scroll chat
   useEffect(() => {
@@ -40,6 +76,8 @@ const Classroom: React.FC<ClassroomProps> = ({ courses, onCompleteLesson }) => {
     setChatHistory(prev => [...prev, userMsg]);
     setQuestion('');
     setIsChatting(true);
+    
+    setSessionQuestions(prev => prev + 1); // Track question
 
     const contextHistory = chatHistory.map(msg => ({ role: msg.role === 'model' ? 'model' : 'user', text: msg.text }));
     
@@ -151,7 +189,7 @@ const Classroom: React.FC<ClassroomProps> = ({ courses, onCompleteLesson }) => {
                     onChange={(e) => setQuestion(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
                     placeholder="Ask about this lesson..."
-                    className="flex-1 text-sm border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
+                    className="flex-1 text-sm border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 text-slate-900 bg-white"
                     disabled={isChatting}
                 />
                 <button 

@@ -40,6 +40,13 @@ export interface Message {
   isSystem?: boolean; // For broadcast notifications
 }
 
+export interface LearningStats {
+    totalTimeSpent: number; // in seconds
+    questionsAsked: number;
+    learningStreak: number; // in days
+    lastLoginDate: string; // YYYY-MM-DD
+}
+
 export interface Student {
   id: string;
   handle: string; // Unique identifier starting with @
@@ -56,6 +63,7 @@ export interface Student {
   avatarUrl?: string; // Profile picture data URL
   salesHistory?: SaleRecord[]; // Record of submitted sales
   cohortId?: string; // The ID of the training cohort they belong to
+  learningStats: LearningStats;
 }
 
 export interface Lesson {

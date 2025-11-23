@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { HashRouter, Routes, Route, Navigate, Link } from 'react-router-dom';
 import Layout from './components/Layout';
 import Dashboard from './components/Dashboard';
@@ -45,33 +45,34 @@ const CourseList: React.FC<{ courses: Course[] }> = ({ courses }) => {
   return (
     <div className="space-y-10">
        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-emerald-950 font-heading">Training Portal</h1>
-          <p className="text-emerald-700 mt-2">Master the skills you need to grow your Forever business.</p>
+          <h1 className="text-3xl font-bold text-emerald-950 font-heading dark:text-emerald-400">Training Portal</h1>
+          <p className="text-emerald-700 mt-2 dark:text-emerald-300">Master the skills you need to grow your Forever business.</p>
        </div>
 
        {Object.keys(coursesByTrack).map((track) => (
          <div key={track} className="space-y-4">
-            <h2 className="text-xl font-bold text-slate-800 border-l-4 border-emerald-500 pl-3 font-heading">{track}</h2>
+            <h2 className="text-xl font-bold text-slate-800 border-l-4 border-emerald-500 pl-3 font-heading dark:text-slate-200">{track}</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {coursesByTrack[track].map(course => (
-                <div key={course.id} className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden flex flex-col group hover:shadow-md transition-shadow">
+                <div key={course.id} className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden flex flex-col group hover:shadow-md transition-shadow dark:bg-slate-800 dark:border-slate-700">
                   <div className="h-40 overflow-hidden relative">
                       <img src={course.thumbnailUrl} alt={course.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
                       <div className="absolute bottom-3 left-4 text-white font-bold font-heading text-lg shadow-black/50 drop-shadow-md">{course.title}</div>
                   </div>
                   <div className="p-6 flex-1 flex flex-col">
-                      <p className="text-sm text-slate-500 mb-4 flex-1 line-clamp-2">{course.description}</p>
+                      <p className="text-sm text-slate-500 mb-4 flex-1 line-clamp-2 dark:text-slate-400">{course.description}</p>
+                      
                       <div className="space-y-2">
-                        <div className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Modules ({course.modules.length})</div>
+                        <div className="text-xs font-semibold text-slate-400 uppercase tracking-wider dark:text-slate-500">Modules ({course.modules.length})</div>
                         {course.modules.map(m => (
                             <Link 
                               key={m.id} 
                               to={`/classroom/${course.id}/${m.id}/${m.lessons[0].id}`}
-                              className="block p-3 rounded-lg bg-slate-50 hover:bg-emerald-50 hover:text-emerald-700 transition-colors text-sm font-medium text-slate-700 flex justify-between items-center"
+                              className="block p-3 rounded-lg bg-slate-50 hover:bg-emerald-50 hover:text-emerald-700 transition-colors text-sm font-medium text-slate-700 flex justify-between items-center dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-emerald-900/30 dark:hover:text-emerald-400"
                             >
                               <span className="truncate flex-1 mr-2">{m.title}</span>
-                              <span className="text-xs bg-white px-2 py-1 rounded border border-slate-200 text-slate-400 whitespace-nowrap">{m.lessons.length} lessons</span>
+                              <span className="text-xs bg-white px-2 py-1 rounded border border-slate-200 text-slate-400 whitespace-nowrap dark:bg-slate-600 dark:border-slate-500 dark:text-slate-300">{m.lessons.length} lessons</span>
                             </Link>
                         ))}
                       </div>
@@ -93,9 +94,23 @@ const App: React.FC = () => {
   const [messages, setMessages] = useState<Message[]>(INITIAL_MESSAGES);
   const [posts, setPosts] = useState<CommunityPost[]>(INITIAL_POSTS);
   const [cohorts, setCohorts] = useState<Cohort[]>(INITIAL_COHORTS);
+  const [theme, setTheme] = useState<'light' | 'dark'>('light');
   
   // Auth State
   const [currentUser, setCurrentUser] = useState<Student | null>(null);
+
+  // Theme Effect
+  useEffect(() => {
+    if (theme === 'dark') {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, [theme]);
+
+  const toggleTheme = () => {
+    setTheme(prev => prev === 'light' ? 'dark' : 'light');
+  };
 
   const handleLogin = (handle: string, pass: string): boolean => {
     const formattedHandle = handle.startsWith('@') ? handle : `@${handle}`;
@@ -105,8 +120,32 @@ const App: React.FC = () => {
     );
 
     if (user) {
-      setCurrentUser(user);
-      return true;
+        // Login Streak Calculation
+        const today = new Date().toISOString().split('T')[0];
+        let newStreak = user.learningStats.learningStreak;
+        const lastLogin = user.learningStats.lastLoginDate;
+
+        if (lastLogin !== today) {
+            const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
+            if (lastLogin === yesterday) {
+                newStreak += 1;
+            } else {
+                newStreak = 1; // Reset streak
+            }
+        }
+        
+        const updatedUser = {
+            ...user,
+            learningStats: {
+                ...user.learningStats,
+                learningStreak: newStreak,
+                lastLoginDate: today
+            }
+        };
+
+        setCurrentUser(updatedUser);
+        handleUpdateStudent(updatedUser); // Persist
+        return true;
     }
     return false;
   };
@@ -179,6 +218,20 @@ const App: React.FC = () => {
       ));
   };
 
+  // Track Stats Logic
+  const handleUpdateStats = (seconds: number, questions: number) => {
+    if (!currentUser) return;
+    const updatedStudent = {
+        ...currentUser,
+        learningStats: {
+            ...currentUser.learningStats,
+            totalTimeSpent: currentUser.learningStats.totalTimeSpent + seconds,
+            questionsAsked: currentUser.learningStats.questionsAsked + questions
+        }
+    };
+    handleUpdateStudent(updatedStudent);
+  };
+
   const handleCompleteLesson = (moduleId: string) => {
      console.log("Lesson in module completed:", moduleId);
   };
@@ -248,6 +301,8 @@ const App: React.FC = () => {
                     courses={courses} 
                     currentUser={currentUser!}
                     onUpdateStudent={handleUpdateStudent}
+                    theme={theme}
+                    onToggleTheme={toggleTheme}
                 />
             </ProtectedRoute>
         } />
@@ -268,7 +323,11 @@ const App: React.FC = () => {
         
         <Route path="/classroom/:courseId/:moduleId/:lessonId" element={
             <ProtectedRoute currentUser={currentUser} onLogout={handleLogout}>
-                <Classroom courses={courses} onCompleteLesson={handleCompleteLesson} />
+                <Classroom 
+                    courses={courses} 
+                    onCompleteLesson={handleCompleteLesson} 
+                    onUpdateStats={handleUpdateStats}
+                />
             </ProtectedRoute>
         } />
       </Routes>

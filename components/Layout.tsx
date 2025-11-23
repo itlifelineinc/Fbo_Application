@@ -19,7 +19,7 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout }) => {
   const isAdminOrSuper = currentUser.role === UserRole.ADMIN || currentUser.role === UserRole.SUPER_ADMIN;
 
   return (
-    <div className="flex h-screen bg-slate-50 overflow-hidden">
+    <div className="flex h-screen bg-slate-50 dark:bg-slate-950 overflow-hidden transition-colors duration-300">
       
       {/* Mobile Overlay */}
       {isMobileMenuOpen && (
@@ -33,11 +33,11 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout }) => {
       <aside 
         className={`
           fixed lg:static inset-y-0 left-0 z-30 w-64 bg-emerald-900 text-white flex flex-col shadow-xl 
-          transform transition-transform duration-300 ease-in-out
+          transform transition-transform duration-300 ease-in-out dark:bg-emerald-950
           ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
         `}
       >
-        <div className="p-6 border-b border-emerald-800 flex justify-between items-center">
+        <div className="p-6 border-b border-emerald-800 flex justify-between items-center dark:border-emerald-900">
           <div className="flex items-center gap-2 font-bold text-xl tracking-tight font-heading">
             <div className="w-8 h-8 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-full flex items-center justify-center text-emerald-900 shadow-lg">
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-5 h-5">
@@ -53,11 +53,11 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout }) => {
         </div>
 
         {/* Clickable User Profile Section */}
-        <div className="px-6 py-4 bg-emerald-800/30">
+        <div className="px-6 py-4 bg-emerald-800/30 dark:bg-emerald-900/30">
            <Link 
              to={`/students/${currentUser.id}`}
              onClick={() => setIsMobileMenuOpen(false)}
-             className="flex items-center gap-3 bg-emerald-800/50 p-3 rounded-lg border border-emerald-800 hover:bg-emerald-700/50 hover:border-emerald-600 transition-all cursor-pointer group"
+             className="flex items-center gap-3 bg-emerald-800/50 p-3 rounded-lg border border-emerald-800 hover:bg-emerald-700/50 hover:border-emerald-600 transition-all cursor-pointer group dark:border-emerald-700 dark:bg-emerald-800/30"
            >
              <div className="w-8 h-8 rounded-full bg-emerald-100 text-emerald-800 flex items-center justify-center font-bold text-xs flex-shrink-0 font-heading overflow-hidden group-hover:scale-105 transition-transform">
                 {currentUser.avatarUrl ? (
@@ -82,13 +82,6 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout }) => {
             onClick={() => setIsMobileMenuOpen(false)}
           />
           <NavItem 
-            to="/community" 
-            icon={<GlobeAltIcon />} 
-            label="Community" 
-            active={isActive('/community')} 
-            onClick={() => setIsMobileMenuOpen(false)}
-          />
-          <NavItem 
             to="/chat" 
             icon={<ChatBubbleOvalLeftIcon />} 
             label="Team Chat" 
@@ -107,6 +100,13 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout }) => {
             icon={<CurrencyDollarIcon />} 
             label="Sales & CC" 
             active={isActive('/sales')} 
+            onClick={() => setIsMobileMenuOpen(false)}
+          />
+          <NavItem 
+            to="/community" 
+            icon={<GlobeAltIcon />} 
+            label="Community" 
+            active={isActive('/community')} 
             onClick={() => setIsMobileMenuOpen(false)}
           />
           
@@ -133,7 +133,7 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout }) => {
           )}
         </nav>
 
-        <div className="p-4 border-t border-emerald-800">
+        <div className="p-4 border-t border-emerald-800 dark:border-emerald-900">
           <button 
             onClick={onLogout}
             className="flex items-center gap-3 px-4 py-3 rounded-lg w-full text-emerald-300 hover:bg-emerald-800/50 hover:text-white transition-colors"
@@ -145,10 +145,10 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout }) => {
       </aside>
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col h-screen overflow-hidden">
+      <div className="flex-1 flex flex-col h-screen overflow-hidden dark:bg-slate-950">
         {/* Mobile Header */}
-        <header className="lg:hidden bg-white border-b border-slate-200 p-4 flex justify-between items-center z-10 shadow-sm">
-           <div className="flex items-center gap-2 font-bold text-lg text-emerald-900 font-heading">
+        <header className="lg:hidden bg-white border-b border-slate-200 p-4 flex justify-between items-center z-10 shadow-sm dark:bg-slate-900 dark:border-slate-800">
+           <div className="flex items-center gap-2 font-bold text-lg text-emerald-900 font-heading dark:text-emerald-400">
              <div className="w-6 h-6 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-full flex items-center justify-center text-emerald-900 shadow-sm">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-3 h-3">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
@@ -156,12 +156,12 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout }) => {
              </div>
              <span>FBO Academy</span>
            </div>
-           <button onClick={() => setIsMobileMenuOpen(true)} className="text-slate-600 p-2 rounded-lg hover:bg-slate-100">
+           <button onClick={() => setIsMobileMenuOpen(true)} className="text-slate-600 p-2 rounded-lg hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800">
              <Bars3Icon />
            </button>
         </header>
 
-        <main className="flex-1 overflow-auto scroll-smooth">
+        <main className="flex-1 overflow-auto scroll-smooth dark:bg-slate-950">
           <div className="max-w-7xl mx-auto p-4 md:p-8">
             {children}
           </div>
@@ -177,8 +177,8 @@ const NavItem: React.FC<{ to: string; icon: React.ReactNode; label: string; acti
     onClick={onClick}
     className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 group ${
       active 
-        ? 'bg-emerald-800 text-white shadow-lg shadow-emerald-900/20' 
-        : 'text-emerald-100 hover:bg-emerald-800/50 hover:text-white'
+        ? 'bg-emerald-800 text-white shadow-lg shadow-emerald-900/20 dark:bg-emerald-800' 
+        : 'text-emerald-100 hover:bg-emerald-800/50 hover:text-white dark:text-emerald-300'
     }`}
   >
     <span className={`${active ? 'text-yellow-400' : 'text-emerald-400 group-hover:text-yellow-300'}`}>
@@ -231,6 +231,12 @@ const ArrowRightOnRectangleIcon = () => (
     </svg>
 );
 
+const GlobeAltIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M12 21a9.004 9.004 0 008.716-6.747M12 21a9.004 9.004 0 01-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S12 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S12 3 12 3m0 0a8.997 8.997 0 017.843 4.582M12 3a8.997 8.997 0 00-7.843 4.582m15.686 0A11.953 11.953 0 0112 10.5c-2.998 0-5.74-1.1-7.843-2.918m15.686 0A8.959 8.959 0 0121 12c0 .778-.099 1.533-.284 2.253m0 0A17.919 17.919 0 0112 16.5c-3.162 0-6.133-.815-8.716-2.247m0 0A9.015 9.015 0 013 12c0-1.605.42-3.113 1.157-4.418" />
+    </svg>
+);
+
 const Bars3Icon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
     <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
@@ -241,12 +247,6 @@ const XMarkIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
     <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
   </svg>
-);
-
-const GlobeAltIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
-        <path strokeLinecap="round" strokeLinejoin="round" d="M12 21a9.004 9.004 0 008.716-6.747M12 21a9.004 9.004 0 01-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S12 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S12 3 12 3m0 0a8.997 8.997 0 017.843 4.582M12 3a8.997 8.997 0 00-7.843 4.582m15.686 0A11.953 11.953 0 0112 10.5c-2.998 0-5.74-1.1-7.843-2.918m15.686 0A8.959 8.959 0 0121 12c0 .778-.099 1.533-.284 2.253m0 0A17.919 17.919 0 0112 16.5c-3.162 0-6.133-.815-8.716-2.247m0 0A9.015 9.015 0 013 12c0-1.605.42-3.113 1.157-4.418" />
-    </svg>
 );
 
 export default Layout;

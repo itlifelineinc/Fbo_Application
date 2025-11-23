@@ -3,11 +3,60 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import { Link, useNavigate } from 'react-router-dom';
 import { Student, UserRole, Course, CourseTrack } from '../types';
 
-interface DashboardProps {
-  students: Student[];
-  currentUser: Student;
-  courses: Course[];
-}
+// --- Child Components & Icons (Defined First) ---
+
+const StatCard: React.FC<{ title: string; value: string; icon: React.ReactNode; trend: string }> = ({ title, value, icon, trend }) => (
+  <div className="bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-slate-100 flex items-center gap-5 hover:shadow-md transition-shadow">
+    <div className="p-4 bg-emerald-50 text-emerald-600 rounded-2xl shrink-0">
+      {icon}
+    </div>
+    <div>
+      <p className="text-sm font-medium text-slate-500 uppercase tracking-wide">{title}</p>
+      <h3 className="text-3xl font-bold text-slate-800 font-heading mt-1">{value}</h3>
+      <p className="text-xs text-emerald-600 font-bold mt-1.5 flex items-center gap-1">
+        <span className="text-lg">↗</span> {trend}
+      </p>
+    </div>
+  </div>
+);
+
+const UserGroupIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
+    <path strokeLinecap="round" strokeLinejoin="round" d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m.94 3.198l.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0112 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 016 18.719m12 0a5.971 5.971 0 00-.941-3.197m0 0A5.995 5.995 0 0012 12.75a5.995 5.995 0 00-5.058 2.772m0 0a3 3 0 00-4.681 2.72 8.986 8.986 0 003.74.477m.94-3.197a5.971 5.971 0 00-.94 3.197M15 6.75a3 3 0 11-6 0 3 3 0 016 0zm6 3a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0zm-13.5 0a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z" />
+  </svg>
+);
+
+const ChartBarIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
+    <path strokeLinecap="round" strokeLinejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z" />
+  </svg>
+);
+
+const AcademicCapIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-8 h-8">
+    <path strokeLinecap="round" strokeLinejoin="round" d="M4.26 10.147a60.436 60.436 0 00-.491 6.347A48.627 48.627 0 0112 20.904a48.627 48.627 0 018.232-4.41 60.46 60.46 0 00-.491-6.347m-15.482 0a50.57 50.57 0 00-2.658-.813A59.905 59.905 0 0112 3.493a59.902 59.902 0 0110.499 5.221 69.17 69.17 0 00-2.66.812M12 14.952V16.95M7 10.05h.008v.008H7v-.008zm5.374 9.332l-.223.55a.51.51 0 01-.902 0l-.223-.55a.51.51 0 01.948 0z" />
+  </svg>
+);
+
+const CurrencyDollarIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+    </svg>
+);
+
+const MagnifyingGlassIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
+    </svg>
+);
+
+const SparklesIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+    <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.456-2.456L14.25 6l1.035-.259a3.375 3.375 0 002.456-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 00-2.456 2.456zM16.894 20.567L16.5 21.75l-.394-1.183a2.25 2.25 0 00-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 001.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 00-1.423 1.423z" />
+  </svg>
+);
+
+// --- Main Component ---
 
 const Dashboard: React.FC<DashboardProps> = ({ students, currentUser, courses }) => {
   const navigate = useNavigate();
@@ -49,21 +98,21 @@ const Dashboard: React.FC<DashboardProps> = ({ students, currentUser, courses })
   ];
   const PIE_COLORS = ['#059669', '#f1f5f9'];
 
+  // Format Stats
+  const formatTime = (seconds: number) => {
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    if(hours > 0) return `${hours}h ${minutes}m`;
+    return `${minutes}m`;
+  };
+
   // Recommended Courses Logic
   const recommendedCourses = courses.filter(course => {
-      // Basic filters: Course must have modules and not be fully completed
       const isCompleted = course.modules.every(m => currentUser.completedModules.includes(m.id));
       if (isCompleted) return false;
-
-      // Role-based recommendations
-      if (isStudent) {
-          // Students need Basics and Product knowledge first
-          return [CourseTrack.BASICS, CourseTrack.PRODUCT, CourseTrack.RANK].includes(course.track);
-      } else {
-          // Sponsors/Admins need Business, Sales, Leadership
-          return [CourseTrack.BUSINESS, CourseTrack.SALES, CourseTrack.LEADERSHIP].includes(course.track);
-      }
-  }).slice(0, 2); // Limit to 2 recommendations
+      if (isStudent) return [CourseTrack.BASICS, CourseTrack.PRODUCT, CourseTrack.RANK].includes(course.track);
+      return [CourseTrack.BUSINESS, CourseTrack.SALES, CourseTrack.LEADERSHIP].includes(course.track);
+  }).slice(0, 2);
 
   return (
     <div className="space-y-8 animate-fade-in">
@@ -105,7 +154,7 @@ const Dashboard: React.FC<DashboardProps> = ({ students, currentUser, courses })
         />
       </div>
 
-      {/* Main Grid Layout - Chart Left (2/3), Widgets Right (1/3) */}
+      {/* Main Grid Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
           
           {/* Left Column: Charts & Course List */}
@@ -118,7 +167,8 @@ const Dashboard: React.FC<DashboardProps> = ({ students, currentUser, courses })
                         {isStudent ? 'Your Progress' : 'Team Leaderboard'}
                     </h2>
                 </div>
-                <div className="h-64 md:h-80 w-full">
+                {/* Added min-w-0 to container to fix Recharts responsive issues */}
+                <div className="h-64 md:h-80 w-full min-w-0">
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                       <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
@@ -210,14 +260,14 @@ const Dashboard: React.FC<DashboardProps> = ({ students, currentUser, courses })
                 </div>
             )}
 
-            {/* Engagement Overview (Pie Chart) - Modernized */}
+            {/* Engagement Overview (Pie Chart) */}
             <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-8 relative overflow-hidden">
                 <div className="flex justify-between items-center mb-6 relative z-10">
                     <h2 className="text-lg font-bold text-emerald-950 font-heading">Engagement</h2>
                     <span className="text-[10px] font-bold px-2 py-1 bg-slate-50 text-slate-400 rounded-md border border-slate-100 uppercase tracking-wide">Overview</span>
                 </div>
                 
-                <div className="h-64 w-full relative z-10">
+                <div className="h-64 w-full relative z-10 min-w-0">
                    <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
                       <Pie
@@ -260,7 +310,6 @@ const Dashboard: React.FC<DashboardProps> = ({ students, currentUser, courses })
                         You've completed <span className="font-bold text-emerald-700">{completedCount}</span> out of <span className="font-bold text-slate-700">{totalModulesCount}</span> modules.
                     </p>
                 </div>
-                {/* Background Decor */}
                 <div className="absolute -top-10 -right-10 w-32 h-32 bg-emerald-50 rounded-full blur-3xl opacity-50 z-0"></div>
             </div>
 
@@ -280,20 +329,19 @@ const Dashboard: React.FC<DashboardProps> = ({ students, currentUser, courses })
                    <div className="space-y-4">
                      <div className="flex justify-between items-center text-sm border-b border-white/10 pb-3">
                         <span className="text-emerald-100 font-medium">Questions Asked</span>
-                        <span className="font-bold text-xl">12</span>
+                        <span className="font-bold text-xl">{currentUser.learningStats.questionsAsked}</span>
                      </div>
                      <div className="flex justify-between items-center text-sm border-b border-white/10 pb-3">
-                        <span className="text-emerald-100 font-medium">Avg. Lesson Time</span>
-                        <span className="font-bold text-xl">8m</span>
+                        <span className="text-emerald-100 font-medium">Total Time</span>
+                        <span className="font-bold text-xl">{formatTime(currentUser.learningStats.totalTimeSpent)}</span>
                      </div>
                      <div className="flex justify-between items-center text-sm pt-1">
                         <span className="text-emerald-100 font-medium">Learning Streak</span>
-                        <span className="font-bold text-yellow-400 flex items-center gap-1">3 Days <span className="text-lg">🔥</span></span>
+                        <span className="font-bold text-yellow-400 flex items-center gap-1">{currentUser.learningStats.learningStreak} Days <span className="text-lg">🔥</span></span>
                      </div>
                    </div>
                  </div>
                  
-                 {/* Decor */}
                  <div className="absolute -bottom-10 -left-10 w-40 h-40 bg-teal-500/20 rounded-full blur-3xl"></div>
             </div>
 
@@ -316,7 +364,6 @@ const Dashboard: React.FC<DashboardProps> = ({ students, currentUser, courses })
                             </Link>
                         </div>
                     </div>
-                    {/* Decorative Icon */}
                     <div className="absolute -right-8 -bottom-8 text-white/10 group-hover:scale-110 transition-transform duration-700 pointer-events-none rotate-12">
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-56 h-56">
                             <path d="M11.644 1.59a.75.75 0 01.712 0l9.75 5.25a.75.75 0 010 1.32l-9.75 5.25a.75.75 0 01-.712 0l-9.75-5.25a.75.75 0 010-1.32l9.75-5.25z" />
@@ -351,57 +398,5 @@ const Dashboard: React.FC<DashboardProps> = ({ students, currentUser, courses })
     </div>
   );
 };
-
-const StatCard: React.FC<{ title: string; value: string; icon: React.ReactNode; trend: string }> = ({ title, value, icon, trend }) => (
-  <div className="bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-slate-100 flex items-center gap-5 hover:shadow-md transition-shadow">
-    <div className="p-4 bg-emerald-50 text-emerald-600 rounded-2xl shrink-0">
-      {icon}
-    </div>
-    <div>
-      <p className="text-sm font-medium text-slate-500 uppercase tracking-wide">{title}</p>
-      <h3 className="text-3xl font-bold text-slate-800 font-heading mt-1">{value}</h3>
-      <p className="text-xs text-emerald-600 font-bold mt-1.5 flex items-center gap-1">
-        <span className="text-lg">↗</span> {trend}
-      </p>
-    </div>
-  </div>
-);
-
-// ... Icons kept the same, just re-exported implicitly ...
-const UserGroupIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
-    <path strokeLinecap="round" strokeLinejoin="round" d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m.94 3.198l.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0112 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 016 18.719m12 0a5.971 5.971 0 00-.941-3.197m0 0A5.995 5.995 0 0012 12.75a5.995 5.995 0 00-5.058 2.772m0 0a3 3 0 00-4.681 2.72 8.986 8.986 0 003.74.477m.94-3.197a5.971 5.971 0 00-.94 3.197M15 6.75a3 3 0 11-6 0 3 3 0 016 0zm6 3a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0zm-13.5 0a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z" />
-  </svg>
-);
-
-const ChartBarIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
-    <path strokeLinecap="round" strokeLinejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z" />
-  </svg>
-);
-
-const AcademicCapIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-8 h-8">
-    <path strokeLinecap="round" strokeLinejoin="round" d="M4.26 10.147a60.436 60.436 0 00-.491 6.347A48.627 48.627 0 0112 20.904a48.627 48.627 0 018.232-4.41 60.46 60.46 0 00-.491-6.347m-15.482 0a50.57 50.57 0 00-2.658-.813A59.905 59.905 0 0112 3.493a59.902 59.902 0 0110.499 5.221 69.17 69.17 0 00-2.66.812M12 14.952V16.95M7 10.05h.008v.008H7v-.008zm5.374 9.332l-.223.55a.51.51 0 01-.902 0l-.223-.55a.51.51 0 01.948 0z" />
-  </svg>
-);
-
-const CurrencyDollarIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
-        <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-    </svg>
-);
-
-const MagnifyingGlassIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
-        <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
-    </svg>
-);
-
-const SparklesIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
-    <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.456-2.456L14.25 6l1.035-.259a3.375 3.375 0 002.456-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 00-2.456 2.456zM16.894 20.567L16.5 21.75l-.394-1.183a2.25 2.25 0 00-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 001.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 00-1.423 1.423z" />
-  </svg>
-);
 
 export default Dashboard;

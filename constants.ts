@@ -1,4 +1,5 @@
-import { Course, Student, UserRole, Message, CourseTrack, CommunityPost, Cohort } from './types';
+
+import { Course, Student, UserRole, Message, CourseTrack, CommunityPost, Cohort, CourseLevel, CourseStatus } from './types';
 
 export const INITIAL_STUDENTS: Student[] = [
   {
@@ -11,8 +12,24 @@ export const INITIAL_STUDENTS: Student[] = [
     enrolledDate: '2020-01-01',
     progress: 100,
     completedModules: [],
+    completedChapters: [],
     caseCredits: 100, 
     sponsorId: '',
+    learningStats: { totalTimeSpent: 0, questionsAsked: 0, learningStreak: 0, lastLoginDate: '' }
+  },
+  {
+    id: 'admin_1',
+    handle: '@admin_support',
+    password: 'password123',
+    role: UserRole.ADMIN,
+    name: 'Support Admin',
+    email: 'support@fbo.com',
+    enrolledDate: '2021-01-01',
+    progress: 100,
+    completedModules: [],
+    completedChapters: [],
+    caseCredits: 10,
+    sponsorId: '@forever_system',
     learningStats: { totalTimeSpent: 0, questionsAsked: 0, learningStreak: 0, lastLoginDate: '' }
   },
   {
@@ -25,6 +42,7 @@ export const INITIAL_STUDENTS: Student[] = [
     enrolledDate: '2023-10-15',
     progress: 65,
     completedModules: ['m1'],
+    completedChapters: ['c1-m1-1'],
     sponsorId: '@forever_system',
     caseCredits: 4.5, 
     quizResults: [
@@ -44,6 +62,7 @@ export const INITIAL_STUDENTS: Student[] = [
     enrolledDate: '2023-10-20',
     progress: 15,
     completedModules: [],
+    completedChapters: [],
     sponsorId: '@alice_success',
     caseCredits: 0.5, 
     quizResults: [
@@ -60,181 +79,76 @@ export const INITIAL_STUDENTS: Student[] = [
 export const INITIAL_COURSES: Course[] = [
   {
     id: 'c1',
-    title: 'Forever Opportunity Basics (Starter Pack)',
-    description: 'The foundation course every new recruit must master to start their journey.',
+    title: 'Forever Opportunity Basics',
+    subtitle: 'A beginner-friendly guide to understanding the Forever business, CC, retailing, and how to build your team.',
+    description: 'This is the foundation course new recruits should take first. It covers everything from the company history to the compensation plan.',
     track: CourseTrack.BASICS,
+    level: CourseLevel.BEGINNER,
+    targetAudience: ['New Recruits', 'Assistant Supervisors'],
+    learningOutcomes: ['Understand Case Credits', 'Learn the Marketing Plan', 'Start Retailing'],
     thumbnailUrl: 'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+    bannerImageUrl: 'https://images.unsplash.com/photo-1556761175-5973dc0f32e7?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80',
+    status: CourseStatus.PUBLISHED,
+    authorHandle: '@forever_system',
+    createdAt: Date.now(),
+    updatedAt: Date.now(),
+    settings: {
+        gamificationEnabled: true,
+        pointsReward: 500,
+        certificateEnabled: true,
+        requiresAssessment: true,
+        teamOnly: false
+    },
     modules: [
       {
         id: 'm1',
-        title: 'Module 1: Welcome to Forever',
-        description: 'Understanding the mission, culture, and unique value of Forever Living.',
-        lessons: [
+        title: 'Welcome to Forever',
+        order: 1,
+        chapters: [
           { 
-            id: 'l1-1', 
+            id: 'c1-m1-1', 
             title: 'The Forever Story', 
-            type: 'TEXT', 
-            headerImageUrl: 'https://images.unsplash.com/photo-1542744173-8e7e53415bb0?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-            summary: 'Learn about the origins of Forever Living, Rex Maughan’s vision, and the global impact of the Aloe company.',
-            objectives: ['Understand the history of FLP', 'Recognize the core values', 'Identify the global scale of the business'],
-            content: 'Forever Living Products was founded in 1978 with a little more than dreams and hard work. It was designed to help anyone who wanted a better future to attain it on their own...',
-            actionSteps: ['Watch the "Story of Forever" video', 'Write down 3 values that resonate with you'],
-            durationMinutes: 10 
+            durationMinutes: 10,
+            content: 'Forever Living Products was founded in 1978...',
+            actionSteps: ['Watch the welcome video', 'Download the company policy'],
+            isPublished: true,
+            type: 'TEXT'
           },
           { 
-             id: 'l1-2',
-             title: 'What Makes Forever Unique?',
-             type: 'VIDEO',
-             headerImageUrl: 'https://images.unsplash.com/photo-1560264280-88b68371db39?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-             summary: 'Discover the vertical integration, the Aloe Science Council seal, and our commitment to quality.',
-             objectives: ['Explain vertical integration', 'List 3 quality certifications'],
-             content: 'https://www.youtube.com/embed/dQw4w9WgXcQ', // Placeholder
-             actionSteps: ['Check the seal on your Aloe bottle'],
-             durationMinutes: 15,
-             quizQuestions: [
-                 { question: "What does Vertical Integration mean for Forever?", options: ["We own everything from plant to product", "We outsource everything", "We only sell online"], correctAnswer: 0 }
-             ]
+            id: 'c1-m1-2', 
+            title: 'What Makes Forever Unique', 
+            durationMinutes: 15,
+            content: 'Vertical integration means we own the aloe fields, the manufacturing, and the distribution...',
+            actionSteps: [],
+            isPublished: true,
+            type: 'TEXT'
           }
         ]
       },
       {
         id: 'm2',
-        title: 'Module 2: Understanding Case Credits (CC)',
-        description: 'Mastering the internal currency of the business to drive growth.',
-        lessons: [
+        title: 'Understanding Case Credits (CC)',
+        order: 2,
+        chapters: [
             {
-                id: 'l2-1',
-                title: 'What is a CC & Why it Matters',
+                id: 'c1-m2-1',
+                title: 'What is a CC?',
+                durationMinutes: 20,
+                content: 'A Case Credit is a global currency used to measure sales...',
+                actionSteps: ['Calculate the CC of your first order'],
+                isPublished: true,
                 type: 'TEXT',
-                summary: 'CC is the global currency that equalizes product value across 160+ countries.',
-                objectives: ['Define Case Credit', 'Calculate CC for common products', 'Understand the 4CC active goal'],
-                content: 'A Case Credit (CC) is a value assigned to each product to calculate sales activity. 1CC is approximately $214 USD (Wholesale) or $307 USD (Retail). Achieving 4CC monthly is the key to unlocking all bonuses.',
-                actionSteps: ['Calculate the CC value of your first order'],
-                durationMinutes: 20
+                quizQuestions: [
+                    {
+                        id: 'q1',
+                        question: 'What does CC stand for?',
+                        options: ['Cash Credit', 'Case Credit', 'Company Coin'],
+                        correctAnswer: 1
+                    }
+                ]
             }
         ]
-      },
-      {
-        id: 'm3',
-        title: 'Module 3: Your First 2CC Plan',
-        description: 'The roadmap to becoming an Assistant Supervisor.',
-        lessons: [
-            {
-                id: 'l3-1',
-                title: 'The Fast Start Strategy',
-                type: 'TEXT',
-                summary: 'How to achieve 2CC in your first week using the "Start Your Journey" pack.',
-                content: 'The fastest way to qualify as an Assistant Supervisor (30% discount) is by purchasing the Start Your Journey pack (2CC). Alternatively, you can retail products to reach 2CC over 2 consecutive months.',
-                objectives: ['Understand the 2CC requirement', 'Learn the benefits of Assistant Supervisor'],
-                actionSteps: ['Review the contents of the Start Your Journey Pack', 'Set a date for your Business Launch'],
-                durationMinutes: 25
-            }
-        ]
-      },
-      {
-          id: 'm4',
-          title: 'Module 4: The Compensation Plan',
-          description: 'How you get paid: Discounts, Bonuses, and Incentives.',
-          lessons: [
-              {
-                  id: 'l4-1',
-                  title: 'Levels & Discounts Explained',
-                  type: 'TEXT',
-                  summary: 'From Novus Customer (5%) to Manager (48%).',
-                  content: 'As you climb the marketing plan, your personal discount increases. Assistant Supervisor: 30%, Supervisor: 38%, Assistant Manager: 43%, Manager: 48%. This discount is also your profit margin on retail sales.',
-                  durationMinutes: 30
-              }
-          ]
-      },
-      {
-          id: 'm5',
-          title: 'Module 5: Team Building Fundamentals',
-          description: 'Building a stable business on a foundation of 5 key people.',
-          lessons: [
-              {
-                  id: 'l5-1',
-                  title: 'Identifying Your First 5 Key People',
-                  type: 'TEXT',
-                  summary: 'Who do you know? Using the memory jogger to find your partners.',
-                  content: 'Success in Forever comes from duplication. You are looking for 5 people who want what you want. They are teachable, hungry for success, and willing to work.',
-                  actionSteps: ['Create your "First 100" list', 'Identify your top 5 prospects'],
-                  durationMinutes: 20
-              }
-          ]
-      },
-      {
-          id: 'm6',
-          title: 'Module 6: Sharing the Opportunity',
-          description: 'Scripts, approaches, and follow-up strategies.',
-          lessons: [
-              {
-                  id: 'l6-1',
-                  title: 'The Right Words to Say',
-                  type: 'TEXT',
-                  summary: 'Proven scripts for inviting prospects to look at the business.',
-                  content: 'Do not try to explain the whole business in one call. The goal of the invitation is to get them to watch a video or attend a presentation. "I found something exciting and I thought of you..."',
-                  actionSteps: ['Practice the invitation script with your sponsor'],
-                  durationMinutes: 15
-              }
-          ]
-      },
-      {
-          id: 'm7',
-          title: 'Module 7: First 7-Day Action Plan',
-          description: 'Daily activities to launch your business with momentum.',
-          lessons: [
-              {
-                  id: 'l7-1',
-                  title: 'Your Daily Method of Operation (DMO)',
-                  type: 'TEXT',
-                  summary: 'What to do every single day to guarantee growth.',
-                  content: '1. Use the products. 2. Share the products. 3. Share the opportunity. 4. Attend training. Consistency is the secret.',
-                  actionSteps: ['Fill out your 7-Day Activity Tracker'],
-                  durationMinutes: 10,
-                  pdfUrl: '/assets/7-day-plan.pdf'
-              }
-          ]
       }
-    ]
-  },
-  {
-    id: 'c2',
-    title: 'Product Mastery',
-    description: 'Deep dive into Kidney Health, Detox, Weight Loss, Skin, and Immunity.',
-    track: CourseTrack.PRODUCT,
-    thumbnailUrl: 'https://images.unsplash.com/photo-1512069772995-ec65ed45afd6?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-    modules: [
-        { id: 'm_pm_1', title: 'Core Aloe Products', description: 'The benefits of Aloe Gel.', lessons: [] }
-    ]
-  },
-  {
-    id: 'c3',
-    title: 'Business Building & Recruiting',
-    description: 'Advanced strategies for prospecting, presenting, and closing.',
-    track: CourseTrack.BUSINESS,
-    thumbnailUrl: 'https://images.unsplash.com/photo-1556761175-5973dc0f32e7?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-    modules: [
-        { id: 'm_bb_1', title: 'Prospecting Mastery', description: 'Finding leads online and offline.', lessons: [] }
-    ]
-  },
-  {
-    id: 'c4',
-    title: 'Sales Techniques & Social Media',
-    description: 'Using Instagram, TikTok, and WhatsApp to retail products.',
-    track: CourseTrack.SALES,
-    thumbnailUrl: 'https://images.unsplash.com/photo-1611162617474-5b21e879e113?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-    modules: [
-        { id: 'm_st_1', title: 'Social Selling 101', description: 'Optimizing your profile for sales.', lessons: [] }
-    ]
-  },
-  {
-    id: 'c5',
-    title: 'Rank Advancement Strategies',
-    description: 'The roadmap from Supervisor to Eagle Manager.',
-    track: CourseTrack.RANK,
-    thumbnailUrl: 'https://images.unsplash.com/photo-1552664730-d307ca884978?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-    modules: [
-        { id: 'm_ra_1', title: 'Road to Manager', description: 'Mapping out your 120CC.', lessons: [] }
     ]
   }
 ];

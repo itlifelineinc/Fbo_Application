@@ -1,7 +1,7 @@
 import React from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, PieChart, Pie, Legend } from 'recharts';
 import { Link, useNavigate } from 'react-router-dom';
-import { Student, UserRole, Course, CourseTrack } from '../types';
+import { Student, UserRole, Course, CourseTrack, CourseStatus } from '../types';
 
 // --- Child Components & Icons (Defined First) ---
 
@@ -56,9 +56,16 @@ const SparklesIcon = () => (
   </svg>
 );
 
+interface DashboardProps {
+  students: Student[];
+  currentUser: Student;
+  courses: Course[];
+  onReviewCourse?: (courseId: string, status: CourseStatus) => void;
+}
+
 // --- Main Component ---
 
-const Dashboard: React.FC<DashboardProps> = ({ students, currentUser, courses }) => {
+const Dashboard: React.FC<DashboardProps> = ({ students, currentUser, courses, onReviewCourse }) => {
   const navigate = useNavigate();
   const isStudent = currentUser.role === UserRole.STUDENT;
   const isSponsor = currentUser.role === UserRole.SPONSOR;
@@ -109,6 +116,10 @@ const Dashboard: React.FC<DashboardProps> = ({ students, currentUser, courses })
   // Recommended Courses Logic
   const recommendedCourses = courses.filter(course => {
       if (!course.modules) return false;
+      
+      // Only show Published or Under Review (for admins)
+      if (course.status !== CourseStatus.PUBLISHED && !isAdmin) return false;
+      
       // Safely check completion using optional chaining
       const isCompleted = course.modules.every(m => currentUser.completedModules?.includes(m.id));
       if (isCompleted) return false;
@@ -116,6 +127,9 @@ const Dashboard: React.FC<DashboardProps> = ({ students, currentUser, courses })
       if (isStudent) return [CourseTrack.BASICS, CourseTrack.PRODUCT, CourseTrack.RANK].includes(course.track);
       return [CourseTrack.BUSINESS, CourseTrack.SALES, CourseTrack.LEADERSHIP].includes(course.track);
   }).slice(0, 2);
+
+  // Pending Courses Logic (For Admins)
+  const pendingCourses = courses.filter(c => c.status === CourseStatus.UNDER_REVIEW);
 
   return (
     <div className="space-y-8 animate-fade-in">
@@ -191,6 +205,44 @@ const Dashboard: React.FC<DashboardProps> = ({ students, currentUser, courses })
                 </div>
             </div>
 
+            {/* Pending Reviews (Admin Only) */}
+            {isAdmin && pendingCourses.length > 0 && (
+                <div className="bg-orange-50 p-6 md:p-8 rounded-2xl border border-orange-100">
+                    <div className="flex justify-between items-center mb-4">
+                        <h2 className="text-lg md:text-xl font-bold text-orange-900 font-heading">Pending Course Reviews</h2>
+                        <span className="bg-orange-200 text-orange-800 px-2 py-1 rounded-full text-xs font-bold">{pendingCourses.length}</span>
+                    </div>
+                    <div className="space-y-3">
+                        {pendingCourses.map(course => (
+                            <div key={course.id} className="bg-white p-4 rounded-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-sm border border-orange-100">
+                                <div>
+                                    <h3 className="font-bold text-slate-800">{course.title}</h3>
+                                    <div className="flex gap-3 text-xs text-slate-500 mt-1">
+                                        <span>By: {course.authorHandle}</span>
+                                        <span>•</span>
+                                        <span>{course.modules.length} Modules</span>
+                                    </div>
+                                </div>
+                                <div className="flex gap-2 w-full sm:w-auto">
+                                    <Link 
+                                        to={`/course-review/${course.id}`}
+                                        className="flex-1 sm:flex-none text-center text-xs font-bold text-emerald-700 bg-emerald-50 px-4 py-2 rounded-lg hover:bg-emerald-100 transition-colors border border-emerald-200"
+                                    >
+                                        Review Content
+                                    </Link>
+                                    <button 
+                                        onClick={() => onReviewCourse?.(course.id, CourseStatus.PUBLISHED)}
+                                        className="text-xs font-bold text-white bg-emerald-600 px-4 py-2 rounded-lg hover:bg-emerald-700"
+                                    >
+                                        Quick Approve
+                                    </button>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
+
             {/* Recommended Courses List */}
             <div className="bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-slate-100">
                 <h2 className="text-lg md:text-xl font-bold text-emerald-950 mb-6 font-heading">Recommended for You</h2>
@@ -223,7 +275,7 @@ const Dashboard: React.FC<DashboardProps> = ({ students, currentUser, courses })
                             </div>
 
                             <Link 
-                                to={`/classroom/${course.id}/${course.modules?.[0]?.id}/${course.modules?.[0]?.lessons?.[0]?.id}`}
+                                to={`/classroom/${course.id}/${course.modules?.[0]?.id}/${course.modules?.[0]?.chapters?.[0]?.id}`}
                                 className="w-full sm:w-auto bg-slate-900 text-white text-sm font-bold py-3 px-6 rounded-xl hover:bg-slate-800 transition-colors text-center whitespace-nowrap shadow-md shadow-slate-200"
                             >
                                 {courseProgress === 0 ? 'Start Learning' : 'Continue'}
@@ -289,8 +341,16 @@ const Dashboard: React.FC<DashboardProps> = ({ students, currentUser, courses })
                           <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />
                         ))}
                       </Pie>
-                      <Tooltip contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)', padding: '8px 12px' }} />
-                      <Legend verticalAlign="bottom" height={36} iconSize={8} iconType="circle" wrapperStyle={{ paddingTop: '10px', fontSize: '12px', fontFamily: 'Jost, sans-serif' }} />
+                      <Tooltip 
+                         contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)', padding: '8px 12px' }}
+                      />
+                      <Legend 
+                        verticalAlign="bottom" 
+                        height={36} 
+                        iconSize={8} 
+                        iconType="circle"
+                        wrapperStyle={{ paddingTop: '10px', fontSize: '12px', fontFamily: 'Jost, sans-serif' }}
+                      />
                     </PieChart>
                   </ResponsiveContainer>
                   <div className="absolute inset-0 flex items-center justify-center pointer-events-none pb-10">

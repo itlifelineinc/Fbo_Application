@@ -11,10 +11,27 @@ import SalesPortal from './components/SalesPortal';
 import ChatPortal from './components/ChatPortal';
 import CommunityPortal from './components/CommunityPortal';
 import Login from './components/Login';
+import CourseReview from './components/CourseReview';
 import { INITIAL_COURSES, INITIAL_STUDENTS, INITIAL_MESSAGES, INITIAL_POSTS, INITIAL_COHORTS } from './constants';
-import { Course, Module, Student, SaleRecord, UserRole, Message, CourseTrack, CommunityPost, CommunityComment, Cohort } from './types';
+import { Course, Module, Student, SaleRecord, UserRole, Message, CourseTrack, CommunityPost, CommunityComment, Cohort, CourseStatus } from './types';
 
-// --- Moved Components Outside App to prevent re-mounting on state changes ---
+// API Base URL
+const API_URL = '/api';
+
+// Helper to fetch with timeout (for future backend connection)
+const fetchWithTimeout = async (resource: string, options: RequestInit = {}) => {
+  const { timeout = 2000 } = options as any;
+  const controller = new AbortController();
+  const id = setTimeout(() => controller.abort(), timeout);
+  const response = await fetch(resource, {
+    ...options,
+    signal: controller.signal  
+  });
+  clearTimeout(id);
+  return response;
+}
+
+// --- Protected Route ---
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -34,8 +51,10 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, currentUser, 
 };
 
 const CourseList: React.FC<{ courses: Course[] }> = ({ courses }) => {
-  const coursesByTrack = courses.reduce((acc, course) => {
-    if (!course) return acc; 
+  // Only show PUBLISHED courses to students
+  const publishedCourses = courses.filter(c => c.status === CourseStatus.PUBLISHED);
+
+  const coursesByTrack = publishedCourses.reduce((acc, course) => {
     if (!acc[course.track]) {
       acc[course.track] = [];
     }
@@ -44,7 +63,7 @@ const CourseList: React.FC<{ courses: Course[] }> = ({ courses }) => {
   }, {} as Record<string, Course[]>);
 
   return (
-    <div className="space-y-10">
+    <div className="space-y-10 animate-fade-in">
        <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-emerald-950 font-heading dark:text-emerald-400">Training Portal</h1>
           <p className="text-emerald-700 mt-2 dark:text-emerald-300">Master the skills you need to grow your Forever business.</p>
@@ -69,11 +88,11 @@ const CourseList: React.FC<{ courses: Course[] }> = ({ courses }) => {
                         {course.modules?.map(m => (
                             <Link 
                               key={m.id} 
-                              to={`/classroom/${course.id}/${m.id}/${m.lessons?.[0]?.id}`}
+                              to={`/classroom/${course.id}/${m.id}/${m.chapters?.[0]?.id}`}
                               className="block p-3 rounded-lg bg-slate-50 hover:bg-emerald-50 hover:text-emerald-700 transition-colors text-sm font-medium text-slate-700 flex justify-between items-center dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-emerald-900/30 dark:hover:text-emerald-400"
                             >
                               <span className="truncate flex-1 mr-2">{m.title}</span>
-                              <span className="text-xs bg-white px-2 py-1 rounded border border-slate-200 text-slate-400 whitespace-nowrap dark:bg-slate-600 dark:border-slate-500 dark:text-slate-300">{m.lessons?.length || 0} lessons</span>
+                              <span className="text-xs bg-white px-2 py-1 rounded border border-slate-200 text-slate-400 whitespace-nowrap dark:bg-slate-600 dark:border-slate-500 dark:text-slate-300">{m.chapters?.length || 0} lessons</span>
                             </Link>
                         ))}
                       </div>
@@ -90,7 +109,6 @@ const CourseList: React.FC<{ courses: Course[] }> = ({ courses }) => {
 // --- Main App Component ---
 
 const App: React.FC = () => {
-  // Initialize State DIRECTLY with Mock Data (No fetching)
   const [courses, setCourses] = useState<Course[]>(INITIAL_COURSES);
   const [students, setStudents] = useState<Student[]>(INITIAL_STUDENTS);
   const [messages, setMessages] = useState<Message[]>(INITIAL_MESSAGES);
@@ -114,18 +132,16 @@ const App: React.FC = () => {
     setTheme(prev => prev === 'light' ? 'dark' : 'light');
   };
 
-  // 1. Authentication (Purely Local)
+  // 1. Authentication
   const handleLogin = async (handle: string, pass: string): Promise<boolean> => {
-    // Instant check against local state
+    // Instant check against local state (Fallback Logic)
     const formattedHandle = handle.startsWith('@') ? handle : `@${handle}`;
-    
     const user = students.find(s => 
       s.handle.toLowerCase() === formattedHandle.toLowerCase() && 
       s.password === pass
     );
 
     if (user) {
-        // Local Streak Logic calculation
         const today = new Date().toISOString().split('T')[0];
         let newStreak = user.learningStats?.learningStreak || 0;
         const lastLogin = user.learningStats?.lastLoginDate || '';
@@ -148,7 +164,6 @@ const App: React.FC = () => {
             }
         };
 
-        // Update state
         setStudents(prev => prev.map(s => s.id === updatedUser.id ? updatedUser : s));
         setCurrentUser(updatedUser);
         return true;
@@ -160,17 +175,13 @@ const App: React.FC = () => {
     setCurrentUser(null);
   };
 
-  // 2. Data Management (Purely Local State Updates)
+  // 2. Data Management
+  const handleSubmitCourse = (newCourse: Course) => {
+      setCourses(prev => [...prev, newCourse]);
+  };
 
-  const handleAddModule = (newModule: Module, track?: CourseTrack) => {
-    const updatedCourses = [...courses];
-    const targetCourseIndex = updatedCourses.findIndex(c => c.track === track);
-    if (targetCourseIndex !== -1) {
-        updatedCourses[targetCourseIndex].modules.push(newModule);
-    } else {
-        updatedCourses[0].modules.push(newModule);
-    }
-    setCourses(updatedCourses);
+  const handleReviewCourse = (courseId: string, status: CourseStatus) => {
+      setCourses(prev => prev.map(c => c.id === courseId ? { ...c, status } : c));
   };
 
   const handleAddStudent = (newStudent: Student) => {
@@ -190,18 +201,14 @@ const App: React.FC = () => {
 
   const handleSubmitSale = (sale: SaleRecord) => {
     if (!currentUser) return;
-    
     const updatedStudent = {
         ...currentUser,
         caseCredits: (currentUser.caseCredits || 0) + sale.ccEarned,
         salesHistory: [sale, ...(currentUser.salesHistory || [])]
     };
-
-    // Auto-promote logic
     if (updatedStudent.role === UserRole.STUDENT && updatedStudent.caseCredits >= 2) {
         updatedStudent.role = UserRole.SPONSOR;
     }
-
     handleUpdateStudent(updatedStudent);
   };
 
@@ -276,7 +283,12 @@ const App: React.FC = () => {
 
         <Route path="/dashboard" element={
             <ProtectedRoute currentUser={currentUser} onLogout={handleLogout}>
-                <Dashboard currentUser={currentUser!} students={students} courses={courses} />
+                <Dashboard 
+                    currentUser={currentUser!} 
+                    students={students} 
+                    courses={courses} 
+                    onReviewCourse={handleReviewCourse}
+                />
             </ProtectedRoute>
         } />
         
@@ -337,10 +349,21 @@ const App: React.FC = () => {
             </ProtectedRoute>
         } />
         
+        <Route path="/course-review/:courseId" element={
+            <ProtectedRoute currentUser={currentUser} onLogout={handleLogout}>
+                 {(currentUser?.role === UserRole.ADMIN || currentUser?.role === UserRole.SUPER_ADMIN) ? (
+                    <CourseReview courses={courses} onReviewCourse={handleReviewCourse} />
+                 ) : <Navigate to="/dashboard" />}
+            </ProtectedRoute>
+        } />
+        
         <Route path="/builder" element={
              <ProtectedRoute currentUser={currentUser} onLogout={handleLogout}>
-                {(currentUser?.role === UserRole.ADMIN || currentUser?.role === UserRole.SUPER_ADMIN) ? (
-                    <CourseBuilder onAddModule={handleAddModule} />
+                {(currentUser?.role === UserRole.ADMIN || currentUser?.role === UserRole.SUPER_ADMIN || currentUser?.role === UserRole.SPONSOR) ? (
+                    <CourseBuilder 
+                        currentUserHandle={currentUser!.handle} 
+                        onSubmitCourse={handleSubmitCourse} 
+                    />
                 ) : <Navigate to="/dashboard" />}
              </ProtectedRoute>
         } />

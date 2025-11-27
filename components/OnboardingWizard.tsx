@@ -79,9 +79,11 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onEnroll, existingS
       enrolledDate: new Date().toISOString().split('T')[0],
       progress: 0,
       completedModules: [],
+      completedChapters: [],
       sponsorId: verifiedSponsor.handle,
       caseCredits: 0, // Starts at 0, needs 2 to become sponsor
-      quizResults: quizAnswers
+      quizResults: quizAnswers,
+      learningStats: { totalTimeSpent: 0, questionsAsked: 0, learningStreak: 0, lastLoginDate: '' }
     };
 
     onEnroll(newStudent);

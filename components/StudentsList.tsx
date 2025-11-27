@@ -57,6 +57,7 @@ const StudentsList: React.FC<StudentsListProps> = ({ students, onAddStudent, cur
       enrolledDate: new Date().toISOString().split('T')[0],
       progress: 0,
       completedModules: [],
+      completedChapters: [],
       caseCredits: 0,
       sponsorId: currentUser.handle, // Auto-assign to current user (Sponsor/Admin)
       learningStats: { totalTimeSpent: 0, questionsAsked: 0, learningStreak: 0, lastLoginDate: '' }

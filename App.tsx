@@ -15,22 +15,6 @@ import CourseReview from './components/CourseReview';
 import { INITIAL_COURSES, INITIAL_STUDENTS, INITIAL_MESSAGES, INITIAL_POSTS, INITIAL_COHORTS } from './constants';
 import { Course, Module, Student, SaleRecord, UserRole, Message, CourseTrack, CommunityPost, CommunityComment, Cohort, CourseStatus } from './types';
 
-// API Base URL
-const API_URL = '/api';
-
-// Helper to fetch with timeout (for future backend connection)
-const fetchWithTimeout = async (resource: string, options: RequestInit = {}) => {
-  const { timeout = 2000 } = options as any;
-  const controller = new AbortController();
-  const id = setTimeout(() => controller.abort(), timeout);
-  const response = await fetch(resource, {
-    ...options,
-    signal: controller.signal  
-  });
-  clearTimeout(id);
-  return response;
-}
-
 // --- Protected Route ---
 
 interface ProtectedRouteProps {

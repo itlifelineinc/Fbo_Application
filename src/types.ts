@@ -1,4 +1,5 @@
 
+
 export interface Question {
   id: string;
   text: string;
@@ -28,7 +29,7 @@ export interface Course {
   id: string;
   title: string;
   subtitle: string;
-  category: 'Opportunity' | 'Product' | 'Sales' | 'Leadership';
+  category: 'Opportunity' | 'Product' | 'Sales' | 'Leadership' | 'Recruiting';
   description: string;
   thumbnail: string;
   banner: string;

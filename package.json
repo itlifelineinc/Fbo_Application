@@ -2,13 +2,11 @@
   "name": "fbo-growth-academy",
   "version": "1.0.0",
   "description": "FBO Training Platform",
-  "main": "server/index.js",
+  "main": "index.html",
   "scripts": {
-    "start": "vite",
+    "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview",
-    "server": "node server/index.js",
-    "dev": "concurrently \"npm start\" \"npm run server\""
+    "preview": "vite preview"
   },
   "dependencies": {
     "react": "^19.2.0",
@@ -16,11 +14,7 @@
     "react-router-dom": "^7.9.6",
     "recharts": "^3.4.1",
     "lucide-react": "^0.344.0",
-    "@google/genai": "^1.30.0",
-    "express": "^4.18.2",
-    "cors": "^2.8.5",
-    "body-parser": "^1.20.2",
-    "concurrently": "^8.2.2"
+    "@google/genai": "^1.30.0"
   },
   "devDependencies": {
     "@types/react": "^18.2.43",

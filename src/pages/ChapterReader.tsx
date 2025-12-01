@@ -15,16 +15,13 @@ const ChapterReader: React.FC = () => {
   // Logic to find next chapter
   // Simple implementation for demo
   const handleNext = () => {
-      if(chapter?.type === 'quiz') {
-          // Just go back to course for demo
-          navigate(`/course/${courseId}`);
-      } else {
-          // Ideally find next chapter index
-          navigate(`/course/${courseId}`); 
-      }
+      // Return to course overview for demo purposes
+      navigate(`/course/${courseId}`); 
   };
 
   if (!course || !module || !chapter) return <div>Not Found</div>;
+
+  const isQuiz = chapter.quizQuestions && chapter.quizQuestions.length > 0;
 
   return (
     <div className="flex h-screen bg-white overflow-hidden">
@@ -38,7 +35,8 @@ const ChapterReader: React.FC = () => {
            <h2 className="font-bold text-slate-900 leading-snug">{course.title}</h2>
            
            <div className="mt-4 w-full bg-slate-200 rounded-full h-1.5">
-              <div className="bg-blue-600 h-1.5 rounded-full" style={{width: `${course.progress}%`}}></div>
+               {/* Mock progress bar as 0 since student state is not available here */}
+              <div className="bg-blue-600 h-1.5 rounded-full" style={{width: `0%`}}></div>
            </div>
         </div>
 
@@ -95,7 +93,7 @@ const ChapterReader: React.FC = () => {
                  <h1 className="text-3xl md:text-4xl font-bold text-slate-900 font-display">{chapter.title}</h1>
               </div>
 
-              {chapter.type === 'video' && chapter.videoUrl && (
+              {chapter.type === 'VIDEO' && chapter.videoUrl && (
                 <div className="aspect-video w-full bg-black rounded-xl overflow-hidden shadow-lg mb-10">
                   <iframe 
                     width="100%" 
@@ -109,11 +107,11 @@ const ChapterReader: React.FC = () => {
                 </div>
               )}
 
-              {chapter.type === 'quiz' && chapter.quiz ? (
+              {isQuiz && chapter.quizQuestions ? (
                  <div className="space-y-8">
-                    {chapter.quiz.map((q, idx) => (
+                    {chapter.quizQuestions.map((q, idx) => (
                         <div key={q.id} className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm">
-                           <h3 className="text-lg font-bold text-slate-900 mb-4"><span className="text-slate-400 mr-2">{idx + 1}.</span> {q.text}</h3>
+                           <h3 className="text-lg font-bold text-slate-900 mb-4"><span className="text-slate-400 mr-2">{idx + 1}.</span> {q.question}</h3>
                            <div className="space-y-3">
                               {q.options.map((opt, i) => (
                                  <label key={i} className="flex items-center gap-3 p-4 border border-slate-200 rounded-lg hover:bg-blue-50 hover:border-blue-200 cursor-pointer transition-all group">
@@ -160,7 +158,7 @@ const ChapterReader: React.FC = () => {
               onClick={handleNext}
               className="bg-blue-600 text-white px-6 py-2.5 rounded-lg font-bold hover:bg-blue-700 shadow-md shadow-blue-100 transition-all flex items-center gap-2 text-sm"
             >
-              {chapter.type === 'quiz' ? 'Finish Module' : 'Next Lesson'} <ChevronRight size={16} />
+              {isQuiz ? 'Finish Module' : 'Next Lesson'} <ChevronRight size={16} />
             </button>
         </div>
 

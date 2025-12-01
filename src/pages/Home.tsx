@@ -1,17 +1,25 @@
+
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PlayCircle, Clock, BookOpen } from 'lucide-react';
 import { COURSES } from '../data';
 import Navbar from '../components/Navbar';
+import { CourseTrack } from '../types';
 
 const Home: React.FC = () => {
   const [activeCategory, setActiveCategory] = useState('All');
-  const categories = ['All', 'Opportunity', 'Product', 'Sales', 'Recruiting', 'Leadership'];
+  const categories = ['All', ...Object.values(CourseTrack)];
   const navigate = useNavigate();
 
   const filteredCourses = activeCategory === 'All' 
     ? COURSES 
-    : COURSES.filter(c => c.category === activeCategory);
+    : COURSES.filter(c => c.track === activeCategory);
+
+  const calculateDuration = (course: typeof COURSES[0]) => {
+     const mins = course.modules.reduce((acc, m) => acc + m.chapters.reduce((cAcc, c) => cAcc + c.durationMinutes, 0), 0);
+     const hours = Math.floor(mins / 60);
+     return hours > 0 ? `${hours}h ${mins % 60}m` : `${mins}m`;
+  };
 
   return (
     <div className="min-h-screen bg-slate-50 font-sans">
@@ -53,12 +61,12 @@ const Home: React.FC = () => {
               {/* Thumbnail */}
               <div className="relative h-48 overflow-hidden">
                 <img 
-                  src={course.thumbnail} 
+                  src={course.thumbnailUrl} 
                   alt={course.title} 
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                 />
                 <div className="absolute top-3 left-3 bg-white/90 backdrop-blur-sm px-2.5 py-1 rounded-lg text-xs font-semibold text-slate-700">
-                  {course.category}
+                  {course.track}
                 </div>
               </div>
 
@@ -70,7 +78,7 @@ const Home: React.FC = () => {
                 <div className="mt-4 flex items-center gap-4 text-xs text-slate-400 font-medium">
                   <div className="flex items-center gap-1">
                     <Clock size={14} />
-                    <span>{course.totalDuration}</span>
+                    <span>{calculateDuration(course)}</span>
                   </div>
                   <div className="flex items-center gap-1">
                     <BookOpen size={14} />
@@ -86,27 +94,10 @@ const Home: React.FC = () => {
                 </div>
 
                 <div className="mt-auto pt-6">
-                  {course.isStarted ? (
-                    <div>
-                      <div className="flex justify-between text-xs font-semibold mb-1.5">
-                        <span className="text-blue-600">{course.progress}% Complete</span>
-                      </div>
-                      <div className="w-full bg-slate-100 rounded-full h-2">
-                        <div 
-                          className="bg-blue-600 h-2 rounded-full transition-all duration-500" 
-                          style={{ width: `${course.progress}%` }}
-                        ></div>
-                      </div>
-                      <button className="mt-4 w-full py-2.5 bg-slate-50 text-blue-600 font-semibold rounded-xl hover:bg-blue-50 transition-colors text-sm">
-                        Continue Learning
-                      </button>
-                    </div>
-                  ) : (
-                    <button className="w-full py-2.5 bg-blue-600 text-white font-semibold rounded-xl hover:bg-blue-700 transition-colors flex items-center justify-center gap-2 shadow-md shadow-blue-100 text-sm">
+                   <button className="w-full py-2.5 bg-blue-600 text-white font-semibold rounded-xl hover:bg-blue-700 transition-colors flex items-center justify-center gap-2 shadow-md shadow-blue-100 text-sm">
                       <PlayCircle size={18} />
                       Start Course
                     </button>
-                  )}
                 </div>
               </div>
             </div>

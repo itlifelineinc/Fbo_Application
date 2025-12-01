@@ -1,0 +1,156 @@
+
+import React, { useMemo } from 'react';
+import { SalesPage } from '../../types/salesPage';
+import { Search, Image as ImageIcon, AlertTriangle, CheckCircle } from 'lucide-react';
+
+interface SEOSettingsProps {
+  data: SalesPage;
+  onChange: <K extends keyof SalesPage>(field: K, value: SalesPage[K]) => void;
+}
+
+const SEOSettings: React.FC<SEOSettingsProps> = ({ data, onChange }) => {
+  
+  const handleSlugChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '');
+    onChange('slug', val);
+  };
+
+  const handleSEOChange = (field: keyof SalesPage['seo'], value: string) => {
+    onChange('seo', { ...data.seo, [field]: value });
+  };
+
+  const handleOGUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => handleSEOChange('ogImage', reader.result as string);
+      reader.readAsDataURL(file);
+    }
+  };
+
+  // SEO Score Calculation
+  const seoScore = useMemo(() => {
+    let score = 0;
+    const { metaTitle, metaDescription, ogImage } = data.seo;
+    
+    if (metaTitle && metaTitle.length >= 30 && metaTitle.length <= 60) score += 30;
+    else if (metaTitle) score += 10;
+
+    if (metaDescription && metaDescription.length >= 120 && metaDescription.length <= 160) score += 30;
+    else if (metaDescription) score += 10;
+
+    if (ogImage) score += 20;
+    if (data.slug) score += 20;
+
+    return Math.min(100, score);
+  }, [data.seo, data.slug]);
+
+  const getScoreColor = (score: number) => {
+    if (score >= 80) return 'text-emerald-600 bg-emerald-50 border-emerald-200';
+    if (score >= 50) return 'text-yellow-600 bg-yellow-50 border-yellow-200';
+    return 'text-red-600 bg-red-50 border-red-200';
+  };
+
+  return (
+    <div className="space-y-6">
+      
+      {/* Score Indicator */}
+      <div className={`p-4 rounded-xl border flex items-center justify-between ${getScoreColor(seoScore)}`}>
+        <div className="flex items-center gap-3">
+            <div className="font-bold text-2xl">{seoScore}/100</div>
+            <div className="text-sm font-medium">
+                {seoScore >= 80 ? 'Excellent Optimization' : seoScore >= 50 ? 'Needs Improvement' : 'Poor Optimization'}
+            </div>
+        </div>
+        {seoScore >= 80 ? <CheckCircle /> : <AlertTriangle />}
+      </div>
+
+      <div>
+        <label className="block text-sm font-bold text-slate-700 mb-1">URL Slug</label>
+        <div className="flex items-center">
+          <span className="bg-slate-100 border border-r-0 border-slate-200 rounded-l-xl px-3 py-3 text-slate-500 text-sm">fbo.com/p/</span>
+          <input 
+            type="text" 
+            value={data.slug}
+            onChange={handleSlugChange}
+            className="flex-1 p-3 border border-slate-200 rounded-r-xl bg-white text-slate-900 focus:ring-2 focus:ring-emerald-500 outline-none font-mono text-sm"
+          />
+        </div>
+        <p className="text-xs text-slate-400 mt-1">Auto-formatted from page title if empty.</p>
+      </div>
+
+      <div className="space-y-3">
+        <div>
+            <label className="block text-sm font-bold text-slate-700 mb-1">Meta Title</label>
+            <input 
+              type="text" 
+              value={data.seo.metaTitle}
+              onChange={(e) => handleSEOChange('metaTitle', e.target.value)}
+              placeholder={data.title}
+              className="w-full p-3 border border-slate-200 rounded-xl bg-white text-slate-900 focus:ring-2 focus:ring-emerald-500 outline-none"
+            />
+            <div className="flex justify-between text-xs mt-1">
+                <span className={data.seo.metaTitle.length > 60 ? 'text-red-500' : 'text-slate-400'}>{data.seo.metaTitle.length} / 60 characters</span>
+                {data.seo.metaTitle.length < 30 && <span className="text-yellow-600">Too short</span>}
+            </div>
+        </div>
+
+        <div>
+            <label className="block text-sm font-bold text-slate-700 mb-1">Meta Description</label>
+            <textarea 
+              value={data.seo.metaDescription}
+              onChange={(e) => handleSEOChange('metaDescription', e.target.value)}
+              className="w-full p-3 border border-slate-200 rounded-xl bg-white text-slate-900 h-24 resize-none focus:ring-2 focus:ring-emerald-500 outline-none"
+            />
+            <div className="flex justify-between text-xs mt-1">
+                <span className={data.seo.metaDescription.length > 160 ? 'text-red-500' : 'text-slate-400'}>{data.seo.metaDescription.length} / 160 characters</span>
+                {data.seo.metaDescription.length < 120 && <span className="text-yellow-600">Ideally 120+ chars</span>}
+            </div>
+        </div>
+      </div>
+
+      <div>
+        <label className="block text-sm font-bold text-slate-700 mb-2">Social Share Image (OG)</label>
+        <div className="flex items-center gap-4">
+            <div className="w-32 h-20 bg-slate-100 border border-slate-200 rounded-lg overflow-hidden flex items-center justify-center shrink-0">
+                {data.seo.ogImage ? (
+                    <img src={data.seo.ogImage} className="w-full h-full object-cover" />
+                ) : (
+                    <ImageIcon className="text-slate-400" />
+                )}
+            </div>
+            <div className="flex-1">
+                <input 
+                    type="file" 
+                    id="og-upload" 
+                    className="hidden" 
+                    accept="image/*"
+                    onChange={handleOGUpload}
+                />
+                <label 
+                    htmlFor="og-upload"
+                    className="inline-block px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm font-medium text-slate-700 cursor-pointer hover:bg-slate-50 transition-colors"
+                >
+                    Upload Image
+                </label>
+                <p className="text-xs text-slate-400 mt-1">Recommended: 1200x630px</p>
+            </div>
+        </div>
+      </div>
+
+      {/* Keyword Suggestions Mockup */}
+      <div className="bg-slate-50 p-4 rounded-xl border border-slate-200">
+        <h4 className="text-xs font-bold text-slate-500 uppercase mb-2 flex items-center gap-1"><Search size={12}/> Keywords Detected</h4>
+        <div className="flex flex-wrap gap-2">
+            {data.title && data.title.split(' ').map((word, i) => (
+                word.length > 3 && <span key={i} className="text-xs bg-white px-2 py-1 rounded border border-slate-200 text-slate-600">{word}</span>
+            ))}
+            <span className="text-xs text-slate-400 italic">...based on title</span>
+        </div>
+      </div>
+
+    </div>
+  );
+};
+
+export default SEOSettings;

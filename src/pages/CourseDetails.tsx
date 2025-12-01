@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ChevronDown, ChevronUp, PlayCircle, CheckCircle, Lock, Clock, Award, ArrowLeft } from 'lucide-react';
+import { ChevronDown, ChevronUp, PlayCircle, CheckCircle, Clock, Award, ArrowLeft } from 'lucide-react';
 import { COURSES } from '../data';
 import Navbar from '../components/Navbar';
 
@@ -21,6 +21,12 @@ const CourseDetails: React.FC = () => {
     );
   };
 
+  const calculateDuration = () => {
+     const mins = course.modules.reduce((acc, m) => acc + m.chapters.reduce((cAcc, c) => cAcc + c.durationMinutes, 0), 0);
+     const hours = Math.floor(mins / 60);
+     return hours > 0 ? `${hours}h ${mins % 60}m` : `${mins}m`;
+  };
+
   return (
     <div className="min-h-screen bg-slate-50">
       <Navbar />
@@ -36,7 +42,7 @@ const CourseDetails: React.FC = () => {
             {/* Left: Info */}
             <div className="flex-1">
               <span className="inline-block px-3 py-1 bg-blue-50 text-blue-700 rounded-full text-xs font-bold uppercase tracking-wider mb-4">
-                {course.category}
+                {course.track}
               </span>
               <h1 className="text-3xl md:text-4xl font-bold text-slate-900 font-display mb-4 leading-tight">
                 {course.title}
@@ -48,7 +54,7 @@ const CourseDetails: React.FC = () => {
               <div className="flex flex-wrap gap-6 text-sm text-slate-500 mb-8">
                 <div className="flex items-center gap-2">
                   <Clock size={18} className="text-blue-500" />
-                  <span>{course.totalDuration}</span>
+                  <span>{calculateDuration()}</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <Award size={18} className="text-blue-500" />
@@ -68,23 +74,14 @@ const CourseDetails: React.FC = () => {
                   }}
                   className="px-8 py-3 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 transition-all shadow-lg shadow-blue-200"
                 >
-                  {course.isStarted ? 'Continue Learning' : 'Start Course'}
+                  Start Course
                 </button>
               </div>
             </div>
 
-            {/* Right: Progress Card (Desktop) */}
+            {/* Right: Progress Card (Desktop) - Mocked for view */}
             <div className="w-full md:w-80 bg-white p-6 rounded-2xl border border-slate-200 shadow-lg hidden md:block">
-                <h3 className="font-bold text-slate-900 mb-4">Course Progress</h3>
-                <div className="flex justify-between text-sm mb-2">
-                  <span className="text-slate-500">{course.progress}% Complete</span>
-                </div>
-                <div className="w-full bg-slate-100 rounded-full h-2.5 mb-6">
-                  <div 
-                    className="bg-green-500 h-2.5 rounded-full" 
-                    style={{ width: `${course.progress}%` }}
-                  ></div>
-                </div>
+                <h3 className="font-bold text-slate-900 mb-4">What you'll learn</h3>
                 <div className="space-y-3">
                   {course.learningOutcomes.map((outcome, i) => (
                     <div key={i} className="flex gap-3 text-sm text-slate-600">
@@ -138,13 +135,11 @@ const CourseDetails: React.FC = () => {
                             onClick={() => navigate(`/course/${course.id}/module/${module.id}/chapter/${chapter.id}`)}
                           >
                             <div className="flex items-center gap-3">
-                              {chapter.type === 'video' ? <PlayCircle size={16} className="text-slate-400" /> : <CheckCircle size={16} className="text-slate-400" />}
+                              {chapter.type === 'VIDEO' ? <PlayCircle size={16} className="text-slate-400" /> : <CheckCircle size={16} className="text-slate-400" />}
                               <span className="text-sm font-medium text-slate-700">{chapter.title}</span>
                             </div>
                             <div className="flex items-center gap-4">
-                              <span className="text-xs text-slate-400">{chapter.duration}</span>
-                              {/* Lock icon if not started, check if done (logic simplified) */}
-                              {/* <Lock size={14} className="text-slate-300" /> */}
+                              <span className="text-xs text-slate-400">{chapter.durationMinutes} min</span>
                             </div>
                           </div>
                         ))}

@@ -11,7 +11,7 @@ interface LayoutProps {
   onToggleTheme: () => void;
 }
 
-// Icons (Legacy local icons kept for Sidebar consistency)
+// Icons
 function HomeIcon() {
   return (
     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
@@ -24,6 +24,22 @@ function BookOpenIcon() {
   return (
     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
       <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" />
+    </svg>
+  );
+}
+
+function GlobeEducationIcon() {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+      <path strokeLinecap="round" strokeLinejoin="round" d="M12 21a9.004 9.004 0 008.716-6.747M12 21a9.004 9.004 0 01-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S12 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S12 3 12 3m0 0a8.997 8.997 0 017.843 4.582M12 3a8.997 8.997 0 00-7.843 4.582m15.686 0A11.953 11.953 0 0112 10.5c-2.998 0-5.74-1.1-7.843-2.918m15.686 0A8.959 8.959 0 0121 12c0 .778-.099 1.533-.284 2.253m0 0A17.919 17.919 0 0112 16.5c-3.162 0-6.133-.815-8.716-2.247m0 0A9.015 9.015 0 013 12c0-1.605.42-3.113 1.157-4.418" />
+    </svg>
+  );
+}
+
+function UserGroupIcon() {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+      <path strokeLinecap="round" strokeLinejoin="round" d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m.94 3.198l.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0112 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 016 18.719m12 0a5.971 5.971 0 00-.941-3.197m0 0A5.995 5.995 0 0012 12.75a5.995 5.995 0 00-5.058 2.772m0 0a3 3 0 00-4.681 2.72 8.986 8.986 0 003.74.477m.94-3.197a5.971 5.971 0 00-.94 3.197M15 6.75a3 3 0 11-6 0 3 3 0 016 0zm6 3a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0zm-13.5 0a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z" />
     </svg>
   );
 }
@@ -100,7 +116,7 @@ function XMarkIcon() {
   );
 }
 
-function ChevronDownIconLocal({ className }: { className?: string }) {
+function ChevronDownIcon({ className }: { className?: string }) {
   return (
     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={className || "w-5 h-5"}>
       <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
@@ -118,7 +134,7 @@ function ArrowRightOnRectangleIcon() {
 
 const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme, onToggleTheme }) => {
   const location = useLocation();
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isSalesMenuOpen, setIsSalesMenuOpen] = useState(false);
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   
@@ -140,9 +156,11 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
     }
   }, [location.pathname]);
 
-  // Navbar auto-hide logic on non-dashboard pages
+  // Navbar auto-hide logic: Only apply for builder pages now. Standard pages get static header.
+  const shouldHeaderBeStatic = isDashboard || !isBuilder;
+
   useEffect(() => {
-    if (isNavbarOpen && !isDashboard) {
+    if (!shouldHeaderBeStatic && isNavbarOpen) {
       const hideNav = () => setIsNavbarOpen(false);
       const resetTimer = () => {
         if (navTimerRef.current) clearTimeout(navTimerRef.current);
@@ -169,33 +187,94 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
           navEl.removeEventListener('mouseenter', resetTimer);
         }
       };
-    } else if (!isDashboard) {
-        // Ensure hidden by default when switching to non-dashboard
-        setIsNavbarOpen(false);
-    } else {
-        // Always show on dashboard
+    } else if (shouldHeaderBeStatic) {
+        // Always open if static
         setIsNavbarOpen(true);
+    } else {
+        // Default close for builders
+        setIsNavbarOpen(false);
     }
-  }, [isNavbarOpen, isDashboard]);
+  }, [isNavbarOpen, shouldHeaderBeStatic]);
 
   // Role Checks
   const isStudent = currentUser.role === UserRole.STUDENT;
   const isAdminOrSuper = currentUser.role === UserRole.ADMIN || currentUser.role === UserRole.SUPER_ADMIN;
   // Allow Sponsors to access builder too
   const canBuildCourses = isAdminOrSuper || currentUser.role === UserRole.SPONSOR;
+  
+  // Logic for showing Team Training: If user has a sponsor OR is a sponsor/admin themselves
+  const hasTeamAccess = currentUser.sponsorId || currentUser.role !== UserRole.STUDENT;
 
-  const headerClass = isDashboard 
+  const headerClass = shouldHeaderBeStatic
     ? "hidden lg:flex bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 h-16 items-center justify-between px-8 z-20 shrink-0"
     : `hidden lg:flex bg-white/95 backdrop-blur-md dark:bg-slate-900/95 border-b border-slate-200 dark:border-slate-800 h-16 items-center justify-between px-8 z-40 absolute top-0 left-0 right-0 shadow-md transition-transform duration-300 ease-in-out ${isNavbarOpen ? 'translate-y-0' : '-translate-y-full'}`;
+
+  // Breadcrumb Generation
+  const getBreadcrumbs = () => {
+    // Map of paths to their directory structure in the sidebar/conceptually
+    const BREADCRUMB_MAP: Record<string, string[]> = {
+      '/sales-builder': ['Sales', 'Sales Pages'],
+      '/sales': ['Sales', 'Sales Log'],
+      '/chat': ['Communication', 'Team Chat'],
+      '/courses': ['Training', 'My Classroom'],
+      '/training/global': ['Training', 'Global Library'],
+      '/training/team': ['Training', 'Team Portal'],
+      '/community': ['Community', 'Global Hub'],
+      '/students': ['Team', 'Members'],
+      '/builder': ['Admin', 'Course Builder'],
+    };
+
+    // Check exact match first
+    if (BREADCRUMB_MAP[location.pathname]) {
+       return (
+         <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
+            <Link to="/dashboard" className="hover:text-emerald-600 transition-colors">Home</Link>
+            {BREADCRUMB_MAP[location.pathname].map((item, idx) => (
+                <React.Fragment key={idx}>
+                    <span className="text-slate-300 dark:text-slate-600">/</span>
+                    <span className={idx === BREADCRUMB_MAP[location.pathname].length - 1 ? "font-bold text-slate-800 dark:text-white" : ""}>
+                        {item}
+                    </span>
+                </React.Fragment>
+            ))}
+         </div>
+       );
+    }
+
+    // Fallback to URL segments for dynamic paths (e.g., /students/123)
+    const pathSegments = location.pathname.split('/').filter(p => p);
+    return (
+        <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400 capitalize">
+            <Link to="/dashboard" className="hover:text-emerald-600 transition-colors">Home</Link>
+            {pathSegments.map((segment, index) => {
+                const isLast = index === pathSegments.length - 1;
+                // Heuristic to make IDs look nicer or hide them
+                const displayName = (segment.length > 8 && /\d/.test(segment)) ? 'Details' : segment.replace(/-/g, ' ');
+                const to = `/${pathSegments.slice(0, index + 1).join('/')}`;
+
+                return (
+                    <React.Fragment key={to}>
+                        <span className="text-slate-300 dark:text-slate-600">/</span>
+                        {isLast ? (
+                            <span className="font-bold text-slate-800 dark:text-white">{displayName}</span>
+                        ) : (
+                            <Link to={to} className="hover:text-emerald-600 transition-colors">{displayName}</Link>
+                        )}
+                    </React.Fragment>
+                );
+            })}
+        </div>
+    );
+  };
 
   return (
     <div className="flex h-screen bg-slate-50 dark:bg-slate-950 overflow-hidden transition-colors duration-300">
       
       {/* Mobile Overlay */}
-      {isSidebarOpen && (
+      {isMobileMenuOpen && (
         <div 
           className="fixed inset-0 bg-black/50 z-50 lg:hidden backdrop-blur-sm transition-opacity"
-          onClick={() => setIsSidebarOpen(false)}
+          onClick={() => setIsMobileMenuOpen(false)}
         />
       )}
 
@@ -205,7 +284,7 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
           fixed inset-y-0 left-0 z-50 w-64 bg-emerald-900 text-white flex flex-col shadow-xl 
           transform transition-transform duration-300 ease-in-out dark:bg-emerald-950
           lg:static lg:translate-x-0
-          ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}
+          ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}
         `}
       >
         <div className="p-6 border-b border-emerald-800 flex justify-between items-center dark:border-emerald-900">
@@ -218,7 +297,7 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
             <span>FBO Academy</span>
           </div>
           {/* Close Button */}
-          <button onClick={() => setIsSidebarOpen(false)} className="lg:hidden text-emerald-300 hover:text-white">
+          <button onClick={() => setIsMobileMenuOpen(false)} className="lg:hidden text-emerald-300 hover:text-white">
             <XMarkIcon />
           </button>
         </div>
@@ -227,7 +306,7 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
         <div className="px-6 py-4 bg-emerald-800/30 dark:bg-emerald-900/30 lg:hidden">
            <Link 
              to={`/students/${currentUser.id}`}
-             onClick={() => setIsSidebarOpen(false)}
+             onClick={() => setIsMobileMenuOpen(false)}
              className="flex items-center gap-3 bg-emerald-800/50 p-3 rounded-lg border border-emerald-800 hover:bg-emerald-700/50 hover:border-emerald-600 transition-all cursor-pointer group dark:border-emerald-700 dark:bg-emerald-800/30"
            >
              <div className="w-8 h-8 rounded-full bg-emerald-100 text-emerald-800 flex items-center justify-center font-bold text-xs flex-shrink-0 font-heading overflow-hidden group-hover:scale-105 transition-transform">
@@ -250,23 +329,48 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
             icon={<HomeIcon />} 
             label="Dashboard" 
             active={isActive('/dashboard')} 
-            onClick={() => setIsSidebarOpen(false)}
+            onClick={() => setIsMobileMenuOpen(false)}
           />
           <NavItem 
             to="/chat" 
             icon={<ChatBubbleOvalLeftIcon />} 
             label="Team Chat" 
             active={isActive('/chat')} 
-            onClick={() => setIsSidebarOpen(false)}
+            onClick={() => setIsMobileMenuOpen(false)}
           />
+          
+          <div className="my-2 border-t border-emerald-800 dark:border-emerald-900 mx-4 opacity-50"></div>
+          
+          <div className="px-4 py-2 text-xs font-bold text-emerald-400 uppercase tracking-wider">Training</div>
+          
           <NavItem 
             to="/courses" 
             icon={<BookOpenIcon />} 
-            label="My Training" 
+            label="My Classroom" 
             active={isActive('/courses') || location.pathname.startsWith('/classroom')} 
-            onClick={() => setIsSidebarOpen(false)}
+            onClick={() => setIsMobileMenuOpen(false)}
           />
           
+          <NavItem 
+            to="/training/global" 
+            icon={<GlobeEducationIcon />} 
+            label="Global Training" 
+            active={isActive('/training/global')} 
+            onClick={() => setIsMobileMenuOpen(false)}
+          />
+
+          {hasTeamAccess && (
+            <NavItem 
+              to="/training/team" 
+              icon={<UserGroupIcon />} 
+              label="Team Training" 
+              active={isActive('/training/team')} 
+              onClick={() => setIsMobileMenuOpen(false)}
+            />
+          )}
+
+          <div className="my-2 border-t border-emerald-800 dark:border-emerald-900 mx-4 opacity-50"></div>
+
           {/* Sales & CC Dropdown */}
           <div className="space-y-1">
             <button
@@ -283,7 +387,7 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
                 </span>
                 <span className="font-medium">Sales & CC</span>
               </div>
-              <ChevronDownIconLocal className={`w-4 h-4 transition-transform duration-300 ${isSalesMenuOpen ? 'rotate-180' : ''}`} />
+              <ChevronDownIcon className={`w-4 h-4 transition-transform duration-300 ${isSalesMenuOpen ? 'rotate-180' : ''}`} />
             </button>
 
             <div className={`overflow-hidden transition-all duration-300 ${isSalesMenuOpen ? 'max-h-40 opacity-100 mt-1' : 'max-h-0 opacity-0'}`}>
@@ -293,7 +397,7 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
                   icon={<ClipboardDocumentListIcon />} 
                   label="Sales Log" 
                   active={isActive('/sales')} 
-                  onClick={() => setIsSidebarOpen(false)}
+                  onClick={() => setIsMobileMenuOpen(false)}
                   className="py-2 text-sm"
                 />
                 <NavItem 
@@ -301,7 +405,7 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
                   icon={<RocketLaunchIcon />} 
                   label="Sales Pages" 
                   active={isActive('/sales-builder')} 
-                  onClick={() => setIsSidebarOpen(false)}
+                  onClick={() => setIsMobileMenuOpen(false)}
                   className="py-2 text-sm"
                 />
               </div>
@@ -313,7 +417,7 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
             icon={<GlobeAltIcon />} 
             label="Community" 
             active={isActive('/community')} 
-            onClick={() => setIsSidebarOpen(false)}
+            onClick={() => setIsMobileMenuOpen(false)}
           />
           
           {/* Hide Students List from Students */}
@@ -323,7 +427,7 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
                icon={<UsersIcon />} 
                label={isAdminOrSuper ? "All Students" : "My Team"} 
                active={isActive('/students')} 
-               onClick={() => setIsSidebarOpen(false)}
+               onClick={() => setIsMobileMenuOpen(false)}
              />
           )}
           
@@ -334,7 +438,7 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
                icon={<SparklesIcon />} 
                label="Course Builder" 
                active={isActive('/builder')} 
-               onClick={() => setIsSidebarOpen(false)}
+               onClick={() => setIsMobileMenuOpen(false)}
              />
           )}
         </nav>
@@ -357,9 +461,12 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
         {/* Desktop Navbar */}
         <header ref={navbarRef} className={headerClass}>
             <div className="flex items-center gap-4 text-sm text-slate-500 dark:text-slate-400">
-               {/* Mobile Menu Trigger (Only visible on mobile, so lg:hidden logic below handles that, this is desktop header content) */}
-               {/* Updated Greeting: Hand Wave + Hi */}
-               <span className="font-medium text-lg">👋 Hi, {currentUser.name}</span>
+               {/* Show Breadcrumbs on non-dashboard pages, Greeting on dashboard */}
+               {isDashboard ? (
+                   <span className="font-medium text-lg">👋 Hi, {currentUser.name}</span>
+               ) : (
+                   getBreadcrumbs()
+               )}
             </div>
             
             <div className="relative">
@@ -424,14 +531,14 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
             </div>
         </header>
 
-        {/* Trigger Button for Desktop Navbar (visible when hidden) */}
-        {!isDashboard && !isNavbarOpen && (
+        {/* Trigger Button for Desktop Navbar (visible when hidden, mostly for builders) */}
+        {!shouldHeaderBeStatic && !isNavbarOpen && (
              <button 
                onClick={() => setIsNavbarOpen(true)}
                className="hidden lg:flex absolute top-4 right-8 z-30 bg-white/90 dark:bg-slate-800/90 p-2.5 rounded-full shadow-lg border border-slate-200 dark:border-slate-700 text-slate-500 hover:text-emerald-600 transition-all hover:scale-110"
                title="Show Menu"
              >
-                <ChevronDownIconLocal />
+                <ChevronDownIcon />
              </button>
         )}
 
@@ -445,7 +552,7 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
              </div>
              <span>FBO Academy</span>
            </div>
-           <button onClick={() => setIsSidebarOpen(true)} className="text-slate-600 p-2 rounded-lg hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800">
+           <button onClick={() => setIsMobileMenuOpen(true)} className="text-slate-600 p-2 rounded-lg hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800">
              <Bars3Icon />
            </button>
         </header>

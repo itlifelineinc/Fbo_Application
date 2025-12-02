@@ -1,4 +1,5 @@
-import React from 'react';
+
+import React, { useState, useEffect } from 'react';
 import { SalesPage, CTAButton } from '../../types/salesPage';
 import WhatsAppFloatingButton from '../Shared/WhatsAppFloatingButton';
 import { Check, Star, User, ShoppingCart, ArrowRight, CheckCircle, MessageCircle } from 'lucide-react';
@@ -26,14 +27,18 @@ const PreviewPanel: React.FC<PreviewPanelProps> = ({ data, device }) => {
     return (
       <>
         {scrollbarStyles}
-        {/* Desktop View: Fills container, no padding on outer wrapper needed as parent handles it for mobile, but here we want edge-to-edge often. 
-            However, parent has padding. To make desktop full-bleed in the preview pane, we might want to negative margin or just accept the frame. 
-            For now, let's keep it filling the available space. */}
-        <div className="w-full h-full bg-white overflow-y-auto scroll-smooth no-scrollbar shadow-sm relative dark:bg-slate-950 transition-colors rounded-xl md:rounded-none border border-slate-200 md:border-0">
-           <PreviewContent data={data} device={device} />
-           <div className="fixed bottom-8 right-8 z-50">
-              <WhatsAppFloatingButton phoneNumber={data.whatsappNumber} isVisible={true} />
+        {/* Desktop View Wrapper: Relative with overflow hidden to contain the absolute button */}
+        <div className="w-full h-full relative overflow-hidden bg-slate-200 dark:bg-slate-900 rounded-xl md:rounded-none border border-slate-200 md:border-0 shadow-sm">
+           <div className="w-full h-full overflow-y-auto scroll-smooth no-scrollbar bg-white dark:bg-slate-950 transition-colors">
+              <PreviewContent data={data} device={device} />
            </div>
+           
+           {/* WhatsApp Button: Absolute relative to the container */}
+           <WhatsAppFloatingButton 
+              phoneNumber={data.whatsappNumber} 
+              isVisible={true} 
+              className="absolute bottom-8 right-8"
+           />
         </div>
       </>
     );
@@ -52,10 +57,12 @@ const PreviewPanel: React.FC<PreviewPanelProps> = ({ data, device }) => {
             <div className="h-6"></div>
         </div>
 
-        {/* Floating Button inside phone frame */}
-        <div className="absolute bottom-4 right-4 z-50">
-           <WhatsAppFloatingButton phoneNumber={data.whatsappNumber} isVisible={true} />
-        </div>
+        {/* Floating Button inside phone frame - Absolute relative to the frame */}
+        <WhatsAppFloatingButton 
+            phoneNumber={data.whatsappNumber} 
+            isVisible={true} 
+            className="absolute bottom-4 right-4"
+        />
         
         {scrollbarStyles}
     </div>
@@ -65,7 +72,54 @@ const PreviewPanel: React.FC<PreviewPanelProps> = ({ data, device }) => {
 // --- Extracted Content Component ---
 
 const PreviewContent: React.FC<{ data: SalesPage; device: 'mobile' | 'desktop' }> = ({ data, device }) => {
-  
+  const [testimonialIndex, setTestimonialIndex] = useState(0);
+  const [packageIndex, setPackageIndex] = useState(0);
+
+  // --- Carousel Logic for Testimonials ---
+  useEffect(() => {
+    if (data.testimonials.length === 0) return;
+
+    // Determine how many items are visible based on device
+    const itemsVisible = device === 'mobile' ? 1 : 3;
+    
+    // Only slide if we have more items than visible slots
+    if (data.testimonials.length <= itemsVisible) return;
+
+    const interval = setInterval(() => {
+        setTestimonialIndex((prev) => {
+            // Calculate max index to scroll to before resetting
+            const maxIndex = data.testimonials.length - itemsVisible;
+            return prev >= maxIndex ? 0 : prev + 1;
+        });
+    }, 4000); // 4 seconds per slide
+
+    return () => clearInterval(interval);
+  }, [data.testimonials.length, device]);
+
+  // --- Carousel Logic for Packages ---
+  useEffect(() => {
+    if (data.packages.length === 0) return;
+
+    const itemsVisible = device === 'mobile' ? 1 : 3;
+    
+    if (data.packages.length <= itemsVisible) return;
+
+    const interval = setInterval(() => {
+        setPackageIndex((prev) => {
+            const maxIndex = data.packages.length - itemsVisible;
+            return prev >= maxIndex ? 0 : prev + 1;
+        });
+    }, 5000); // 5 seconds per slide for packages (more content to read)
+
+    return () => clearInterval(interval);
+  }, [data.packages.length, device]);
+
+  // Reset indices when switching devices to prevent layout jumps
+  useEffect(() => {
+      setTestimonialIndex(0);
+      setPackageIndex(0);
+  }, [device]);
+
   // --- Helper Icons ---
   const getIcon = (name?: string) => {
     switch(name) {
@@ -218,54 +272,142 @@ const PreviewContent: React.FC<{ data: SalesPage; device: 'mobile' | 'desktop' }
   const renderPackages = () => {
       if (!data.packages.length) return null;
 
+      // Mobile: 1 item visible (100% width)
+      // Desktop: 3 items visible (33.33% width)
+      const itemsPerView = device === 'mobile' ? 1 : 3;
+      const slidePercentage = 100 / itemsPerView;
+
       return (
-          <div className="py-16 px-6 bg-slate-50 dark:bg-slate-900 transition-colors">
+          <div className="py-16 px-6 bg-slate-50 dark:bg-slate-900 transition-colors overflow-hidden">
               <h2 className="text-3xl font-bold text-center text-slate-900 mb-4 dark:text-white">Bundles & Kits</h2>
               <p className="text-center text-slate-500 mb-12 dark:text-slate-400">Save more with our exclusive packages</p>
               
-              <div className="max-w-6xl mx-auto flex flex-wrap justify-center gap-8">
-                  {data.packages.map(pkg => (
-                      <div key={pkg.id} className="w-full md:w-[350px] bg-white rounded-3xl shadow-lg overflow-hidden border-2 border-transparent hover:border-emerald-500 transition-all flex flex-col dark:bg-slate-800 dark:border-slate-700 dark:hover:border-emerald-500">
-                          {pkg.bannerImage && (
-                              <div className="h-40 bg-slate-200 dark:bg-slate-700">
-                                  <img src={pkg.bannerImage} className="w-full h-full object-cover" />
-                              </div>
-                          )}
-                          <div className="p-6 flex-1 flex flex-col">
-                              <h3 className="text-xl font-bold text-slate-900 mb-2 dark:text-white">{pkg.title}</h3>
-                              <p className="text-sm text-slate-500 mb-4 dark:text-slate-400">{pkg.description}</p>
-                              
-                              <div className="space-y-2 mb-6 flex-1">
-                                  {pkg.productIds.map(pid => {
-                                      const prod = data.products.find(p => p.id === pid);
-                                      return prod ? (
-                                          <div key={pid} className="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-300">
-                                              <div className="w-1 h-1 bg-emerald-500 rounded-full"></div>
-                                              {prod.name}
-                                          </div>
-                                      ) : null;
-                                  })}
-                              </div>
+              <div className="max-w-6xl mx-auto relative">
+                  {/* Carousel Track */}
+                  <div 
+                      className="flex transition-transform duration-700 ease-in-out"
+                      style={{ transform: `translateX(-${packageIndex * slidePercentage}%)` }}
+                  >
+                      {data.packages.map(pkg => (
+                          <div 
+                            key={pkg.id} 
+                            className="flex-shrink-0 px-3"
+                            style={{ width: `${slidePercentage}%` }}
+                          >
+                              <div className="w-full bg-white rounded-3xl shadow-lg overflow-hidden border-2 border-transparent hover:border-emerald-500 transition-all flex flex-col h-full dark:bg-slate-800 dark:border-slate-700 dark:hover:border-emerald-500">
+                                  {pkg.bannerImage && (
+                                      <div className="h-40 bg-slate-200 dark:bg-slate-700 shrink-0">
+                                          <img src={pkg.bannerImage} className="w-full h-full object-cover" />
+                                      </div>
+                                  )}
+                                  <div className="p-6 flex-1 flex flex-col">
+                                      <h3 className="text-xl font-bold text-slate-900 mb-2 dark:text-white">{pkg.title}</h3>
+                                      <p className="text-sm text-slate-500 mb-4 dark:text-slate-400">{pkg.description}</p>
+                                      
+                                      <div className="space-y-2 mb-6 flex-1">
+                                          {pkg.productIds.map(pid => {
+                                              const prod = data.products.find(p => p.id === pid);
+                                              return prod ? (
+                                                  <div key={pid} className="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-300">
+                                                      <div className="w-1 h-1 bg-emerald-500 rounded-full"></div>
+                                                      {prod.name}
+                                                  </div>
+                                              ) : null;
+                                          })}
+                                      </div>
 
-                              <div className="mt-auto pt-4 border-t border-slate-100 flex items-end justify-between dark:border-slate-700">
-                                  <div>
-                                      {pkg.specialPrice && (
-                                          <span className="text-xs text-slate-400 line-through block dark:text-slate-500">Total: {data.currency}{pkg.totalPrice}</span>
-                                      )}
-                                      <span className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">
-                                          {data.currency}{pkg.specialPrice || pkg.totalPrice}
-                                      </span>
+                                      <div className="mt-auto pt-4 border-t border-slate-100 flex items-end justify-between dark:border-slate-700">
+                                          <div>
+                                              {pkg.specialPrice && (
+                                                  <span className="text-xs text-slate-400 line-through block dark:text-slate-500">Total: {data.currency}{pkg.totalPrice}</span>
+                                              )}
+                                              <span className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">
+                                                  {data.currency}{pkg.specialPrice || pkg.totalPrice}
+                                              </span>
+                                          </div>
+                                          <button style={{ backgroundColor: data.themeColor }} className="px-4 py-2 rounded-lg text-white text-sm font-bold shadow-sm whitespace-nowrap">
+                                              Order
+                                          </button>
+                                      </div>
                                   </div>
-                                  <button style={{ backgroundColor: data.themeColor }} className="px-4 py-2 rounded-lg text-white text-sm font-bold shadow-sm">
-                                      Order Bundle
-                                  </button>
                               </div>
                           </div>
-                      </div>
-                  ))}
+                      ))}
+                  </div>
+
+                  {/* Pagination Dots */}
+                  {data.packages.length > itemsPerView && (
+                    <div className="flex justify-center gap-2 mt-8">
+                        {Array.from({ length: Math.ceil(data.packages.length / (device === 'mobile' ? 1 : 1)) }).slice(0, 5).map((_, idx) => (
+                            <div 
+                                key={idx} 
+                                className={`w-2 h-2 rounded-full transition-colors ${idx === packageIndex || (idx === 4 && packageIndex > 4) ? 'bg-emerald-500' : 'bg-slate-300 dark:bg-slate-700'}`}
+                            ></div>
+                        ))}
+                    </div>
+                  )}
               </div>
           </div>
       );
+  };
+
+  const renderTestimonials = () => {
+    if (!data.testimonials.length) return null;
+
+    // Mobile: 1 item visible (100% width)
+    // Desktop: 3 items visible (33.33% width)
+    const itemsPerView = device === 'mobile' ? 1 : 3;
+    const slidePercentage = 100 / itemsPerView;
+
+    return (
+        <div className="py-16 px-6 bg-slate-50 border-t border-slate-200 dark:bg-slate-900 dark:border-slate-800 transition-colors overflow-hidden">
+            <h2 className="text-2xl font-bold text-center mb-10 dark:text-white">What People Say</h2>
+            
+            <div className="max-w-6xl mx-auto relative">
+                {/* Carousel Track */}
+                <div 
+                    className="flex transition-transform duration-700 ease-in-out" 
+                    style={{ transform: `translateX(-${testimonialIndex * slidePercentage}%)` }}
+                >
+                    {data.testimonials.map(t => (
+                        <div 
+                            key={t.id} 
+                            className="flex-shrink-0 px-3"
+                            style={{ width: `${slidePercentage}%` }}
+                        >
+                            <div className="bg-white p-6 rounded-2xl shadow-sm h-full flex flex-col dark:bg-slate-800">
+                                <div className="flex gap-1 text-yellow-400 mb-4">
+                                    {[1,2,3,4,5].map(i => <Star key={i} size={14} fill="currentColor" />)}
+                                </div>
+                                <p className="text-slate-600 italic text-sm mb-6 flex-1 dark:text-slate-300">"{t.quote}"</p>
+                                <div className="flex items-center gap-3">
+                                    <div className="w-10 h-10 bg-slate-200 rounded-full overflow-hidden dark:bg-slate-700 shrink-0">
+                                        {t.photoUrl ? <img src={t.photoUrl} className="w-full h-full object-cover"/> : <User className="p-2 text-slate-400 dark:text-slate-500"/>}
+                                    </div>
+                                    <div>
+                                        <p className="font-bold text-sm text-slate-900 dark:text-white">{t.name}</p>
+                                        <p className="text-xs text-slate-500 dark:text-slate-400">{t.role}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+
+                {/* Pagination Dots (Optional Visual Indicator) */}
+                {data.testimonials.length > itemsPerView && (
+                    <div className="flex justify-center gap-2 mt-8">
+                        {Array.from({ length: Math.ceil(data.testimonials.length / (device === 'mobile' ? 1 : 1)) }).slice(0, 5).map((_, idx) => (
+                            <div 
+                                key={idx} 
+                                className={`w-2 h-2 rounded-full transition-colors ${idx === testimonialIndex || (idx === 4 && testimonialIndex > 4) ? 'bg-emerald-500' : 'bg-slate-300 dark:bg-slate-700'}`}
+                            ></div>
+                        ))}
+                    </div>
+                )}
+            </div>
+        </div>
+    );
   };
 
   return (
@@ -297,31 +439,7 @@ const PreviewContent: React.FC<{ data: SalesPage; device: 'mobile' | 'desktop' }
           </div>
       )}
 
-      {/* Testimonials */}
-      {data.testimonials.length > 0 && (
-          <div className="py-16 px-6 bg-slate-50 border-t border-slate-200 dark:bg-slate-900 dark:border-slate-800 transition-colors">
-            <h2 className="text-2xl font-bold text-center mb-10 dark:text-white">What People Say</h2>
-            <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {data.testimonials.map(t => (
-                    <div key={t.id} className="bg-white p-6 rounded-2xl shadow-sm dark:bg-slate-800">
-                        <div className="flex gap-1 text-yellow-400 mb-4">
-                            {[1,2,3,4,5].map(i => <Star key={i} size={14} fill="currentColor" />)}
-                        </div>
-                        <p className="text-slate-600 italic text-sm mb-6 dark:text-slate-300">"{t.quote}"</p>
-                        <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 bg-slate-200 rounded-full overflow-hidden dark:bg-slate-700">
-                                {t.photoUrl ? <img src={t.photoUrl} className="w-full h-full object-cover"/> : <User className="p-2 text-slate-400 dark:text-slate-500"/>}
-                            </div>
-                            <div>
-                                <p className="font-bold text-sm text-slate-900 dark:text-white">{t.name}</p>
-                                <p className="text-xs text-slate-500 dark:text-slate-400">{t.role}</p>
-                            </div>
-                        </div>
-                    </div>
-                ))}
-            </div>
-          </div>
-      )}
+      {renderTestimonials()}
 
       {/* Footer */}
       <div className="bg-white border-t border-slate-100 py-12 px-6 text-center dark:bg-slate-950 dark:border-slate-800 transition-colors">

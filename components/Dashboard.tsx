@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, PieChart, Pie, Legend } from 'recharts';
 import { Link, useNavigate } from 'react-router-dom';
@@ -144,6 +143,9 @@ const Dashboard: React.FC<DashboardProps> = ({ students, currentUser, courses, o
   // Pending Courses Logic (For Admins)
   const pendingCourses = courses.filter(c => c.status === CourseStatus.UNDER_REVIEW);
 
+  // All Private Courses Logic (For Super Admin)
+  const allPrivateCourses = courses.filter(c => c.settings.teamOnly === true);
+
   // Invite Link
   const inviteLink = `${window.location.origin}${window.location.pathname}#/join?sponsor=${currentUser.handle.replace('@','')}`;
   
@@ -261,6 +263,45 @@ const Dashboard: React.FC<DashboardProps> = ({ students, currentUser, courses, o
                             </div>
                         ))}
                     </div>
+                </div>
+            )}
+
+            {/* Private Course Registry (Super Admin Only) */}
+            {isSuperAdmin && (
+                <div className="bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-slate-100 dark:bg-slate-800 dark:border-slate-700">
+                    <h2 className="text-lg md:text-xl font-bold text-slate-800 mb-6 font-heading dark:text-slate-100 flex items-center gap-2">
+                        <span>🔒</span> Private Course Registry
+                    </h2>
+                    {allPrivateCourses.length > 0 ? (
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-sm text-left">
+                                <thead className="bg-slate-50 text-slate-500 font-bold uppercase text-xs dark:bg-slate-700 dark:text-slate-400">
+                                    <tr>
+                                        <th className="px-4 py-3 rounded-l-lg">Course Title</th>
+                                        <th className="px-4 py-3">Creator</th>
+                                        <th className="px-4 py-3">Modules</th>
+                                        <th className="px-4 py-3 rounded-r-lg">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-slate-100 dark:divide-slate-700">
+                                    {allPrivateCourses.map(course => (
+                                        <tr key={course.id} className="hover:bg-slate-50 dark:hover:bg-slate-700/50">
+                                            <td className="px-4 py-3 font-medium text-slate-800 dark:text-slate-200">{course.title}</td>
+                                            <td className="px-4 py-3 text-slate-500 dark:text-slate-400">{course.authorHandle}</td>
+                                            <td className="px-4 py-3 text-slate-500 dark:text-slate-400">{course.modules.length}</td>
+                                            <td className="px-4 py-3">
+                                                <Link to={`/courses/${course.id}/modules`} className="text-emerald-600 hover:underline dark:text-emerald-400 font-medium text-xs">
+                                                    Inspect
+                                                </Link>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    ) : (
+                        <p className="text-slate-400 text-sm italic">No private courses created yet.</p>
+                    )}
                 </div>
             )}
 

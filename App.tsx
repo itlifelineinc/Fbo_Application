@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { HashRouter, Routes, Route, Navigate, Link } from 'react-router-dom';
+import { HashRouter, Routes, Route, Navigate, Link, useParams } from 'react-router-dom';
 import Layout from './components/Layout';
 import Dashboard from './components/Dashboard';
 import CourseBuilder from './components/CourseBuilder';
@@ -38,11 +38,103 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, currentUser, 
   );
 };
 
-const CourseList: React.FC<{ courses: Course[] }> = ({ courses }) => {
-  // Only show PUBLISHED courses to students
-  const publishedCourses = courses.filter(c => c.status === CourseStatus.PUBLISHED);
+// --- Course Modules List Component ---
 
-  const coursesByTrack = publishedCourses.reduce((acc, course) => {
+const CourseModulesList: React.FC<{ courses: Course[] }> = ({ courses }) => {
+  const { courseId } = useParams();
+  const course = courses.find(c => c.id === courseId);
+
+  if (!course) return <div className="p-10 text-center text-slate-500 dark:text-slate-400">Course not found</div>;
+
+  return (
+    <div className="space-y-8 animate-fade-in">
+       {/* Header with Back Button */}
+       <div className="flex flex-col gap-4">
+          <Link to="/courses" className="text-slate-500 hover:text-emerald-600 font-bold flex items-center gap-2 w-fit transition-colors dark:text-slate-400 dark:hover:text-emerald-400">
+             <span className="text-lg">←</span> Back to Enrolled Courses
+          </Link>
+          <div>
+            <span className="text-emerald-600 font-bold tracking-wider text-xs uppercase mb-2 block dark:text-emerald-400">{course.track}</span>
+            <h1 className="text-3xl font-bold text-emerald-950 font-heading dark:text-white">{course.title}</h1>
+            <p className="text-slate-600 mt-2 max-w-3xl leading-relaxed dark:text-slate-300">{course.description}</p>
+          </div>
+       </div>
+
+       <h2 className="text-xl font-bold text-slate-800 border-l-4 border-emerald-500 pl-3 font-heading dark:text-slate-200">Course Modules</h2>
+
+       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {course.modules?.map((module, index) => (
+            <div key={module.id} className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden flex flex-col group hover:shadow-md transition-shadow dark:bg-slate-800 dark:border-slate-700">
+               {/* Module Image */}
+               <div className="h-40 overflow-hidden relative bg-slate-100 dark:bg-slate-700">
+                  <img 
+                    src={module.coverImageUrl || course.thumbnailUrl} 
+                    alt={module.title} 
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
+                  <div className="absolute top-3 left-3 bg-white/20 backdrop-blur-md text-white text-xs font-bold px-3 py-1 rounded-full border border-white/20 shadow-sm">
+                     Module {index + 1}
+                  </div>
+               </div>
+               
+               <div className="p-6 flex-1 flex flex-col">
+                  <h3 className="text-xl font-bold text-slate-800 mb-2 font-heading dark:text-white">{module.title}</h3>
+                  <p className="text-sm text-slate-500 mb-6 flex-1 line-clamp-3 dark:text-slate-400">{module.summary || "Master this section to advance your FBO journey."}</p>
+                  
+                  <div className="mt-auto pt-4 border-t border-slate-50 dark:border-slate-700 flex items-center justify-between">
+                     <span className="text-xs font-bold text-slate-400 uppercase tracking-wider dark:text-slate-500">{module.chapters.length} Lessons</span>
+                     {module.chapters.length > 0 ? (
+                        <Link 
+                            to={`/classroom/${course.id}/${module.id}/${module.chapters[0].id}`}
+                            className="bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold px-6 py-2 rounded-xl transition-colors shadow-sm dark:bg-emerald-600 dark:hover:bg-emerald-500"
+                        >
+                            Start Module
+                        </Link>
+                     ) : (
+                        <button disabled className="bg-slate-100 text-slate-400 text-sm font-bold px-6 py-2 rounded-xl cursor-not-allowed dark:bg-slate-700 dark:text-slate-500">Coming Soon</button>
+                     )}
+                  </div>
+               </div>
+            </div>
+          ))}
+       </div>
+    </div>
+  );
+};
+
+const CourseList: React.FC<{ courses: Course[]; mode?: 'GLOBAL' | 'TEAM' | 'ENROLLED'; currentUser?: Student }> = ({ courses, mode = 'ENROLLED', currentUser }) => {
+  // Filter courses based on mode
+  const filteredCourses = courses.filter(course => {
+      // 1. Enrolled (My Classroom): User has started it OR it's a basic course
+      if (mode === 'ENROLLED') {
+          // Simplified: Show all published courses for now, or check progress
+          // In real app, check currentUser.enrolledCourses
+          return course.status === CourseStatus.PUBLISHED;
+      }
+
+      // 2. Global Library: Public, Published, Reviewed
+      if (mode === 'GLOBAL') {
+          return course.status === CourseStatus.PUBLISHED && !course.settings.teamOnly;
+      }
+
+      // 3. Team Training: Private, belongs to Sponsor OR User is Author
+      if (mode === 'TEAM') {
+          // Super Admin sees all private courses here
+          if (currentUser?.role === UserRole.SUPER_ADMIN) {
+              return course.settings.teamOnly; 
+          }
+          
+          const isMySponsorAuthor = course.authorHandle === currentUser?.sponsorId;
+          const isMeAuthor = course.authorHandle === currentUser?.handle;
+          
+          return course.settings.teamOnly && (isMySponsorAuthor || isMeAuthor);
+      }
+
+      return false;
+  });
+
+  const coursesByTrack = filteredCourses.reduce((acc, course) => {
     if (!acc[course.track]) {
       acc[course.track] = [];
     }
@@ -50,46 +142,69 @@ const CourseList: React.FC<{ courses: Course[] }> = ({ courses }) => {
     return acc;
   }, {} as Record<string, Course[]>);
 
+  const getTitle = () => {
+      if (mode === 'GLOBAL') return 'Global Training Library';
+      if (mode === 'TEAM') return 'Team Training Portal';
+      return 'My Classroom';
+  };
+
+  const getSubtitle = () => {
+      if (mode === 'GLOBAL') return 'Master the skills you need with courses from top leaders worldwide.';
+      if (mode === 'TEAM') return 'Exclusive strategies and training from your direct sponsorship team.';
+      return 'Continue your learning journey.';
+  };
+
   return (
     <div className="space-y-10 animate-fade-in">
        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-emerald-950 font-heading dark:text-emerald-400">Training Portal</h1>
-          <p className="text-emerald-700 mt-2 dark:text-emerald-300">Master the skills you need to grow your Forever business.</p>
+          <h1 className="text-3xl font-bold text-emerald-950 font-heading dark:text-emerald-400">{getTitle()}</h1>
+          <p className="text-emerald-700 mt-2 dark:text-emerald-300">{getSubtitle()}</p>
        </div>
 
-       {Object.keys(coursesByTrack).map((track) => (
-         <div key={track} className="space-y-4">
-            <h2 className="text-xl font-bold text-slate-800 border-l-4 border-emerald-500 pl-3 font-heading dark:text-slate-200">{track}</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {coursesByTrack[track].map(course => (
-                <div key={course.id} className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden flex flex-col group hover:shadow-md transition-shadow dark:bg-slate-800 dark:border-slate-700">
-                  <div className="h-40 overflow-hidden relative">
-                      <img src={course.thumbnailUrl} alt={course.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
-                      <div className="absolute bottom-3 left-4 text-white font-bold font-heading text-lg shadow-black/50 drop-shadow-md">{course.title}</div>
-                  </div>
-                  <div className="p-6 flex-1 flex flex-col">
-                      <p className="text-sm text-slate-500 mb-4 flex-1 line-clamp-2 dark:text-slate-400">{course.description}</p>
-                      
-                      <div className="space-y-2">
-                        <div className="text-xs font-semibold text-slate-400 uppercase tracking-wider dark:text-slate-500">Modules ({course.modules?.length || 0})</div>
-                        {course.modules?.map(m => (
-                            <Link 
-                              key={m.id} 
-                              to={`/classroom/${course.id}/${m.id}/${m.chapters?.[0]?.id}`}
-                              className="block p-3 rounded-lg bg-slate-50 hover:bg-emerald-50 hover:text-emerald-700 transition-colors text-sm font-medium text-slate-700 flex justify-between items-center dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-emerald-900/30 dark:hover:text-emerald-400"
-                            >
-                              <span className="truncate flex-1 mr-2">{m.title}</span>
-                              <span className="text-xs bg-white px-2 py-1 rounded border border-slate-200 text-slate-400 whitespace-nowrap dark:bg-slate-600 dark:border-slate-500 dark:text-slate-300">{m.chapters?.length || 0} lessons</span>
-                            </Link>
-                        ))}
+       {filteredCourses.length === 0 ? (
+           <div className="text-center py-20 bg-slate-50 rounded-2xl border border-dashed border-slate-200 dark:bg-slate-800/50 dark:border-slate-700">
+               <p className="text-slate-500 font-medium dark:text-slate-400">No courses found in this portal.</p>
+               {mode === 'TEAM' && <p className="text-sm text-slate-400 mt-2">Ask your sponsor to publish training content!</p>}
+           </div>
+       ) : (
+           Object.keys(coursesByTrack).map((track) => (
+             <div key={track} className="space-y-4">
+                <h2 className="text-xl font-bold text-slate-800 border-l-4 border-emerald-500 pl-3 font-heading dark:text-slate-200">{track}</h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {coursesByTrack[track].map(course => (
+                    <div key={course.id} className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden flex flex-col group hover:shadow-md transition-shadow dark:bg-slate-800 dark:border-slate-700">
+                      <div className="h-40 overflow-hidden relative">
+                          <img src={course.thumbnailUrl} alt={course.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
+                          <div className="absolute bottom-3 left-4 text-white font-bold font-heading text-lg shadow-black/50 drop-shadow-md">{course.title}</div>
+                          {course.settings.teamOnly && (
+                              <div className="absolute top-3 right-3 bg-yellow-400 text-yellow-900 text-[10px] font-bold px-2 py-1 rounded shadow-sm uppercase tracking-wide">
+                                  Team Exclusive
+                              </div>
+                          )}
                       </div>
-                  </div>
+                      <div className="p-6 flex-1 flex flex-col">
+                          <p className="text-sm text-slate-500 mb-4 flex-1 line-clamp-2 dark:text-slate-400">{course.description}</p>
+                          
+                          <div className="mt-auto">
+                            <div className="flex justify-between items-center mb-4">
+                                <div className="text-xs font-semibold text-slate-400 uppercase tracking-wider dark:text-slate-500">Modules ({course.modules?.length || 0})</div>
+                                <div className="text-xs text-slate-400 dark:text-slate-500">By: {course.authorHandle}</div>
+                            </div>
+                            <Link 
+                                to={`/courses/${course.id}/modules`}
+                                className="w-full block text-center bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-xl transition-colors shadow-sm dark:bg-emerald-600 dark:hover:bg-emerald-500"
+                            >
+                                Start Learning
+                            </Link>
+                          </div>
+                      </div>
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
-         </div>
-       ))}
+             </div>
+           ))
+       )}
     </div>
   );
 };
@@ -356,15 +471,36 @@ const App: React.FC = () => {
              </ProtectedRoute>
         } />
 
+        {/* New Route for Sales Page Builder - Accessible to all logged-in users for demo purposes */}
         <Route path="/sales-builder" element={
              <ProtectedRoute currentUser={currentUser} onLogout={handleLogout} theme={theme} onToggleTheme={toggleTheme}>
                 <SalesPageBuilder />
              </ProtectedRoute>
         } />
         
+        {/* Main "My Classroom" Route */}
         <Route path="/courses" element={
             <ProtectedRoute currentUser={currentUser} onLogout={handleLogout} theme={theme} onToggleTheme={toggleTheme}>
-                <CourseList courses={courses} />
+                <CourseList courses={courses} mode="ENROLLED" currentUser={currentUser!} />
+            </ProtectedRoute>
+        } />
+
+        {/* New Split Portals */}
+        <Route path="/training/global" element={
+            <ProtectedRoute currentUser={currentUser} onLogout={handleLogout} theme={theme} onToggleTheme={toggleTheme}>
+                <CourseList courses={courses} mode="GLOBAL" currentUser={currentUser!} />
+            </ProtectedRoute>
+        } />
+
+        <Route path="/training/team" element={
+            <ProtectedRoute currentUser={currentUser} onLogout={handleLogout} theme={theme} onToggleTheme={toggleTheme}>
+                <CourseList courses={courses} mode="TEAM" currentUser={currentUser!} />
+            </ProtectedRoute>
+        } />
+
+        <Route path="/courses/:courseId/modules" element={
+            <ProtectedRoute currentUser={currentUser} onLogout={handleLogout} theme={theme} onToggleTheme={toggleTheme}>
+                <CourseModulesList courses={courses} />
             </ProtectedRoute>
         } />
         

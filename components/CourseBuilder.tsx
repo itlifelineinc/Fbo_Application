@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Course, Module, Chapter, CourseTrack, CourseLevel, CourseStatus } from '../types';
 
@@ -128,6 +128,29 @@ const CourseBuilder: React.FC<CourseBuilderProps> = ({ currentUserHandle, onSubm
   
   // State for managing the active chapter being edited
   const [editingChapter, setEditingChapter] = useState<{moduleId: string, chapterId: string} | null>(null);
+  
+  // Publishing Target State
+  const [publishTarget, setPublishTarget] = useState<'GLOBAL' | 'TEAM'>('TEAM');
+
+  // Ref for the step navigation container to handle scrolling
+  const stepsContainerRef = useRef<HTMLDivElement>(null);
+
+  // Auto-scroll active step into view on mobile
+  useEffect(() => {
+    if (stepsContainerRef.current) {
+        const activeTab = stepsContainerRef.current.querySelector(`[data-step-id="${step}"]`) as HTMLElement;
+        if (activeTab) {
+            // Scroll to center the active tab
+            const container = stepsContainerRef.current;
+            const scrollLeft = activeTab.offsetLeft - (container.clientWidth / 2) + (activeTab.clientWidth / 2);
+            
+            container.scrollTo({
+                left: scrollLeft,
+                behavior: 'smooth'
+            });
+        }
+    }
+  }, [step]);
 
   // --- HANDLERS ---
 
@@ -222,9 +245,24 @@ const CourseBuilder: React.FC<CourseBuilderProps> = ({ currentUserHandle, onSubm
   };
 
   const handleSubmit = () => {
-    const finalCourse = { ...course, status: CourseStatus.UNDER_REVIEW };
+    const isGlobal = publishTarget === 'GLOBAL';
+    const finalCourse = { 
+        ...course, 
+        status: isGlobal ? CourseStatus.UNDER_REVIEW : CourseStatus.PUBLISHED,
+        settings: {
+            ...course.settings,
+            teamOnly: !isGlobal
+        }
+    };
+    
     onSubmitCourse(finalCourse);
-    alert("Course submitted for review successfully!");
+    
+    if (isGlobal) {
+        alert("Course submitted for Global Review! An admin will check it shortly.");
+    } else {
+        alert("Course published to your Team Training portal successfully!");
+    }
+    
     setCourse(getEmptyCourse(currentUserHandle)); // Reset
     setStep(1);
     navigate('/dashboard');
@@ -318,7 +356,7 @@ const CourseBuilder: React.FC<CourseBuilderProps> = ({ currentUserHandle, onSubm
         </button>
       </div>
       
-      <div className="flex-1 overflow-y-auto space-y-6 pr-2">
+      <div className="flex-1 overflow-y-auto space-y-6 pr-2 no-scrollbar">
         {course.modules.length === 0 && (
           <div className="text-center py-10 text-slate-400 border-2 border-dashed border-slate-200 rounded-xl dark:border-slate-700 dark:text-slate-500">
             Start by adding your first module.
@@ -382,19 +420,6 @@ const CourseBuilder: React.FC<CourseBuilderProps> = ({ currentUserHandle, onSubm
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
          <div className="space-y-4">
-             <h3 className="font-bold text-emerald-900 dark:text-emerald-400">Visibility & Access</h3>
-             <label className="flex items-center justify-between p-4 border border-slate-200 rounded-xl bg-white dark:bg-slate-800 dark:border-slate-700">
-                <span className="text-sm font-medium text-slate-700 dark:text-slate-300">Team Only (Private)</span>
-                <input 
-                  type="checkbox" 
-                  checked={course.settings.teamOnly} 
-                  onChange={e => updateSettings('teamOnly', e.target.checked)} 
-                  className="w-5 h-5 text-emerald-600 rounded border-slate-300 bg-white accent-emerald-600 dark:bg-slate-700 dark:border-slate-600" 
-                />
-             </label>
-         </div>
-
-         <div className="space-y-4">
              <h3 className="font-bold text-emerald-900 dark:text-emerald-400">Gamification</h3>
              <label className="flex items-center justify-between p-4 border border-slate-200 rounded-xl bg-white dark:bg-slate-800 dark:border-slate-700">
                 <span className="text-sm font-medium text-slate-700 dark:text-slate-300">Enable Certificates</span>
@@ -443,7 +468,7 @@ const CourseBuilder: React.FC<CourseBuilderProps> = ({ currentUserHandle, onSubm
                </button>
             </div>
             
-            <div className="flex-1 overflow-y-auto p-6 space-y-6 bg-slate-50 dark:bg-slate-950">
+            <div className="flex-1 overflow-y-auto p-6 space-y-6 bg-slate-50 dark:bg-slate-950 no-scrollbar">
                 <div>
                     <label className="block text-sm font-bold text-slate-700 mb-1 dark:text-slate-300">Chapter Title</label>
                     <input 
@@ -514,10 +539,19 @@ const CourseBuilder: React.FC<CourseBuilderProps> = ({ currentUserHandle, onSubm
   }
 
   return (
-    <div className="max-w-5xl mx-auto h-auto md:h-[calc(100vh-6rem)] flex flex-col">
+    <div className="max-w-5xl mx-auto h-full flex flex-col p-4 md:p-6">
+      <style>{`
+        .no-scrollbar::-webkit-scrollbar {
+          display: none;
+        }
+        .no-scrollbar {
+          -ms-overflow-style: none;  /* IE and Edge */
+          scrollbar-width: none;  /* Firefox */
+        }
+      `}</style>
       
       {/* Top Navigation Bar */}
-      <div className="flex items-center justify-between mb-6 bg-white p-4 rounded-xl shadow-sm border border-slate-100 dark:bg-slate-800 dark:border-slate-700">
+      <div className="flex items-center justify-between mb-6 bg-white p-4 rounded-xl shadow-sm border border-slate-100 dark:bg-slate-800 dark:border-slate-700 shrink-0">
          <div className="flex items-center gap-3">
              <button onClick={() => navigate('/dashboard')} className="text-slate-500 hover:text-emerald-700 transition-colors p-1 rounded-lg hover:bg-emerald-50 dark:text-slate-400 dark:hover:bg-emerald-900/30 dark:hover:text-emerald-400">
                  <ArrowLeftIcon />
@@ -527,14 +561,6 @@ const CourseBuilder: React.FC<CourseBuilderProps> = ({ currentUserHandle, onSubm
                  <p className="text-xs text-slate-500 dark:text-slate-400">Create and manage training content</p>
              </div>
          </div>
-         {step === 4 && (
-             <button 
-                onClick={handleSubmit}
-                className="bg-emerald-600 text-white text-sm px-4 py-2 rounded-lg font-bold hover:bg-emerald-700 shadow-sm"
-             >
-                Publish
-             </button>
-         )}
       </div>
 
       {renderChapterEditor()}
@@ -542,15 +568,16 @@ const CourseBuilder: React.FC<CourseBuilderProps> = ({ currentUserHandle, onSubm
       <div className="flex flex-col md:flex-row h-full gap-6 overflow-hidden">
         
         {/* Sidebar Steps */}
-        <div className="w-full md:w-64 bg-white rounded-2xl shadow-sm border border-slate-100 p-4 flex md:flex-col gap-2 overflow-x-auto md:overflow-visible shrink-0 h-fit md:h-full dark:bg-slate-800 dark:border-slate-700">
+        <div ref={stepsContainerRef} className="w-full md:w-64 bg-white rounded-2xl shadow-sm border border-slate-100 p-4 flex md:flex-col gap-2 overflow-x-auto md:overflow-visible shrink-0 h-fit md:h-full dark:bg-slate-800 dark:border-slate-700 no-scrollbar">
            {[
              { id: 1, label: 'Basic Info', icon: '📝' },
              { id: 2, label: 'Curriculum', icon: '📚' },
              { id: 3, label: 'Settings', icon: '⚙️' },
-             { id: 4, label: 'Review', icon: '👀' },
+             { id: 4, label: 'Review & Publish', icon: '🚀' },
            ].map(s => (
              <button 
                key={s.id}
+               data-step-id={s.id}
                onClick={() => setStep(s.id as any)}
                className={`flex items-center gap-3 p-3 rounded-xl text-sm font-bold transition-all whitespace-nowrap ${
                  step === s.id ? 'bg-emerald-600 text-white shadow-md' : 'text-slate-500 hover:bg-slate-50 dark:text-slate-400 dark:hover:bg-slate-700'
@@ -563,41 +590,89 @@ const CourseBuilder: React.FC<CourseBuilderProps> = ({ currentUserHandle, onSubm
         </div>
 
         {/* Main Content Area */}
-        <div className="flex-1 bg-white rounded-2xl shadow-sm border border-slate-100 p-6 md:p-8 overflow-y-auto relative min-h-[500px] dark:bg-slate-800 dark:border-slate-700">
+        <div className="flex-1 bg-white rounded-2xl shadow-sm border border-slate-100 p-6 md:p-8 overflow-y-auto relative min-h-[500px] dark:bg-slate-800 dark:border-slate-700 no-scrollbar">
             
             {step === 1 && renderStep1_Info()}
             {step === 2 && renderStep2_Curriculum()}
             {step === 3 && renderStep3_Settings()}
             
             {step === 4 && (
-              <div className="space-y-6 animate-fade-in text-center py-10">
-                  <div className="w-20 h-20 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-6 text-4xl dark:bg-emerald-900/30">🚀</div>
-                  <h2 className="text-2xl font-bold text-slate-800 dark:text-white">Ready to Submit?</h2>
-                  <p className="text-slate-500 max-w-md mx-auto dark:text-slate-400">
-                    You have created a course with <strong>{course.modules.length} modules</strong>. 
-                    Once submitted, it will be sent to the Admin team for final approval before going live.
-                  </p>
-                  
-                  <div className="bg-slate-50 p-6 rounded-xl text-left max-w-md mx-auto border border-slate-200 mt-6 dark:bg-slate-700/50 dark:border-slate-600">
-                      <h4 className="font-bold text-slate-700 mb-2 dark:text-slate-200">Summary</h4>
-                      <p className="text-sm text-slate-600 dark:text-slate-300"><span className="font-bold">Title:</span> {course.title}</p>
-                      <p className="text-sm text-slate-600 dark:text-slate-300"><span className="font-bold">Track:</span> {course.track}</p>
-                      <p className="text-sm text-slate-600 dark:text-slate-300"><span className="font-bold">Level:</span> {course.level}</p>
+              <div className="space-y-8 animate-fade-in text-center py-6">
+                  <div>
+                    <h2 className="text-2xl font-bold text-slate-800 dark:text-white mb-2">Publishing Options</h2>
+                    <p className="text-slate-500 dark:text-slate-400">Choose where this course will be visible.</p>
                   </div>
 
-                  <button 
-                    onClick={handleSubmit}
-                    className="mt-8 bg-emerald-600 text-white px-8 py-4 rounded-xl font-bold text-lg shadow-lg hover:bg-emerald-700 hover:scale-105 transition-all"
-                  >
-                    Submit Course for Review
-                  </button>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-3xl mx-auto">
+                      {/* Team Only Option */}
+                      <button 
+                        onClick={() => setPublishTarget('TEAM')}
+                        className={`p-6 rounded-2xl border-2 transition-all flex flex-col items-center text-center gap-4 ${
+                            publishTarget === 'TEAM' 
+                            ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/30' 
+                            : 'border-slate-200 hover:border-emerald-300 dark:border-slate-600 dark:hover:border-slate-500'
+                        }`}
+                      >
+                          <div className={`w-12 h-12 rounded-full flex items-center justify-center text-2xl ${
+                              publishTarget === 'TEAM' ? 'bg-emerald-200 text-emerald-800' : 'bg-slate-100 text-slate-500 dark:bg-slate-700'
+                          }`}>
+                              👥
+                          </div>
+                          <div>
+                              <h3 className="font-bold text-lg text-slate-800 dark:text-white">Team Training (Private)</h3>
+                              <p className="text-sm text-slate-500 mt-1 dark:text-slate-400">Visible only to your downline or people with the link.</p>
+                              <span className="inline-block mt-3 px-3 py-1 bg-green-100 text-green-700 text-xs font-bold rounded-full dark:bg-green-900/30 dark:text-green-300">
+                                  Instantly Published
+                              </span>
+                          </div>
+                      </button>
+
+                      {/* Global Option */}
+                      <button 
+                        onClick={() => setPublishTarget('GLOBAL')}
+                        className={`p-6 rounded-2xl border-2 transition-all flex flex-col items-center text-center gap-4 ${
+                            publishTarget === 'GLOBAL' 
+                            ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/30' 
+                            : 'border-slate-200 hover:border-blue-300 dark:border-slate-600 dark:hover:border-slate-500'
+                        }`}
+                      >
+                          <div className={`w-12 h-12 rounded-full flex items-center justify-center text-2xl ${
+                              publishTarget === 'GLOBAL' ? 'bg-blue-200 text-blue-800' : 'bg-slate-100 text-slate-500 dark:bg-slate-700'
+                          }`}>
+                              🌍
+                          </div>
+                          <div>
+                              <h3 className="font-bold text-lg text-slate-800 dark:text-white">Global Library (Public)</h3>
+                              <p className="text-sm text-slate-500 mt-1 dark:text-slate-400">Visible to ALL FBOs on the platform. Build your reputation.</p>
+                              <span className="inline-block mt-3 px-3 py-1 bg-orange-100 text-orange-700 text-xs font-bold rounded-full dark:bg-orange-900/30 dark:text-orange-300">
+                                  Requires Admin Review
+                              </span>
+                          </div>
+                      </button>
+                  </div>
+                  
+                  <div className="pt-6 border-t border-slate-100 dark:border-slate-700 max-w-md mx-auto">
+                      <div className="flex justify-between text-sm text-slate-500 mb-6 dark:text-slate-400">
+                          <span>Modules: {course.modules.length}</span>
+                          <span>Track: {course.track}</span>
+                      </div>
+
+                      <button 
+                        onClick={handleSubmit}
+                        className={`w-full py-4 rounded-xl font-bold text-lg shadow-lg hover:scale-105 transition-all text-white ${
+                            publishTarget === 'GLOBAL' ? 'bg-blue-600 hover:bg-blue-700' : 'bg-emerald-600 hover:bg-emerald-700'
+                        }`}
+                      >
+                        {publishTarget === 'GLOBAL' ? 'Submit for Global Review' : 'Publish to Team Portal'}
+                      </button>
+                  </div>
               </div>
             )}
         </div>
       </div>
       
       {/* Navigation Footer (Mobile mainly) */}
-      <div className="flex justify-between mt-6 md:hidden pb-6">
+      <div className="flex justify-between mt-6 md:hidden pb-6 shrink-0">
           <button 
             disabled={step === 1} 
             onClick={() => setStep(prev => Math.max(1, prev - 1) as any)}
@@ -617,12 +692,6 @@ const CourseBuilder: React.FC<CourseBuilderProps> = ({ currentUserHandle, onSubm
   );
 };
 
-const SparklesIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
-    <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.456-2.456L14.25 6l1.035-.259a3.375 3.375 0 002.456-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 00-2.456 2.456zM16.894 20.567L16.5 21.75l-.394-1.183a2.25 2.25 0 00-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 001.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 00-1.423 1.423z" />
-  </svg>
-);
-
 const ArrowLeftIcon = () => (
     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-6 h-6">
         <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
@@ -633,13 +702,6 @@ const TrashIcon = () => (
     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4">
         <path strokeLinecap="round" strokeLinejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
     </svg>
-);
-
-const Spinner = () => (
-  <svg className="animate-spin -ml-1 mr-2 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-  </svg>
 );
 
 export default CourseBuilder;

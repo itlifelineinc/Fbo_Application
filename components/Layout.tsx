@@ -1,14 +1,17 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Student, UserRole } from '../types';
+import { LogOut, Settings, Moon, Sun, ChevronDown } from 'lucide-react';
 
 interface LayoutProps {
   children: React.ReactNode;
   currentUser: Student;
   onLogout: () => void;
+  theme: 'light' | 'dark';
+  onToggleTheme: () => void;
 }
 
-// Icons
+// Icons (Legacy local icons kept for Sidebar consistency)
 function HomeIcon() {
   return (
     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
@@ -97,7 +100,7 @@ function XMarkIcon() {
   );
 }
 
-function ChevronDownIcon({ className }: { className?: string }) {
+function ChevronDownIconLocal({ className }: { className?: string }) {
   return (
     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={className || "w-5 h-5"}>
       <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
@@ -113,12 +116,19 @@ function ArrowRightOnRectangleIcon() {
   );
 }
 
-const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout }) => {
+const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme, onToggleTheme }) => {
   const location = useLocation();
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isSalesMenuOpen, setIsSalesMenuOpen] = useState(false);
+  const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
+  
+  // Navbar Auto-hide State
+  const [isNavbarOpen, setIsNavbarOpen] = useState(false);
+  const navbarRef = useRef<HTMLElement>(null);
+  const navTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const isActive = (path: string) => location.pathname === path;
+  const isDashboard = location.pathname === '/dashboard';
 
   // Check if we are in a builder mode (full screen tools)
   const isBuilder = location.pathname.startsWith('/sales-builder') || location.pathname.startsWith('/builder');
@@ -130,29 +140,72 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout }) => {
     }
   }, [location.pathname]);
 
+  // Navbar auto-hide logic on non-dashboard pages
+  useEffect(() => {
+    if (isNavbarOpen && !isDashboard) {
+      const hideNav = () => setIsNavbarOpen(false);
+      const resetTimer = () => {
+        if (navTimerRef.current) clearTimeout(navTimerRef.current);
+        navTimerRef.current = setTimeout(hideNav, 3000); // 3 seconds inactivity
+      };
+
+      // Initial start
+      resetTimer();
+
+      const navEl = navbarRef.current;
+      if (navEl) {
+        navEl.addEventListener('mousemove', resetTimer);
+        navEl.addEventListener('click', resetTimer);
+        navEl.addEventListener('keydown', resetTimer);
+        navEl.addEventListener('mouseenter', resetTimer);
+      }
+
+      return () => {
+        if (navTimerRef.current) clearTimeout(navTimerRef.current);
+        if (navEl) {
+          navEl.removeEventListener('mousemove', resetTimer);
+          navEl.removeEventListener('click', resetTimer);
+          navEl.removeEventListener('keydown', resetTimer);
+          navEl.removeEventListener('mouseenter', resetTimer);
+        }
+      };
+    } else if (!isDashboard) {
+        // Ensure hidden by default when switching to non-dashboard
+        setIsNavbarOpen(false);
+    } else {
+        // Always show on dashboard
+        setIsNavbarOpen(true);
+    }
+  }, [isNavbarOpen, isDashboard]);
+
   // Role Checks
   const isStudent = currentUser.role === UserRole.STUDENT;
   const isAdminOrSuper = currentUser.role === UserRole.ADMIN || currentUser.role === UserRole.SUPER_ADMIN;
   // Allow Sponsors to access builder too
   const canBuildCourses = isAdminOrSuper || currentUser.role === UserRole.SPONSOR;
 
+  const headerClass = isDashboard 
+    ? "hidden lg:flex bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 h-16 items-center justify-between px-8 z-20 shrink-0"
+    : `hidden lg:flex bg-white/95 backdrop-blur-md dark:bg-slate-900/95 border-b border-slate-200 dark:border-slate-800 h-16 items-center justify-between px-8 z-40 absolute top-0 left-0 right-0 shadow-md transition-transform duration-300 ease-in-out ${isNavbarOpen ? 'translate-y-0' : '-translate-y-full'}`;
+
   return (
     <div className="flex h-screen bg-slate-50 dark:bg-slate-950 overflow-hidden transition-colors duration-300">
       
       {/* Mobile Overlay */}
-      {isMobileMenuOpen && (
+      {isSidebarOpen && (
         <div 
           className="fixed inset-0 bg-black/50 z-50 lg:hidden backdrop-blur-sm transition-opacity"
-          onClick={() => setIsMobileMenuOpen(false)}
+          onClick={() => setIsSidebarOpen(false)}
         />
       )}
 
       {/* Sidebar - Responsive */}
       <aside 
         className={`
-          fixed lg:static inset-y-0 left-0 z-50 w-64 bg-emerald-900 text-white flex flex-col shadow-xl 
+          fixed inset-y-0 left-0 z-50 w-64 bg-emerald-900 text-white flex flex-col shadow-xl 
           transform transition-transform duration-300 ease-in-out dark:bg-emerald-950
-          ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
+          lg:static lg:translate-x-0
+          ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}
         `}
       >
         <div className="p-6 border-b border-emerald-800 flex justify-between items-center dark:border-emerald-900">
@@ -164,17 +217,17 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout }) => {
             </div>
             <span>FBO Academy</span>
           </div>
-          {/* Mobile Close Button */}
-          <button onClick={() => setIsMobileMenuOpen(false)} className="lg:hidden text-emerald-300 hover:text-white">
+          {/* Close Button */}
+          <button onClick={() => setIsSidebarOpen(false)} className="lg:hidden text-emerald-300 hover:text-white">
             <XMarkIcon />
           </button>
         </div>
 
         {/* Clickable User Profile Section */}
-        <div className="px-6 py-4 bg-emerald-800/30 dark:bg-emerald-900/30">
+        <div className="px-6 py-4 bg-emerald-800/30 dark:bg-emerald-900/30 lg:hidden">
            <Link 
              to={`/students/${currentUser.id}`}
-             onClick={() => setIsMobileMenuOpen(false)}
+             onClick={() => setIsSidebarOpen(false)}
              className="flex items-center gap-3 bg-emerald-800/50 p-3 rounded-lg border border-emerald-800 hover:bg-emerald-700/50 hover:border-emerald-600 transition-all cursor-pointer group dark:border-emerald-700 dark:bg-emerald-800/30"
            >
              <div className="w-8 h-8 rounded-full bg-emerald-100 text-emerald-800 flex items-center justify-center font-bold text-xs flex-shrink-0 font-heading overflow-hidden group-hover:scale-105 transition-transform">
@@ -197,21 +250,21 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout }) => {
             icon={<HomeIcon />} 
             label="Dashboard" 
             active={isActive('/dashboard')} 
-            onClick={() => setIsMobileMenuOpen(false)}
+            onClick={() => setIsSidebarOpen(false)}
           />
           <NavItem 
             to="/chat" 
             icon={<ChatBubbleOvalLeftIcon />} 
             label="Team Chat" 
             active={isActive('/chat')} 
-            onClick={() => setIsMobileMenuOpen(false)}
+            onClick={() => setIsSidebarOpen(false)}
           />
           <NavItem 
             to="/courses" 
             icon={<BookOpenIcon />} 
             label="My Training" 
             active={isActive('/courses') || location.pathname.startsWith('/classroom')} 
-            onClick={() => setIsMobileMenuOpen(false)}
+            onClick={() => setIsSidebarOpen(false)}
           />
           
           {/* Sales & CC Dropdown */}
@@ -230,7 +283,7 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout }) => {
                 </span>
                 <span className="font-medium">Sales & CC</span>
               </div>
-              <ChevronDownIcon className={`w-4 h-4 transition-transform duration-300 ${isSalesMenuOpen ? 'rotate-180' : ''}`} />
+              <ChevronDownIconLocal className={`w-4 h-4 transition-transform duration-300 ${isSalesMenuOpen ? 'rotate-180' : ''}`} />
             </button>
 
             <div className={`overflow-hidden transition-all duration-300 ${isSalesMenuOpen ? 'max-h-40 opacity-100 mt-1' : 'max-h-0 opacity-0'}`}>
@@ -240,7 +293,7 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout }) => {
                   icon={<ClipboardDocumentListIcon />} 
                   label="Sales Log" 
                   active={isActive('/sales')} 
-                  onClick={() => setIsMobileMenuOpen(false)}
+                  onClick={() => setIsSidebarOpen(false)}
                   className="py-2 text-sm"
                 />
                 <NavItem 
@@ -248,7 +301,7 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout }) => {
                   icon={<RocketLaunchIcon />} 
                   label="Sales Pages" 
                   active={isActive('/sales-builder')} 
-                  onClick={() => setIsMobileMenuOpen(false)}
+                  onClick={() => setIsSidebarOpen(false)}
                   className="py-2 text-sm"
                 />
               </div>
@@ -260,7 +313,7 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout }) => {
             icon={<GlobeAltIcon />} 
             label="Community" 
             active={isActive('/community')} 
-            onClick={() => setIsMobileMenuOpen(false)}
+            onClick={() => setIsSidebarOpen(false)}
           />
           
           {/* Hide Students List from Students */}
@@ -270,7 +323,7 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout }) => {
                icon={<UsersIcon />} 
                label={isAdminOrSuper ? "All Students" : "My Team"} 
                active={isActive('/students')} 
-               onClick={() => setIsMobileMenuOpen(false)}
+               onClick={() => setIsSidebarOpen(false)}
              />
           )}
           
@@ -281,12 +334,13 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout }) => {
                icon={<SparklesIcon />} 
                label="Course Builder" 
                active={isActive('/builder')} 
-               onClick={() => setIsMobileMenuOpen(false)}
+               onClick={() => setIsSidebarOpen(false)}
              />
           )}
         </nav>
 
-        <div className="p-4 border-t border-emerald-800 dark:border-emerald-900">
+        {/* Sidebar Logout: Only show on Mobile or collapsed state logic if needed */}
+        <div className="p-4 border-t border-emerald-800 dark:border-emerald-900 lg:hidden">
           <button 
             onClick={onLogout}
             className="flex items-center gap-3 px-4 py-3 rounded-lg w-full text-emerald-300 hover:bg-emerald-800/50 hover:text-white transition-colors"
@@ -298,9 +352,91 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout }) => {
       </aside>
 
       {/* Main Content - Adjusted for Builders */}
-      <div className="flex-1 flex flex-col h-screen overflow-hidden dark:bg-slate-950">
+      <div className="flex-1 flex flex-col h-screen overflow-hidden dark:bg-slate-950 relative">
+        
+        {/* Desktop Navbar */}
+        <header ref={navbarRef} className={headerClass}>
+            <div className="flex items-center gap-4 text-sm text-slate-500 dark:text-slate-400">
+               {/* Mobile Menu Trigger (Only visible on mobile, so lg:hidden logic below handles that, this is desktop header content) */}
+               {/* Updated Greeting: Hand Wave + Hi */}
+               <span className="font-medium text-lg">👋 Hi, {currentUser.name}</span>
+            </div>
+            
+            <div className="relative">
+               <button 
+                 onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)} 
+                 className="flex items-center gap-3 focus:outline-none hover:bg-slate-50 dark:hover:bg-slate-800 p-2 rounded-xl transition-colors"
+               >
+                  <div className="text-right hidden xl:block">
+                      <p className="text-sm font-bold text-slate-700 dark:text-slate-200">{currentUser.name}</p>
+                      <p className="text-xs text-slate-500 dark:text-slate-400">{currentUser.role}</p>
+                  </div>
+                  <div className="w-9 h-9 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold text-sm overflow-hidden border border-emerald-200 dark:bg-emerald-900 dark:text-emerald-300 dark:border-emerald-800">
+                      {currentUser.avatarUrl ? (
+                          <img src={currentUser.avatarUrl} alt={currentUser.name} className="w-full h-full object-cover" />
+                      ) : (
+                          currentUser.name.charAt(0)
+                      )}
+                  </div>
+                  <ChevronDown size={16} className={`text-slate-400 transition-transform ${isProfileMenuOpen ? 'rotate-180' : ''}`} />
+               </button>
+
+               {/* Profile Dropdown */}
+               {isProfileMenuOpen && (
+                  <>
+                    <div className="fixed inset-0 z-10" onClick={() => setIsProfileMenuOpen(false)}></div>
+                    <div className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-xl border border-slate-100 py-2 z-20 animate-fade-in dark:bg-slate-800 dark:border-slate-700">
+                        <div className="px-4 py-3 border-b border-slate-100 dark:border-slate-700">
+                            <p className="text-sm font-bold text-slate-800 dark:text-white">Signed in as</p>
+                            <p className="text-xs text-slate-500 truncate dark:text-slate-400">{currentUser.email}</p>
+                        </div>
+                        
+                        <div className="py-2">
+                            <button 
+                                onClick={() => { onToggleTheme(); setIsProfileMenuOpen(false); }}
+                                className="w-full text-left px-4 py-2 text-sm text-slate-600 hover:bg-slate-50 flex items-center gap-2 transition-colors dark:text-slate-300 dark:hover:bg-slate-700"
+                            >
+                                {theme === 'light' ? <Moon size={16} /> : <Sun size={16} />}
+                                <span>{theme === 'light' ? 'Dark Mode' : 'Light Mode'}</span>
+                            </button>
+                            <Link 
+                                to={`/students/${currentUser.id}`}
+                                onClick={() => setIsProfileMenuOpen(false)}
+                                className="w-full text-left px-4 py-2 text-sm text-slate-600 hover:bg-slate-50 flex items-center gap-2 transition-colors dark:text-slate-300 dark:hover:bg-slate-700"
+                            >
+                                <Settings size={16} />
+                                <span>Settings</span>
+                            </Link>
+                        </div>
+
+                        <div className="border-t border-slate-100 pt-2 dark:border-slate-700">
+                            <button 
+                                onClick={onLogout}
+                                className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2 transition-colors dark:hover:bg-red-900/20"
+                            >
+                                <LogOut size={16} />
+                                <span>Sign Out</span>
+                            </button>
+                        </div>
+                    </div>
+                  </>
+               )}
+            </div>
+        </header>
+
+        {/* Trigger Button for Desktop Navbar (visible when hidden) */}
+        {!isDashboard && !isNavbarOpen && (
+             <button 
+               onClick={() => setIsNavbarOpen(true)}
+               className="hidden lg:flex absolute top-4 right-8 z-30 bg-white/90 dark:bg-slate-800/90 p-2.5 rounded-full shadow-lg border border-slate-200 dark:border-slate-700 text-slate-500 hover:text-emerald-600 transition-all hover:scale-110"
+               title="Show Menu"
+             >
+                <ChevronDownIconLocal />
+             </button>
+        )}
+
         {/* Mobile Header */}
-        <header className="lg:hidden bg-white border-b border-slate-200 p-4 flex justify-between items-center z-10 shadow-sm dark:bg-slate-900 dark:border-slate-800">
+        <header className="lg:hidden bg-white border-b border-slate-200 p-4 flex justify-between items-center z-10 shadow-sm dark:bg-slate-900 dark:border-slate-800 shrink-0">
            <div className="flex items-center gap-2 font-bold text-lg text-emerald-900 font-heading dark:text-emerald-400">
              <div className="w-6 h-6 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-full flex items-center justify-center text-emerald-900 shadow-sm">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-3 h-3">
@@ -309,7 +445,7 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout }) => {
              </div>
              <span>FBO Academy</span>
            </div>
-           <button onClick={() => setIsMobileMenuOpen(true)} className="text-slate-600 p-2 rounded-lg hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800">
+           <button onClick={() => setIsSidebarOpen(true)} className="text-slate-600 p-2 rounded-lg hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800">
              <Bars3Icon />
            </button>
         </header>

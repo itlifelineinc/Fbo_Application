@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { SalesPage } from '../../types/salesPage';
 import MetaForm from './MetaForm';
@@ -24,7 +23,16 @@ const EditorLayout: React.FC<EditorLayoutProps> = ({ data, updateField, isPrevie
   if (isPreviewMode) return null;
 
   return (
-    <div className="h-full overflow-y-auto bg-slate-50 p-4 md:p-6 space-y-4 pb-24">
+    <div className="h-full overflow-y-auto bg-slate-50 p-4 md:p-6 space-y-4 pb-24 dark:bg-slate-900 no-scrollbar">
+      <style>{`
+        .no-scrollbar::-webkit-scrollbar {
+          display: none;
+        }
+        .no-scrollbar {
+          -ms-overflow-style: none;  /* IE and Edge */
+          scrollbar-width: none;  /* Firefox */
+        }
+      `}</style>
       <Section title="1. Page Details" defaultOpen>
         <MetaForm data={data} onChange={updateField} />
       </Section>
@@ -47,7 +55,7 @@ const EditorLayout: React.FC<EditorLayoutProps> = ({ data, updateField, isPrevie
 
       <Section title="6. Content & Copy">
         <RichTextEditor value={data.description} onChange={(val) => updateField('description', val)} />
-        <div className="mt-6 border-t border-slate-100 pt-6">
+        <div className="mt-6 border-t border-slate-100 pt-6 dark:border-slate-700">
           <FeaturesList data={data} onChange={updateField} />
         </div>
       </Section>
@@ -75,16 +83,16 @@ const Section: React.FC<{title: string, children: React.ReactNode, defaultOpen?:
   const [isOpen, setIsOpen] = useState(defaultOpen);
 
   return (
-    <div className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm transition-all duration-200">
+    <div className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm transition-all duration-200 dark:bg-slate-800 dark:border-slate-700">
         <button 
             onClick={() => setIsOpen(!isOpen)}
-            className="w-full bg-slate-50 px-6 py-4 border-b border-slate-100 font-bold text-slate-700 font-heading flex justify-between items-center hover:bg-slate-100 transition-colors"
+            className="w-full bg-slate-50 px-6 py-4 border-b border-slate-100 font-bold text-slate-700 font-heading flex justify-between items-center hover:bg-slate-100 transition-colors dark:bg-slate-800 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-700"
         >
             <span>{title}</span>
-            {isOpen ? <ChevronUp size={18} className="text-slate-400" /> : <ChevronDown size={18} className="text-slate-400" />}
+            {isOpen ? <ChevronUp size={18} className="text-slate-400 dark:text-slate-500" /> : <ChevronDown size={18} className="text-slate-400 dark:text-slate-500" />}
         </button>
         {isOpen && (
-            <div className="p-6 animate-fade-in">
+            <div className="p-6 animate-fade-in dark:text-slate-200">
                 {children}
             </div>
         )}

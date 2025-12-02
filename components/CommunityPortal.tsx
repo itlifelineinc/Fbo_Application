@@ -68,68 +68,68 @@ const CommunityPortal: React.FC<CommunityPortalProps> = ({ currentUser, posts, c
       {/* Mobile: Fixed Drawer. Desktop: Sticky Sidebar */}
       <div className={`
           fixed inset-y-0 left-0 z-50 w-72 bg-white border-r border-slate-200 flex flex-col shadow-2xl transition-transform duration-300 ease-in-out
-          md:translate-x-0 md:static md:z-0 md:shadow-none md:border-0 md:bg-transparent md:w-64 md:h-[calc(100vh-6rem)] md:sticky md:top-4
+          md:translate-x-0 md:static md:z-0 md:shadow-none md:border-0 md:bg-transparent md:w-64 md:h-[calc(100vh-6rem)] md:sticky md:top-4 dark:bg-slate-900 dark:border-slate-800
           ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}
       `}>
-        <div className="p-6 border-b border-slate-100 md:hidden flex justify-between items-center">
-             <h2 className="font-bold text-lg text-emerald-900 font-heading flex items-center gap-2">
+        <div className="p-6 border-b border-slate-100 md:hidden flex justify-between items-center dark:border-slate-800">
+             <h2 className="font-bold text-lg text-emerald-900 font-heading flex items-center gap-2 dark:text-emerald-400">
                 <GlobeAltIcon /> Community
              </h2>
-             <button onClick={() => setIsSidebarOpen(false)} className="text-slate-400 hover:text-slate-600">
+             <button onClick={() => setIsSidebarOpen(false)} className="text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300">
                 <XMarkIcon />
              </button>
         </div>
 
         {/* Desktop Sidebar Content Container */}
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden flex-1 flex flex-col">
-            <div className="p-4 border-b border-slate-100 hidden md:flex items-center gap-2 bg-slate-50">
+        <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden flex-1 flex flex-col dark:bg-slate-800 dark:border-slate-700">
+            <div className="p-4 border-b border-slate-100 hidden md:flex items-center gap-2 bg-slate-50 dark:bg-slate-900 dark:border-slate-700">
                 <GlobeAltIcon />
-                <span className="font-bold text-slate-700 font-heading">Groups & Hubs</span>
+                <span className="font-bold text-slate-700 font-heading dark:text-slate-200">Groups & Hubs</span>
             </div>
             
             <div className="p-2 space-y-1 flex-1 overflow-y-auto">
                 <button 
                     onClick={() => { setActiveTab('GLOBAL'); setIsSidebarOpen(false); }}
                     className={`w-full text-left px-3 py-2.5 rounded-lg text-sm font-medium transition-all flex items-center gap-3 ${
-                        activeTab === 'GLOBAL' ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' : 'text-slate-600 hover:bg-slate-50'
+                        activeTab === 'GLOBAL' ? 'bg-emerald-50 text-emerald-700 border border-emerald-100 dark:bg-emerald-900/30 dark:text-emerald-400 dark:border-emerald-800' : 'text-slate-600 hover:bg-slate-50 dark:text-slate-400 dark:hover:bg-slate-700/50'
                     }`}
                 >
-                    <div className="w-8 h-8 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center shrink-0"><HashtagIcon /></div>
+                    <div className="w-8 h-8 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center shrink-0 dark:bg-blue-900/30 dark:text-blue-400"><HashtagIcon /></div>
                     <span className="truncate">Global Hub</span>
                 </button>
 
                 {/* My Cohort Section */}
-                <div className="mt-4 mb-1 px-3 text-[10px] font-bold text-slate-400 uppercase tracking-wider">My Cohort</div>
+                <div className="mt-4 mb-1 px-3 text-[10px] font-bold text-slate-400 uppercase tracking-wider dark:text-slate-500">My Cohort</div>
                 {myCohort ? (
                     <button 
                         onClick={() => { setActiveTab(myCohort.id); setIsSidebarOpen(false); }}
                         className={`w-full text-left px-3 py-2.5 rounded-lg text-sm font-medium transition-all flex items-center gap-3 ${
-                            activeTab === myCohort.id ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' : 'text-slate-600 hover:bg-slate-50'
+                            activeTab === myCohort.id ? 'bg-emerald-50 text-emerald-700 border border-emerald-100 dark:bg-emerald-900/30 dark:text-emerald-400 dark:border-emerald-800' : 'text-slate-600 hover:bg-slate-50 dark:text-slate-400 dark:hover:bg-slate-700/50'
                         }`}
                     >
-                        <div className="w-8 h-8 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center shrink-0"><UserGroupIcon /></div>
+                        <div className="w-8 h-8 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center shrink-0 dark:bg-emerald-900/30 dark:text-emerald-400"><UserGroupIcon /></div>
                         <div className="min-w-0">
                             <div className="truncate font-semibold">{myCohort.name}</div>
-                            <div className="text-[10px] text-slate-400 font-normal truncate">Mentor: {myCohort.mentorHandle}</div>
+                            <div className="text-[10px] text-slate-400 font-normal truncate dark:text-slate-500">Mentor: {myCohort.mentorHandle}</div>
                         </div>
                     </button>
                 ) : (
-                    <div className="px-3 py-2 text-xs text-slate-400 italic">No active cohort.</div>
+                    <div className="px-3 py-2 text-xs text-slate-400 italic dark:text-slate-500">No active cohort.</div>
                 )}
 
                 {/* Admin/Sponsor View All Cohorts */}
                 {isSponsorOrAdmin && (
                     <>
-                        <div className="mt-4 mb-1 px-3 text-[10px] font-bold text-slate-400 uppercase tracking-wider">All Cohorts (Admin)</div>
+                        <div className="mt-4 mb-1 px-3 text-[10px] font-bold text-slate-400 uppercase tracking-wider dark:text-slate-500">All Cohorts (Admin)</div>
                         {cohorts.filter(c => c.id !== currentUser.cohortId).map(c => (
                             <button 
                                 key={c.id}
                                 onClick={() => { setActiveTab(c.id); setIsSidebarOpen(false); }}
                                 className={`w-full text-left px-3 py-2.5 rounded-lg text-sm font-medium transition-all flex items-center gap-3 ${
-                                    activeTab === c.id ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' : 'text-slate-600 hover:bg-slate-50'
+                                    activeTab === c.id ? 'bg-emerald-50 text-emerald-700 border border-emerald-100 dark:bg-emerald-900/30 dark:text-emerald-400 dark:border-emerald-800' : 'text-slate-600 hover:bg-slate-50 dark:text-slate-400 dark:hover:bg-slate-700/50'
                                 }`}
                             >
-                                <div className="w-8 h-8 bg-slate-100 text-slate-500 rounded-full flex items-center justify-center shrink-0"><UserGroupIcon /></div>
+                                <div className="w-8 h-8 bg-slate-100 text-slate-500 rounded-full flex items-center justify-center shrink-0 dark:bg-slate-700 dark:text-slate-400"><UserGroupIcon /></div>
                                 <div className="truncate">{c.name}</div>
                             </button>
                         ))}
@@ -142,41 +142,41 @@ const CommunityPortal: React.FC<CommunityPortalProps> = ({ currentUser, posts, c
       {/* Main Feed Area */}
       <div className="flex-1 min-w-0">
           {/* Mobile Header Trigger */}
-          <div className="md:hidden mb-4 flex items-center justify-between bg-white p-4 rounded-xl shadow-sm border border-slate-200">
+          <div className="md:hidden mb-4 flex items-center justify-between bg-white p-4 rounded-xl shadow-sm border border-slate-200 dark:bg-slate-800 dark:border-slate-700">
              <div>
-                <h2 className="font-bold text-slate-800 font-heading">
+                <h2 className="font-bold text-slate-800 font-heading dark:text-slate-100">
                     {activeTab === 'GLOBAL' ? 'Global Hub' : 'My Cohort'}
                 </h2>
-                <p className="text-xs text-slate-500">Tap menu to switch groups</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400">Tap menu to switch groups</p>
              </div>
-             <button onClick={() => setIsSidebarOpen(true)} className="p-2 bg-slate-100 rounded-lg text-slate-600">
+             <button onClick={() => setIsSidebarOpen(true)} className="p-2 bg-slate-100 rounded-lg text-slate-600 dark:bg-slate-700 dark:text-slate-300">
                  <Bars3Icon />
              </button>
           </div>
 
           {/* Header Card (Desktop mainly, but adaptable) */}
-          <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-6 relative overflow-hidden">
+          <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-6 relative overflow-hidden dark:bg-slate-800 dark:border-slate-700">
                <div className="relative z-10">
-                    <h1 className="text-2xl font-bold text-emerald-950 font-heading mb-1">
+                    <h1 className="text-2xl font-bold text-emerald-900 font-heading mb-1 dark:text-emerald-400">
                         {activeTab === 'GLOBAL' ? 'Global Community Hub' : cohorts.find(c => c.id === activeTab)?.name}
                     </h1>
-                    <p className="text-slate-500 text-sm">
+                    <p className="text-slate-500 text-sm dark:text-slate-400">
                         {activeTab === 'GLOBAL' 
                             ? 'Connect with FBOs worldwide. Share wins, ask questions, and grow.' 
                             : `Private cohort mentored by ${cohorts.find(c => c.id === activeTab)?.mentorHandle}`
                         }
                     </p>
                </div>
-               <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-50 rounded-bl-full -mr-8 -mt-8 z-0"></div>
+               <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-50 rounded-bl-full -mr-8 -mt-8 z-0 dark:bg-emerald-900/20"></div>
           </div>
 
           <div className="space-y-6">
               
               {/* Create Post Box */}
               {(activeTab !== 'GLOBAL' || isSuperAdmin) && (
-                  <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4">
+                  <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4 dark:bg-slate-800 dark:border-slate-700">
                       <div className="flex gap-4">
-                          <div className="w-10 h-10 rounded-full bg-emerald-100 text-emerald-800 flex items-center justify-center font-bold text-sm flex-shrink-0 overflow-hidden border-2 border-white shadow-sm">
+                          <div className="w-10 h-10 rounded-full bg-emerald-100 text-emerald-800 flex items-center justify-center font-bold text-sm flex-shrink-0 overflow-hidden border-2 border-white shadow-sm dark:bg-emerald-900 dark:text-emerald-300 dark:border-slate-600">
                               {currentUser.avatarUrl ? <img src={currentUser.avatarUrl} className="w-full h-full object-cover" /> : currentUser.name.charAt(0)}
                           </div>
                           <div className="flex-1">
@@ -184,20 +184,20 @@ const CommunityPortal: React.FC<CommunityPortalProps> = ({ currentUser, posts, c
                                 value={newPostContent}
                                 onChange={(e) => setNewPostContent(e.target.value)}
                                 placeholder={activeTab === 'GLOBAL' ? "Post an announcement..." : "What's on your mind? Ask a question or share a win..."}
-                                className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/20 min-h-[80px] resize-none text-slate-900 placeholder-slate-400 transition-all"
+                                className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/20 min-h-[80px] resize-none text-slate-900 placeholder-slate-400 transition-all dark:bg-slate-900 dark:border-slate-600 dark:text-slate-100 dark:placeholder-slate-500"
                               />
                               <div className="flex flex-wrap justify-between items-center mt-3 gap-2">
                                   <div className="flex gap-2 overflow-x-auto pb-1 no-scrollbar">
                                       {/* Post Type Selectors */}
                                       {activeTab !== 'GLOBAL' && (
                                           <>
-                                            <button onClick={() => setNewPostType('QUESTION')} className={`text-xs px-3 py-1.5 rounded-full border font-medium transition-colors ${newPostType === 'QUESTION' ? 'bg-orange-50 border-orange-200 text-orange-700' : 'border-slate-200 text-slate-500 hover:bg-slate-50'}`}>❓ Question</button>
-                                            <button onClick={() => setNewPostType('WIN')} className={`text-xs px-3 py-1.5 rounded-full border font-medium transition-colors ${newPostType === 'WIN' ? 'bg-green-50 border-green-200 text-green-700' : 'border-slate-200 text-slate-500 hover:bg-slate-50'}`}>🏆 Win</button>
-                                            <button onClick={() => setNewPostType('DISCUSSION')} className={`text-xs px-3 py-1.5 rounded-full border font-medium transition-colors ${newPostType === 'DISCUSSION' ? 'bg-blue-50 border-blue-200 text-blue-700' : 'border-slate-200 text-slate-500 hover:bg-slate-50'}`}>💬 Discussion</button>
+                                            <button onClick={() => setNewPostType('QUESTION')} className={`text-xs px-3 py-1.5 rounded-full border font-medium transition-colors ${newPostType === 'QUESTION' ? 'bg-orange-50 border-orange-200 text-orange-700 dark:bg-orange-900/30 dark:border-orange-800 dark:text-orange-300' : 'border-slate-200 text-slate-500 hover:bg-slate-50 dark:border-slate-600 dark:text-slate-400 dark:hover:bg-slate-700'}`}>❓ Question</button>
+                                            <button onClick={() => setNewPostType('WIN')} className={`text-xs px-3 py-1.5 rounded-full border font-medium transition-colors ${newPostType === 'WIN' ? 'bg-green-50 border-green-200 text-green-700 dark:bg-green-900/30 dark:border-green-800 dark:text-green-300' : 'border-slate-200 text-slate-500 hover:bg-slate-50 dark:border-slate-600 dark:text-slate-400 dark:hover:bg-slate-700'}`}>🏆 Win</button>
+                                            <button onClick={() => setNewPostType('DISCUSSION')} className={`text-xs px-3 py-1.5 rounded-full border font-medium transition-colors ${newPostType === 'DISCUSSION' ? 'bg-blue-50 border-blue-200 text-blue-700 dark:bg-blue-900/30 dark:border-blue-800 dark:text-blue-300' : 'border-slate-200 text-slate-500 hover:bg-slate-50 dark:border-slate-600 dark:text-slate-400 dark:hover:bg-slate-700'}`}>💬 Discussion</button>
                                           </>
                                       )}
                                       {isSuperAdmin && activeTab === 'GLOBAL' && (
-                                          <span className="text-xs px-3 py-1.5 rounded-full bg-red-50 text-red-700 border border-red-100 font-bold">Announcement</span>
+                                          <span className="text-xs px-3 py-1.5 rounded-full bg-red-50 text-red-700 border border-red-100 font-bold dark:bg-red-900/30 dark:text-red-300 dark:border-red-800">Announcement</span>
                                       )}
                                   </div>
                                   <button 
@@ -217,8 +217,8 @@ const CommunityPortal: React.FC<CommunityPortalProps> = ({ currentUser, posts, c
               {visiblePosts.length > 0 ? visiblePosts.map(post => (
                   <PostItem key={post.id} post={post} currentUser={currentUser} onAddComment={onAddComment} onLikePost={onLikePost} />
               )) : (
-                  <div className="text-center py-12 text-slate-400 bg-white rounded-xl border border-dashed border-slate-200">
-                      <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <div className="text-center py-12 text-slate-400 bg-white rounded-xl border border-dashed border-slate-200 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-500">
+                      <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4 dark:bg-slate-700">
                           <ChatBubbleBottomCenterTextIcon />
                       </div>
                       <p className="font-medium">No posts yet in this channel.</p>
@@ -259,52 +259,52 @@ const PostItem: React.FC<{ post: CommunityPost; currentUser: Student; onAddComme
     // Render badges
     const getTypeBadge = () => {
         switch(post.type) {
-            case 'ANNOUNCEMENT': return <span className="bg-red-100 text-red-700 text-[10px] font-bold px-2 py-1 rounded-full border border-red-200">ANNOUNCEMENT</span>;
-            case 'WIN': return <span className="bg-green-100 text-green-700 text-[10px] font-bold px-2 py-1 rounded-full border border-green-200">WIN 🏆</span>;
-            case 'QUESTION': return <span className="bg-orange-100 text-orange-700 text-[10px] font-bold px-2 py-1 rounded-full border border-orange-200">QUESTION ❓</span>;
+            case 'ANNOUNCEMENT': return <span className="bg-red-100 text-red-700 text-[10px] font-bold px-2 py-1 rounded-full border border-red-200 dark:bg-red-900/30 dark:text-red-300 dark:border-red-800">ANNOUNCEMENT</span>;
+            case 'WIN': return <span className="bg-green-100 text-green-700 text-[10px] font-bold px-2 py-1 rounded-full border border-green-200 dark:bg-green-900/30 dark:text-green-300 dark:border-green-800">WIN 🏆</span>;
+            case 'QUESTION': return <span className="bg-orange-100 text-orange-700 text-[10px] font-bold px-2 py-1 rounded-full border border-orange-200 dark:bg-orange-900/30 dark:text-orange-300 dark:border-orange-800">QUESTION ❓</span>;
             default: return null;
         }
     };
 
     return (
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-5 transition-shadow hover:shadow-md">
+        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-5 transition-shadow hover:shadow-md dark:bg-slate-800 dark:border-slate-700">
             <div className="flex items-start justify-between mb-3">
                 <div className="flex items-center gap-3">
-                     <div className="w-10 h-10 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center overflow-hidden shadow-sm">
-                        {post.authorAvatar ? <img src={post.authorAvatar} className="w-full h-full object-cover"/> : <span className="font-bold text-slate-500">{post.authorName.charAt(0)}</span>}
+                     <div className="w-10 h-10 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center overflow-hidden shadow-sm dark:bg-slate-700 dark:border-slate-600">
+                        {post.authorAvatar ? <img src={post.authorAvatar} className="w-full h-full object-cover"/> : <span className="font-bold text-slate-500 dark:text-slate-300">{post.authorName.charAt(0)}</span>}
                      </div>
                      <div>
                          <div className="flex items-center gap-2 flex-wrap">
-                            <h4 className="font-bold text-slate-800 text-sm">{post.authorName}</h4>
-                            <span className={`text-[10px] px-1.5 py-0.5 rounded border font-medium ${post.authorRole === 'STUDENT' ? 'bg-slate-50 text-slate-500 border-slate-200' : 'bg-emerald-50 text-emerald-700 border-emerald-200'}`}>{post.authorRole}</span>
+                            <h4 className="font-bold text-slate-800 text-sm dark:text-slate-100">{post.authorName}</h4>
+                            <span className={`text-[10px] px-1.5 py-0.5 rounded border font-medium ${post.authorRole === 'STUDENT' ? 'bg-slate-50 text-slate-500 border-slate-200 dark:bg-slate-700 dark:text-slate-300 dark:border-slate-600' : 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-300 dark:border-emerald-800'}`}>{post.authorRole}</span>
                          </div>
-                         <p className="text-xs text-slate-400">{new Date(post.timestamp).toLocaleDateString()} at {new Date(post.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</p>
+                         <p className="text-xs text-slate-400 dark:text-slate-500">{new Date(post.timestamp).toLocaleDateString()} at {new Date(post.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</p>
                      </div>
                 </div>
                 {getTypeBadge()}
             </div>
             
-            <p className="text-sm text-slate-800 leading-relaxed whitespace-pre-wrap mb-4">{post.content}</p>
+            <p className="text-sm text-slate-800 leading-relaxed whitespace-pre-wrap mb-4 dark:text-slate-200">{post.content}</p>
             
             {/* Tags */}
             {post.tags.length > 0 && (
                 <div className="flex gap-2 mb-4 flex-wrap">
                     {post.tags.map(tag => (
-                        <span key={tag} className="text-xs text-slate-500 bg-slate-100 px-2 py-1 rounded-md border border-slate-200">#{tag}</span>
+                        <span key={tag} className="text-xs text-slate-500 bg-slate-100 px-2 py-1 rounded-md border border-slate-200 dark:bg-slate-700 dark:border-slate-600 dark:text-slate-300">#{tag}</span>
                     ))}
                 </div>
             )}
 
             {/* Actions */}
-            <div className="flex items-center gap-6 pt-3 border-t border-slate-100">
+            <div className="flex items-center gap-6 pt-3 border-t border-slate-100 dark:border-slate-700">
                  <button 
                     onClick={() => onLikePost(post.id)}
-                    className={`flex items-center gap-2 transition-all text-sm font-medium ${hasLiked ? 'text-emerald-600' : 'text-slate-500 hover:text-emerald-600'}`}
+                    className={`flex items-center gap-2 transition-all text-sm font-medium ${hasLiked ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-500 hover:text-emerald-600 dark:text-slate-400 dark:hover:text-emerald-400'}`}
                  >
                     <HeartIcon filled={hasLiked} /> 
                     <span>{post.likes} {post.likes === 1 ? 'Like' : 'Likes'}</span>
                  </button>
-                 <button onClick={() => setShowComments(!showComments)} className="flex items-center gap-2 text-slate-500 hover:text-blue-600 transition-colors text-sm font-medium">
+                 <button onClick={() => setShowComments(!showComments)} className="flex items-center gap-2 text-slate-500 hover:text-blue-600 transition-colors text-sm font-medium dark:text-slate-400 dark:hover:text-blue-400">
                     <ChatBubbleLeftIcon /> 
                     <span>{post.comments.length} {post.comments.length === 1 ? 'Comment' : 'Comments'}</span>
                  </button>
@@ -312,26 +312,26 @@ const PostItem: React.FC<{ post: CommunityPost; currentUser: Student; onAddComme
 
             {/* Comments Section */}
             {showComments && (
-                <div className="mt-4 pt-4 border-t border-slate-100 animate-fade-in">
+                <div className="mt-4 pt-4 border-t border-slate-100 animate-fade-in dark:border-slate-700">
                     <div className="space-y-4 mb-4">
                         {post.comments.map(comment => (
                             <div key={comment.id} className="flex gap-3 items-start">
-                                <div className="w-8 h-8 rounded-full bg-white border border-slate-200 flex items-center justify-center text-xs font-bold shrink-0 overflow-hidden shadow-sm">
+                                <div className="w-8 h-8 rounded-full bg-white border border-slate-200 flex items-center justify-center text-xs font-bold shrink-0 overflow-hidden shadow-sm dark:bg-slate-700 dark:border-slate-600 dark:text-slate-300">
                                     {comment.authorAvatar ? <img src={comment.authorAvatar} className="w-full h-full object-cover"/> : comment.authorName.charAt(0)}
                                 </div>
-                                <div className="bg-slate-50 rounded-2xl rounded-tl-none p-3 border border-slate-100 flex-1">
+                                <div className="bg-slate-50 rounded-2xl rounded-tl-none p-3 border border-slate-100 flex-1 dark:bg-slate-700/50 dark:border-slate-600">
                                     <div className="flex items-baseline justify-between mb-1">
-                                        <span className="text-xs font-bold text-slate-800">{comment.authorName}</span>
-                                        <span className="text-[10px] text-slate-400">{new Date(comment.timestamp).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</span>
+                                        <span className="text-xs font-bold text-slate-800 dark:text-slate-200">{comment.authorName}</span>
+                                        <span className="text-[10px] text-slate-400 dark:text-slate-500">{new Date(comment.timestamp).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</span>
                                     </div>
-                                    <p className="text-sm text-slate-700 leading-snug">{comment.content}</p>
+                                    <p className="text-sm text-slate-700 leading-snug dark:text-slate-300">{comment.content}</p>
                                 </div>
                             </div>
                         ))}
                     </div>
                     
                     <form onSubmit={handleSubmitComment} className="flex gap-3 items-center">
-                         <div className="w-8 h-8 rounded-full bg-emerald-100 text-emerald-800 flex items-center justify-center font-bold text-xs shrink-0 border border-emerald-200">
+                         <div className="w-8 h-8 rounded-full bg-emerald-100 text-emerald-800 flex items-center justify-center font-bold text-xs shrink-0 border border-emerald-200 dark:bg-emerald-900 dark:text-emerald-300 dark:border-emerald-800">
                             {currentUser.avatarUrl ? <img src={currentUser.avatarUrl} className="w-full h-full object-cover rounded-full" /> : currentUser.name.charAt(0)}
                          </div>
                         <div className="flex-1 relative">
@@ -339,13 +339,13 @@ const PostItem: React.FC<{ post: CommunityPost; currentUser: Student; onAddComme
                                 type="text" 
                                 value={commentText}
                                 onChange={(e) => setCommentText(e.target.value)}
-                                className="w-full text-sm bg-slate-50 border border-slate-200 rounded-full pl-4 pr-12 py-2.5 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/20 text-slate-900 placeholder-slate-400 transition-all"
+                                className="w-full text-sm bg-slate-50 border border-slate-200 rounded-full pl-4 pr-12 py-2.5 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/20 text-slate-900 placeholder-slate-400 transition-all dark:bg-slate-900 dark:border-slate-600 dark:text-slate-100 dark:placeholder-slate-500"
                                 placeholder="Write a comment..."
                             />
                             <button 
                                 type="submit" 
                                 disabled={!commentText.trim()} 
-                                className="absolute right-2 top-1/2 -translate-y-1/2 text-emerald-600 p-1.5 hover:bg-emerald-50 rounded-full disabled:opacity-50 disabled:hover:bg-transparent transition-colors"
+                                className="absolute right-2 top-1/2 -translate-y-1/2 text-emerald-600 p-1.5 hover:bg-emerald-50 rounded-full disabled:opacity-50 disabled:hover:bg-transparent transition-colors dark:text-emerald-400 dark:hover:bg-emerald-900/30"
                             >
                                 <PaperAirplaneIcon />
                             </button>

@@ -41,7 +41,12 @@ const SalesPageBuilder: React.FC = () => {
             ${isPreviewMode ? 'flex' : 'hidden'}
             ${showSplitView && !isPreviewMode ? 'hidden md:flex' : ''}
         `}>
-          <div className="w-full h-full overflow-y-auto bg-dot-pattern flex items-start justify-center p-4 md:p-8">
+          {/* 
+              Using overflow-hidden here ensures the gray background never scrolls. 
+              The PreviewPanel itself will handle sizing and internal content scrolling.
+              Padding ensures the phone frame doesn't touch the edges.
+          */}
+          <div className="w-full h-full bg-dot-pattern flex items-center justify-center overflow-hidden p-4 md:p-8">
              <PreviewPanel data={page} device={previewDevice} />
           </div>
         </div>

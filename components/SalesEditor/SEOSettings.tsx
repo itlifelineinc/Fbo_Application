@@ -1,4 +1,3 @@
-
 import React, { useMemo } from 'react';
 import { SalesPage } from '../../types/salesPage';
 import { Search, Image as ImageIcon, AlertTriangle, CheckCircle } from 'lucide-react';
@@ -46,9 +45,9 @@ const SEOSettings: React.FC<SEOSettingsProps> = ({ data, onChange }) => {
   }, [data.seo, data.slug]);
 
   const getScoreColor = (score: number) => {
-    if (score >= 80) return 'text-emerald-600 bg-emerald-50 border-emerald-200';
-    if (score >= 50) return 'text-yellow-600 bg-yellow-50 border-yellow-200';
-    return 'text-red-600 bg-red-50 border-red-200';
+    if (score >= 80) return 'text-emerald-600 bg-emerald-50 border-emerald-200 dark:bg-emerald-900/30 dark:border-emerald-800 dark:text-emerald-400';
+    if (score >= 50) return 'text-yellow-600 bg-yellow-50 border-yellow-200 dark:bg-yellow-900/30 dark:border-yellow-800 dark:text-yellow-400';
+    return 'text-red-600 bg-red-50 border-red-200 dark:bg-red-900/30 dark:border-red-800 dark:text-red-400';
   };
 
   return (
@@ -66,57 +65,57 @@ const SEOSettings: React.FC<SEOSettingsProps> = ({ data, onChange }) => {
       </div>
 
       <div>
-        <label className="block text-sm font-bold text-slate-700 mb-1">URL Slug</label>
+        <label className="block text-sm font-bold text-slate-700 mb-1 dark:text-slate-300">URL Slug</label>
         <div className="flex items-center">
-          <span className="bg-slate-100 border border-r-0 border-slate-200 rounded-l-xl px-3 py-3 text-slate-500 text-sm">fbo.com/p/</span>
+          <span className="bg-slate-100 border border-r-0 border-slate-200 rounded-l-xl px-3 py-3 text-slate-500 text-sm dark:bg-slate-700 dark:border-slate-600 dark:text-slate-400">fbo.com/p/</span>
           <input 
             type="text" 
             value={data.slug}
             onChange={handleSlugChange}
-            className="flex-1 p-3 border border-slate-200 rounded-r-xl bg-white text-slate-900 focus:ring-2 focus:ring-emerald-500 outline-none font-mono text-sm"
+            className="flex-1 p-3 border border-slate-200 rounded-r-xl bg-white text-slate-900 focus:ring-2 focus:ring-emerald-500 outline-none font-mono text-sm dark:bg-slate-700 dark:border-slate-600 dark:text-white"
           />
         </div>
-        <p className="text-xs text-slate-400 mt-1">Auto-formatted from page title if empty.</p>
+        <p className="text-xs text-slate-400 mt-1 dark:text-slate-500">Auto-formatted from page title if empty.</p>
       </div>
 
       <div className="space-y-3">
         <div>
-            <label className="block text-sm font-bold text-slate-700 mb-1">Meta Title</label>
+            <label className="block text-sm font-bold text-slate-700 mb-1 dark:text-slate-300">Meta Title</label>
             <input 
               type="text" 
               value={data.seo.metaTitle}
               onChange={(e) => handleSEOChange('metaTitle', e.target.value)}
               placeholder={data.title}
-              className="w-full p-3 border border-slate-200 rounded-xl bg-white text-slate-900 focus:ring-2 focus:ring-emerald-500 outline-none"
+              className="w-full p-3 border border-slate-200 rounded-xl bg-white text-slate-900 focus:ring-2 focus:ring-emerald-500 outline-none dark:bg-slate-700 dark:border-slate-600 dark:text-white"
             />
             <div className="flex justify-between text-xs mt-1">
-                <span className={data.seo.metaTitle.length > 60 ? 'text-red-500' : 'text-slate-400'}>{data.seo.metaTitle.length} / 60 characters</span>
-                {data.seo.metaTitle.length < 30 && <span className="text-yellow-600">Too short</span>}
+                <span className={data.seo.metaTitle.length > 60 ? 'text-red-500' : 'text-slate-400 dark:text-slate-500'}>{data.seo.metaTitle.length} / 60 characters</span>
+                {data.seo.metaTitle.length < 30 && <span className="text-yellow-600 dark:text-yellow-500">Too short</span>}
             </div>
         </div>
 
         <div>
-            <label className="block text-sm font-bold text-slate-700 mb-1">Meta Description</label>
+            <label className="block text-sm font-bold text-slate-700 mb-1 dark:text-slate-300">Meta Description</label>
             <textarea 
               value={data.seo.metaDescription}
               onChange={(e) => handleSEOChange('metaDescription', e.target.value)}
-              className="w-full p-3 border border-slate-200 rounded-xl bg-white text-slate-900 h-24 resize-none focus:ring-2 focus:ring-emerald-500 outline-none"
+              className="w-full p-3 border border-slate-200 rounded-xl bg-white text-slate-900 h-24 resize-none focus:ring-2 focus:ring-emerald-500 outline-none dark:bg-slate-700 dark:border-slate-600 dark:text-white"
             />
             <div className="flex justify-between text-xs mt-1">
-                <span className={data.seo.metaDescription.length > 160 ? 'text-red-500' : 'text-slate-400'}>{data.seo.metaDescription.length} / 160 characters</span>
-                {data.seo.metaDescription.length < 120 && <span className="text-yellow-600">Ideally 120+ chars</span>}
+                <span className={data.seo.metaDescription.length > 160 ? 'text-red-500' : 'text-slate-400 dark:text-slate-500'}>{data.seo.metaDescription.length} / 160 characters</span>
+                {data.seo.metaDescription.length < 120 && <span className="text-yellow-600 dark:text-yellow-500">Ideally 120+ chars</span>}
             </div>
         </div>
       </div>
 
       <div>
-        <label className="block text-sm font-bold text-slate-700 mb-2">Social Share Image (OG)</label>
+        <label className="block text-sm font-bold text-slate-700 mb-2 dark:text-slate-300">Social Share Image (OG)</label>
         <div className="flex items-center gap-4">
-            <div className="w-32 h-20 bg-slate-100 border border-slate-200 rounded-lg overflow-hidden flex items-center justify-center shrink-0">
+            <div className="w-32 h-20 bg-slate-100 border border-slate-200 rounded-lg overflow-hidden flex items-center justify-center shrink-0 dark:bg-slate-700 dark:border-slate-600">
                 {data.seo.ogImage ? (
                     <img src={data.seo.ogImage} className="w-full h-full object-cover" />
                 ) : (
-                    <ImageIcon className="text-slate-400" />
+                    <ImageIcon className="text-slate-400 dark:text-slate-500" />
                 )}
             </div>
             <div className="flex-1">
@@ -129,23 +128,23 @@ const SEOSettings: React.FC<SEOSettingsProps> = ({ data, onChange }) => {
                 />
                 <label 
                     htmlFor="og-upload"
-                    className="inline-block px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm font-medium text-slate-700 cursor-pointer hover:bg-slate-50 transition-colors"
+                    className="inline-block px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm font-medium text-slate-700 cursor-pointer hover:bg-slate-50 transition-colors dark:bg-slate-700 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-600"
                 >
                     Upload Image
                 </label>
-                <p className="text-xs text-slate-400 mt-1">Recommended: 1200x630px</p>
+                <p className="text-xs text-slate-400 mt-1 dark:text-slate-500">Recommended: 1200x630px</p>
             </div>
         </div>
       </div>
 
       {/* Keyword Suggestions Mockup */}
-      <div className="bg-slate-50 p-4 rounded-xl border border-slate-200">
-        <h4 className="text-xs font-bold text-slate-500 uppercase mb-2 flex items-center gap-1"><Search size={12}/> Keywords Detected</h4>
+      <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 dark:bg-slate-800 dark:border-slate-700">
+        <h4 className="text-xs font-bold text-slate-500 uppercase mb-2 flex items-center gap-1 dark:text-slate-400"><Search size={12}/> Keywords Detected</h4>
         <div className="flex flex-wrap gap-2">
             {data.title && data.title.split(' ').map((word, i) => (
-                word.length > 3 && <span key={i} className="text-xs bg-white px-2 py-1 rounded border border-slate-200 text-slate-600">{word}</span>
+                word.length > 3 && <span key={i} className="text-xs bg-white px-2 py-1 rounded border border-slate-200 text-slate-600 dark:bg-slate-700 dark:border-slate-600 dark:text-slate-300">{word}</span>
             ))}
-            <span className="text-xs text-slate-400 italic">...based on title</span>
+            <span className="text-xs text-slate-400 italic dark:text-slate-500">...based on title</span>
         </div>
       </div>
 

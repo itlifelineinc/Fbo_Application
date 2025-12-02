@@ -36,15 +36,15 @@ const CTAButtonsEditor: React.FC<CTAButtonsEditorProps> = ({ data, onChange }) =
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
-        <label className="block text-sm font-bold text-slate-700">Call to Action Buttons</label>
-        <button onClick={addCTA} className="text-xs flex items-center gap-1 text-emerald-600 font-bold hover:bg-emerald-50 px-2 py-1 rounded">
+        <label className="block text-sm font-bold text-slate-700 dark:text-slate-300">Call to Action Buttons</label>
+        <button onClick={addCTA} className="text-xs flex items-center gap-1 text-emerald-600 font-bold hover:bg-emerald-50 px-2 py-1 rounded dark:text-emerald-400 dark:hover:bg-emerald-900/30">
           <Plus size={14} /> Add Button
         </button>
       </div>
 
       <div className="space-y-3">
         {(data.ctas || []).map((cta, idx) => (
-          <div key={cta.id} className="border border-slate-200 rounded-xl p-4 bg-slate-50 relative group transition-all hover:border-emerald-300">
+          <div key={cta.id} className="border border-slate-200 rounded-xl p-4 bg-slate-50 relative group transition-all hover:border-emerald-300 dark:bg-slate-800 dark:border-slate-700">
             <button 
                 onClick={() => removeCTA(idx)}
                 className="absolute top-2 right-2 text-slate-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
@@ -59,7 +59,9 @@ const CTAButtonsEditor: React.FC<CTAButtonsEditorProps> = ({ data, onChange }) =
                         type="text" 
                         value={cta.label}
                         onChange={(e) => updateCTA(idx, 'label', e.target.value)}
-                        className="w-full text-sm font-bold bg-white border border-slate-200 rounded p-2 focus:border-emerald-500 outline-none text-slate-900"
+                        maxLength={25}
+                        placeholder="e.g. Buy Now (Max 25)"
+                        className="w-full text-sm font-bold bg-white border border-slate-200 rounded p-2 focus:border-emerald-500 outline-none text-slate-900 dark:bg-slate-700 dark:border-slate-600 dark:text-white"
                     />
                 </div>
                 <div className="col-span-2 sm:col-span-1">
@@ -67,7 +69,7 @@ const CTAButtonsEditor: React.FC<CTAButtonsEditorProps> = ({ data, onChange }) =
                     <select 
                         value={cta.style}
                         onChange={(e) => updateCTA(idx, 'style', e.target.value)}
-                        className="w-full text-sm bg-white border border-slate-200 rounded p-2 focus:border-emerald-500 outline-none text-slate-900"
+                        className="w-full text-sm bg-white border border-slate-200 rounded p-2 focus:border-emerald-500 outline-none text-slate-900 dark:bg-slate-700 dark:border-slate-600 dark:text-white"
                     >
                         <option value="primary">Solid (Primary)</option>
                         <option value="outline">Outline</option>
@@ -84,14 +86,14 @@ const CTAButtonsEditor: React.FC<CTAButtonsEditorProps> = ({ data, onChange }) =
                         value={cta.url}
                         onChange={(e) => updateCTA(idx, 'url', e.target.value)}
                         placeholder="#products, https://wa.me/..."
-                        className="w-full text-sm bg-white border border-slate-200 rounded p-2 focus:border-emerald-500 outline-none placeholder-slate-400 font-mono text-slate-900"
+                        className="w-full text-sm bg-white border border-slate-200 rounded p-2 focus:border-emerald-500 outline-none placeholder-slate-400 font-mono text-slate-900 dark:bg-slate-700 dark:border-slate-600 dark:text-white dark:placeholder-slate-500"
                     />
                 </div>
 
                 <div className="col-span-2 flex gap-4 items-center mt-1">
                     <div className="flex items-center gap-2">
                         <label className="text-[10px] uppercase font-bold text-slate-400">Color</label>
-                        <div className="relative w-6 h-6 rounded-full overflow-hidden border border-slate-200 shadow-sm cursor-pointer">
+                        <div className="relative w-6 h-6 rounded-full overflow-hidden border border-slate-200 shadow-sm cursor-pointer dark:border-slate-600">
                             <input 
                                 type="color" 
                                 value={cta.color || data.themeColor}
@@ -106,7 +108,7 @@ const CTAButtonsEditor: React.FC<CTAButtonsEditorProps> = ({ data, onChange }) =
                         <select 
                             value={cta.icon || ''}
                             onChange={(e) => updateCTA(idx, 'icon', e.target.value)}
-                            className="w-full text-xs bg-white border border-slate-200 rounded p-1.5 focus:border-emerald-500 outline-none text-slate-900"
+                            className="w-full text-xs bg-white border border-slate-200 rounded p-1.5 focus:border-emerald-500 outline-none text-slate-900 dark:bg-slate-700 dark:border-slate-600 dark:text-white"
                         >
                             <option value="">None</option>
                             <option value="shopping-cart">Shopping Cart</option>

@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, PieChart, Pie, Legend } from 'recharts';
 import { Link, useNavigate } from 'react-router-dom';
@@ -6,14 +7,14 @@ import { Student, UserRole, Course, CourseTrack, CourseStatus } from '../types';
 // --- Child Components & Icons (Defined First) ---
 
 const StatCard: React.FC<{ title: string; value: string; icon: React.ReactNode; trend: string }> = ({ title, value, icon, trend }) => (
-  <div className="bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-slate-100 flex items-center gap-5 hover:shadow-md transition-shadow">
-    <div className="p-4 bg-emerald-50 text-emerald-600 rounded-2xl shrink-0">
+  <div className="bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-slate-100 flex items-center gap-5 hover:shadow-md transition-shadow dark:bg-slate-800 dark:border-slate-700">
+    <div className="p-4 bg-emerald-50 text-emerald-600 rounded-2xl shrink-0 dark:bg-emerald-900/30 dark:text-emerald-400">
       {icon}
     </div>
     <div>
-      <p className="text-sm font-medium text-slate-500 uppercase tracking-wide">{title}</p>
-      <h3 className="text-3xl font-bold text-slate-800 font-heading mt-1">{value}</h3>
-      <p className="text-xs text-emerald-600 font-bold mt-1.5 flex items-center gap-1">
+      <p className="text-sm font-medium text-slate-500 uppercase tracking-wide dark:text-slate-400">{title}</p>
+      <h3 className="text-3xl font-bold text-slate-800 font-heading mt-1 dark:text-slate-100">{value}</h3>
+      <p className="text-xs text-emerald-600 font-bold mt-1.5 flex items-center gap-1 dark:text-emerald-400">
         <span className="text-lg">↗</span> {trend}
       </p>
     </div>
@@ -154,10 +155,10 @@ const Dashboard: React.FC<DashboardProps> = ({ students, currentUser, courses, o
   return (
     <div className="space-y-8 animate-fade-in">
       <header>
-        <h1 className="text-2xl md:text-3xl font-bold text-emerald-950 font-heading">
-            Welcome, {currentUser.name?.split(' ')[0]}!
+        <h1 className="text-2xl md:text-3xl font-bold text-emerald-950 font-heading dark:text-emerald-400">
+            👋 Hi, {currentUser.name?.split(' ')[0]}!
         </h1>
-        <p className="text-emerald-700 mt-2 text-sm md:text-base">
+        <p className="text-emerald-700 mt-2 text-sm md:text-base dark:text-emerald-300">
             {isAdmin 
                 ? "Platform-wide analytics and control center." 
                 : isSponsor 
@@ -198,9 +199,9 @@ const Dashboard: React.FC<DashboardProps> = ({ students, currentUser, courses, o
           <div className="lg:col-span-2 space-y-8 min-w-0">
             
             {/* Progress Chart (Team or Personal) */}
-            <div className="bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-slate-100">
+            <div className="bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-slate-100 dark:bg-slate-800 dark:border-slate-700">
                 <div className="flex justify-between items-center mb-8">
-                    <h2 className="text-lg md:text-xl font-bold text-slate-800 font-heading">
+                    <h2 className="text-lg md:text-xl font-bold text-slate-800 font-heading dark:text-slate-100">
                         {isStudent ? 'Your Progress' : 'Team Leaderboard'}
                     </h2>
                 </div>
@@ -227,17 +228,17 @@ const Dashboard: React.FC<DashboardProps> = ({ students, currentUser, courses, o
 
             {/* Pending Reviews (Admin Only) */}
             {isAdmin && pendingCourses.length > 0 && (
-                <div className="bg-orange-50 p-6 md:p-8 rounded-2xl border border-orange-100">
+                <div className="bg-orange-50 p-6 md:p-8 rounded-2xl border border-orange-100 dark:bg-orange-900/30 dark:border-orange-800">
                     <div className="flex justify-between items-center mb-4">
-                        <h2 className="text-lg md:text-xl font-bold text-orange-900 font-heading">Pending Course Reviews</h2>
-                        <span className="bg-orange-200 text-orange-800 px-2 py-1 rounded-full text-xs font-bold">{pendingCourses.length}</span>
+                        <h2 className="text-lg md:text-xl font-bold text-orange-900 font-heading dark:text-orange-200">Pending Course Reviews</h2>
+                        <span className="bg-orange-200 text-orange-800 px-2 py-1 rounded-full text-xs font-bold dark:bg-orange-800 dark:text-orange-200">{pendingCourses.length}</span>
                     </div>
                     <div className="space-y-3">
                         {pendingCourses.map(course => (
-                            <div key={course.id} className="bg-white p-4 rounded-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-sm border border-orange-100">
+                            <div key={course.id} className="bg-white p-4 rounded-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-sm border border-orange-100 dark:bg-slate-800 dark:border-slate-700">
                                 <div>
-                                    <h3 className="font-bold text-slate-800">{course.title}</h3>
-                                    <div className="flex gap-3 text-xs text-slate-500 mt-1">
+                                    <h3 className="font-bold text-slate-800 dark:text-slate-100">{course.title}</h3>
+                                    <div className="flex gap-3 text-xs text-slate-500 mt-1 dark:text-slate-400">
                                         <span>By: {course.authorHandle}</span>
                                         <span>•</span>
                                         <span>{course.modules.length} Modules</span>
@@ -246,7 +247,7 @@ const Dashboard: React.FC<DashboardProps> = ({ students, currentUser, courses, o
                                 <div className="flex gap-2 w-full sm:w-auto">
                                     <Link 
                                         to={`/course-review/${course.id}`}
-                                        className="flex-1 sm:flex-none text-center text-xs font-bold text-emerald-700 bg-emerald-50 px-4 py-2 rounded-lg hover:bg-emerald-100 transition-colors border border-emerald-200"
+                                        className="flex-1 sm:flex-none text-center text-xs font-bold text-emerald-700 bg-emerald-50 px-4 py-2 rounded-lg hover:bg-emerald-100 transition-colors border border-emerald-200 dark:bg-emerald-900/50 dark:text-emerald-300 dark:border-emerald-800 dark:hover:bg-emerald-800/50"
                                     >
                                         Review Content
                                     </Link>
@@ -264,8 +265,8 @@ const Dashboard: React.FC<DashboardProps> = ({ students, currentUser, courses, o
             )}
 
             {/* Recommended Courses List */}
-            <div className="bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-slate-100">
-                <h2 className="text-lg md:text-xl font-bold text-emerald-950 mb-6 font-heading">Recommended for You</h2>
+            <div className="bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-slate-100 dark:bg-slate-800 dark:border-slate-700">
+                <h2 className="text-lg md:text-xl font-bold text-emerald-950 mb-6 font-heading dark:text-emerald-400">Recommended for You</h2>
                 {recommendedCourses.length > 0 ? (
                     <div className="space-y-4">
                     {recommendedCourses.map(course => {
@@ -274,29 +275,29 @@ const Dashboard: React.FC<DashboardProps> = ({ students, currentUser, courses, o
                         const courseProgress = totalCourseModules > 0 ? Math.round((completedInCourse / totalCourseModules) * 100) : 0;
 
                         return (
-                        <div key={course.id} className="border border-slate-100 rounded-2xl p-5 hover:bg-slate-50 transition-all flex flex-col sm:flex-row sm:items-center gap-5">
-                            <div className="w-full sm:w-24 h-32 sm:h-20 rounded-xl bg-slate-200 overflow-hidden flex-shrink-0 shadow-sm">
+                        <div key={course.id} className="border border-slate-100 rounded-2xl p-5 hover:bg-slate-50 transition-all flex flex-col sm:flex-row sm:items-center gap-5 dark:border-slate-700 dark:hover:bg-slate-700/50">
+                            <div className="w-full sm:w-24 h-32 sm:h-20 rounded-xl bg-slate-200 overflow-hidden flex-shrink-0 shadow-sm dark:bg-slate-700">
                                 <img src={course.thumbnailUrl} alt={course.title} className="w-full h-full object-cover" />
                             </div>
                             
                             <div className="flex-1 min-w-0">
                                 <div className="flex flex-wrap items-center gap-2 mb-2">
-                                    <span className="text-[10px] px-2 py-0.5 bg-emerald-50 text-emerald-600 rounded-md font-bold tracking-wide uppercase">{course.track}</span>
+                                    <span className="text-[10px] px-2 py-0.5 bg-emerald-50 text-emerald-600 rounded-md font-bold tracking-wide uppercase dark:bg-emerald-900/50 dark:text-emerald-400">{course.track}</span>
                                 </div>
-                                <h3 className="font-bold text-slate-800 truncate text-base md:text-lg mb-2">{course.title}</h3>
+                                <h3 className="font-bold text-slate-800 truncate text-base md:text-lg mb-2 dark:text-slate-100">{course.title}</h3>
                                 
                                 <div className="flex items-center gap-3">
-                                    <div className="flex-1 h-2 bg-slate-100 rounded-full overflow-hidden">
+                                    <div className="flex-1 h-2 bg-slate-100 rounded-full overflow-hidden dark:bg-slate-700">
                                         <div className="h-full bg-emerald-500 transition-all duration-500" style={{ width: `${courseProgress}%` }}></div>
                                     </div>
-                                    <span className="text-xs font-bold text-emerald-700 w-8 text-right">{courseProgress}%</span>
+                                    <span className="text-xs font-bold text-emerald-700 w-8 text-right dark:text-emerald-400">{courseProgress}%</span>
                                 </div>
-                                <p className="text-[11px] text-slate-400 mt-1.5 font-medium">{completedInCourse} of {totalCourseModules} modules completed</p>
+                                <p className="text-[11px] text-slate-400 mt-1.5 font-medium dark:text-slate-500">{completedInCourse} of {totalCourseModules} modules completed</p>
                             </div>
 
                             <Link 
                                 to={`/classroom/${course.id}/${course.modules?.[0]?.id}/${course.modules?.[0]?.chapters?.[0]?.id}`}
-                                className="w-full sm:w-auto bg-slate-900 text-white text-sm font-bold py-3 px-6 rounded-xl hover:bg-slate-800 transition-colors text-center whitespace-nowrap shadow-md shadow-slate-200"
+                                className="w-full sm:w-auto bg-slate-900 text-white text-sm font-bold py-3 px-6 rounded-xl hover:bg-slate-800 transition-colors text-center whitespace-nowrap shadow-md shadow-slate-200 dark:bg-emerald-600 dark:hover:bg-emerald-700 dark:shadow-none"
                             >
                                 {courseProgress === 0 ? 'Start Learning' : 'Continue'}
                             </Link>
@@ -305,9 +306,9 @@ const Dashboard: React.FC<DashboardProps> = ({ students, currentUser, courses, o
                     })}
                     </div>
                 ) : (
-                    <div className="text-center py-12 bg-slate-50 rounded-xl border border-dashed border-slate-200">
-                        <p className="text-slate-500 font-medium">You're all caught up!</p>
-                        <p className="text-sm text-slate-400 mt-1">Check back later for new content.</p>
+                    <div className="text-center py-12 bg-slate-50 rounded-xl border border-dashed border-slate-200 dark:bg-slate-800/50 dark:border-slate-700">
+                        <p className="text-slate-500 font-medium dark:text-slate-400">You're all caught up!</p>
+                        <p className="text-sm text-slate-400 mt-1 dark:text-slate-500">Check back later for new content.</p>
                     </div>
                 )}
             </div>
@@ -318,15 +319,15 @@ const Dashboard: React.FC<DashboardProps> = ({ students, currentUser, courses, o
             
             {/* Quick User Search Widget (Super Admin Only) */}
             {isSuperAdmin && (
-                <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 md:p-8">
-                    <div className="flex items-center gap-3 mb-4 text-emerald-800">
-                        <div className="bg-emerald-100 p-2 rounded-lg"><MagnifyingGlassIcon /></div>
+                <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 md:p-8 dark:bg-slate-800 dark:border-slate-700">
+                    <div className="flex items-center gap-3 mb-4 text-emerald-800 dark:text-emerald-400">
+                        <div className="bg-emerald-100 p-2 rounded-lg dark:bg-emerald-900/50"><MagnifyingGlassIcon /></div>
                         <h3 className="font-bold text-lg font-heading">Quick User Lookup</h3>
                     </div>
                     <div className="flex gap-2">
                         <Link 
                             to="/students" 
-                            className="w-full bg-slate-800 hover:bg-slate-900 text-white font-medium py-3 px-4 rounded-xl transition-colors text-center text-sm flex items-center justify-center gap-2 shadow-md shadow-slate-200"
+                            className="w-full bg-slate-800 hover:bg-slate-900 text-white font-medium py-3 px-4 rounded-xl transition-colors text-center text-sm flex items-center justify-center gap-2 shadow-md shadow-slate-200 dark:bg-emerald-600 dark:hover:bg-emerald-700 dark:shadow-none"
                         >
                             <MagnifyingGlassIcon />
                             Search Database
@@ -336,10 +337,10 @@ const Dashboard: React.FC<DashboardProps> = ({ students, currentUser, courses, o
             )}
 
             {/* Engagement Overview (Pie Chart) */}
-            <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-8 relative overflow-hidden">
+            <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-8 relative overflow-hidden dark:bg-slate-800 dark:border-slate-700">
                 <div className="flex justify-between items-center mb-6 relative z-10">
-                    <h2 className="text-lg font-bold text-emerald-950 font-heading">Engagement</h2>
-                    <span className="text-[10px] font-bold px-2 py-1 bg-slate-50 text-slate-400 rounded-md border border-slate-100 uppercase tracking-wide">Overview</span>
+                    <h2 className="text-lg font-bold text-emerald-950 font-heading dark:text-emerald-400">Engagement</h2>
+                    <span className="text-[10px] font-bold px-2 py-1 bg-slate-50 text-slate-400 rounded-md border border-slate-100 uppercase tracking-wide dark:bg-slate-700 dark:border-slate-600 dark:text-slate-300">Overview</span>
                 </div>
                 
                 {/* Fixed: Added min-w-0 to parent to prevent Recharts sizing issue */}
@@ -375,18 +376,18 @@ const Dashboard: React.FC<DashboardProps> = ({ students, currentUser, courses, o
                   </ResponsiveContainer>
                   <div className="absolute inset-0 flex items-center justify-center pointer-events-none pb-10">
                      <div className="text-center">
-                        <span className="block text-4xl font-bold text-emerald-800 font-heading tracking-tight">{calculatedProgress}%</span>
-                        <span className="text-[10px] text-slate-400 uppercase tracking-widest font-bold">Done</span>
+                        <span className="block text-4xl font-bold text-emerald-800 font-heading tracking-tight dark:text-emerald-400">{calculatedProgress}%</span>
+                        <span className="text-[10px] text-slate-400 uppercase tracking-widest font-bold dark:text-slate-500">Done</span>
                      </div>
                   </div>
                 </div>
                 
-                <div className="mt-2 pt-4 border-t border-slate-50 text-center relative z-10">
-                    <p className="text-sm text-slate-500">
-                        You've completed <span className="font-bold text-emerald-700">{completedCount}</span> out of <span className="font-bold text-slate-700">{totalModulesCount}</span> modules.
+                <div className="mt-2 pt-4 border-t border-slate-50 text-center relative z-10 dark:border-slate-700">
+                    <p className="text-sm text-slate-500 dark:text-slate-400">
+                        You've completed <span className="font-bold text-emerald-700 dark:text-emerald-400">{completedCount}</span> out of <span className="font-bold text-slate-700 dark:text-slate-300">{totalModulesCount}</span> modules.
                     </p>
                 </div>
-                <div className="absolute -top-10 -right-10 w-32 h-32 bg-emerald-50 rounded-full blur-3xl opacity-50 z-0"></div>
+                <div className="absolute -top-10 -right-10 w-32 h-32 bg-emerald-50 rounded-full blur-3xl opacity-50 z-0 dark:bg-emerald-900/20"></div>
             </div>
 
             {/* AI Tutor Stats */}
@@ -462,18 +463,18 @@ const Dashboard: React.FC<DashboardProps> = ({ students, currentUser, courses, o
             
              {/* Student Next Steps */}
             {isStudent && (
-                <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-8 flex flex-col justify-center items-center text-center h-auto relative overflow-hidden">
-                    <div className="w-20 h-20 bg-emerald-50 rounded-full flex items-center justify-center text-emerald-600 mb-5 relative z-10">
+                <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-8 flex flex-col justify-center items-center text-center h-auto relative overflow-hidden dark:bg-slate-800 dark:border-slate-700">
+                    <div className="w-20 h-20 bg-emerald-50 rounded-full flex items-center justify-center text-emerald-600 mb-5 relative z-10 dark:bg-emerald-900/30 dark:text-emerald-400">
                         <AcademicCapIcon />
                     </div>
-                    <h3 className="text-xl font-bold text-slate-800 font-heading relative z-10">Your Next Goal: 2CC</h3>
-                    <p className="text-slate-500 mt-3 mb-6 text-sm leading-relaxed relative z-10">
+                    <h3 className="text-xl font-bold text-slate-800 font-heading relative z-10 dark:text-slate-100">Your Next Goal: 2CC</h3>
+                    <p className="text-slate-500 mt-3 mb-6 text-sm leading-relaxed relative z-10 dark:text-slate-400">
                         Complete your training and accumulate 2 Case Credits to become a Sponsor and build your own team.
                     </p>
-                    <div className="w-full bg-slate-100 h-4 rounded-full overflow-hidden relative z-10">
+                    <div className="w-full bg-slate-100 h-4 rounded-full overflow-hidden relative z-10 dark:bg-slate-700">
                         <div className="bg-gradient-to-r from-emerald-500 to-teal-500 h-full transition-all duration-1000" style={{width: `${(currentUser.caseCredits / 2) * 100}%`}}></div>
                     </div>
-                    <div className="mt-3 text-sm font-bold text-emerald-700 relative z-10">{currentUser.caseCredits} / 2.0 CC</div>
+                    <div className="mt-3 text-sm font-bold text-emerald-700 relative z-10 dark:text-emerald-400">{currentUser.caseCredits} / 2.0 CC</div>
                     
                     {/* Bg Decor */}
                     <div className="absolute top-0 left-0 w-full h-2 bg-emerald-500"></div>

@@ -1,4 +1,3 @@
-
 import React, { useRef } from 'react';
 import { SalesPage } from '../../types/salesPage';
 import { Image as ImageIcon, Trash2, Plus } from 'lucide-react';
@@ -42,10 +41,10 @@ const MediaUploader: React.FC<MediaUploaderProps> = ({ data, onChange }) => {
     <div className="space-y-6">
       {/* Hero Image */}
       <div>
-        <label className="block text-sm font-bold text-slate-700 mb-2">Hero Image</label>
+        <label className="block text-sm font-bold text-slate-700 mb-2 dark:text-slate-300">Hero Image</label>
         <div 
           onClick={() => heroInputRef.current?.click()}
-          className="relative w-full h-48 border-2 border-dashed border-slate-300 rounded-xl bg-slate-50 hover:bg-emerald-50 hover:border-emerald-400 transition-all cursor-pointer flex flex-col items-center justify-center overflow-hidden group"
+          className="relative w-full h-48 border-2 border-dashed border-slate-300 rounded-xl bg-slate-50 hover:bg-emerald-50 hover:border-emerald-400 transition-all cursor-pointer flex flex-col items-center justify-center overflow-hidden group dark:bg-slate-700/50 dark:border-slate-600 dark:hover:bg-slate-700 dark:hover:border-emerald-500"
         >
           {data.heroImage ? (
             <>
@@ -55,7 +54,7 @@ const MediaUploader: React.FC<MediaUploaderProps> = ({ data, onChange }) => {
               </div>
             </>
           ) : (
-            <div className="text-center text-slate-400">
+            <div className="text-center text-slate-400 dark:text-slate-500">
               <ImageIcon className="w-8 h-8 mx-auto mb-2" />
               <span className="text-sm font-medium">Click to upload main image</span>
             </div>
@@ -66,10 +65,10 @@ const MediaUploader: React.FC<MediaUploaderProps> = ({ data, onChange }) => {
 
       {/* Gallery */}
       <div>
-        <label className="block text-sm font-bold text-slate-700 mb-2">Gallery</label>
+        <label className="block text-sm font-bold text-slate-700 mb-2 dark:text-slate-300">Gallery</label>
         <div className="grid grid-cols-3 gap-3">
           {data.galleryImages.map((img, idx) => (
-            <div key={idx} className="relative aspect-square rounded-lg overflow-hidden border border-slate-200 group">
+            <div key={idx} className="relative aspect-square rounded-lg overflow-hidden border border-slate-200 group dark:border-slate-600">
               <img src={img} alt={`Gallery ${idx}`} className="w-full h-full object-cover" />
               <button 
                 onClick={() => removeGalleryImage(idx)}
@@ -81,7 +80,7 @@ const MediaUploader: React.FC<MediaUploaderProps> = ({ data, onChange }) => {
           ))}
           <button 
             onClick={() => galleryInputRef.current?.click()}
-            className="aspect-square rounded-lg border-2 border-dashed border-slate-300 flex items-center justify-center text-slate-400 hover:text-emerald-600 hover:border-emerald-400 hover:bg-emerald-50 transition-all"
+            className="aspect-square rounded-lg border-2 border-dashed border-slate-300 flex items-center justify-center text-slate-400 hover:text-emerald-600 hover:border-emerald-400 hover:bg-emerald-50 transition-all dark:border-slate-600 dark:text-slate-500 dark:hover:bg-slate-700 dark:hover:border-emerald-500"
           >
             <Plus size={24} />
           </button>

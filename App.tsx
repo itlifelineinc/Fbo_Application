@@ -23,14 +23,16 @@ interface ProtectedRouteProps {
   children: React.ReactNode;
   currentUser: Student | null;
   onLogout: () => void;
+  theme: 'light' | 'dark';
+  onToggleTheme: () => void;
 }
 
-const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, currentUser, onLogout }) => {
+const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, currentUser, onLogout, theme, onToggleTheme }) => {
   if (!currentUser) {
     return <Navigate to="/" replace />;
   }
   return (
-    <Layout currentUser={currentUser} onLogout={onLogout}>
+    <Layout currentUser={currentUser} onLogout={onLogout} theme={theme} onToggleTheme={onToggleTheme}>
       {children}
     </Layout>
   );
@@ -268,7 +270,7 @@ const App: React.FC = () => {
         } />
 
         <Route path="/dashboard" element={
-            <ProtectedRoute currentUser={currentUser} onLogout={handleLogout}>
+            <ProtectedRoute currentUser={currentUser} onLogout={handleLogout} theme={theme} onToggleTheme={toggleTheme}>
                 <Dashboard 
                     currentUser={currentUser!} 
                     students={students} 
@@ -279,13 +281,13 @@ const App: React.FC = () => {
         } />
         
         <Route path="/sales" element={
-            <ProtectedRoute currentUser={currentUser} onLogout={handleLogout}>
+            <ProtectedRoute currentUser={currentUser} onLogout={handleLogout} theme={theme} onToggleTheme={toggleTheme}>
                 <SalesPortal currentUser={currentUser!} onSubmitSale={handleSubmitSale} />
             </ProtectedRoute>
         } />
         
         <Route path="/chat" element={
-            <ProtectedRoute currentUser={currentUser} onLogout={handleLogout}>
+            <ProtectedRoute currentUser={currentUser} onLogout={handleLogout} theme={theme} onToggleTheme={toggleTheme}>
                 <ChatPortal 
                     currentUser={currentUser!} 
                     students={students} 
@@ -296,7 +298,7 @@ const App: React.FC = () => {
         } />
 
         <Route path="/community" element={
-            <ProtectedRoute currentUser={currentUser} onLogout={handleLogout}>
+            <ProtectedRoute currentUser={currentUser} onLogout={handleLogout} theme={theme} onToggleTheme={toggleTheme}>
                 <CommunityPortal 
                     currentUser={currentUser!}
                     posts={posts}
@@ -309,7 +311,7 @@ const App: React.FC = () => {
         } />
         
         <Route path="/students" element={
-            <ProtectedRoute currentUser={currentUser} onLogout={handleLogout}>
+            <ProtectedRoute currentUser={currentUser} onLogout={handleLogout} theme={theme} onToggleTheme={toggleTheme}>
                 {currentUser?.role !== UserRole.STUDENT ? (
                     <StudentsList 
                         currentUser={currentUser!} 
@@ -323,7 +325,7 @@ const App: React.FC = () => {
         } />
         
         <Route path="/students/:studentId" element={
-            <ProtectedRoute currentUser={currentUser} onLogout={handleLogout}>
+            <ProtectedRoute currentUser={currentUser} onLogout={handleLogout} theme={theme} onToggleTheme={toggleTheme}>
                 <StudentProfile 
                     students={students} 
                     courses={courses} 
@@ -336,7 +338,7 @@ const App: React.FC = () => {
         } />
         
         <Route path="/course-review/:courseId" element={
-            <ProtectedRoute currentUser={currentUser} onLogout={handleLogout}>
+            <ProtectedRoute currentUser={currentUser} onLogout={handleLogout} theme={theme} onToggleTheme={toggleTheme}>
                  {(currentUser?.role === UserRole.ADMIN || currentUser?.role === UserRole.SUPER_ADMIN) ? (
                     <CourseReview courses={courses} onReviewCourse={handleReviewCourse} />
                  ) : <Navigate to="/dashboard" />}
@@ -344,7 +346,7 @@ const App: React.FC = () => {
         } />
         
         <Route path="/builder" element={
-             <ProtectedRoute currentUser={currentUser} onLogout={handleLogout}>
+             <ProtectedRoute currentUser={currentUser} onLogout={handleLogout} theme={theme} onToggleTheme={toggleTheme}>
                 {(currentUser?.role === UserRole.ADMIN || currentUser?.role === UserRole.SUPER_ADMIN || currentUser?.role === UserRole.SPONSOR) ? (
                     <CourseBuilder 
                         currentUserHandle={currentUser!.handle} 
@@ -355,19 +357,19 @@ const App: React.FC = () => {
         } />
 
         <Route path="/sales-builder" element={
-             <ProtectedRoute currentUser={currentUser} onLogout={handleLogout}>
+             <ProtectedRoute currentUser={currentUser} onLogout={handleLogout} theme={theme} onToggleTheme={toggleTheme}>
                 <SalesPageBuilder />
              </ProtectedRoute>
         } />
         
         <Route path="/courses" element={
-            <ProtectedRoute currentUser={currentUser} onLogout={handleLogout}>
+            <ProtectedRoute currentUser={currentUser} onLogout={handleLogout} theme={theme} onToggleTheme={toggleTheme}>
                 <CourseList courses={courses} />
             </ProtectedRoute>
         } />
         
         <Route path="/classroom/:courseId/:moduleId/:lessonId" element={
-            <ProtectedRoute currentUser={currentUser} onLogout={handleLogout}>
+            <ProtectedRoute currentUser={currentUser} onLogout={handleLogout} theme={theme} onToggleTheme={toggleTheme}>
                 <Classroom 
                     courses={courses} 
                     onCompleteLesson={handleCompleteLesson} 

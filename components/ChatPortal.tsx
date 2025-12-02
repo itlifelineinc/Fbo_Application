@@ -113,16 +113,16 @@ const ChatPortal: React.FC<ChatPortalProps> = ({ currentUser, students, messages
   };
 
   return (
-    <div className="h-[calc(100vh-8rem)] flex flex-col md:flex-row bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden animate-fade-in">
+    <div className="h-[calc(100vh-8rem)] flex flex-col md:flex-row bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden animate-fade-in dark:bg-slate-800 dark:border-slate-700">
       
       {/* Sidebar List */}
-      <div className={`w-full md:w-80 bg-slate-50 border-r border-slate-100 flex flex-col ${activeChatHandle && !isBroadcastMode ? 'hidden md:flex' : 'flex'}`}>
-        <div className="p-4 border-b border-slate-200 bg-white">
-            <h2 className="font-bold text-lg text-emerald-900 font-heading">Messages</h2>
+      <div className={`w-full md:w-80 bg-slate-50 border-r border-slate-100 flex flex-col ${activeChatHandle && !isBroadcastMode ? 'hidden md:flex' : 'flex'} dark:bg-slate-900 dark:border-slate-700`}>
+        <div className="p-4 border-b border-slate-200 bg-white dark:bg-slate-800 dark:border-slate-700">
+            <h2 className="font-bold text-lg text-emerald-900 font-heading dark:text-emerald-400">Messages</h2>
             {currentUser.role === UserRole.SPONSOR && (
                 <button 
                     onClick={() => { setIsBroadcastMode(true); setActiveChatHandle(null); }}
-                    className="mt-3 w-full bg-emerald-100 text-emerald-700 text-sm font-bold py-2 rounded-lg hover:bg-emerald-200 transition-colors flex items-center justify-center gap-2"
+                    className="mt-3 w-full bg-emerald-100 text-emerald-700 text-sm font-bold py-2 rounded-lg hover:bg-emerald-200 transition-colors flex items-center justify-center gap-2 dark:bg-emerald-900/30 dark:text-emerald-300 dark:hover:bg-emerald-800/50"
                 >
                     <SpeakerWaveIcon />
                     New Broadcast
@@ -135,16 +135,16 @@ const ChatPortal: React.FC<ChatPortalProps> = ({ currentUser, students, messages
                 <div 
                     key={chat.handle}
                     onClick={() => { setActiveChatHandle(chat.handle); setIsBroadcastMode(false); }}
-                    className={`p-4 border-b border-slate-100 cursor-pointer hover:bg-white transition-colors flex items-center gap-3 ${activeChatHandle === chat.handle ? 'bg-white border-l-4 border-l-emerald-500' : ''}`}
+                    className={`p-4 border-b border-slate-100 cursor-pointer hover:bg-white transition-colors flex items-center gap-3 dark:border-slate-800 dark:hover:bg-slate-800 ${activeChatHandle === chat.handle ? 'bg-white border-l-4 border-l-emerald-500 dark:bg-slate-800' : ''}`}
                 >
-                    <div className="w-10 h-10 rounded-full bg-emerald-200 text-emerald-800 flex items-center justify-center font-bold text-sm overflow-hidden">
+                    <div className="w-10 h-10 rounded-full bg-emerald-200 text-emerald-800 flex items-center justify-center font-bold text-sm overflow-hidden dark:bg-emerald-900 dark:text-emerald-300">
                         {chat.avatar.length > 2 ? <img src={chat.avatar} className="w-full h-full object-cover" alt={chat.name}/> : chat.avatar}
                     </div>
                     <div className="flex-1 min-w-0">
                         <div className="flex justify-between items-baseline">
-                            <h3 className="font-bold text-slate-800 truncate text-sm">{chat.name}</h3>
+                            <h3 className="font-bold text-slate-800 truncate text-sm dark:text-slate-200">{chat.name}</h3>
                         </div>
-                        <p className="text-xs text-slate-500 truncate">{chat.lastMsg}</p>
+                        <p className="text-xs text-slate-500 truncate dark:text-slate-400">{chat.lastMsg}</p>
                     </div>
                 </div>
             ))}
@@ -152,47 +152,47 @@ const ChatPortal: React.FC<ChatPortalProps> = ({ currentUser, students, messages
       </div>
 
       {/* Chat Area */}
-      <div className={`flex-1 flex flex-col bg-slate-50/50 ${!activeChatHandle && !isBroadcastMode ? 'hidden md:flex' : 'flex'}`}>
+      <div className={`flex-1 flex flex-col bg-slate-50/50 ${!activeChatHandle && !isBroadcastMode ? 'hidden md:flex' : 'flex'} dark:bg-slate-800/50`}>
         
         {/* Broadcast Header/Mode */}
         {isBroadcastMode ? (
             <div className="flex-1 flex flex-col p-6">
                 <div className="flex items-center gap-2 mb-6">
-                    <button onClick={() => setIsBroadcastMode(false)} className="md:hidden text-slate-500"><ChevronLeftIcon /></button>
-                    <h2 className="text-xl font-bold text-emerald-900 font-heading">Send Broadcast Message</h2>
+                    <button onClick={() => setIsBroadcastMode(false)} className="md:hidden text-slate-500 dark:text-slate-400"><ChevronLeftIcon /></button>
+                    <h2 className="text-xl font-bold text-emerald-900 font-heading dark:text-emerald-400">Send Broadcast Message</h2>
                 </div>
                 
-                <div className="bg-white p-4 rounded-xl border border-slate-200 flex-1 overflow-y-auto mb-4">
+                <div className="bg-white p-4 rounded-xl border border-slate-200 flex-1 overflow-y-auto mb-4 dark:bg-slate-800 dark:border-slate-700">
                     <div className="flex justify-between items-center mb-4">
-                        <h3 className="font-bold text-sm text-slate-700">Select Recipients ({selectedBroadcastUsers.length})</h3>
-                        <button onClick={selectAllBroadcast} className="text-xs text-emerald-600 font-bold hover:underline">
+                        <h3 className="font-bold text-sm text-slate-700 dark:text-slate-300">Select Recipients ({selectedBroadcastUsers.length})</h3>
+                        <button onClick={selectAllBroadcast} className="text-xs text-emerald-600 font-bold hover:underline dark:text-emerald-400">
                             {selectedBroadcastUsers.length === myDownline.length ? 'Deselect All' : 'Select All'}
                         </button>
                     </div>
                     <div className="space-y-2">
                         {myDownline.map(student => (
-                            <label key={student.handle} className="flex items-center gap-3 p-3 rounded-lg hover:bg-slate-50 cursor-pointer border border-transparent hover:border-slate-100">
+                            <label key={student.handle} className="flex items-center gap-3 p-3 rounded-lg hover:bg-slate-50 cursor-pointer border border-transparent hover:border-slate-100 dark:hover:bg-slate-700/50 dark:hover:border-slate-700">
                                 <input 
                                     type="checkbox" 
                                     checked={selectedBroadcastUsers.includes(student.handle)}
                                     onChange={() => toggleBroadcastUser(student.handle)}
                                     className="w-5 h-5 text-emerald-600 rounded focus:ring-emerald-500 border-gray-300" 
                                 />
-                                <div className="w-8 h-8 rounded-full bg-emerald-100 text-emerald-800 flex items-center justify-center text-xs font-bold">
+                                <div className="w-8 h-8 rounded-full bg-emerald-100 text-emerald-800 flex items-center justify-center text-xs font-bold dark:bg-emerald-900 dark:text-emerald-300">
                                     {student.name.charAt(0)}
                                 </div>
-                                <span className="font-medium text-slate-700">{student.name}</span>
+                                <span className="font-medium text-slate-700 dark:text-slate-200">{student.name}</span>
                             </label>
                         ))}
                     </div>
                 </div>
 
-                <div className="bg-white p-4 rounded-xl border border-slate-200">
+                <div className="bg-white p-4 rounded-xl border border-slate-200 dark:bg-slate-800 dark:border-slate-700">
                     <textarea 
                         value={newMessage} 
                         onChange={(e) => setNewMessage(e.target.value)}
                         placeholder="Type your broadcast message here..."
-                        className="w-full p-3 border border-slate-200 rounded-lg focus:outline-none focus:border-emerald-500 h-24 resize-none bg-white text-slate-900"
+                        className="w-full p-3 border border-slate-200 rounded-lg focus:outline-none focus:border-emerald-500 h-24 resize-none bg-white text-slate-900 dark:bg-slate-900 dark:text-white dark:border-slate-600"
                     />
                     <div className="flex justify-end mt-2">
                         <button 
@@ -209,18 +209,18 @@ const ChatPortal: React.FC<ChatPortalProps> = ({ currentUser, students, messages
         ) : activeChatHandle ? (
             <>
                 {/* Active Chat Header */}
-                <div className="bg-white p-4 border-b border-slate-200 flex items-center gap-3 shadow-sm">
-                    <button onClick={() => setActiveChatHandle(null)} className="md:hidden text-slate-500 hover:text-emerald-600">
+                <div className="bg-white p-4 border-b border-slate-200 flex items-center gap-3 shadow-sm dark:bg-slate-800 dark:border-slate-700">
+                    <button onClick={() => setActiveChatHandle(null)} className="md:hidden text-slate-500 hover:text-emerald-600 dark:text-slate-400 dark:hover:text-emerald-400">
                         <ChevronLeftIcon />
                     </button>
                     <div className="w-8 h-8 rounded-full bg-emerald-600 text-white flex items-center justify-center font-bold">
                         {chatListItems.find(c => c.handle === activeChatHandle)?.avatar.toString().charAt(0) === 'h' ? 'img' : chatListItems.find(c => c.handle === activeChatHandle)?.avatar}
                     </div>
                     <div>
-                        <h3 className="font-bold text-slate-800 text-sm md:text-base">
+                        <h3 className="font-bold text-slate-800 text-sm md:text-base dark:text-slate-100">
                             {chatListItems.find(c => c.handle === activeChatHandle)?.name}
                         </h3>
-                        <p className="text-xs text-slate-500">{activeChatHandle.startsWith('GROUP_') ? `${myDownline.length + 1} members` : activeChatHandle}</p>
+                        <p className="text-xs text-slate-500 dark:text-slate-400">{activeChatHandle.startsWith('GROUP_') ? `${myDownline.length + 1} members` : activeChatHandle}</p>
                     </div>
                 </div>
 
@@ -230,12 +230,12 @@ const ChatPortal: React.FC<ChatPortalProps> = ({ currentUser, students, messages
                         const isMe = msg.senderHandle === currentUser.handle;
                         return (
                             <div key={msg.id} className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
-                                <div className={`max-w-[80%] md:max-w-[60%] ${isMe ? 'bg-emerald-600 text-white rounded-br-none' : 'bg-white border border-slate-200 text-slate-800 rounded-bl-none'} p-3 rounded-2xl shadow-sm`}>
+                                <div className={`max-w-[80%] md:max-w-[60%] ${isMe ? 'bg-emerald-600 text-white rounded-br-none' : 'bg-white border border-slate-200 text-slate-800 rounded-bl-none dark:bg-slate-700 dark:text-slate-200 dark:border-slate-600'} p-3 rounded-2xl shadow-sm`}>
                                     {activeChatHandle.startsWith('GROUP_') && !isMe && (
                                         <p className="text-[10px] font-bold mb-1 opacity-70">{msg.senderHandle}</p>
                                     )}
                                     <p className="text-sm whitespace-pre-wrap leading-relaxed">{msg.text}</p>
-                                    <p className={`text-[10px] mt-1 text-right ${isMe ? 'text-emerald-200' : 'text-slate-400'}`}>
+                                    <p className={`text-[10px] mt-1 text-right ${isMe ? 'text-emerald-200' : 'text-slate-400 dark:text-slate-500'}`}>
                                         {new Date(msg.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
                                     </p>
                                 </div>
@@ -246,7 +246,7 @@ const ChatPortal: React.FC<ChatPortalProps> = ({ currentUser, students, messages
                 </div>
 
                 {/* Input */}
-                <div className="p-4 bg-white border-t border-slate-200">
+                <div className="p-4 bg-white border-t border-slate-200 dark:bg-slate-800 dark:border-slate-700">
                     <div className="flex gap-2">
                         <input 
                             type="text" 
@@ -254,7 +254,7 @@ const ChatPortal: React.FC<ChatPortalProps> = ({ currentUser, students, messages
                             onChange={(e) => setNewMessage(e.target.value)}
                             onKeyDown={(e) => e.key === 'Enter' && handleSend()}
                             placeholder="Type a message..."
-                            className="flex-1 border border-slate-200 rounded-full px-4 py-3 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 bg-white text-slate-900"
+                            className="flex-1 border border-slate-200 rounded-full px-4 py-3 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 bg-white text-slate-900 dark:bg-slate-900 dark:text-white dark:border-slate-600"
                         />
                         <button 
                             onClick={handleSend}
@@ -267,11 +267,11 @@ const ChatPortal: React.FC<ChatPortalProps> = ({ currentUser, students, messages
                 </div>
             </>
         ) : (
-            <div className="flex-1 flex flex-col items-center justify-center text-slate-400 p-8 text-center">
-                <div className="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center mb-4">
+            <div className="flex-1 flex flex-col items-center justify-center text-slate-400 p-8 text-center dark:text-slate-500">
+                <div className="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center mb-4 dark:bg-slate-700">
                     <ChatBubbleLeftRightIcon />
                 </div>
-                <h3 className="text-lg font-bold text-slate-600 mb-2">Team Communication</h3>
+                <h3 className="text-lg font-bold text-slate-600 mb-2 dark:text-slate-300">Team Communication</h3>
                 <p className="max-w-xs">Select a conversation from the left or start a broadcast to message your team.</p>
             </div>
         )}

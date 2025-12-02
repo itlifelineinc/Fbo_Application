@@ -7,6 +7,8 @@ interface LayoutProps {
   children: React.ReactNode;
   currentUser: Student;
   onLogout: () => void;
+  theme: 'light' | 'dark';
+  onToggleTheme: () => void;
 }
 
 // Icons
@@ -114,7 +116,7 @@ function ArrowRightOnRectangleIcon() {
   );
 }
 
-const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout }) => {
+const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme, onToggleTheme }) => {
   const location = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isSalesMenuOpen, setIsSalesMenuOpen] = useState(false);

@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { SalesPage, LayoutStyle } from '../../types/salesPage';
 import { Layout, Palette, Check } from 'lucide-react';
@@ -29,7 +28,7 @@ const ThemeSelector: React.FC<ThemeSelectorProps> = ({ data, onChange }) => {
     <div className="space-y-6">
       {/* Layout Selection */}
       <div>
-        <label className="block text-sm font-bold text-slate-700 mb-3 flex items-center gap-2">
+        <label className="block text-sm font-bold text-slate-700 mb-3 flex items-center gap-2 dark:text-slate-300">
           <Layout size={16} /> Layout Style
         </label>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
@@ -39,12 +38,12 @@ const ThemeSelector: React.FC<ThemeSelectorProps> = ({ data, onChange }) => {
               onClick={() => onChange('layoutStyle', layout.id)}
               className={`p-3 rounded-xl border-2 text-left transition-all ${
                 data.layoutStyle === layout.id
-                  ? 'border-emerald-500 bg-emerald-50'
-                  : 'border-slate-200 bg-white hover:border-emerald-200'
+                  ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/30 dark:border-emerald-500'
+                  : 'border-slate-200 bg-white hover:border-emerald-200 dark:bg-slate-700 dark:border-slate-600 dark:hover:border-slate-500'
               }`}
             >
-              <div className="font-bold text-slate-800 text-sm">{layout.label}</div>
-              <div className="text-[10px] text-slate-500 mt-1">{layout.desc}</div>
+              <div className="font-bold text-slate-800 text-sm dark:text-slate-200">{layout.label}</div>
+              <div className="text-[10px] text-slate-500 mt-1 dark:text-slate-400">{layout.desc}</div>
             </button>
           ))}
         </div>
@@ -52,7 +51,7 @@ const ThemeSelector: React.FC<ThemeSelectorProps> = ({ data, onChange }) => {
 
       {/* Color Theme */}
       <div>
-        <label className="block text-sm font-bold text-slate-700 mb-3 flex items-center gap-2">
+        <label className="block text-sm font-bold text-slate-700 mb-3 flex items-center gap-2 dark:text-slate-300">
           <Palette size={16} /> Color Theme
         </label>
         <div className="flex gap-3 flex-wrap">
@@ -61,7 +60,7 @@ const ThemeSelector: React.FC<ThemeSelectorProps> = ({ data, onChange }) => {
               key={color}
               onClick={() => onChange('themeColor', color)}
               className={`w-10 h-10 rounded-full flex items-center justify-center transition-transform hover:scale-110 shadow-sm ${
-                data.themeColor === color ? 'ring-2 ring-offset-2 ring-slate-400' : ''
+                data.themeColor === color ? 'ring-2 ring-offset-2 ring-slate-400 dark:ring-slate-500 dark:ring-offset-slate-800' : ''
               }`}
               style={{ backgroundColor: color }}
             >

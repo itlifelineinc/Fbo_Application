@@ -51,55 +51,47 @@ const PriceAndPackages: React.FC<PriceAndPackagesProps> = ({ data, onChange }) =
 
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-bold text-slate-700 mb-1">Base Price</label>
+          <label className="block text-sm font-bold text-slate-700 mb-1 dark:text-slate-300">Base Price ({data.currency})</label>
           <input 
             type="number" 
             value={data.basePrice || ''}
             onChange={(e) => onChange('basePrice', parseFloat(e.target.value))}
-            className="w-full p-3 border border-slate-200 rounded-xl bg-white text-slate-900 focus:ring-2 focus:ring-emerald-500 outline-none font-mono"
+            className="w-full p-3 border border-slate-200 rounded-xl bg-white text-slate-900 focus:ring-2 focus:ring-emerald-500 outline-none font-mono dark:bg-slate-700 dark:border-slate-600 dark:text-white"
           />
-        </div>
-        <div>
-          <label className="block text-sm font-bold text-slate-700 mb-1">Currency</label>
-          <select 
-            value={data.currency}
-            onChange={(e) => onChange('currency', e.target.value as CurrencyCode)}
-            className="w-full p-3 border border-slate-200 rounded-xl bg-white text-slate-900 focus:ring-2 focus:ring-emerald-500 outline-none"
-          >
-            {['USD', 'EUR', 'GBP', 'GHS', 'NGN', 'ZAR'].map(c => <option key={c} value={c}>{c}</option>)}
-          </select>
         </div>
       </div>
 
       <div>
         <div className="flex justify-between items-center mb-3">
-          <label className="block text-sm font-bold text-slate-700">Packages / Variants</label>
-          <button onClick={addPackage} className="text-xs flex items-center gap-1 text-emerald-600 font-bold hover:bg-emerald-50 px-2 py-1 rounded">
+          <label className="block text-sm font-bold text-slate-700 dark:text-slate-300">Packages / Variants</label>
+          <button onClick={addPackage} className="text-xs flex items-center gap-1 text-emerald-600 font-bold hover:bg-emerald-50 px-2 py-1 rounded dark:text-emerald-400 dark:hover:bg-emerald-900/30">
             <Plus size={14} /> Add Package
           </button>
         </div>
         
         <div className="space-y-3">
           {pricingOptions.map((pkg, idx) => (
-            <div key={pkg.id} className="border border-slate-200 rounded-xl p-4 bg-slate-50">
+            <div key={pkg.id} className="border border-slate-200 rounded-xl p-4 bg-slate-50 dark:bg-slate-800 dark:border-slate-700">
               <div className="flex justify-between items-center mb-3">
                 <input 
                   type="text" 
                   value={pkg.name}
                   onChange={(e) => updatePackage(idx, 'name', e.target.value)}
-                  className="font-bold bg-transparent border-b border-transparent focus:border-emerald-500 focus:bg-white outline-none w-1/2 text-slate-900"
+                  className="font-bold bg-transparent border-b border-transparent focus:border-emerald-500 focus:bg-white outline-none w-1/2 text-slate-900 dark:text-white dark:focus:bg-slate-700"
                 />
                 <div className="flex items-center gap-2">
-                  <span className="text-xs text-slate-500">Price +</span>
+                  <span className="text-xs text-slate-500 dark:text-slate-400">Price +</span>
                   <input 
                     type="number" 
                     value={pkg.priceDelta}
                     onChange={(e) => updatePackage(idx, 'priceDelta', parseFloat(e.target.value))}
-                    className="w-20 p-1 text-right border border-slate-200 rounded bg-white text-sm text-slate-900"
+                    className="w-20 p-1 text-right border border-slate-200 rounded bg-white text-sm text-slate-900 dark:bg-slate-700 dark:border-slate-600 dark:text-white"
                   />
-                  <button onClick={() => removePackage(idx)} className="text-red-400 hover:text-red-600 ml-2"><Trash2 size={16} /></button>
+                  <button onClick={() => removePackage(idx)} className="text-red-400 hover:text-red-600 ml-2">
+                    <Trash2 size={16} />
+                  </button>
                 </div>
               </div>
               
@@ -111,15 +103,15 @@ const PriceAndPackages: React.FC<PriceAndPackagesProps> = ({ data, onChange }) =
                       type="text" 
                       value={feat}
                       onChange={(e) => updatePackageFeature(idx, fIdx, e.target.value)}
-                      className="flex-1 text-xs bg-transparent border-b border-slate-200 focus:border-emerald-500 outline-none pb-0.5 text-slate-900"
+                      className="flex-1 text-xs bg-transparent border-b border-slate-200 focus:border-emerald-500 outline-none pb-0.5 text-slate-900 dark:text-slate-300 dark:border-slate-600"
                     />
                   </div>
                 ))}
-                <button onClick={() => addPackageFeature(idx)} className="text-xs text-slate-400 hover:text-emerald-600 pl-4">+ Add feature</button>
+                <button onClick={() => addPackageFeature(idx)} className="text-xs text-slate-400 hover:text-emerald-600 pl-4 dark:text-slate-500 dark:hover:text-emerald-400">+ Add feature</button>
               </div>
             </div>
           ))}
-          {pricingOptions.length === 0 && <p className="text-xs text-slate-400 italic">No packages added. Base price applies.</p>}
+          {pricingOptions.length === 0 && <p className="text-xs text-slate-400 italic dark:text-slate-500">No packages added. Base price applies.</p>}
         </div>
       </div>
     </div>

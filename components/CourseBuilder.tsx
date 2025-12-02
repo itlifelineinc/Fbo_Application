@@ -334,14 +334,6 @@ const CourseBuilder: React.FC<CourseBuilderProps> = ({ currentUserHandle, onSubm
             value={course.thumbnailUrl} 
             onChange={(val) => updateCourseInfo('thumbnailUrl', val)}
           />
-          
-          <MediaInput 
-            label="Promotional Video (Optional)" 
-            value={course.trailerVideoUrl || ''} 
-            onChange={(val) => updateCourseInfo('trailerVideoUrl', val)}
-            accept="video/*"
-            placeholder="Youtube/Vimeo Link"
-          />
         </div>
       </div>
     </div>
@@ -565,7 +557,8 @@ const CourseBuilder: React.FC<CourseBuilderProps> = ({ currentUserHandle, onSubm
 
       {renderChapterEditor()}
 
-      <div className="flex flex-col md:flex-row h-full gap-6 overflow-hidden">
+      {/* Main Container - Changed h-full to flex-1 min-h-0 to fix overflow issues */}
+      <div className="flex flex-col md:flex-row flex-1 min-h-0 gap-6 overflow-hidden">
         
         {/* Sidebar Steps */}
         <div ref={stepsContainerRef} className="w-full md:w-64 bg-white rounded-2xl shadow-sm border border-slate-100 p-4 flex md:flex-col gap-2 overflow-x-auto md:overflow-visible shrink-0 h-fit md:h-full dark:bg-slate-800 dark:border-slate-700 no-scrollbar">
@@ -590,14 +583,14 @@ const CourseBuilder: React.FC<CourseBuilderProps> = ({ currentUserHandle, onSubm
         </div>
 
         {/* Main Content Area */}
-        <div className="flex-1 bg-white rounded-2xl shadow-sm border border-slate-100 p-6 md:p-8 overflow-y-auto relative min-h-[500px] dark:bg-slate-800 dark:border-slate-700 no-scrollbar">
+        <div className="flex-1 bg-white rounded-2xl shadow-sm border border-slate-100 p-6 md:p-8 overflow-y-auto relative h-full dark:bg-slate-800 dark:border-slate-700 no-scrollbar">
             
             {step === 1 && renderStep1_Info()}
             {step === 2 && renderStep2_Curriculum()}
             {step === 3 && renderStep3_Settings()}
             
             {step === 4 && (
-              <div className="space-y-8 animate-fade-in text-center py-6">
+              <div className="space-y-8 animate-fade-in text-center py-6 pb-20">
                   <div>
                     <h2 className="text-2xl font-bold text-slate-800 dark:text-white mb-2">Publishing Options</h2>
                     <p className="text-slate-500 dark:text-slate-400">Choose where this course will be visible.</p>

@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from 'react';
 import { SalesPage, Package } from '../../types/salesPage';
 import { Plus, Trash2, Image as ImageIcon, LayoutTemplate } from 'lucide-react';
@@ -133,7 +132,7 @@ const PackageSectionEditor: React.FC<PackageSectionEditorProps> = ({ data, onCha
                   value={pkg.specialPrice || ''}
                   onChange={(e) => updatePackage(pkg.id, 'specialPrice', parseFloat(e.target.value))}
                   placeholder="Optional"
-                  className="w-full text-sm font-bold text-emerald-600 outline-none border-b border-emerald-100 focus:border-emerald-500"
+                  className="w-full text-sm font-bold text-emerald-600 outline-none border-b border-emerald-100 focus:border-emerald-500 bg-transparent"
                 />
               </div>
             </div>
@@ -145,7 +144,7 @@ const PackageSectionEditor: React.FC<PackageSectionEditorProps> = ({ data, onCha
                   <select 
                     value={pkg.layout}
                     onChange={(e) => updatePackage(pkg.id, 'layout', e.target.value)}
-                    className="w-full text-xs p-2 rounded border border-slate-200"
+                    className="w-full text-xs p-2 rounded border border-slate-200 text-slate-900 bg-white"
                   >
                     <option value="grid">Grid Card</option>
                     <option value="hero">Featured Hero</option>

@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { SalesPage, CTAButton } from '../../types/salesPage';
 import { Plus, Trash2, Link as LinkIcon, Palette, MousePointerClick } from 'lucide-react';
@@ -60,7 +59,7 @@ const CTAButtonsEditor: React.FC<CTAButtonsEditorProps> = ({ data, onChange }) =
                         type="text" 
                         value={cta.label}
                         onChange={(e) => updateCTA(idx, 'label', e.target.value)}
-                        className="w-full text-sm font-bold bg-white border border-slate-200 rounded p-2 focus:border-emerald-500 outline-none"
+                        className="w-full text-sm font-bold bg-white border border-slate-200 rounded p-2 focus:border-emerald-500 outline-none text-slate-900"
                     />
                 </div>
                 <div className="col-span-2 sm:col-span-1">
@@ -68,7 +67,7 @@ const CTAButtonsEditor: React.FC<CTAButtonsEditorProps> = ({ data, onChange }) =
                     <select 
                         value={cta.style}
                         onChange={(e) => updateCTA(idx, 'style', e.target.value)}
-                        className="w-full text-sm bg-white border border-slate-200 rounded p-2 focus:border-emerald-500 outline-none"
+                        className="w-full text-sm bg-white border border-slate-200 rounded p-2 focus:border-emerald-500 outline-none text-slate-900"
                     >
                         <option value="primary">Solid (Primary)</option>
                         <option value="outline">Outline</option>
@@ -85,7 +84,7 @@ const CTAButtonsEditor: React.FC<CTAButtonsEditorProps> = ({ data, onChange }) =
                         value={cta.url}
                         onChange={(e) => updateCTA(idx, 'url', e.target.value)}
                         placeholder="#products, https://wa.me/..."
-                        className="w-full text-sm bg-white border border-slate-200 rounded p-2 focus:border-emerald-500 outline-none placeholder-slate-400 font-mono"
+                        className="w-full text-sm bg-white border border-slate-200 rounded p-2 focus:border-emerald-500 outline-none placeholder-slate-400 font-mono text-slate-900"
                     />
                 </div>
 
@@ -107,7 +106,7 @@ const CTAButtonsEditor: React.FC<CTAButtonsEditorProps> = ({ data, onChange }) =
                         <select 
                             value={cta.icon || ''}
                             onChange={(e) => updateCTA(idx, 'icon', e.target.value)}
-                            className="w-full text-xs bg-white border border-slate-200 rounded p-1.5 focus:border-emerald-500 outline-none"
+                            className="w-full text-xs bg-white border border-slate-200 rounded p-1.5 focus:border-emerald-500 outline-none text-slate-900"
                         >
                             <option value="">None</option>
                             <option value="shopping-cart">Shopping Cart</option>

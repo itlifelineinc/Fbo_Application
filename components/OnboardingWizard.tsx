@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { Student, QuizResult, UserRole } from '../types';
 
 interface OnboardingWizardProps {
@@ -9,6 +9,7 @@ interface OnboardingWizardProps {
 
 const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onEnroll, existingStudents }) => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [step, setStep] = useState(0);
   
   // Form Data
@@ -21,6 +22,25 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onEnroll, existingS
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [generatedHandle, setGeneratedHandle] = useState('');
+
+  // Auto-fill sponsor from URL
+  useEffect(() => {
+    const searchParams = new URLSearchParams(location.search);
+    const sponsorParam = searchParams.get('sponsor');
+    
+    if (sponsorParam) {
+        const formattedHandle = sponsorParam.startsWith('@') ? sponsorParam : `@${sponsorParam}`;
+        setSponsorHandle(formattedHandle);
+        
+        // Auto-verify if provided in URL
+        const sponsor = existingStudents.find(s => s.handle.toLowerCase() === formattedHandle.toLowerCase());
+        if (sponsor) {
+             if (sponsor.caseCredits >= 2 || sponsor.role === UserRole.SUPER_ADMIN || sponsor.role === UserRole.ADMIN) {
+                 setVerifiedSponsor(sponsor);
+             }
+        }
+    }
+  }, [location, existingStudents]);
 
   const handleQuizAnswer = (question: string, answer: string) => {
     setQuizAnswers(prev => {
@@ -121,6 +141,19 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onEnroll, existingS
               <p className="text-lg text-slate-600">
                 Welcome to the FBO Growth Academy. Let's personalize your path to success.
               </p>
+              
+              {verifiedSponsor && (
+                  <div className="bg-emerald-50 border border-emerald-100 rounded-xl p-4 max-w-sm mx-auto animate-fade-in">
+                      <p className="text-sm font-bold text-emerald-800">You've been invited by:</p>
+                      <div className="flex items-center justify-center gap-2 mt-2">
+                          <div className="w-8 h-8 bg-emerald-200 rounded-full flex items-center justify-center text-emerald-800 font-bold text-xs">
+                              {verifiedSponsor.name.charAt(0)}
+                          </div>
+                          <span className="font-medium text-emerald-900">{verifiedSponsor.name}</span>
+                      </div>
+                  </div>
+              )}
+
               <div className="pt-6">
                 <button 
                   onClick={nextStep}
@@ -181,21 +214,34 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onEnroll, existingS
               <div className="max-w-sm mx-auto space-y-4">
                  <div>
                     <label className="block text-left text-sm font-bold text-slate-700 mb-2">Sponsor Handle</label>
-                    <input 
-                        type="text" 
-                        value={sponsorHandle}
-                        onChange={(e) => setSponsorHandle(e.target.value)}
-                        placeholder="@alice_success"
-                        className={`w-full text-center text-xl font-bold font-mono border-2 rounded-xl py-4 focus:ring-4 outline-none transition-all bg-white text-slate-900 ${
-                            sponsorError ? 'border-red-200 focus:border-red-500 focus:ring-red-100' : 'border-slate-200 focus:border-emerald-500 focus:ring-emerald-100'
-                        }`}
-                    />
+                    <div className="relative">
+                        <input 
+                            type="text" 
+                            value={sponsorHandle}
+                            onChange={(e) => setSponsorHandle(e.target.value)}
+                            placeholder="@alice_success"
+                            disabled={!!verifiedSponsor} // Disable if auto-verified
+                            className={`w-full text-center text-xl font-bold font-mono border-2 rounded-xl py-4 focus:ring-4 outline-none transition-all bg-white text-slate-900 ${
+                                sponsorError ? 'border-red-200 focus:border-red-500 focus:ring-red-100' : 'border-slate-200 focus:border-emerald-500 focus:ring-emerald-100'
+                            } ${verifiedSponsor ? 'bg-emerald-50 border-emerald-200 text-emerald-800' : ''}`}
+                        />
+                        {verifiedSponsor && (
+                            <button 
+                                onClick={() => { setVerifiedSponsor(null); setSponsorHandle(''); }}
+                                className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-red-500 text-xs font-bold"
+                            >
+                                CHANGE
+                            </button>
+                        )}
+                    </div>
                     {sponsorError && <p className="text-red-500 text-sm mt-2 font-medium">{sponsorError}</p>}
                  </div>
 
-                 <div className="text-xs text-slate-400 bg-slate-50 p-3 rounded-lg border border-slate-100">
-                    Don't have a sponsor? Use <span className="font-mono text-emerald-600 cursor-pointer" onClick={() => setSponsorHandle('@forever_system')}>@forever_system</span>
-                 </div>
+                 {!verifiedSponsor && (
+                    <div className="text-xs text-slate-400 bg-slate-50 p-3 rounded-lg border border-slate-100">
+                        Don't have a sponsor? Use <span className="font-mono text-emerald-600 cursor-pointer" onClick={() => setSponsorHandle('@forever_system')}>@forever_system</span>
+                    </div>
+                 )}
               </div>
 
               <div className="flex justify-between pt-8">
@@ -205,7 +251,7 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onEnroll, existingS
                     disabled={!sponsorHandle.trim()}
                     className="bg-emerald-600 disabled:opacity-50 text-white px-8 py-3 rounded-xl font-semibold shadow-md hover:bg-emerald-700 transition-all"
                  >
-                    Verify Sponsor
+                    {verifiedSponsor ? 'Confirm Sponsor' : 'Verify Sponsor'}
                  </button>
               </div>
             </div>

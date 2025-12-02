@@ -1,6 +1,5 @@
-
 import React from 'react';
-import { Save, Smartphone, Monitor, Eye, ArrowLeft } from 'lucide-react';
+import { Save, Smartphone, Monitor, Eye, ArrowLeft, Columns, Maximize } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 interface EditorToolbarProps {
@@ -11,6 +10,8 @@ interface EditorToolbarProps {
   onTogglePreview: () => void;
   previewDevice: 'mobile' | 'desktop';
   onSetPreviewDevice: (device: 'mobile' | 'desktop') => void;
+  showSplitView: boolean;
+  onToggleSplitView: () => void;
 }
 
 const EditorToolbar: React.FC<EditorToolbarProps> = ({ 
@@ -20,7 +21,9 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({
   isPreviewMode, 
   onTogglePreview,
   previewDevice,
-  onSetPreviewDevice
+  onSetPreviewDevice,
+  showSplitView,
+  onToggleSplitView
 }) => {
   return (
     <div className="bg-white border-b border-slate-200 h-16 px-4 flex items-center justify-between sticky top-0 z-40">
@@ -37,23 +40,47 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({
       </div>
 
       <div className="flex items-center gap-3">
+        {/* View Options (Desktop) */}
+        {!isPreviewMode && (
+            <div className="hidden md:flex items-center bg-slate-100 p-1 rounded-lg mr-2">
+                <button 
+                    onClick={onToggleSplitView}
+                    className={`p-1.5 rounded-md transition-all flex items-center gap-2 text-xs font-bold ${showSplitView ? 'bg-white shadow text-emerald-600' : 'text-slate-500 hover:text-slate-700'}`}
+                    title="Split View (Editor + Preview)"
+                >
+                    <Columns size={16} />
+                    <span>Split</span>
+                </button>
+                <button 
+                    onClick={onToggleSplitView}
+                    className={`p-1.5 rounded-md transition-all flex items-center gap-2 text-xs font-bold ${!showSplitView ? 'bg-white shadow text-emerald-600' : 'text-slate-500 hover:text-slate-700'}`}
+                    title="Focus Mode (Full Editor)"
+                >
+                    <Maximize size={16} />
+                    <span>Focus</span>
+                </button>
+            </div>
+        )}
+
         {/* Device Toggles (Only relevant if Preview is active or screen is large) */}
-        <div className="bg-slate-100 p-1 rounded-lg flex items-center hidden md:flex">
-          <button 
-            onClick={() => onSetPreviewDevice('desktop')}
-            className={`p-1.5 rounded-md transition-all ${previewDevice === 'desktop' ? 'bg-white shadow text-emerald-600' : 'text-slate-400 hover:text-slate-600'}`}
-            title="Desktop View"
-          >
-            <Monitor size={18} />
-          </button>
-          <button 
-            onClick={() => onSetPreviewDevice('mobile')}
-            className={`p-1.5 rounded-md transition-all ${previewDevice === 'mobile' ? 'bg-white shadow text-emerald-600' : 'text-slate-400 hover:text-slate-600'}`}
-            title="Mobile View"
-          >
-            <Smartphone size={18} />
-          </button>
-        </div>
+        {(isPreviewMode || showSplitView) && (
+            <div className="bg-slate-100 p-1 rounded-lg flex items-center hidden md:flex">
+            <button 
+                onClick={() => onSetPreviewDevice('desktop')}
+                className={`p-1.5 rounded-md transition-all ${previewDevice === 'desktop' ? 'bg-white shadow text-emerald-600' : 'text-slate-400 hover:text-slate-600'}`}
+                title="Desktop View"
+            >
+                <Monitor size={18} />
+            </button>
+            <button 
+                onClick={() => onSetPreviewDevice('mobile')}
+                className={`p-1.5 rounded-md transition-all ${previewDevice === 'mobile' ? 'bg-white shadow text-emerald-600' : 'text-slate-400 hover:text-slate-600'}`}
+                title="Mobile View"
+            >
+                <Smartphone size={18} />
+            </button>
+            </div>
+        )}
 
         <button 
           onClick={onTogglePreview}

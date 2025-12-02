@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from 'react';
 import { SalesPage, Product, CurrencyCode } from '../../types/salesPage';
 import { Plus, Trash2, ChevronDown, ChevronUp, Image as ImageIcon, X } from 'lucide-react';
@@ -145,14 +144,14 @@ const ProductSectionEditor: React.FC<ProductSectionEditorProps> = ({ data, onCha
                       value={product.name}
                       onChange={(e) => updateProduct(product.id, 'name', e.target.value)}
                       placeholder="Product Name"
-                      className="w-full p-2 text-sm border border-slate-200 rounded-lg focus:ring-1 focus:ring-emerald-500 outline-none"
+                      className="w-full p-2 text-sm border border-slate-200 rounded-lg focus:ring-1 focus:ring-emerald-500 outline-none text-slate-900 bg-white"
                     />
                     <input 
                       type="text" 
                       value={product.shortDescription}
                       onChange={(e) => updateProduct(product.id, 'shortDescription', e.target.value)}
                       placeholder="Short tagline (e.g. For daily energy)"
-                      className="w-full p-2 text-sm border border-slate-200 rounded-lg focus:ring-1 focus:ring-emerald-500 outline-none"
+                      className="w-full p-2 text-sm border border-slate-200 rounded-lg focus:ring-1 focus:ring-emerald-500 outline-none text-slate-900 bg-white"
                     />
                   </div>
                 </div>
@@ -165,7 +164,7 @@ const ProductSectionEditor: React.FC<ProductSectionEditorProps> = ({ data, onCha
                       type="number" 
                       value={product.price}
                       onChange={(e) => updateProduct(product.id, 'price', parseFloat(e.target.value))}
-                      className="w-full p-2 text-sm border border-slate-200 rounded-lg outline-none"
+                      className="w-full p-2 text-sm border border-slate-200 rounded-lg outline-none text-slate-900 bg-white"
                     />
                   </div>
                   <div>
@@ -174,7 +173,7 @@ const ProductSectionEditor: React.FC<ProductSectionEditorProps> = ({ data, onCha
                       type="number" 
                       value={product.discountPrice || ''}
                       onChange={(e) => updateProduct(product.id, 'discountPrice', parseFloat(e.target.value))}
-                      className="w-full p-2 text-sm border border-slate-200 rounded-lg outline-none"
+                      className="w-full p-2 text-sm border border-slate-200 rounded-lg outline-none text-slate-900 bg-white"
                     />
                   </div>
                 </div>
@@ -185,7 +184,7 @@ const ProductSectionEditor: React.FC<ProductSectionEditorProps> = ({ data, onCha
                   <textarea 
                     value={product.fullDescription}
                     onChange={(e) => updateProduct(product.id, 'fullDescription', e.target.value)}
-                    className="w-full p-2 text-sm border border-slate-200 rounded-lg h-24 resize-none outline-none"
+                    className="w-full p-2 text-sm border border-slate-200 rounded-lg h-24 resize-none outline-none text-slate-900 bg-white"
                     placeholder="Rich text description..."
                   />
                 </div>
@@ -208,7 +207,7 @@ const ProductSectionEditor: React.FC<ProductSectionEditorProps> = ({ data, onCha
                           type="text" 
                           value={benefit}
                           onChange={(e) => toggleArrayItem(product.id, 'benefits', idx, e.target.value)}
-                          className="flex-1 p-1.5 text-xs border border-slate-200 rounded outline-none"
+                          className="flex-1 p-1.5 text-xs border border-slate-200 rounded outline-none text-slate-900 bg-white"
                         />
                         <button onClick={() => toggleArrayItem(product.id, 'benefits', idx)} className="text-slate-400 hover:text-red-500">
                           <X size={14} />

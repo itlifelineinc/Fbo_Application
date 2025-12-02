@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Student, UserRole } from '../types';
@@ -143,7 +142,7 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout }) => {
       {/* Mobile Overlay */}
       {isMobileMenuOpen && (
         <div 
-          className="fixed inset-0 bg-black/50 z-20 lg:hidden backdrop-blur-sm transition-opacity"
+          className="fixed inset-0 bg-black/50 z-50 lg:hidden backdrop-blur-sm transition-opacity"
           onClick={() => setIsMobileMenuOpen(false)}
         />
       )}
@@ -151,7 +150,7 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout }) => {
       {/* Sidebar - Responsive */}
       <aside 
         className={`
-          fixed lg:static inset-y-0 left-0 z-30 w-64 bg-emerald-900 text-white flex flex-col shadow-xl 
+          fixed lg:static inset-y-0 left-0 z-50 w-64 bg-emerald-900 text-white flex flex-col shadow-xl 
           transform transition-transform duration-300 ease-in-out dark:bg-emerald-950
           ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
         `}

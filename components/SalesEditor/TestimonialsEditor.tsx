@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { SalesPage, Testimonial } from '../../types/salesPage';
 import { Plus, Trash2, User } from 'lucide-react';
@@ -54,7 +53,7 @@ const TestimonialsEditor: React.FC<TestimonialsEditorProps> = ({ data, onChange 
                 type="text" 
                 value={t.quote}
                 onChange={(e) => updateTestimonial(idx, 'quote', e.target.value)}
-                className="w-full text-sm italic bg-white border border-slate-200 rounded p-2 focus:border-emerald-500 outline-none"
+                className="w-full text-sm italic bg-white border border-slate-200 rounded p-2 focus:border-emerald-500 outline-none text-slate-900"
                 placeholder="Quote..."
               />
               <div className="flex gap-2">
@@ -62,14 +61,14 @@ const TestimonialsEditor: React.FC<TestimonialsEditorProps> = ({ data, onChange 
                   type="text" 
                   value={t.name}
                   onChange={(e) => updateTestimonial(idx, 'name', e.target.value)}
-                  className="flex-1 text-xs font-bold bg-white border border-slate-200 rounded p-2 outline-none"
+                  className="flex-1 text-xs font-bold bg-white border border-slate-200 rounded p-2 outline-none text-slate-900"
                   placeholder="Customer Name"
                 />
                 <input 
                   type="text" 
                   value={t.role || ''}
                   onChange={(e) => updateTestimonial(idx, 'role', e.target.value)}
-                  className="flex-1 text-xs bg-white border border-slate-200 rounded p-2 outline-none"
+                  className="flex-1 text-xs bg-white border border-slate-200 rounded p-2 outline-none text-slate-900"
                   placeholder="Role (Optional)"
                 />
               </div>

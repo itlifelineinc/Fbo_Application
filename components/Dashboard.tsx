@@ -42,7 +42,7 @@ const CurrencyDollarIcon = () => (
     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
         <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
     </svg>
-);
+  );
 
 const MagnifyingGlassIcon = () => (
     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
@@ -53,6 +53,18 @@ const MagnifyingGlassIcon = () => (
 const SparklesIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
     <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.456-2.456L14.25 6l1.035-.259a3.375 3.375 0 002.456-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 00-2.456 2.456zM16.894 20.567L16.5 21.75l-.394-1.183a2.25 2.25 0 00-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 001.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 00-1.423 1.423z" />
+  </svg>
+);
+
+const ShareIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+    <path strokeLinecap="round" strokeLinejoin="round" d="M7.217 10.907a2.25 2.25 0 100 2.186m0-2.186c.18.324.283.696.283 1.093s-.103.77-.283 1.093m0-2.186l9.566-5.314m-9.566 7.5l9.566 5.314m0 0a2.25 2.25 0 103.935 2.186 2.25 2.25 0 00-3.935-2.186zm0-12.814a2.25 2.25 0 103.933-2.185 2.25 2.25 0 00-3.933 2.185z" />
+  </svg>
+);
+
+const ClipboardIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+    <path strokeLinecap="round" strokeLinejoin="round" d="M15.666 3.888A2.25 2.25 0 0013.5 2.25h-3c-1.03 0-1.9.693-2.166 1.638m7.332 0c.055.194.084.4.084.612v0a.75.75 0 01-.75.75H9a.75.75 0 01-.75-.75v0c0-.212.03-.418.084-.612m7.332 0c.646.049 1.288.564 1.509 1.192.613 1.753.613 3.655 0 5.408-.22.727-1.033 1.109-1.724 1.109H8.438c-.69 0-1.504-.382-1.724-1.109-.613-1.753-.613-3.655 0-5.408.22-.628.863-1.143 1.509-1.192M6.75 21a2.25 2.25 0 01-2.25-2.25V6.75c0-1.012.668-1.875 1.586-2.155.127.427.34.821.619 1.165A3.725 3.725 0 006.75 9.75h10.5a3.725 3.725 0 002.795-4.24.75.75 0 011.5 0 5.25 5.25 0 01-3.545 4.99H6.75A.75.75 0 006 11.25v7.5a.75.75 0 00.75.75h9.75a.75.75 0 00.75-.75v-2.25m0 0h2.25m-2.25 0H18" />
   </svg>
 );
 
@@ -130,6 +142,14 @@ const Dashboard: React.FC<DashboardProps> = ({ students, currentUser, courses, o
 
   // Pending Courses Logic (For Admins)
   const pendingCourses = courses.filter(c => c.status === CourseStatus.UNDER_REVIEW);
+
+  // Invite Link
+  const inviteLink = `${window.location.origin}${window.location.pathname}#/join?sponsor=${currentUser.handle.replace('@','')}`;
+  
+  const copyToClipboard = () => {
+    navigator.clipboard.writeText(inviteLink);
+    alert('Invite link copied to clipboard!');
+  };
 
   return (
     <div className="space-y-8 animate-fade-in">
@@ -406,17 +426,27 @@ const Dashboard: React.FC<DashboardProps> = ({ students, currentUser, courses, o
                 <div className="bg-gradient-to-br from-emerald-600 to-teal-700 rounded-2xl shadow-lg shadow-emerald-600/20 p-8 text-white relative overflow-hidden group h-auto">
                     <div className="relative z-10 flex flex-col justify-between gap-8">
                         <div>
-                            <h2 className="text-xl font-bold mb-2 font-heading">Enroll New FBO</h2>
-                            <p className="text-emerald-50 text-sm leading-relaxed opacity-90">Grow your business by inviting new members to the academy.</p>
+                            <div className="flex items-center justify-between">
+                                <h2 className="text-xl font-bold mb-2 font-heading">Grow Your Team</h2>
+                                <ShareIcon />
+                            </div>
+                            <p className="text-emerald-50 text-sm leading-relaxed opacity-90">Share your personalized link to automatically attribute new FBOs to your downline.</p>
                         </div>
                         
                         <div className="bg-white/10 rounded-2xl backdrop-blur-md border border-white/20 p-5">
-                            <div className="text-[10px] text-emerald-100 uppercase font-bold tracking-widest mb-2">Your Sponsor Handle</div>
-                            <div className="flex gap-2 items-center bg-black/20 rounded-xl p-3 text-sm font-mono text-white truncate w-full mb-4 border border-white/10">
-                                <span className="truncate w-full text-center tracking-wide">{currentUser.handle}</span>
+                            <div className="text-[10px] text-emerald-100 uppercase font-bold tracking-widest mb-2">Your Invite Link</div>
+                            <div className="flex gap-2 items-center bg-black/20 rounded-xl p-1 text-sm font-mono text-white w-full border border-white/10 pl-3">
+                                <span className="truncate w-full tracking-wide text-xs">{inviteLink}</span>
+                                <button 
+                                    onClick={copyToClipboard}
+                                    className="bg-white text-emerald-700 p-2 rounded-lg hover:bg-emerald-50 transition-colors flex-shrink-0"
+                                    title="Copy Link"
+                                >
+                                    <ClipboardIcon />
+                                </button>
                             </div>
-                            <Link to="/join" className="block w-full bg-white text-emerald-700 text-center py-3 rounded-xl font-bold hover:bg-emerald-50 transition-all shadow-lg transform hover:-translate-y-0.5 text-sm">
-                                Open Enrollment Form
+                            <Link to="/join" className="block w-full text-emerald-100 text-center py-2 mt-2 text-xs hover:text-white underline">
+                                Preview Form
                             </Link>
                         </div>
                     </div>

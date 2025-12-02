@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { SalesPage } from '../../types/salesPage';
 import { Plus, X } from 'lucide-react';
@@ -33,7 +32,7 @@ const FeaturesList: React.FC<FeaturesListProps> = ({ data, onChange }) => {
           onChange={(e) => setNewFeature(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && addFeature()}
           placeholder="e.g. 100% Organic Aloe Vera"
-          className="flex-1 p-2 border border-slate-200 rounded-lg text-sm outline-none focus:border-emerald-500"
+          className="flex-1 p-2 border border-slate-200 rounded-lg text-sm outline-none focus:border-emerald-500 text-slate-900 bg-white"
         />
         <button 
           onClick={addFeature}
@@ -45,7 +44,7 @@ const FeaturesList: React.FC<FeaturesListProps> = ({ data, onChange }) => {
       <ul className="space-y-2">
         {data.features.map((feat, idx) => (
           <li key={idx} className="flex justify-between items-center bg-slate-50 p-2 rounded-lg text-sm border border-slate-100">
-            <span>{feat}</span>
+            <span className="text-slate-700">{feat}</span>
             <button onClick={() => removeFeature(idx)} className="text-slate-400 hover:text-red-500">
               <X size={14} />
             </button>

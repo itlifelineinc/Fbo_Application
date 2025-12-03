@@ -1,6 +1,5 @@
-
 import React, { useState, useEffect } from 'react';
-import { HashRouter, Routes, Route, Navigate, Link, useParams } from 'react-router-dom';
+import { HashRouter, Routes, Route, Navigate, Link } from 'react-router-dom';
 import Layout from './components/Layout';
 import Dashboard from './components/Dashboard';
 import CourseBuilder from './components/CourseBuilder';
@@ -13,7 +12,7 @@ import ChatPortal from './components/ChatPortal';
 import CommunityPortal from './components/CommunityPortal';
 import Login from './components/Login';
 import CourseReview from './components/CourseReview';
-import SalesPageBuilder from './pages/SalesPageBuilder';
+import SalesPageBuilder from './pages/SalesPageBuilder'; 
 import { INITIAL_COURSES, INITIAL_STUDENTS, INITIAL_MESSAGES, INITIAL_POSTS, INITIAL_COHORTS } from './constants';
 import { Course, Module, Student, SaleRecord, UserRole, Message, CourseTrack, CommunityPost, CommunityComment, Cohort, CourseStatus } from './types';
 
@@ -38,103 +37,13 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, currentUser, 
   );
 };
 
-// --- Course Modules List Component ---
+const CourseList: React.FC<{ courses: Course[], currentUser: Student }> = ({ courses, currentUser }) => {
+  // Check if currentUser exists before rendering to avoid crash
+  if (!currentUser) return null;
 
-const CourseModulesList: React.FC<{ courses: Course[] }> = ({ courses }) => {
-  const { courseId } = useParams();
-  const course = courses.find(c => c.id === courseId);
+  const publishedCourses = courses.filter(c => c.status === CourseStatus.PUBLISHED);
 
-  if (!course) return <div className="p-10 text-center text-slate-500 dark:text-slate-400">Course not found</div>;
-
-  return (
-    <div className="space-y-8 animate-fade-in">
-       {/* Header with Back Button */}
-       <div className="flex flex-col gap-4">
-          <Link to="/courses" className="text-slate-500 hover:text-emerald-600 font-bold flex items-center gap-2 w-fit transition-colors dark:text-slate-400 dark:hover:text-emerald-400">
-             <span className="text-lg">←</span> Back to Enrolled Courses
-          </Link>
-          <div>
-            <span className="text-emerald-600 font-bold tracking-wider text-xs uppercase mb-2 block dark:text-emerald-400">{course.track}</span>
-            <h1 className="text-3xl font-bold text-emerald-950 font-heading dark:text-white">{course.title}</h1>
-            <p className="text-slate-600 mt-2 max-w-3xl leading-relaxed dark:text-slate-300">{course.description}</p>
-          </div>
-       </div>
-
-       <h2 className="text-xl font-bold text-slate-800 border-l-4 border-emerald-500 pl-3 font-heading dark:text-slate-200">Course Modules</h2>
-
-       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {course.modules?.map((module, index) => (
-            <div key={module.id} className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden flex flex-col group hover:shadow-md transition-shadow dark:bg-slate-800 dark:border-slate-700">
-               {/* Module Image */}
-               <div className="h-40 overflow-hidden relative bg-slate-100 dark:bg-slate-700">
-                  <img 
-                    src={module.coverImageUrl || course.thumbnailUrl} 
-                    alt={module.title} 
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
-                  <div className="absolute top-3 left-3 bg-white/20 backdrop-blur-md text-white text-xs font-bold px-3 py-1 rounded-full border border-white/20 shadow-sm">
-                     Module {index + 1}
-                  </div>
-               </div>
-               
-               <div className="p-6 flex-1 flex flex-col">
-                  <h3 className="text-xl font-bold text-slate-800 mb-2 font-heading dark:text-white">{module.title}</h3>
-                  <p className="text-sm text-slate-500 mb-6 flex-1 line-clamp-3 dark:text-slate-400">{module.summary || "Master this section to advance your FBO journey."}</p>
-                  
-                  <div className="mt-auto pt-4 border-t border-slate-50 dark:border-slate-700 flex items-center justify-between">
-                     <span className="text-xs font-bold text-slate-400 uppercase tracking-wider dark:text-slate-500">{module.chapters.length} Lessons</span>
-                     {module.chapters.length > 0 ? (
-                        <Link 
-                            to={`/classroom/${course.id}/${module.id}/${module.chapters[0].id}`}
-                            className="bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold px-6 py-2 rounded-xl transition-colors shadow-sm dark:bg-emerald-600 dark:hover:bg-emerald-500"
-                        >
-                            Start Module
-                        </Link>
-                     ) : (
-                        <button disabled className="bg-slate-100 text-slate-400 text-sm font-bold px-6 py-2 rounded-xl cursor-not-allowed dark:bg-slate-700 dark:text-slate-500">Coming Soon</button>
-                     )}
-                  </div>
-               </div>
-            </div>
-          ))}
-       </div>
-    </div>
-  );
-};
-
-const CourseList: React.FC<{ courses: Course[]; mode?: 'GLOBAL' | 'TEAM' | 'ENROLLED'; currentUser?: Student }> = ({ courses, mode = 'ENROLLED', currentUser }) => {
-  // Filter courses based on mode
-  const filteredCourses = courses.filter(course => {
-      // 1. Enrolled (My Classroom): User has started it OR it's a basic course
-      if (mode === 'ENROLLED') {
-          // Simplified: Show all published courses for now, or check progress
-          // In real app, check currentUser.enrolledCourses
-          return course.status === CourseStatus.PUBLISHED;
-      }
-
-      // 2. Global Library: Public, Published, Reviewed
-      if (mode === 'GLOBAL') {
-          return course.status === CourseStatus.PUBLISHED && !course.settings.teamOnly;
-      }
-
-      // 3. Team Training: Private, belongs to Sponsor OR User is Author
-      if (mode === 'TEAM') {
-          // Super Admin sees all private courses here
-          if (currentUser?.role === UserRole.SUPER_ADMIN) {
-              return course.settings.teamOnly; 
-          }
-          
-          const isMySponsorAuthor = course.authorHandle === currentUser?.sponsorId;
-          const isMeAuthor = course.authorHandle === currentUser?.handle;
-          
-          return course.settings.teamOnly && (isMySponsorAuthor || isMeAuthor);
-      }
-
-      return false;
-  });
-
-  const coursesByTrack = filteredCourses.reduce((acc, course) => {
+  const coursesByTrack = publishedCourses.reduce((acc, course) => {
     if (!acc[course.track]) {
       acc[course.track] = [];
     }
@@ -142,29 +51,32 @@ const CourseList: React.FC<{ courses: Course[]; mode?: 'GLOBAL' | 'TEAM' | 'ENRO
     return acc;
   }, {} as Record<string, Course[]>);
 
-  const getTitle = () => {
-      if (mode === 'GLOBAL') return 'Global Training Library';
-      if (mode === 'TEAM') return 'Team Training Portal';
-      return 'My Classroom';
-  };
+  // Helper to generate the correct link
+  const getResumeLink = (course: Course) => {
+      // 1. If user has a tracked last accessed point for this course, go there
+      if (currentUser?.lastAccessed && currentUser.lastAccessed.courseId === course.id) {
+          return `/classroom/${course.id}/${currentUser.lastAccessed.moduleId}/${currentUser.lastAccessed.chapterId}`;
+      }
+      
+      // 2. Default to first chapter of first module
+      if (course.modules.length > 0 && course.modules[0].chapters.length > 0) {
+          return `/classroom/${course.id}/${course.modules[0].id}/${course.modules[0].chapters[0].id}`;
+      }
 
-  const getSubtitle = () => {
-      if (mode === 'GLOBAL') return 'Master the skills you need with courses from top leaders worldwide.';
-      if (mode === 'TEAM') return 'Exclusive strategies and training from your direct sponsorship team.';
-      return 'Continue your learning journey.';
+      return '#'; // Fallback
   };
 
   return (
     <div className="space-y-10 animate-fade-in">
        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-emerald-950 font-heading dark:text-emerald-400">{getTitle()}</h1>
-          <p className="text-emerald-700 mt-2 dark:text-emerald-300">{getSubtitle()}</p>
+          <h1 className="text-3xl font-bold text-emerald-950 font-heading dark:text-emerald-400">Training Portal</h1>
+          <p className="text-emerald-700 mt-2 dark:text-emerald-300">Master the skills you need to grow your Forever business.</p>
        </div>
 
-       {filteredCourses.length === 0 ? (
-           <div className="text-center py-20 bg-slate-50 rounded-2xl border border-dashed border-slate-200 dark:bg-slate-800/50 dark:border-slate-700">
-               <p className="text-slate-500 font-medium dark:text-slate-400">No courses found in this portal.</p>
-               {mode === 'TEAM' && <p className="text-sm text-slate-400 mt-2">Ask your sponsor to publish training content!</p>}
+       {Object.keys(coursesByTrack).length === 0 ? (
+           <div className="text-center py-20 bg-white rounded-2xl border border-dashed border-slate-200 dark:bg-slate-800 dark:border-slate-700">
+               <p className="text-slate-500 text-lg dark:text-slate-400">No courses available yet.</p>
+               <p className="text-slate-400 text-sm mt-2 dark:text-slate-500">Check back later for updates.</p>
            </div>
        ) : (
            Object.keys(coursesByTrack).map((track) => (
@@ -177,25 +89,21 @@ const CourseList: React.FC<{ courses: Course[]; mode?: 'GLOBAL' | 'TEAM' | 'ENRO
                           <img src={course.thumbnailUrl} alt={course.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                           <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
                           <div className="absolute bottom-3 left-4 text-white font-bold font-heading text-lg shadow-black/50 drop-shadow-md">{course.title}</div>
-                          {course.settings.teamOnly && (
-                              <div className="absolute top-3 right-3 bg-yellow-400 text-yellow-900 text-[10px] font-bold px-2 py-1 rounded shadow-sm uppercase tracking-wide">
-                                  Team Exclusive
-                              </div>
-                          )}
                       </div>
                       <div className="p-6 flex-1 flex flex-col">
                           <p className="text-sm text-slate-500 mb-4 flex-1 line-clamp-2 dark:text-slate-400">{course.description}</p>
                           
-                          <div className="mt-auto">
-                            <div className="flex justify-between items-center mb-4">
-                                <div className="text-xs font-semibold text-slate-400 uppercase tracking-wider dark:text-slate-500">Modules ({course.modules?.length || 0})</div>
-                                <div className="text-xs text-slate-400 dark:text-slate-500">By: {course.authorHandle}</div>
+                          <div className="space-y-4 mt-auto">
+                            <div className="flex justify-between items-center text-xs text-slate-400 dark:text-slate-500">
+                                <span>{course.modules?.length || 0} Modules</span>
+                                <span>By {course.authorHandle}</span>
                             </div>
+                            
                             <Link 
-                                to={`/courses/${course.id}/modules`}
-                                className="w-full block text-center bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-xl transition-colors shadow-sm dark:bg-emerald-600 dark:hover:bg-emerald-500"
+                                to={getResumeLink(course)}
+                                className="block w-full text-center bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-xl transition-colors shadow-sm"
                             >
-                                Start Learning
+                                {currentUser.lastAccessed?.courseId === course.id ? 'Continue Learning' : 'Start Course'}
                             </Link>
                           </div>
                       </div>
@@ -219,10 +127,8 @@ const App: React.FC = () => {
   const [cohorts, setCohorts] = useState<Cohort[]>(INITIAL_COHORTS);
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
   
-  // Auth State
   const [currentUser, setCurrentUser] = useState<Student | null>(null);
 
-  // Theme Effect
   useEffect(() => {
     if (theme === 'dark') {
       document.documentElement.classList.add('dark');
@@ -235,9 +141,7 @@ const App: React.FC = () => {
     setTheme(prev => prev === 'light' ? 'dark' : 'light');
   };
 
-  // 1. Authentication
   const handleLogin = async (handle: string, pass: string): Promise<boolean> => {
-    // Instant check against local state (Fallback Logic)
     const formattedHandle = handle.startsWith('@') ? handle : `@${handle}`;
     const user = students.find(s => 
       s.handle.toLowerCase() === formattedHandle.toLowerCase() && 
@@ -278,7 +182,6 @@ const App: React.FC = () => {
     setCurrentUser(null);
   };
 
-  // 2. Data Management
   const handleSubmitCourse = (newCourse: Course) => {
       setCourses(prev => [...prev, newCourse]);
   };
@@ -325,28 +228,20 @@ const App: React.FC = () => {
 
   const handleLikePost = (postId: string) => {
     if (!currentUser) return;
-
     setPosts(prev => prev.map(p => {
         if (p.id === postId) {
             const hasLiked = p.likedBy.includes(currentUser.handle);
             const newLikedBy = hasLiked 
                 ? p.likedBy.filter(h => h !== currentUser.handle) 
                 : [...p.likedBy, currentUser.handle]; 
-            
-            return { 
-                ...p, 
-                likedBy: newLikedBy, 
-                likes: newLikedBy.length 
-            };
+            return { ...p, likedBy: newLikedBy, likes: newLikedBy.length };
         }
         return p;
     }));
   };
 
   const handleAddComment = (postId: string, comment: CommunityComment) => {
-      setPosts(prev => prev.map(p => 
-          p.id === postId ? { ...p, comments: [...p.comments, comment] } : p
-      ));
+      setPosts(prev => prev.map(p => p.id === postId ? { ...p, comments: [...p.comments, comment] } : p));
   };
 
   const handleUpdateStats = (seconds: number, questions: number) => {
@@ -364,16 +259,31 @@ const App: React.FC = () => {
     handleUpdateStudent(updatedStudent);
   };
 
-  const handleCompleteLesson = (moduleId: string) => {
+  const handleCompleteLesson = (moduleId: string, chapterId: string) => {
      if(!currentUser) return;
-     if(!currentUser.completedModules?.includes(moduleId)) {
-         const updatedStudent = {
-             ...currentUser,
-             completedModules: [...(currentUser.completedModules || []), moduleId],
-             progress: Math.min(100, (currentUser.progress || 0) + 5)
-         };
-         handleUpdateStudent(updatedStudent);
+     
+     // 1. Calculate course ID based on where this module lives
+     const course = courses.find(c => c.modules.some(m => m.id === moduleId));
+     if (!course) return;
+
+     // 2. Prepare update object
+     let updatedStudent = { ...currentUser };
+
+     // 3. Mark Chapter as Completed if not already
+     if(!updatedStudent.completedChapters.includes(chapterId)) {
+         updatedStudent.completedChapters = [...updatedStudent.completedChapters, chapterId];
+         // Simple progress calc: just +1% for demo, or real math
+         updatedStudent.progress = Math.min(100, (updatedStudent.progress || 0) + 1); 
      }
+
+     // 4. Update "Last Accessed" to this chapter (so they return here or next)
+     updatedStudent.lastAccessed = {
+         courseId: course.id,
+         moduleId: moduleId,
+         chapterId: chapterId
+     };
+
+     handleUpdateStudent(updatedStudent);
   };
 
   return (
@@ -464,43 +374,22 @@ const App: React.FC = () => {
              <ProtectedRoute currentUser={currentUser} onLogout={handleLogout} theme={theme} onToggleTheme={toggleTheme}>
                 {(currentUser?.role === UserRole.ADMIN || currentUser?.role === UserRole.SUPER_ADMIN || currentUser?.role === UserRole.SPONSOR) ? (
                     <CourseBuilder 
-                        currentUserHandle={currentUser!.handle} 
+                        currentUserHandle={currentUser?.handle || ''} 
                         onSubmitCourse={handleSubmitCourse} 
                     />
                 ) : <Navigate to="/dashboard" />}
              </ProtectedRoute>
         } />
 
-        {/* New Route for Sales Page Builder - Accessible to all logged-in users for demo purposes */}
         <Route path="/sales-builder" element={
              <ProtectedRoute currentUser={currentUser} onLogout={handleLogout} theme={theme} onToggleTheme={toggleTheme}>
                 <SalesPageBuilder />
              </ProtectedRoute>
         } />
         
-        {/* Main "My Classroom" Route */}
         <Route path="/courses" element={
             <ProtectedRoute currentUser={currentUser} onLogout={handleLogout} theme={theme} onToggleTheme={toggleTheme}>
-                <CourseList courses={courses} mode="ENROLLED" currentUser={currentUser!} />
-            </ProtectedRoute>
-        } />
-
-        {/* New Split Portals */}
-        <Route path="/training/global" element={
-            <ProtectedRoute currentUser={currentUser} onLogout={handleLogout} theme={theme} onToggleTheme={toggleTheme}>
-                <CourseList courses={courses} mode="GLOBAL" currentUser={currentUser!} />
-            </ProtectedRoute>
-        } />
-
-        <Route path="/training/team" element={
-            <ProtectedRoute currentUser={currentUser} onLogout={handleLogout} theme={theme} onToggleTheme={toggleTheme}>
-                <CourseList courses={courses} mode="TEAM" currentUser={currentUser!} />
-            </ProtectedRoute>
-        } />
-
-        <Route path="/courses/:courseId/modules" element={
-            <ProtectedRoute currentUser={currentUser} onLogout={handleLogout} theme={theme} onToggleTheme={toggleTheme}>
-                <CourseModulesList courses={courses} />
+                <CourseList courses={courses} currentUser={currentUser!} />
             </ProtectedRoute>
         } />
         
@@ -510,6 +399,7 @@ const App: React.FC = () => {
                     courses={courses} 
                     onCompleteLesson={handleCompleteLesson} 
                     onUpdateStats={handleUpdateStats}
+                    completedChapters={currentUser?.completedChapters || []}
                 />
             </ProtectedRoute>
         } />

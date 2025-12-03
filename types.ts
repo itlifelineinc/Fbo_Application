@@ -38,13 +38,23 @@ export interface QuizQuestion {
   correctAnswer: number; // Index
 }
 
+export type BlockType = 'paragraph' | 'heading' | 'image' | 'list' | 'quote' | 'callout';
+
+export interface ContentBlock {
+  id: string;
+  type: BlockType;
+  content: string; // Text content or Image URL
+  style?: 'h1' | 'h2' | 'h3' | 'bullet' | 'number' | 'info' | 'warning' | 'tip'; // Sub-styles
+}
+
 export interface Chapter {
   id: string;
   title: string;
   type?: 'VIDEO' | 'TEXT';
   headerImageUrl?: string;
   summary?: string;
-  content: string; // Rich text / Markdown
+  content: string; // Fallback HTML/Markdown string
+  blocks?: ContentBlock[]; // Structured content
   videoUrl?: string; // Link or Upload
   pdfUrl?: string;
   durationMinutes: number;
@@ -112,6 +122,14 @@ export interface Student {
   progress: number; 
   completedModules: string[]; // IDs of completed modules
   completedChapters: string[]; // IDs of completed chapters
+  
+  // Track where the student left off
+  lastAccessed?: {
+    courseId: string;
+    moduleId: string;
+    chapterId: string;
+  };
+
   sponsorId?: string;
   caseCredits: number;
   avatarUrl?: string;

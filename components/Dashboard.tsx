@@ -78,6 +78,9 @@ interface DashboardProps {
 // --- Main Component ---
 
 const Dashboard: React.FC<DashboardProps> = ({ students, currentUser, courses, onReviewCourse }) => {
+  // Guard clause against null user
+  if (!currentUser) return null;
+
   const navigate = useNavigate();
   const isStudent = currentUser.role === UserRole.STUDENT;
   const isSponsor = currentUser.role === UserRole.SPONSOR;
@@ -105,8 +108,11 @@ const Dashboard: React.FC<DashboardProps> = ({ students, currentUser, courses, o
   }));
 
   // Personal Progress Data (Pie Chart)
-  const allModules = courses.flatMap(c => c.modules || []);
+  // Safely handle missing courses or modules array
+  const safeCourses = courses || [];
+  const allModules = safeCourses.flatMap(c => c.modules || []);
   const totalModulesCount = allModules.length;
+  // Safely access completedModules with fallback
   const completedCount = currentUser.completedModules ? currentUser.completedModules.length : 0;
   const remainingCount = Math.max(0, totalModulesCount - completedCount);
   const calculatedProgress = totalModulesCount > 0 ? Math.round((completedCount / totalModulesCount) * 100) : 0;
@@ -126,14 +132,15 @@ const Dashboard: React.FC<DashboardProps> = ({ students, currentUser, courses, o
   };
 
   // Recommended Courses Logic
-  const recommendedCourses = courses.filter(course => {
+  const recommendedCourses = safeCourses.filter(course => {
       if (!course.modules) return false;
       
       // Only show Published or Under Review (for admins)
       if (course.status !== CourseStatus.PUBLISHED && !isAdmin) return false;
       
-      // Safely check completion using optional chaining
-      const isCompleted = course.modules.every(m => currentUser.completedModules?.includes(m.id));
+      // Safely check completion using optional chaining and array default
+      const userCompletedModules = currentUser.completedModules || [];
+      const isCompleted = course.modules.every(m => userCompletedModules.includes(m.id));
       if (isCompleted) return false;
       
       if (isStudent) return [CourseTrack.BASICS, CourseTrack.PRODUCT, CourseTrack.RANK].includes(course.track);
@@ -141,10 +148,10 @@ const Dashboard: React.FC<DashboardProps> = ({ students, currentUser, courses, o
   }).slice(0, 2);
 
   // Pending Courses Logic (For Admins)
-  const pendingCourses = courses.filter(c => c.status === CourseStatus.UNDER_REVIEW);
+  const pendingCourses = safeCourses.filter(c => c.status === CourseStatus.UNDER_REVIEW);
 
   // All Private Courses Logic (For Super Admin)
-  const allPrivateCourses = courses.filter(c => c.settings.teamOnly === true);
+  const allPrivateCourses = safeCourses.filter(c => c.settings?.teamOnly === true);
 
   // Invite Link
   const inviteLink = `${window.location.origin}${window.location.pathname}#/join?sponsor=${currentUser.handle.replace('@','')}`;
@@ -290,7 +297,7 @@ const Dashboard: React.FC<DashboardProps> = ({ students, currentUser, courses, o
                                             <td className="px-4 py-3 text-slate-500 dark:text-slate-400">{course.authorHandle}</td>
                                             <td className="px-4 py-3 text-slate-500 dark:text-slate-400">{course.modules.length}</td>
                                             <td className="px-4 py-3">
-                                                <Link to={`/courses/${course.id}/modules`} className="text-emerald-600 hover:underline dark:text-emerald-400 font-medium text-xs">
+                                                <Link to={`/courses`} className="text-emerald-600 hover:underline dark:text-emerald-400 font-medium text-xs">
                                                     Inspect
                                                 </Link>
                                             </td>
@@ -312,8 +319,13 @@ const Dashboard: React.FC<DashboardProps> = ({ students, currentUser, courses, o
                     <div className="space-y-4">
                     {recommendedCourses.map(course => {
                         const totalCourseModules = course.modules?.length || 0;
-                        const completedInCourse = course.modules?.filter(m => currentUser.completedModules?.includes(m.id)).length || 0;
+                        const userCompletedModules = currentUser.completedModules || [];
+                        const completedInCourse = course.modules?.filter(m => userCompletedModules.includes(m.id)).length || 0;
                         const courseProgress = totalCourseModules > 0 ? Math.round((completedInCourse / totalCourseModules) * 100) : 0;
+
+                        // Safely get first module and chapter for link
+                        const firstModuleId = course.modules?.[0]?.id || 'unknown';
+                        const firstChapterId = course.modules?.[0]?.chapters?.[0]?.id || 'unknown';
 
                         return (
                         <div key={course.id} className="border border-slate-100 rounded-2xl p-5 hover:bg-slate-50 transition-all flex flex-col sm:flex-row sm:items-center gap-5 dark:border-slate-700 dark:hover:bg-slate-700/50">
@@ -337,7 +349,7 @@ const Dashboard: React.FC<DashboardProps> = ({ students, currentUser, courses, o
                             </div>
 
                             <Link 
-                                to={`/classroom/${course.id}/${course.modules?.[0]?.id}/${course.modules?.[0]?.chapters?.[0]?.id}`}
+                                to={`/classroom/${course.id}/${firstModuleId}/${firstChapterId}`}
                                 className="w-full sm:w-auto bg-slate-900 text-white text-sm font-bold py-3 px-6 rounded-xl hover:bg-slate-800 transition-colors text-center whitespace-nowrap shadow-md shadow-slate-200 dark:bg-emerald-600 dark:hover:bg-emerald-700 dark:shadow-none"
                             >
                                 {courseProgress === 0 ? 'Start Learning' : 'Continue'}

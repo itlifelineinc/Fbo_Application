@@ -93,6 +93,19 @@ const MediaInput: React.FC<{
     }
   };
 
+  const handleTextChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+      const val = e.target.value;
+      // Extract YouTube Thumbnail
+      const ytRegex = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+      const match = val.match(ytRegex);
+      
+      if (match && match[2].length === 11) {
+          onChange(`https://img.youtube.com/vi/${match[2]}/maxresdefault.jpg`);
+      } else {
+          onChange(val);
+      }
+  };
+
   return (
     <div className="space-y-2 w-full">
       {label && (
@@ -106,13 +119,20 @@ const MediaInput: React.FC<{
       )}
 
       {mode === 'LINK' ? (
-        <input 
-          type="text" 
-          value={value}
-          onChange={e => onChange(e.target.value)}
-          className={`w-full border border-slate-200 rounded-lg bg-white text-slate-900 outline-none focus:border-emerald-500 dark:bg-slate-800 dark:border-slate-700 dark:text-white ${compact ? 'p-2 text-xs' : 'p-3'}`}
-          placeholder={placeholder}
-        />
+        <div className="space-y-2">
+            <input 
+                type="text" 
+                value={value}
+                onChange={handleTextChange}
+                className={`w-full border border-slate-200 rounded-lg bg-white text-slate-900 outline-none focus:border-emerald-500 dark:bg-slate-800 dark:border-slate-700 dark:text-white ${compact ? 'p-2 text-xs' : 'p-3'}`}
+                placeholder={placeholder}
+            />
+            {value && !compact && (
+                <div className="relative h-40 w-full bg-slate-50 rounded-lg overflow-hidden border border-slate-200 dark:bg-slate-800 dark:border-slate-700">
+                    <img src={value} alt="Preview" className="w-full h-full object-cover" onError={(e) => (e.currentTarget.style.display = 'none')} />
+                </div>
+            )}
+        </div>
       ) : (
         <div 
           onClick={() => fileInputRef.current?.click()}

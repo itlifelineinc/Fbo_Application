@@ -37,6 +37,13 @@ const getEmptyCourse = (authorHandle: string): Course => ({
 // --- TEMPLATES DEFINITION ---
 const TEMPLATES: {id: string, name: string, description: string, icon: any, blocks: ContentBlock[]}[] = [
     {
+        id: 'blank',
+        name: 'Start from Scratch',
+        description: 'Start fresh with an empty canvas.',
+        icon: FileText,
+        blocks: []
+    },
+    {
         id: 'hook-story',
         name: 'The "Hook & Story"',
         description: 'Engage emotionally. Best for introductions and vision sharing.',

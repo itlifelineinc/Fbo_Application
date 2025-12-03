@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { HashRouter, Routes, Route, Navigate, Link } from 'react-router-dom';
 import Layout from './components/Layout';
@@ -12,7 +13,7 @@ import ChatPortal from './components/ChatPortal';
 import CommunityPortal from './components/CommunityPortal';
 import Login from './components/Login';
 import CourseReview from './components/CourseReview';
-import SalesPageBuilder from './pages/SalesPageBuilder'; 
+import SalesPageBuilder from './pages/SalesPageBuilder'; // Import the new page
 import { INITIAL_COURSES, INITIAL_STUDENTS, INITIAL_MESSAGES, INITIAL_POSTS, INITIAL_COHORTS } from './constants';
 import { Course, Module, Student, SaleRecord, UserRole, Message, CourseTrack, CommunityPost, CommunityComment, Cohort, CourseStatus } from './types';
 

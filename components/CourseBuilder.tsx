@@ -2,7 +2,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Course, Module, Chapter, CourseTrack, CourseLevel, CourseStatus, ContentBlock, BlockType } from '../types';
-import { Eye, X, PlayCircle, FileText, HelpCircle, ChevronDown, ChevronRight, CheckCircle, Menu, BookOpen, Clock, Plus, Trash2, ArrowUp, ArrowDown, LayoutTemplate, Type, Image as ImageIcon, List, Quote, AlertCircle, ArrowLeft } from 'lucide-react';
+import { Eye, X, PlayCircle, FileText, HelpCircle, ChevronDown, ChevronRight, CheckCircle, Menu, BookOpen, Clock, Plus, Trash2, ArrowUp, ArrowDown, LayoutTemplate, Type, Image as ImageIcon, List, Quote, AlertCircle, ArrowLeft, ShoppingBag, Users, Sparkles, Save } from 'lucide-react';
 
 interface CourseBuilderProps {
   currentUserHandle: string;
@@ -35,40 +35,62 @@ const getEmptyCourse = (authorHandle: string): Course => ({
 });
 
 // --- TEMPLATES DEFINITION ---
-const TEMPLATES: {id: string, name: string, icon: any, blocks: ContentBlock[]}[] = [
+const TEMPLATES: {id: string, name: string, description: string, icon: any, blocks: ContentBlock[]}[] = [
     {
         id: 'blank',
         name: 'Blank Slate',
+        description: 'Start fresh with an empty canvas.',
         icon: FileText,
         blocks: []
     },
     {
         id: 'standard',
         name: 'Standard Lesson',
+        description: 'Classic lecture format with intro & summary.',
         icon: BookOpen,
         blocks: [
             { id: '1', type: 'heading', style: 'h2', content: 'Introduction' },
-            { id: '2', type: 'paragraph', content: 'Start with a hook to grab the students attention.' },
+            { id: '2', type: 'paragraph', content: 'Start with a hook to grab the students attention and explain what they will learn.' },
             { id: '3', type: 'image', content: '' },
-            { id: '4', type: 'heading', style: 'h2', content: 'Key Concepts' },
-            { id: '5', type: 'paragraph', content: 'Explain the core material here.' },
-            { id: '6', type: 'callout', style: 'tip', content: 'Pro Tip: Remember to emphasize this point.' }
+            { id: '4', type: 'heading', style: 'h2', content: 'Core Concepts' },
+            { id: '5', type: 'paragraph', content: 'Explain the main topic in detail here. Break it down into digestible parts.' },
+            { id: '6', type: 'callout', style: 'tip', content: 'Pro Tip: Remember to emphasize this key takeaway.' }
         ]
     },
     {
         id: 'case-study',
         name: 'Case Study',
-        icon: CheckCircle,
+        description: 'Real-world scenario analysis.',
+        icon: Users,
         blocks: [
             { id: '1', type: 'heading', style: 'h2', content: 'The Scenario' },
-            { id: '2', type: 'paragraph', content: 'Describe the situation or problem the FBO faced.' },
-            { id: '3', type: 'quote', content: 'Include a direct quote from the person involved.' },
-            { id: '4', type: 'heading', style: 'h3', content: 'The Solution' },
-            { id: '5', type: 'list', style: 'bullet', content: 'Step 1: Identified the need\nStep 2: Recommended product\nStep 3: Followed up' },
-            { id: '6', type: 'callout', style: 'info', content: 'Result: 2CC achieved in one week.' }
+            { id: '2', type: 'paragraph', content: 'Describe a specific situation or problem an FBO faced in the field.' },
+            { id: '3', type: 'quote', content: 'Include a direct quote from the person involved to add authenticity.' },
+            { id: '4', type: 'heading', style: 'h3', content: 'The Approach' },
+            { id: '5', type: 'list', style: 'bullet', content: 'Step 1: Identified the customer need\nStep 2: Recommended the C9 Pack\nStep 3: Followed up after 3 days' },
+            { id: '6', type: 'callout', style: 'info', content: 'Result: 2CC achieved in one week and a loyal customer gained.' }
+        ]
+    },
+    {
+        id: 'product-spotlight',
+        name: 'Product Spotlight',
+        description: 'Deep dive into a specific product.',
+        icon: ShoppingBag,
+        blocks: [
+            { id: '1', type: 'heading', style: 'h2', content: 'Product Overview' },
+            { id: '2', type: 'image', content: '' },
+            { id: '3', type: 'paragraph', content: 'Briefly describe what the product is and who it is for.' },
+            { id: '4', type: 'heading', style: 'h3', content: 'Key Benefits' },
+            { id: '5', type: 'list', style: 'bullet', content: 'Benefit 1: Supports immune health\nBenefit 2: High in vitamins\nBenefit 3: Great taste' },
+            { id: '6', type: 'callout', style: 'warning', content: 'Compliance Note: Do not make medical claims.' }
         ]
     }
 ];
+
+// --- STYLES ---
+const INPUT_CLASS = "w-full bg-slate-50 border border-transparent focus:bg-white focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 rounded-xl px-4 py-3 outline-none transition-all duration-200 font-medium text-slate-700 placeholder-slate-400 dark:bg-slate-900 dark:text-white dark:border-slate-800 dark:focus:border-emerald-500";
+const LABEL_CLASS = "block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 ml-1 dark:text-slate-500";
+const CARD_CLASS = "bg-white rounded-3xl p-8 shadow-xl shadow-slate-200/50 border border-slate-100 dark:bg-slate-800 dark:border-slate-700 dark:shadow-none";
 
 // --- REUSABLE MEDIA INPUT COMPONENT (Link vs Upload) ---
 const MediaInput: React.FC<{ 
@@ -109,26 +131,26 @@ const MediaInput: React.FC<{
   return (
     <div className="space-y-2 w-full">
       {label && (
-          <div className="flex justify-between items-center">
-            <label className="block text-sm font-bold text-slate-700 dark:text-slate-300">{label}</label>
+          <div className="flex justify-between items-center mb-1">
+            <label className={LABEL_CLASS}>{label}</label>
             <div className="flex bg-slate-100 rounded-lg p-0.5 dark:bg-slate-700">
-            <button onClick={() => setMode('LINK')} className={`px-2 py-0.5 text-xs font-bold rounded-md transition-all ${mode === 'LINK' ? 'bg-white shadow-sm dark:bg-slate-600' : 'text-slate-500'}`}>Link</button>
-            <button onClick={() => setMode('UPLOAD')} className={`px-2 py-0.5 text-xs font-bold rounded-md transition-all ${mode === 'UPLOAD' ? 'bg-white shadow-sm dark:bg-slate-600' : 'text-slate-500'}`}>Upload</button>
+            <button onClick={() => setMode('LINK')} className={`px-2 py-0.5 text-[10px] font-bold rounded-md transition-all ${mode === 'LINK' ? 'bg-white shadow-sm text-slate-800 dark:bg-slate-600 dark:text-white' : 'text-slate-400 hover:text-slate-600'}`}>Link</button>
+            <button onClick={() => setMode('UPLOAD')} className={`px-2 py-0.5 text-[10px] font-bold rounded-md transition-all ${mode === 'UPLOAD' ? 'bg-white shadow-sm text-slate-800 dark:bg-slate-600 dark:text-white' : 'text-slate-400 hover:text-slate-600'}`}>Upload</button>
             </div>
           </div>
       )}
 
       {mode === 'LINK' ? (
-        <div className="space-y-2">
+        <div className="space-y-3">
             <input 
                 type="text" 
                 value={value}
                 onChange={handleTextChange}
-                className={`w-full border border-slate-200 rounded-lg bg-white text-slate-900 outline-none focus:border-emerald-500 dark:bg-slate-800 dark:border-slate-700 dark:text-white ${compact ? 'p-2 text-xs' : 'p-3'}`}
+                className={compact ? INPUT_CLASS.replace('px-4 py-3', 'px-3 py-2 text-sm') : INPUT_CLASS}
                 placeholder={placeholder}
             />
             {value && !compact && (
-                <div className="relative h-40 w-full bg-slate-50 rounded-lg overflow-hidden border border-slate-200 dark:bg-slate-800 dark:border-slate-700">
+                <div className="relative h-48 w-full bg-slate-50 rounded-2xl overflow-hidden border border-slate-200 dark:bg-slate-800 dark:border-slate-700">
                     <img src={value} alt="Preview" className="w-full h-full object-cover" onError={(e) => (e.currentTarget.style.display = 'none')} />
                 </div>
             )}
@@ -136,16 +158,16 @@ const MediaInput: React.FC<{
       ) : (
         <div 
           onClick={() => fileInputRef.current?.click()}
-          className={`w-full border-2 border-dashed border-slate-300 rounded-lg bg-slate-50 hover:bg-emerald-50 cursor-pointer flex items-center justify-center text-slate-400 dark:bg-slate-700/50 dark:border-slate-600 ${compact ? 'py-2' : 'aspect-video'}`}
+          className={`w-full border-2 border-dashed border-slate-200 rounded-2xl bg-slate-50 hover:bg-emerald-50 hover:border-emerald-300 transition-all cursor-pointer flex items-center justify-center text-slate-400 dark:bg-slate-700/50 dark:border-slate-600 dark:hover:border-emerald-500 ${compact ? 'py-3' : 'aspect-video'}`}
         >
            {value ? (
              <div className="relative w-full h-full p-2">
-                <img src={value} alt="Preview" className="w-full h-full object-contain rounded" />
+                <img src={value} alt="Preview" className="w-full h-full object-contain rounded-xl" />
              </div>
            ) : (
-             <div className="flex items-center gap-2">
-                <ImageIcon size={compact ? 14 : 24} />
-                <span className={compact ? 'text-xs' : 'text-sm'}>{compact ? 'Select Image' : 'Click to Upload'}</span>
+             <div className="flex flex-col items-center gap-2">
+                <div className="p-3 bg-white rounded-full shadow-sm dark:bg-slate-800"><ImageIcon size={compact ? 16 : 24} /></div>
+                <span className={compact ? 'text-xs font-bold' : 'text-sm font-bold'}>{compact ? 'Select Image' : 'Click to Upload'}</span>
              </div>
            )}
            <input type="file" ref={fileInputRef} className="hidden" accept={accept} onChange={handleFileChange} />
@@ -178,33 +200,33 @@ const CoursePreview: React.FC<{ course: Course; onClose: () => void }> = ({ cour
     const durationStr = totalDuration > 60 ? `${Math.floor(totalDuration / 60)}h ${totalDuration % 60}m` : `${totalDuration}m`;
 
     return (
-        <div className="fixed inset-0 z-50 bg-white flex flex-col dark:bg-slate-950">
+        <div className="fixed inset-0 z-50 bg-white flex flex-col dark:bg-slate-950 animate-fade-in">
             {/* Preview Toolbar */}
-            <div className="bg-slate-900 text-white h-14 flex items-center justify-between px-4 shrink-0 shadow-md z-50">
-                <div className="flex items-center gap-3">
-                    <span className="bg-emerald-500 text-xs font-bold px-2 py-1 rounded uppercase tracking-wider">Preview Mode</span>
-                    <span className="text-sm text-slate-300 hidden sm:inline">Experience your course as a student</span>
+            <div className="bg-slate-900 text-white h-16 flex items-center justify-between px-6 shrink-0 shadow-md z-50">
+                <div className="flex items-center gap-4">
+                    <div className="bg-emerald-500 text-xs font-bold px-2 py-1 rounded uppercase tracking-wider">Preview Mode</div>
+                    <span className="text-sm text-slate-300 hidden sm:inline border-l border-slate-700 pl-4">Experience your course as a student</span>
                 </div>
                 <div className="flex items-center gap-3">
                     {viewMode === 'PLAYER' && (
                         <button 
                             onClick={() => setViewMode('MODULES')}
-                            className="text-xs font-bold text-slate-300 hover:text-white hover:bg-white/10 px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1"
+                            className="text-xs font-bold text-slate-300 hover:text-white hover:bg-white/10 px-4 py-2 rounded-full transition-colors flex items-center gap-2"
                         >
-                            <ArrowLeft size={12} /> Back to Curriculum
+                            <ArrowLeft size={14} /> Back to Curriculum
                         </button>
                     )}
                     {viewMode === 'MODULES' && (
                         <button 
                             onClick={() => setViewMode('LANDING')}
-                            className="text-xs font-bold text-slate-300 hover:text-white hover:bg-white/10 px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1"
+                            className="text-xs font-bold text-slate-300 hover:text-white hover:bg-white/10 px-4 py-2 rounded-full transition-colors flex items-center gap-2"
                         >
-                            <ArrowLeft size={12} /> Back to Overview
+                            <ArrowLeft size={14} /> Back to Overview
                         </button>
                     )}
                     <button 
                         onClick={onClose}
-                        className="flex items-center gap-2 text-sm font-bold bg-white/10 hover:bg-white/20 px-4 py-2 rounded-lg transition-colors"
+                        className="flex items-center gap-2 text-sm font-bold bg-white text-slate-900 hover:bg-slate-100 px-5 py-2 rounded-full transition-colors shadow-sm"
                     >
                         <X size={16} /> Exit Preview
                     </button>
@@ -214,33 +236,33 @@ const CoursePreview: React.FC<{ course: Course; onClose: () => void }> = ({ cour
             {viewMode === 'LANDING' ? (
                 // --- LANDING PAGE VIEW ---
                 <div className="flex-1 overflow-y-auto bg-slate-50 flex items-center justify-center p-4 dark:bg-slate-950">
-                    <div className="w-full max-w-sm bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden flex flex-col group hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 dark:bg-slate-800 dark:border-slate-700">
+                    <div className="w-full max-w-sm bg-white rounded-[2rem] shadow-2xl border border-slate-200 overflow-hidden flex flex-col group hover:-translate-y-1 transition-all duration-300 dark:bg-slate-800 dark:border-slate-700">
                         {/* Thumbnail & Overlay Title */}
-                        <div className="h-48 overflow-hidden relative bg-slate-200 dark:bg-slate-700">
+                        <div className="h-56 overflow-hidden relative bg-slate-200 dark:bg-slate-700">
                             {course.thumbnailUrl ? (
-                                <img src={course.thumbnailUrl} alt={course.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                                <img src={course.thumbnailUrl} alt={course.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
                             ) : (
                                 <div className="w-full h-full flex items-center justify-center text-slate-400 font-medium">No Thumbnail</div>
                             )}
                             <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
-                            <div className="absolute bottom-4 left-4 right-4">
+                            <div className="absolute bottom-6 left-6 right-6">
                                 <span className="inline-block px-2 py-0.5 bg-emerald-500/90 text-white text-[10px] font-bold rounded mb-2 backdrop-blur-sm uppercase tracking-wide">
                                     {course.track}
                                 </span>
-                                <h1 className="text-xl font-bold text-white font-heading leading-tight shadow-black/50 drop-shadow-md">
+                                <h1 className="text-2xl font-bold text-white font-heading leading-tight shadow-black/50 drop-shadow-md">
                                     {course.title || "Untitled Course"}
                                 </h1>
                             </div>
                         </div>
                         
                         {/* Card Content */}
-                        <div className="p-6 flex-1 flex flex-col">
-                            <p className="text-sm text-slate-600 mb-6 flex-1 line-clamp-3 leading-relaxed dark:text-slate-300">
+                        <div className="p-8 flex-1 flex flex-col">
+                            <p className="text-sm text-slate-600 mb-8 flex-1 line-clamp-4 leading-relaxed dark:text-slate-300">
                                 {course.subtitle || course.description || "No description provided."}
                             </p>
                             
-                            <div className="space-y-4 mt-auto">
-                                <div className="flex items-center justify-between text-xs font-medium text-slate-500 dark:text-slate-400">
+                            <div className="space-y-6 mt-auto">
+                                <div className="flex items-center justify-between text-xs font-bold text-slate-400 uppercase tracking-wider dark:text-slate-500">
                                     <div className="flex items-center gap-1.5">
                                         <BookOpen size={14} />
                                         <span>{course.modules.length} Modules</span>
@@ -251,12 +273,12 @@ const CoursePreview: React.FC<{ course: Course; onClose: () => void }> = ({ cour
                                     </div>
                                 </div>
 
-                                <div className="pt-4 border-t border-slate-100 dark:border-slate-700">
+                                <div className="pt-6 border-t border-slate-100 dark:border-slate-700">
                                     <button 
                                         onClick={() => setViewMode('MODULES')}
-                                        className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-xl transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2 active:scale-95"
+                                        className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-4 rounded-xl transition-all shadow-lg shadow-emerald-200 dark:shadow-none flex items-center justify-center gap-2 active:scale-95"
                                     >
-                                        <PlayCircle size={18} /> Start Learning
+                                        <PlayCircle size={20} /> Start Learning
                                     </button>
                                 </div>
                             </div>
@@ -266,27 +288,27 @@ const CoursePreview: React.FC<{ course: Course; onClose: () => void }> = ({ cour
             ) : viewMode === 'MODULES' ? (
                 // --- MODULES LIST VIEW ---
                 <div className="flex-1 overflow-y-auto bg-slate-50 p-6 md:p-12 dark:bg-slate-950">
-                    <div className="max-w-4xl mx-auto space-y-8 animate-slide-in-right">
-                        <div className="text-center mb-10">
-                            <h2 className="text-3xl font-bold text-slate-900 font-heading dark:text-white">Course Curriculum</h2>
-                            <p className="text-slate-500 mt-2 dark:text-slate-400">Select a module to begin your journey.</p>
+                    <div className="max-w-4xl mx-auto space-y-10 animate-slide-in-right">
+                        <div className="text-center mb-12">
+                            <h2 className="text-4xl font-bold text-slate-900 font-heading dark:text-white">Course Curriculum</h2>
+                            <p className="text-slate-500 mt-3 dark:text-slate-400 text-lg">Select a module to begin your journey.</p>
                         </div>
 
                         {course.modules.length === 0 && (
-                            <div className="text-center py-20 bg-white rounded-2xl border border-dashed border-slate-200 dark:bg-slate-800 dark:border-slate-700">
-                                <p className="text-slate-400 font-medium">No modules added yet.</p>
+                            <div className="text-center py-24 bg-white rounded-3xl border-2 border-dashed border-slate-200 dark:bg-slate-800 dark:border-slate-700">
+                                <p className="text-slate-400 font-medium text-lg">No modules added yet.</p>
                             </div>
                         )}
 
                         {course.modules.map((mod, idx) => (
-                            <div key={mod.id} className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden dark:bg-slate-800 dark:border-slate-700">
-                                <div className="p-6 border-b border-slate-50 flex justify-between items-start dark:border-slate-700">
+                            <div key={mod.id} className="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden dark:bg-slate-800 dark:border-slate-700 hover:shadow-md transition-shadow">
+                                <div className="p-8 border-b border-slate-50 flex justify-between items-start dark:border-slate-700">
                                     <div>
-                                        <span className="text-xs font-bold text-emerald-600 uppercase tracking-wider mb-1 block dark:text-emerald-400">Module {idx + 1}</span>
-                                        <h3 className="text-xl font-bold text-slate-900 dark:text-white">{mod.title}</h3>
+                                        <span className="text-xs font-bold text-emerald-600 uppercase tracking-wider mb-2 block dark:text-emerald-400">Module {idx + 1}</span>
+                                        <h3 className="text-2xl font-bold text-slate-900 dark:text-white">{mod.title}</h3>
                                         {mod.summary && <p className="text-sm text-slate-500 mt-2 dark:text-slate-400">{mod.summary}</p>}
                                     </div>
-                                    <div className="bg-slate-100 text-slate-500 text-xs font-bold px-3 py-1 rounded-full dark:bg-slate-700 dark:text-slate-300">
+                                    <div className="bg-slate-100 text-slate-600 text-xs font-bold px-4 py-2 rounded-full dark:bg-slate-700 dark:text-slate-300">
                                         {mod.chapters.length} Lessons
                                     </div>
                                 </div>
@@ -295,26 +317,26 @@ const CoursePreview: React.FC<{ course: Course; onClose: () => void }> = ({ cour
                                         <button 
                                             key={chap.id}
                                             onClick={() => { setActiveChapter(chap); setViewMode('PLAYER'); }}
-                                            className="w-full flex items-center justify-between p-4 hover:bg-slate-50 transition-colors text-left group dark:hover:bg-slate-700/30"
+                                            className="w-full flex items-center justify-between p-5 hover:bg-slate-50 transition-colors text-left group dark:hover:bg-slate-700/30"
                                         >
-                                            <div className="flex items-center gap-4">
-                                                <div className="w-8 h-8 rounded-full border-2 border-slate-200 flex items-center justify-center text-slate-400 text-xs font-bold group-hover:border-emerald-500 group-hover:text-emerald-500 transition-colors dark:border-slate-600 dark:text-slate-500">
+                                            <div className="flex items-center gap-5">
+                                                <div className="w-10 h-10 rounded-full border-2 border-slate-200 flex items-center justify-center text-slate-400 text-sm font-bold group-hover:border-emerald-500 group-hover:text-emerald-500 transition-colors dark:border-slate-600 dark:text-slate-500">
                                                     {cIdx + 1}
                                                 </div>
                                                 <div>
-                                                    <span className="block text-sm font-bold text-slate-700 group-hover:text-emerald-700 transition-colors dark:text-slate-200 dark:group-hover:text-emerald-400">{chap.title}</span>
-                                                    <span className="text-xs text-slate-400 flex items-center gap-1 mt-0.5 dark:text-slate-500">
-                                                        <Clock size={10} /> {chap.durationMinutes} min
+                                                    <span className="block text-base font-bold text-slate-700 group-hover:text-emerald-700 transition-colors dark:text-slate-200 dark:group-hover:text-emerald-400">{chap.title}</span>
+                                                    <span className="text-xs text-slate-400 flex items-center gap-1 mt-1 dark:text-slate-500">
+                                                        <Clock size={12} /> {chap.durationMinutes} min
                                                     </span>
                                                 </div>
                                             </div>
                                             <div className="text-slate-300 group-hover:text-emerald-500 transition-colors">
-                                                <PlayCircle size={20} />
+                                                <PlayCircle size={24} />
                                             </div>
                                         </button>
                                     ))}
                                     {mod.chapters.length === 0 && (
-                                        <div className="p-4 text-xs text-slate-400 italic text-center">No lessons in this module.</div>
+                                        <div className="p-6 text-sm text-slate-400 italic text-center">No lessons in this module.</div>
                                     )}
                                 </div>
                             </div>
@@ -329,24 +351,24 @@ const CoursePreview: React.FC<{ course: Course; onClose: () => void }> = ({ cour
                         w-80 bg-slate-50 border-r border-slate-200 flex flex-col absolute inset-y-0 left-0 z-20 transform transition-transform duration-300 lg:static lg:translate-x-0 dark:bg-slate-900 dark:border-slate-800
                         ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}
                     `}>
-                        <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center">
+                        <div className="p-6 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center">
                             <h2 className="font-bold text-slate-800 truncate dark:text-slate-100">{course.title || 'Untitled Course'}</h2>
                             <button onClick={() => setIsSidebarOpen(false)} className="lg:hidden text-slate-500"><X size={20} /></button>
                         </div>
-                        <div className="flex-1 overflow-y-auto p-4 space-y-6">
-                            {course.modules.length === 0 && <p className="text-sm text-slate-400 text-center italic">No modules added yet.</p>}
+                        <div className="flex-1 overflow-y-auto p-4 space-y-8">
+                            {course.modules.length === 0 && <p className="text-sm text-slate-400 text-center italic mt-10">No modules added yet.</p>}
                             {course.modules.map((mod, idx) => (
                                 <div key={mod.id}>
-                                    <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 pl-2 dark:text-slate-500">Module {idx + 1}: {mod.title}</h3>
+                                    <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3 pl-3 dark:text-slate-500">Module {idx + 1}: {mod.title}</h3>
                                     <div className="space-y-1">
                                         {mod.chapters.map((chap) => (
                                             <button
                                                 key={chap.id}
                                                 onClick={() => { setActiveChapter(chap); setIsSidebarOpen(false); }}
-                                                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-left transition-all ${
+                                                className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl text-sm text-left transition-all ${
                                                     activeChapter?.id === chap.id 
                                                     ? 'bg-white text-emerald-700 shadow-sm ring-1 ring-slate-200 font-medium dark:bg-slate-800 dark:text-emerald-400 dark:ring-slate-700' 
-                                                    : 'text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800'
+                                                    : 'text-slate-600 hover:bg-slate-200/50 dark:text-slate-400 dark:hover:bg-slate-800'
                                                 }`}
                                             >
                                                 <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 ${activeChapter?.id === chap.id ? 'border-emerald-600' : 'border-slate-300 dark:border-slate-600'}`}>
@@ -355,7 +377,7 @@ const CoursePreview: React.FC<{ course: Course; onClose: () => void }> = ({ cour
                                                 <span className="truncate">{chap.title}</span>
                                             </button>
                                         ))}
-                                        {mod.chapters.length === 0 && <p className="text-xs text-slate-400 pl-3 italic">No lessons</p>}
+                                        {mod.chapters.length === 0 && <p className="text-xs text-slate-400 pl-4 italic">No lessons</p>}
                                     </div>
                                 </div>
                             ))}
@@ -374,45 +396,45 @@ const CoursePreview: React.FC<{ course: Course; onClose: () => void }> = ({ cour
 
                         {activeChapter ? (
                             <div className="flex-1 overflow-y-auto">
-                                <div className="max-w-3xl mx-auto px-6 py-10">
+                                <div className="max-w-3xl mx-auto px-8 py-16">
                                     {/* Header */}
-                                    <div className="mb-8 border-b border-slate-100 pb-6 dark:border-slate-800">
-                                        <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-emerald-600 mb-2 dark:text-emerald-400">
+                                    <div className="mb-12 border-b border-slate-100 pb-8 dark:border-slate-800">
+                                        <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-emerald-600 mb-3 dark:text-emerald-400">
                                             <span>{activeModule?.title}</span>
                                             <ChevronRight size={12} />
                                             <span>{activeChapter.type}</span>
                                         </div>
-                                        <h1 className="text-3xl font-bold text-slate-900 font-heading dark:text-white">{activeChapter.title}</h1>
+                                        <h1 className="text-4xl font-bold text-slate-900 font-heading dark:text-white leading-tight">{activeChapter.title}</h1>
                                     </div>
 
                                     {/* Content Render (Blocks or Legacy) */}
                                     {activeChapter.blocks && activeChapter.blocks.length > 0 ? (
-                                        <div className="space-y-8">
+                                        <div className="space-y-10">
                                             {activeChapter.blocks.map(block => {
                                                 switch(block.type) {
                                                     case 'heading':
-                                                        if (block.style === 'h2') return <h2 key={block.id} className="text-2xl font-bold text-slate-800 dark:text-white mt-8 mb-4">{block.content}</h2>;
-                                                        if (block.style === 'h3') return <h3 key={block.id} className="text-xl font-bold text-slate-800 dark:text-white mt-6 mb-3">{block.content}</h3>;
-                                                        return <h2 key={block.id} className="text-2xl font-bold">{block.content}</h2>;
+                                                        if (block.style === 'h2') return <h2 key={block.id} className="text-3xl font-bold text-slate-800 dark:text-white mt-10 mb-5">{block.content}</h2>;
+                                                        if (block.style === 'h3') return <h3 key={block.id} className="text-2xl font-bold text-slate-800 dark:text-white mt-8 mb-4">{block.content}</h3>;
+                                                        return <h2 key={block.id} className="text-3xl font-bold">{block.content}</h2>;
                                                     case 'paragraph':
-                                                        return <p key={block.id} className="text-lg leading-relaxed text-slate-700 dark:text-slate-300">{block.content}</p>;
+                                                        return <p key={block.id} className="text-lg leading-relaxed text-slate-600 dark:text-slate-300">{block.content}</p>;
                                                     case 'image':
-                                                        return block.content ? <img key={block.id} src={block.content} alt="Lesson Media" className="w-full rounded-xl my-6 shadow-sm" /> : null;
+                                                        return block.content ? <img key={block.id} src={block.content} alt="Lesson Media" className="w-full rounded-2xl my-8 shadow-md" /> : null;
                                                     case 'callout':
                                                         return (
-                                                            <div key={block.id} className={`p-6 rounded-xl border-l-4 my-6 ${block.style === 'warning' ? 'bg-red-50 border-red-500 text-red-900' : 'bg-blue-50 border-blue-500 text-blue-900'} dark:bg-slate-800`}>
-                                                                <p className="font-medium">{block.content}</p>
+                                                            <div key={block.id} className={`p-8 rounded-2xl border-l-4 my-8 ${block.style === 'warning' ? 'bg-red-50 border-red-500 text-red-900' : 'bg-blue-50 border-blue-500 text-blue-900'} dark:bg-slate-800`}>
+                                                                <p className="font-medium text-lg">{block.content}</p>
                                                             </div>
                                                         );
                                                     case 'quote':
                                                         return (
-                                                            <blockquote key={block.id} className="border-l-4 border-emerald-500 pl-6 my-8 italic text-xl text-slate-600 dark:text-slate-400">
+                                                            <blockquote key={block.id} className="border-l-4 border-emerald-500 pl-8 my-10 italic text-2xl text-slate-500 dark:text-slate-400 font-heading">
                                                                 "{block.content}"
                                                             </blockquote>
                                                         );
                                                     case 'list':
                                                         return (
-                                                            <ul key={block.id} className="list-disc pl-6 space-y-2 text-slate-700 dark:text-slate-300">
+                                                            <ul key={block.id} className="list-disc pl-6 space-y-3 text-lg text-slate-700 dark:text-slate-300 my-6">
                                                                 {block.content.split('\n').map((line, i) => <li key={i}>{line}</li>)}
                                                             </ul>
                                                         );
@@ -421,22 +443,22 @@ const CoursePreview: React.FC<{ course: Course; onClose: () => void }> = ({ cour
                                             })}
                                         </div>
                                     ) : (
-                                        <div className="prose prose-slate prose-lg max-w-none text-slate-700 dark:prose-invert dark:text-slate-300">
+                                        <div className="prose prose-slate prose-lg max-w-none text-slate-600 dark:prose-invert dark:text-slate-300">
                                             <p className="whitespace-pre-wrap">{activeChapter.content || <em className="text-slate-400">No content added yet.</em>}</p>
                                         </div>
                                     )}
 
                                     {/* Action Steps */}
                                     {activeChapter.actionSteps && activeChapter.actionSteps.length > 0 && (
-                                        <div className="mt-10 bg-blue-50 border border-blue-100 rounded-xl p-6 dark:bg-blue-900/20 dark:border-blue-800">
-                                            <h3 className="font-bold text-blue-900 mb-4 flex items-center gap-2 dark:text-blue-300">
-                                                <CheckCircle size={18} /> Action Plan
+                                        <div className="mt-16 bg-emerald-50 border border-emerald-100 rounded-3xl p-8 dark:bg-emerald-900/20 dark:border-emerald-800">
+                                            <h3 className="font-bold text-emerald-900 mb-6 flex items-center gap-3 text-lg dark:text-emerald-300">
+                                                <CheckCircle size={24} /> Action Plan
                                             </h3>
-                                            <div className="space-y-3">
+                                            <div className="space-y-4">
                                                 {activeChapter.actionSteps.map((step, idx) => (
-                                                    <label key={idx} className="flex items-start gap-3 p-3 bg-white rounded-lg border border-blue-100 cursor-pointer hover:shadow-sm dark:bg-slate-800 dark:border-slate-700 dark:text-slate-300">
-                                                        <div className="w-5 h-5 rounded border border-blue-300 flex items-center justify-center shrink-0 mt-0.5"></div>
-                                                        <span className="text-sm font-medium">{step}</span>
+                                                    <label key={idx} className="flex items-start gap-4 p-4 bg-white rounded-xl border border-emerald-100 cursor-pointer hover:shadow-sm dark:bg-slate-800 dark:border-slate-700 dark:text-slate-300 transition-all">
+                                                        <div className="w-6 h-6 rounded-full border-2 border-emerald-300 flex items-center justify-center shrink-0 mt-0.5 text-xs font-bold text-emerald-600 bg-emerald-50 dark:bg-slate-900 dark:border-slate-600 dark:text-slate-400">{idx+1}</div>
+                                                        <span className="text-base font-medium">{step}</span>
                                                     </label>
                                                 ))}
                                             </div>
@@ -446,8 +468,8 @@ const CoursePreview: React.FC<{ course: Course; onClose: () => void }> = ({ cour
                             </div>
                         ) : (
                             <div className="flex-1 flex flex-col items-center justify-center text-slate-400 dark:text-slate-500">
-                                <PlayCircle size={48} className="mb-4 opacity-50" />
-                                <p>Select a chapter from the sidebar to preview content.</p>
+                                <PlayCircle size={64} className="mb-6 opacity-20" />
+                                <p className="text-lg font-medium">Select a chapter to preview content.</p>
                             </div>
                         )}
                     </main>
@@ -711,70 +733,72 @@ const CourseBuilder: React.FC<CourseBuilderProps> = ({ currentUserHandle, onSubm
   // --- RENDERERS ---
 
   const renderStep1_Info = () => (
-    <div className="space-y-6 animate-fade-in">
-      <h2 className="text-xl font-bold text-slate-800 border-b border-slate-100 pb-4 dark:text-slate-100 dark:border-slate-700">Step 1: Course Information</h2>
-      
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="space-y-4">
-          <div>
-            <label className="block text-sm font-bold text-slate-700 mb-1 dark:text-slate-300">Course Title</label>
-            <input 
-              type="text" 
-              value={course.title} 
-              onChange={e => updateCourseInfo('title', e.target.value)}
-              className="w-full p-3 border border-slate-200 rounded-xl bg-white text-slate-900 placeholder-slate-400 focus:ring-2 focus:ring-emerald-500 outline-none dark:bg-slate-700 dark:border-slate-600 dark:text-white dark:placeholder-slate-500"
-              placeholder="e.g. Product Mastery"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-bold text-slate-700 mb-1 dark:text-slate-300">Subtitle</label>
-            <input 
-              type="text" 
-              value={course.subtitle} 
-              onChange={e => updateCourseInfo('subtitle', e.target.value)}
-              className="w-full p-3 border border-slate-200 rounded-xl bg-white text-slate-900 placeholder-slate-400 focus:ring-2 focus:ring-emerald-500 outline-none dark:bg-slate-700 dark:border-slate-600 dark:text-white dark:placeholder-slate-500"
-              placeholder="Short summary of what the course teaches"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-bold text-slate-700 mb-1 dark:text-slate-300">Course Track (Category)</label>
-            <select 
-              value={course.track} 
-              onChange={e => updateCourseInfo('track', e.target.value)}
-              className="w-full p-3 border border-slate-200 rounded-xl bg-white text-slate-900 outline-none dark:bg-slate-700 dark:border-slate-600 dark:text-white"
-            >
-              {Object.values(CourseTrack).map(t => <option key={t} value={t}>{t}</option>)}
-            </select>
-          </div>
-          <div>
-            <label className="block text-sm font-bold text-slate-700 mb-1 dark:text-slate-300">Difficulty Level</label>
-            <select 
-              value={course.level} 
-              onChange={e => updateCourseInfo('level', e.target.value)}
-              className="w-full p-3 border border-slate-200 rounded-xl bg-white text-slate-900 outline-none dark:bg-slate-700 dark:border-slate-600 dark:text-white"
-            >
-              {Object.values(CourseLevel).map(l => <option key={l} value={l}>{l}</option>)}
-            </select>
-          </div>
-        </div>
+    <div className="space-y-8 animate-fade-in">
+      <div className={CARD_CLASS}>
+        <h2 className="text-xl font-bold text-slate-900 border-b border-slate-100 pb-6 mb-6 font-heading dark:text-slate-100 dark:border-slate-700">Basic Information</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div className="space-y-6">
+                <div>
+                    <label className={LABEL_CLASS}>Course Title</label>
+                    <input 
+                        type="text" 
+                        value={course.title} 
+                        onChange={e => updateCourseInfo('title', e.target.value)}
+                        className={INPUT_CLASS}
+                        placeholder="e.g. Product Mastery"
+                    />
+                </div>
+                <div>
+                    <label className={LABEL_CLASS}>Subtitle</label>
+                    <input 
+                        type="text" 
+                        value={course.subtitle} 
+                        onChange={e => updateCourseInfo('subtitle', e.target.value)}
+                        className={INPUT_CLASS}
+                        placeholder="Short summary of what the course teaches"
+                    />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                    <div>
+                        <label className={LABEL_CLASS}>Course Track</label>
+                        <select 
+                            value={course.track} 
+                            onChange={e => updateCourseInfo('track', e.target.value)}
+                            className={`${INPUT_CLASS} appearance-none`}
+                        >
+                            {Object.values(CourseTrack).map(t => <option key={t} value={t}>{t}</option>)}
+                        </select>
+                    </div>
+                    <div>
+                        <label className={LABEL_CLASS}>Difficulty</label>
+                        <select 
+                            value={course.level} 
+                            onChange={e => updateCourseInfo('level', e.target.value)}
+                            className={`${INPUT_CLASS} appearance-none`}
+                        >
+                            {Object.values(CourseLevel).map(l => <option key={l} value={l}>{l}</option>)}
+                        </select>
+                    </div>
+                </div>
+            </div>
 
-        <div className="space-y-4">
-          <div>
-            <label className="block text-sm font-bold text-slate-700 mb-1 dark:text-slate-300">Description</label>
-            <textarea 
-              value={course.description} 
-              onChange={e => updateCourseInfo('description', e.target.value)}
-              className="w-full p-3 border border-slate-200 rounded-xl bg-white text-slate-900 placeholder-slate-400 focus:ring-2 focus:ring-emerald-500 outline-none h-32 dark:bg-slate-700 dark:border-slate-600 dark:text-white dark:placeholder-slate-500"
-              placeholder="Detailed overview..."
-            />
-          </div>
-          
-          <MediaInput 
-            label="Course Thumbnail (16:9 Aspect Ratio)" 
-            value={course.thumbnailUrl} 
-            onChange={(val) => updateCourseInfo('thumbnailUrl', val)}
-            accept="image/png, image/jpeg, image/jpg, image/webp"
-          />
+            <div className="space-y-6">
+                <div>
+                    <label className={LABEL_CLASS}>Description</label>
+                    <textarea 
+                        value={course.description} 
+                        onChange={e => updateCourseInfo('description', e.target.value)}
+                        className={`${INPUT_CLASS} h-40 resize-none`}
+                        placeholder="Detailed overview..."
+                    />
+                </div>
+                <MediaInput 
+                    label="Course Thumbnail" 
+                    value={course.thumbnailUrl} 
+                    onChange={(val) => updateCourseInfo('thumbnailUrl', val)}
+                    accept="image/png, image/jpeg, image/jpg, image/webp"
+                />
+            </div>
         </div>
       </div>
     </div>
@@ -782,60 +806,72 @@ const CourseBuilder: React.FC<CourseBuilderProps> = ({ currentUserHandle, onSubm
 
   const renderStep2_Curriculum = () => (
     <div className="space-y-6 animate-fade-in h-full flex flex-col">
-      <div className="flex justify-between items-center border-b border-slate-100 pb-4 dark:border-slate-700">
-        <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100">Step 2: Curriculum Builder</h2>
-        <button onClick={addModule} className="text-sm bg-emerald-50 text-emerald-700 px-4 py-2 rounded-lg font-bold hover:bg-emerald-100 transition-colors dark:bg-emerald-900/30 dark:text-emerald-400 dark:hover:bg-emerald-800/50">
-          + Add Module
+      <div className="flex justify-between items-center mb-2 px-2">
+        <div>
+            <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100 font-heading">Curriculum</h2>
+            <p className="text-sm text-slate-500 dark:text-slate-400">Structure your course with modules and lessons.</p>
+        </div>
+        <button onClick={addModule} className="bg-slate-900 text-white px-5 py-2.5 rounded-xl font-bold hover:bg-slate-800 transition-colors shadow-lg shadow-slate-200 dark:bg-emerald-600 dark:hover:bg-emerald-700 dark:shadow-none flex items-center gap-2">
+          <Plus size={18} /> New Module
         </button>
       </div>
       
-      <div className="flex-1 overflow-y-auto space-y-6 pr-2 no-scrollbar">
+      <div className="flex-1 overflow-y-auto space-y-6 pr-2 no-scrollbar pb-20">
         {course.modules.length === 0 && (
-          <div className="text-center py-10 text-slate-400 border-2 border-dashed border-slate-200 rounded-xl dark:border-slate-700 dark:text-slate-500">
-            Start by adding your first module.
+          <div className="text-center py-16 border-2 border-dashed border-slate-200 rounded-3xl bg-slate-50/50 dark:border-slate-700 dark:bg-slate-900/50">
+            <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm dark:bg-slate-800">
+                <BookOpen className="text-slate-300" size={24} />
+            </div>
+            <p className="text-slate-500 font-bold dark:text-slate-400">Start by adding your first module.</p>
           </div>
         )}
         
         {course.modules.map((module, mIdx) => (
-          <div key={module.id} className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden dark:bg-slate-800 dark:border-slate-700">
+          <div key={module.id} className="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden dark:bg-slate-800 dark:border-slate-700 group transition-all hover:shadow-md">
              {/* Module Header */}
-             <div className="bg-slate-50 p-4 flex flex-col sm:flex-row sm:items-center gap-4 border-b border-slate-100 dark:bg-slate-800 dark:border-slate-700">
-                <span className="font-bold text-slate-500 whitespace-nowrap dark:text-slate-400">Module {mIdx + 1}:</span>
+             <div className="p-6 flex flex-col sm:flex-row sm:items-center gap-4 border-b border-slate-50 dark:border-slate-700/50 bg-white dark:bg-slate-800">
+                <div className="w-10 h-10 rounded-xl bg-slate-100 text-slate-500 flex items-center justify-center font-bold text-sm shrink-0 dark:bg-slate-700 dark:text-slate-400">
+                    {mIdx + 1}
+                </div>
                 <input 
                   type="text" 
                   value={module.title}
                   onChange={(e) => updateModule(module.id, 'title', e.target.value)}
-                  className="flex-1 bg-white border border-slate-200 rounded-lg px-3 py-2 focus:border-emerald-500 outline-none text-slate-900 font-medium placeholder-slate-400 dark:bg-slate-700 dark:border-slate-600 dark:text-white dark:placeholder-slate-500"
-                  placeholder="Enter Module Title"
+                  className="flex-1 bg-transparent border-none p-0 text-lg font-bold text-slate-900 placeholder-slate-400 focus:ring-0 dark:text-white"
+                  placeholder="Module Title (e.g. Introduction)"
                 />
-                <button onClick={() => deleteModule(module.id)} className="text-slate-400 hover:text-red-500"><TrashIcon /></button>
-                <button onClick={() => addChapter(module.id)} className="text-xs bg-white border border-slate-200 px-3 py-2 rounded-lg text-slate-600 hover:text-emerald-600 hover:border-emerald-200 font-bold shadow-sm dark:bg-slate-700 dark:border-slate-600 dark:text-slate-300 dark:hover:text-emerald-400">
-                  + Add Chapter
-                </button>
+                <div className="flex items-center gap-2">
+                    <button onClick={() => addChapter(module.id)} className="text-xs bg-emerald-50 text-emerald-700 px-3 py-2 rounded-lg font-bold hover:bg-emerald-100 transition-colors dark:bg-emerald-900/30 dark:text-emerald-400">
+                    + Lesson
+                    </button>
+                    <button onClick={() => deleteModule(module.id)} className="text-slate-300 hover:text-red-500 p-2 transition-colors"><Trash2 size={18} /></button>
+                </div>
              </div>
 
              {/* Chapter List */}
-             <div className="p-2 space-y-2">
-                {module.chapters.length === 0 && <p className="text-xs text-slate-400 text-center py-2 dark:text-slate-500">No chapters yet.</p>}
+             <div className="p-4 space-y-2 bg-slate-50/50 dark:bg-slate-900/30">
+                {module.chapters.length === 0 && <p className="text-xs text-slate-400 text-center py-4 italic">No lessons yet.</p>}
                 {module.chapters.map((chapter, cIdx) => (
-                  <div key={chapter.id} className="flex items-center justify-between p-3 hover:bg-slate-50 rounded-lg group border border-transparent hover:border-slate-100 transition-all dark:hover:bg-slate-700/50 dark:hover:border-slate-700">
-                     <div className="flex items-center gap-3">
-                        <div className="w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center text-xs font-bold text-slate-500 dark:bg-slate-700 dark:text-slate-400">{cIdx + 1}</div>
-                        <span className="text-sm font-medium text-slate-700 dark:text-slate-200">{chapter.title}</span>
+                  <div key={chapter.id} className="flex items-center justify-between p-4 bg-white rounded-2xl border border-slate-100 hover:border-emerald-200 transition-all group/chapter shadow-sm dark:bg-slate-800 dark:border-slate-700 dark:hover:border-emerald-500/30">
+                     <div className="flex items-center gap-4">
+                        <div className="w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center text-[10px] font-bold text-slate-500 dark:bg-slate-700 dark:text-slate-400">{cIdx + 1}</div>
+                        <span className="text-sm font-bold text-slate-700 dark:text-slate-200">{chapter.title}</span>
+                        {chapter.durationMinutes > 0 && (
+                            <span className="text-[10px] text-slate-400 bg-slate-50 px-2 py-0.5 rounded dark:bg-slate-700 dark:text-slate-500">{chapter.durationMinutes}m</span>
+                        )}
                      </div>
-                     <div className="flex items-center gap-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
+                     <div className="flex items-center gap-2 opacity-0 group-hover/chapter:opacity-100 transition-opacity">
                         <button 
                             onClick={() => setEditingChapter({ moduleId: module.id, chapterId: chapter.id })}
-                            className="text-xs text-emerald-600 font-bold hover:text-emerald-800 bg-emerald-50 px-3 py-1.5 rounded-lg dark:bg-emerald-900/30 dark:text-emerald-400 dark:hover:bg-emerald-800/50"
+                            className="text-xs text-slate-600 font-bold hover:text-emerald-600 bg-slate-100 hover:bg-emerald-50 px-3 py-1.5 rounded-lg transition-colors dark:bg-slate-700 dark:text-slate-300 dark:hover:bg-emerald-900/30 dark:hover:text-emerald-400"
                         >
                             Edit Content
                         </button>
                         <button 
                             onClick={(e) => deleteChapter(e, module.id, chapter.id)}
-                            className="text-xs text-red-500 font-bold hover:text-red-700 bg-red-50 px-2 py-1.5 rounded-lg dark:bg-red-900/30 dark:text-red-400 dark:hover:bg-red-800/50"
-                            title="Delete Chapter"
+                            className="text-slate-300 hover:text-red-500 p-1.5 transition-colors"
                         >
-                            <TrashIcon />
+                            <X size={16} />
                         </button>
                      </div>
                   </div>
@@ -848,31 +884,47 @@ const CourseBuilder: React.FC<CourseBuilderProps> = ({ currentUserHandle, onSubm
   );
 
   const renderStep3_Settings = () => (
-    <div className="space-y-6 animate-fade-in">
-      <h2 className="text-xl font-bold text-slate-800 border-b border-slate-100 pb-4 dark:text-slate-100 dark:border-slate-700">Step 3: Enhancements & Settings</h2>
-      
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-         <div className="space-y-4">
-             <h3 className="font-bold text-emerald-900 dark:text-emerald-400">Gamification</h3>
-             <label className="flex items-center justify-between p-4 border border-slate-200 rounded-xl bg-white dark:bg-slate-800 dark:border-slate-700">
-                <span className="text-sm font-medium text-slate-700 dark:text-slate-300">Enable Certificates</span>
-                <input 
-                  type="checkbox" 
-                  checked={course.settings.certificateEnabled} 
-                  onChange={e => updateSettings('certificateEnabled', e.target.checked)} 
-                  className="w-5 h-5 text-emerald-600 rounded border-slate-300 bg-white accent-emerald-600 dark:bg-slate-700 dark:border-slate-600" 
-                />
-             </label>
-             <div className="flex items-center justify-between p-4 border border-slate-200 rounded-xl bg-white dark:bg-slate-800 dark:border-slate-700">
-                <span className="text-sm font-medium text-slate-700 dark:text-slate-300">Points Reward</span>
-                <input 
-                  type="number" 
-                  value={course.settings.pointsReward} 
-                  onChange={e => updateSettings('pointsReward', parseInt(e.target.value))} 
-                  className="w-20 p-2 text-center border border-slate-200 rounded-lg text-slate-900 bg-slate-50 focus:ring-2 focus:ring-emerald-500 outline-none dark:bg-slate-700 dark:text-white dark:border-slate-600"
-                />
-             </div>
-         </div>
+    <div className="space-y-8 animate-fade-in">
+      <div className={CARD_CLASS}>
+        <h2 className="text-xl font-bold text-slate-900 border-b border-slate-100 pb-6 mb-6 font-heading dark:text-slate-100 dark:border-slate-700">Course Settings</h2>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div className="space-y-6">
+                <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4">Gamification</h3>
+                
+                <div className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl dark:bg-slate-900">
+                    <span className="text-sm font-bold text-slate-700 dark:text-slate-300">Enable Certificates</span>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" checked={course.settings.certificateEnabled} onChange={e => updateSettings('certificateEnabled', e.target.checked)} className="sr-only peer" />
+                        <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500 dark:bg-slate-700"></div>
+                    </label>
+                </div>
+
+                <div className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl dark:bg-slate-900">
+                    <span className="text-sm font-bold text-slate-700 dark:text-slate-300">XP Points Reward</span>
+                    <input 
+                        type="number" 
+                        value={course.settings.pointsReward} 
+                        onChange={e => updateSettings('pointsReward', parseInt(e.target.value))} 
+                        className="w-20 p-2 text-center text-sm font-bold bg-white rounded-lg border-0 focus:ring-2 focus:ring-emerald-500 dark:bg-slate-800 dark:text-white"
+                    />
+                </div>
+            </div>
+            
+            <div className="space-y-6">
+                <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4">Access Control</h3>
+                 <div className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl dark:bg-slate-900">
+                    <div className="flex flex-col">
+                        <span className="text-sm font-bold text-slate-700 dark:text-slate-300">Assessment Required</span>
+                        <span className="text-xs text-slate-400">Users must pass quiz to complete</span>
+                    </div>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" checked={course.settings.requiresAssessment} onChange={e => updateSettings('requiresAssessment', e.target.checked)} className="sr-only peer" />
+                        <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500 dark:bg-slate-700"></div>
+                    </label>
+                </div>
+            </div>
+        </div>
       </div>
     </div>
   );
@@ -886,92 +938,115 @@ const CourseBuilder: React.FC<CourseBuilderProps> = ({ currentUserHandle, onSubm
     if (!activeChapter) return null;
 
     return (
-      <div className="fixed inset-0 z-50 flex justify-end">
-         <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={saveBlocksToChapter} />
-         <div className="relative w-full max-w-4xl bg-white h-full shadow-2xl flex flex-col animate-slide-in-right dark:bg-slate-900">
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 animate-fade-in">
+         <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-md transition-opacity" onClick={saveBlocksToChapter} />
+         <div className="relative w-full max-w-5xl bg-white h-[90vh] shadow-2xl flex flex-col rounded-3xl overflow-hidden ring-1 ring-black/5 dark:bg-slate-900 dark:ring-white/10">
             {/* Header */}
-            <div className="p-4 border-b border-slate-200 flex justify-between items-center bg-white z-10 dark:bg-slate-900 dark:border-slate-700">
-               <div className="flex items-center gap-4">
-                   <button onClick={saveBlocksToChapter} className="text-slate-500 hover:text-slate-800 p-2 rounded-full hover:bg-slate-100 dark:text-slate-400 dark:hover:text-white dark:hover:bg-slate-800">
-                        <X size={20} />
+            <div className="px-8 py-5 border-b border-slate-100 flex justify-between items-center bg-white z-10 dark:bg-slate-900 dark:border-slate-800">
+               <div className="flex items-center gap-6">
+                   <button onClick={saveBlocksToChapter} className="text-slate-400 hover:text-slate-800 transition-colors p-1 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 dark:hover:text-white">
+                        <ArrowLeft size={24} />
                    </button>
                    <div>
-                        <h3 className="font-bold text-lg text-slate-800 dark:text-white">Edit Chapter Content</h3>
-                        <p className="text-xs text-slate-500 dark:text-slate-400">{activeModule?.title} &gt; {activeChapter.title}</p>
+                        <h3 className="font-bold text-xl text-slate-900 font-heading dark:text-white">Edit Lesson</h3>
+                        <p className="text-xs text-slate-500 font-medium dark:text-slate-400">{activeModule?.title} / <span className="text-emerald-600 dark:text-emerald-400">{activeChapter.title}</span></p>
                    </div>
                </div>
-               <div className="flex gap-2">
+               <div className="flex gap-4 items-center">
                    {/* Template Selector */}
                    <div className="relative group">
-                       <button className="flex items-center gap-2 text-xs font-bold text-emerald-600 bg-emerald-50 px-3 py-2 rounded-lg hover:bg-emerald-100 dark:bg-emerald-900/30 dark:text-emerald-400 dark:hover:bg-emerald-800/50">
-                           <LayoutTemplate size={14} /> Templates
+                       <button className="flex items-center gap-2 text-sm font-bold text-slate-600 bg-slate-50 px-4 py-2.5 rounded-xl hover:bg-slate-100 transition-colors dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700">
+                           <LayoutTemplate size={16} /> Templates
                        </button>
-                       <div className="absolute right-0 top-full mt-2 w-48 bg-white border border-slate-200 rounded-xl shadow-xl p-2 hidden group-hover:block z-50 dark:bg-slate-800 dark:border-slate-700">
+                       <div className="absolute right-0 top-full mt-2 w-72 bg-white border border-slate-100 rounded-2xl shadow-xl p-2 hidden group-hover:block z-50 dark:bg-slate-800 dark:border-slate-700 animate-fade-in">
+                           <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2 px-3 mt-2">Quick Start</div>
                            {TEMPLATES.map(t => (
                                <button 
                                 key={t.id} 
                                 onClick={() => applyTemplate(t.id)}
-                                className="w-full text-left px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50 rounded-lg flex items-center gap-2 dark:text-slate-300 dark:hover:bg-slate-700"
+                                className="w-full text-left px-3 py-3 hover:bg-slate-50 rounded-xl flex items-start gap-3 transition-colors dark:hover:bg-slate-700/50"
                                >
-                                   <t.icon size={14} /> {t.name}
+                                   <div className="p-2 bg-emerald-50 text-emerald-600 rounded-lg dark:bg-emerald-900/30 dark:text-emerald-400">
+                                      <t.icon size={16} />
+                                   </div>
+                                   <div>
+                                      <div className="text-sm font-bold text-slate-800 dark:text-slate-200">{t.name}</div>
+                                      <div className="text-xs text-slate-500 mt-0.5 leading-tight dark:text-slate-400">{t.description}</div>
+                                   </div>
                                </button>
                            ))}
                        </div>
                    </div>
-                   <button onClick={saveBlocksToChapter} className="bg-emerald-600 text-white px-6 py-2 rounded-lg font-bold hover:bg-emerald-700 transition-colors text-sm">Save & Close</button>
+                   <button onClick={saveBlocksToChapter} className="bg-slate-900 text-white px-6 py-2.5 rounded-xl font-bold hover:bg-slate-800 transition-colors text-sm shadow-lg shadow-slate-200 dark:bg-emerald-600 dark:hover:bg-emerald-700 dark:shadow-none flex items-center gap-2">
+                       <Save size={16} /> Save Changes
+                   </button>
                </div>
             </div>
             
             <div className="flex-1 flex overflow-hidden">
                 {/* Scrollable Content Area */}
-                <div className="flex-1 overflow-y-auto p-8 bg-slate-50 dark:bg-slate-950">
-                    <div className="max-w-2xl mx-auto space-y-6 pb-20">
+                <div className="flex-1 overflow-y-auto bg-slate-50 dark:bg-slate-950">
+                    <div className="max-w-3xl mx-auto py-12 px-8 pb-32 space-y-10">
                         
-                        {/* Meta Fields */}
-                        <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm dark:bg-slate-900 dark:border-slate-700">
-                            <label className="block text-xs font-bold text-slate-400 uppercase mb-2">Chapter Details</label>
-                            <div className="space-y-4">
-                                <input 
-                                    type="text" 
-                                    value={activeChapter.title} 
-                                    onChange={e => updateActiveChapter('title', e.target.value)}
-                                    className="w-full p-2 border-b border-slate-200 text-xl font-bold focus:border-emerald-500 outline-none bg-transparent dark:border-slate-700 dark:text-white"
-                                    placeholder="Chapter Title"
-                                />
-                                <div className="grid grid-cols-2 gap-4">
+                        {/* Meta Fields Card */}
+                        <div className={CARD_CLASS}>
+                            <div className="flex justify-between items-center mb-6">
+                                <h4 className={LABEL_CLASS}>Lesson Metadata</h4>
+                                <span className="text-xs font-mono text-slate-300 dark:text-slate-600">ID: {activeChapter.id}</span>
+                            </div>
+                            <div className="space-y-6">
+                                <div>
+                                    <label className={LABEL_CLASS}>Title</label>
+                                    <input 
+                                        type="text" 
+                                        value={activeChapter.title} 
+                                        onChange={e => updateActiveChapter('title', e.target.value)}
+                                        className="w-full p-0 border-b border-slate-200 text-2xl font-bold font-heading focus:border-emerald-500 focus:ring-0 outline-none bg-transparent text-slate-900 py-2 dark:border-slate-700 dark:text-white"
+                                        placeholder="Enter lesson title..."
+                                    />
+                                </div>
+                                <div className="grid grid-cols-2 gap-8">
                                     <MediaInput 
-                                        label="Header Image" 
+                                        label="Header Image (Optional)" 
                                         value={activeChapter.headerImageUrl || ''} 
                                         onChange={val => updateActiveChapter('headerImageUrl', val)}
                                         compact
                                     />
                                     <div>
-                                        <label className="block text-xs font-bold text-slate-500 mb-1 dark:text-slate-400">Duration (Min)</label>
+                                        <label className={LABEL_CLASS}>Duration (Minutes)</label>
                                         <input 
                                             type="number" 
                                             value={activeChapter.durationMinutes} 
                                             onChange={e => updateActiveChapter('durationMinutes', parseInt(e.target.value))}
-                                            className="w-full p-2 border border-slate-200 rounded bg-white text-sm outline-none focus:border-emerald-500 dark:bg-slate-800 dark:border-slate-700 dark:text-white"
+                                            className={INPUT_CLASS}
                                         />
                                     </div>
                                 </div>
                             </div>
                         </div>
 
+                        <div className="flex items-center gap-4 py-2">
+                            <div className="h-px bg-slate-200 flex-1 dark:bg-slate-800"></div>
+                            <span className="text-xs font-bold text-slate-400 uppercase tracking-widest bg-slate-100 px-3 py-1 rounded-full dark:bg-slate-800 dark:text-slate-500">Content</span>
+                            <div className="h-px bg-slate-200 flex-1 dark:bg-slate-800"></div>
+                        </div>
+
                         {/* Blocks Editor */}
-                        <div className="space-y-4">
+                        <div className="space-y-4 min-h-[300px]">
                             {currentBlocks.map((block, idx) => (
-                                <div key={block.id} className="group relative bg-white border border-slate-200 rounded-xl p-4 hover:shadow-md transition-all dark:bg-slate-800 dark:border-slate-700">
+                                <div key={block.id} className="group relative bg-white border border-slate-200 rounded-3xl p-8 hover:shadow-xl hover:shadow-slate-200/50 transition-all hover:border-emerald-300 dark:bg-slate-900 dark:border-slate-700 dark:hover:border-emerald-700 dark:shadow-none">
                                     {/* Block Controls */}
-                                    <div className="absolute -right-3 top-2 flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-opacity z-10">
-                                        <button onClick={() => moveBlock(idx, 'up')} className="bg-white border border-slate-200 p-1 rounded hover:bg-slate-50 text-slate-500 shadow-sm dark:bg-slate-700 dark:border-slate-600 dark:text-slate-300"><ArrowUp size={12} /></button>
-                                        <button onClick={() => moveBlock(idx, 'down')} className="bg-white border border-slate-200 p-1 rounded hover:bg-slate-50 text-slate-500 shadow-sm dark:bg-slate-700 dark:border-slate-600 dark:text-slate-300"><ArrowDown size={12} /></button>
-                                        <button onClick={() => deleteBlock(block.id)} className="bg-white border border-slate-200 p-1 rounded hover:bg-red-50 text-red-500 shadow-sm dark:bg-slate-700 dark:border-slate-600"><Trash2 size={12} /></button>
+                                    <div className="absolute -right-3 top-6 flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-opacity z-10 bg-white p-1 rounded-xl border border-slate-100 shadow-lg dark:bg-slate-800 dark:border-slate-700">
+                                        <button onClick={() => moveBlock(idx, 'up')} className="p-2 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-600 dark:hover:bg-slate-700 dark:text-slate-500"><ArrowUp size={14} /></button>
+                                        <button onClick={() => moveBlock(idx, 'down')} className="p-2 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-600 dark:hover:bg-slate-700 dark:text-slate-500"><ArrowDown size={14} /></button>
+                                        <div className="w-4 h-px bg-slate-100 mx-auto my-1 dark:bg-slate-700"></div>
+                                        <button onClick={() => deleteBlock(block.id)} className="p-2 rounded-lg hover:bg-red-50 text-slate-400 hover:text-red-500 dark:hover:bg-red-900/30"><Trash2 size={14} /></button>
                                     </div>
 
                                     {/* Block Content */}
                                     {block.type === 'heading' && (
-                                        <div className="flex gap-2">
+                                        <div className="flex gap-4 items-center">
+                                            <div className="text-xs font-bold text-slate-300 w-8 text-right font-mono">H{block.style === 'h1' ? '1' : block.style === 'h3' ? '3' : '2'}</div>
                                             <select 
                                                 value={block.style || 'h2'} 
                                                 onChange={e => {
@@ -979,17 +1054,13 @@ const CourseBuilder: React.FC<CourseBuilderProps> = ({ currentUserHandle, onSubm
                                                     newBlocks[idx].style = e.target.value as any;
                                                     setCurrentBlocks(newBlocks);
                                                 }}
-                                                className="bg-slate-100 border-none rounded text-xs font-bold text-slate-500 outline-none w-16 dark:bg-slate-700 dark:text-slate-300"
-                                            >
-                                                <option value="h1">H1</option>
-                                                <option value="h2">H2</option>
-                                                <option value="h3">H3</option>
-                                            </select>
+                                                className="opacity-0 w-0 h-0 absolute" 
+                                            />
                                             <input 
                                                 type="text" 
                                                 value={block.content} 
                                                 onChange={e => updateBlock(block.id, e.target.value)}
-                                                className={`w-full outline-none font-bold placeholder-slate-300 dark:bg-transparent dark:text-white ${block.style === 'h1' ? 'text-2xl' : block.style === 'h3' ? 'text-lg' : 'text-xl'}`}
+                                                className={`w-full outline-none font-bold placeholder-slate-200 bg-transparent font-heading dark:text-white dark:placeholder-slate-700 ${block.style === 'h1' ? 'text-4xl' : block.style === 'h3' ? 'text-xl' : 'text-2xl'}`}
                                                 placeholder="Heading Text"
                                             />
                                         </div>
@@ -999,65 +1070,73 @@ const CourseBuilder: React.FC<CourseBuilderProps> = ({ currentUserHandle, onSubm
                                         <textarea 
                                             value={block.content} 
                                             onChange={e => updateBlock(block.id, e.target.value)}
-                                            className="w-full outline-none text-slate-700 resize-none h-24 bg-transparent dark:text-slate-300"
+                                            className="w-full outline-none text-slate-600 resize-none h-auto min-h-[5rem] bg-transparent text-lg leading-relaxed dark:text-slate-300 dark:placeholder-slate-700"
                                             placeholder="Type your paragraph here..."
                                         />
                                     )}
 
                                     {block.type === 'quote' && (
-                                        <div className="flex gap-3">
-                                            <div className="w-1 bg-emerald-500 rounded-full"></div>
+                                        <div className="flex gap-6">
+                                            <div className="w-1 bg-emerald-400 rounded-full shrink-0"></div>
                                             <textarea 
                                                 value={block.content} 
                                                 onChange={e => updateBlock(block.id, e.target.value)}
-                                                className="w-full outline-none text-slate-600 italic resize-none h-20 bg-transparent dark:text-slate-400"
+                                                className="w-full outline-none text-slate-500 italic resize-none h-auto min-h-[4rem] text-xl font-serif bg-transparent dark:text-slate-400"
                                                 placeholder="Enter quote..."
                                             />
                                         </div>
                                     )}
 
                                     {block.type === 'image' && (
-                                        <MediaInput 
-                                            value={block.content} 
-                                            onChange={val => updateBlock(block.id, val)}
-                                            compact
-                                        />
+                                        <div className="space-y-3">
+                                            <label className={LABEL_CLASS}>Image Block</label>
+                                            <MediaInput 
+                                                value={block.content} 
+                                                onChange={val => updateBlock(block.id, val)}
+                                                compact
+                                            />
+                                        </div>
                                     )}
 
                                     {block.type === 'list' && (
-                                        <div className="flex gap-2">
-                                            <div className="mt-2"><List size={16} className="text-slate-400" /></div>
+                                        <div className="flex gap-4">
+                                            <div className="mt-1.5 p-1.5 bg-slate-100 rounded-lg text-slate-400 dark:bg-slate-800"><List size={16} /></div>
                                             <textarea 
                                                 value={block.content} 
                                                 onChange={e => updateBlock(block.id, e.target.value)}
-                                                className="w-full outline-none text-slate-700 resize-none h-32 bg-transparent dark:text-slate-300"
+                                                className="w-full outline-none text-slate-700 resize-none h-auto min-h-[6rem] bg-transparent text-lg dark:text-slate-300"
                                                 placeholder="List items (one per line)..."
                                             />
                                         </div>
                                     )}
 
                                     {block.type === 'callout' && (
-                                        <div className={`p-3 rounded-lg border-l-4 flex gap-3 ${block.style === 'warning' ? 'bg-red-50 border-red-400 dark:bg-red-900/20' : 'bg-blue-50 border-blue-400 dark:bg-blue-900/20'}`}>
-                                            <select 
-                                                value={block.style || 'info'} 
-                                                onChange={e => {
-                                                    const newBlocks = [...currentBlocks];
-                                                    newBlocks[idx].style = e.target.value as any;
-                                                    setCurrentBlocks(newBlocks);
-                                                }}
-                                                className="bg-transparent text-xs font-bold opacity-50 outline-none w-16 dark:text-white"
-                                            >
-                                                <option value="info">Info</option>
-                                                <option value="warning">Warn</option>
-                                                <option value="tip">Tip</option>
-                                            </select>
-                                            <input 
-                                                type="text" 
-                                                value={block.content} 
-                                                onChange={e => updateBlock(block.id, e.target.value)}
-                                                className="w-full bg-transparent outline-none text-sm font-medium text-slate-800 dark:text-slate-200"
-                                                placeholder="Callout text..."
-                                            />
+                                        <div className={`p-6 rounded-2xl border flex gap-4 ${block.style === 'warning' ? 'bg-red-50 border-red-100 dark:bg-red-900/10 dark:border-red-900/30' : 'bg-blue-50 border-blue-100 dark:bg-blue-900/10 dark:border-blue-900/30'}`}>
+                                            <div className="mt-1">
+                                                {block.style === 'warning' ? <AlertCircle className="text-red-500" size={20} /> : <HelpCircle className="text-blue-500" size={20} />}
+                                            </div>
+                                            <div className="flex-1">
+                                                <select 
+                                                    value={block.style || 'info'} 
+                                                    onChange={e => {
+                                                        const newBlocks = [...currentBlocks];
+                                                        newBlocks[idx].style = e.target.value as any;
+                                                        setCurrentBlocks(newBlocks);
+                                                    }}
+                                                    className="bg-transparent text-[10px] font-bold opacity-50 outline-none mb-1 block uppercase tracking-wide dark:text-slate-300"
+                                                >
+                                                    <option value="info">Info Box</option>
+                                                    <option value="warning">Warning Box</option>
+                                                    <option value="tip">Pro Tip</option>
+                                                </select>
+                                                <input 
+                                                    type="text" 
+                                                    value={block.content} 
+                                                    onChange={e => updateBlock(block.id, e.target.value)}
+                                                    className="w-full bg-transparent outline-none font-bold text-slate-800 text-lg dark:text-slate-200"
+                                                    placeholder="Callout text..."
+                                                />
+                                            </div>
                                         </div>
                                     )}
                                 </div>
@@ -1065,26 +1144,27 @@ const CourseBuilder: React.FC<CourseBuilderProps> = ({ currentUserHandle, onSubm
                             
                             {/* Empty State */}
                             {currentBlocks.length === 0 && (
-                                <div className="text-center py-12 border-2 border-dashed border-slate-200 rounded-xl text-slate-400 dark:border-slate-700 dark:text-slate-500">
-                                    <p>No content blocks yet.</p>
-                                    <p className="text-xs mt-1">Use the toolbar below to add content.</p>
+                                <div className="text-center py-20 border-2 border-dashed border-slate-200 rounded-3xl bg-slate-50/50 text-slate-400 dark:border-slate-700 dark:bg-slate-900/50 dark:text-slate-500">
+                                    <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-6 shadow-sm dark:bg-slate-800">
+                                        <Sparkles size={24} className="text-emerald-400" />
+                                    </div>
+                                    <p className="font-bold text-lg text-slate-600 dark:text-slate-400">Your Lesson Canvas</p>
+                                    <p className="text-sm mt-2 opacity-70">Add blocks from the toolbar below or pick a template.</p>
                                 </div>
                             )}
                         </div>
                     </div>
                 </div>
 
-                {/* Bottom Toolbar (Sticky) */}
-                <div className="bg-white border-t border-slate-200 p-4 shrink-0 z-20 dark:bg-slate-900 dark:border-slate-700">
-                    <div className="max-w-2xl mx-auto flex items-center justify-between gap-2 overflow-x-auto no-scrollbar">
-                        <div className="text-xs font-bold text-slate-400 uppercase mr-2 dark:text-slate-500">Add:</div>
-                        <ToolbarBtn icon={Type} label="Text" onClick={() => addBlock('paragraph')} />
-                        <ToolbarBtn icon={LayoutTemplate} label="Header" onClick={() => addBlock('heading', 'h2')} />
-                        <ToolbarBtn icon={ImageIcon} label="Image" onClick={() => addBlock('image')} />
-                        <ToolbarBtn icon={List} label="List" onClick={() => addBlock('list')} />
-                        <ToolbarBtn icon={Quote} label="Quote" onClick={() => addBlock('quote')} />
-                        <ToolbarBtn icon={AlertCircle} label="Callout" onClick={() => addBlock('callout', 'info')} />
-                    </div>
+                {/* Bottom Toolbar (Floating) */}
+                <div className="absolute bottom-8 left-1/2 -translate-x-1/2 bg-white/90 backdrop-blur-xl border border-slate-200/50 p-2 rounded-2xl shadow-2xl flex gap-1 z-30 dark:bg-slate-800/90 dark:border-slate-700">
+                    <ToolbarBtn icon={Type} label="Text" onClick={() => addBlock('paragraph')} />
+                    <ToolbarBtn icon={LayoutTemplate} label="Header" onClick={() => addBlock('heading', 'h2')} />
+                    <div className="w-px bg-slate-200 mx-1 dark:bg-slate-700"></div>
+                    <ToolbarBtn icon={ImageIcon} label="Img" onClick={() => addBlock('image')} />
+                    <ToolbarBtn icon={List} label="List" onClick={() => addBlock('list')} />
+                    <ToolbarBtn icon={Quote} label="Quote" onClick={() => addBlock('quote')} />
+                    <ToolbarBtn icon={AlertCircle} label="Note" onClick={() => addBlock('callout', 'info')} />
                 </div>
             </div>
          </div>
@@ -1098,7 +1178,7 @@ const CourseBuilder: React.FC<CourseBuilderProps> = ({ currentUserHandle, onSubm
   }
 
   return (
-    <div className="max-w-5xl mx-auto h-full flex flex-col p-4 md:p-6">
+    <div className="max-w-7xl mx-auto h-full flex flex-col p-4 md:p-8 animate-fade-in">
       <style>{`
         .no-scrollbar::-webkit-scrollbar {
           display: none;
@@ -1109,152 +1189,142 @@ const CourseBuilder: React.FC<CourseBuilderProps> = ({ currentUserHandle, onSubm
         }
       `}</style>
       
-      {/* Top Navigation Bar */}
-      <div className="flex items-center justify-between mb-6 bg-white p-4 rounded-xl shadow-sm border border-slate-100 dark:bg-slate-800 dark:border-slate-700 shrink-0">
-         <div className="flex items-center gap-3">
-             <button onClick={() => navigate('/dashboard')} className="text-slate-500 hover:text-emerald-700 transition-colors p-1 rounded-lg hover:bg-emerald-50 dark:text-slate-400 dark:hover:bg-emerald-900/30 dark:hover:text-emerald-400">
+      {/* Modern Header */}
+      <div className="flex items-center justify-between mb-10 shrink-0">
+         <div className="flex items-center gap-6">
+             <button onClick={() => navigate('/dashboard')} className="group flex items-center justify-center w-12 h-12 rounded-full bg-white border border-slate-200 shadow-sm hover:shadow-md hover:border-slate-300 transition-all dark:bg-slate-800 dark:border-slate-700 dark:hover:border-slate-600">
                  <ArrowLeftIcon />
              </button>
              <div>
-                 <h1 className="font-bold text-xl text-emerald-950 font-heading dark:text-emerald-400">Course Builder</h1>
-                 <p className="text-xs text-slate-500 dark:text-slate-400">Create and manage training content</p>
+                 <h1 className="text-3xl font-bold text-slate-900 font-heading tracking-tight dark:text-white">Course Builder</h1>
+                 <p className="text-sm text-slate-500 font-medium mt-1 dark:text-slate-400">Crafting: <span className="text-emerald-600 dark:text-emerald-400">{course.title || 'Untitled Course'}</span></p>
              </div>
          </div>
          
-         {/* Toggle Preview Button */}
-         <button 
-            onClick={() => setIsPreviewMode(true)}
-            className="flex items-center gap-2 bg-slate-100 hover:bg-slate-200 text-slate-700 px-4 py-2 rounded-lg text-sm font-bold transition-all dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600"
-         >
-            <Eye size={16} /> Preview Course
-         </button>
+         <div className="flex gap-3">
+            <button 
+                onClick={() => setIsPreviewMode(true)}
+                className="flex items-center gap-2 bg-white text-slate-700 px-6 py-3 rounded-xl text-sm font-bold border border-slate-200 hover:bg-slate-50 hover:border-slate-300 transition-all shadow-sm dark:bg-slate-800 dark:border-slate-700 dark:text-white dark:hover:bg-slate-700"
+            >
+                <Eye size={18} /> <span className="hidden sm:inline">Preview</span>
+            </button>
+            {step === 4 && (
+                <button 
+                    onClick={handleSubmit}
+                    className="flex items-center gap-2 bg-emerald-600 text-white px-8 py-3 rounded-xl text-sm font-bold hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-200 dark:shadow-none"
+                >
+                    <Sparkles size={18} /> Publish
+                </button>
+            )}
+         </div>
       </div>
 
       {renderChapterEditor()}
 
-      {/* Main Container - Changed h-full to flex-1 min-h-0 to fix overflow issues */}
-      <div className="flex flex-col md:flex-row flex-1 min-h-0 gap-6 overflow-hidden">
+      {/* Main Container */}
+      <div className="flex flex-col lg:flex-row flex-1 min-h-0 gap-8 overflow-hidden">
         
-        {/* Sidebar Steps */}
-        <div ref={stepsContainerRef} className="w-full md:w-64 bg-white rounded-2xl shadow-sm border border-slate-100 p-4 flex md:flex-col gap-2 overflow-x-auto md:overflow-visible shrink-0 h-fit md:h-full dark:bg-slate-800 dark:border-slate-700 no-scrollbar">
+        {/* Navigation Sidebar (Vertical Pills) */}
+        <div className="w-full lg:w-64 flex flex-row lg:flex-col gap-2 shrink-0 overflow-x-auto lg:overflow-visible pb-2 lg:pb-0 no-scrollbar">
            {[
              { id: 1, label: 'Basic Info', icon: '📝' },
              { id: 2, label: 'Curriculum', icon: '📚' },
              { id: 3, label: 'Settings', icon: '⚙️' },
-             { id: 4, label: 'Review & Publish', icon: '🚀' },
+             { id: 4, label: 'Review', icon: '🚀' },
            ].map(s => (
              <button 
                key={s.id}
                data-step-id={s.id}
                onClick={() => setStep(s.id as any)}
-               className={`flex items-center gap-3 p-3 rounded-xl text-sm font-bold transition-all whitespace-nowrap ${
-                 step === s.id ? 'bg-emerald-600 text-white shadow-md' : 'text-slate-500 hover:bg-slate-50 dark:text-slate-400 dark:hover:bg-slate-700'
+               className={`flex items-center gap-3 px-5 py-4 rounded-2xl text-sm font-bold transition-all whitespace-nowrap ${
+                 step === s.id 
+                 ? 'bg-white text-emerald-600 shadow-lg shadow-slate-200/50 border border-emerald-100 ring-1 ring-emerald-50 dark:bg-emerald-900/20 dark:text-emerald-400 dark:border-emerald-800 dark:shadow-none dark:ring-0' 
+                 : 'text-slate-500 hover:bg-white/50 hover:text-slate-700 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-300'
                }`}
              >
-               <span>{s.icon}</span>
+               <span className="text-lg opacity-80">{s.icon}</span>
                <span>{s.label}</span>
+               {step === s.id && <div className="ml-auto w-1.5 h-1.5 rounded-full bg-emerald-500"></div>}
              </button>
            ))}
         </div>
 
         {/* Main Content Area */}
-        <div className="flex-1 bg-white rounded-2xl shadow-sm border border-slate-100 p-6 md:p-8 overflow-y-auto relative h-full dark:bg-slate-800 dark:border-slate-700 no-scrollbar">
-            
+        <div className="flex-1 overflow-y-auto no-scrollbar pb-20">
             {step === 1 && renderStep1_Info()}
             {step === 2 && renderStep2_Curriculum()}
             {step === 3 && renderStep3_Settings()}
             
             {step === 4 && (
-              <div className="space-y-8 animate-fade-in text-center py-6 pb-20">
-                  <div>
-                    <h2 className="text-2xl font-bold text-slate-800 dark:text-white mb-2">Publishing Options</h2>
-                    <p className="text-slate-500 dark:text-slate-400">Choose where this course will be visible.</p>
-                  </div>
+              <div className="space-y-8 animate-fade-in text-center py-12">
+                  <div className={CARD_CLASS}>
+                    <div className="max-w-2xl mx-auto">
+                        <h2 className="text-3xl font-bold text-slate-900 dark:text-white mb-3 font-heading">Ready to Launch?</h2>
+                        <p className="text-slate-500 dark:text-slate-400 text-lg mb-10">Choose visibility for your course.</p>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-3xl mx-auto">
-                      {/* Team Only Option */}
-                      <button 
-                        onClick={() => setPublishTarget('TEAM')}
-                        className={`p-6 rounded-2xl border-2 transition-all flex flex-col items-center text-center gap-4 ${
-                            publishTarget === 'TEAM' 
-                            ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/30' 
-                            : 'border-slate-200 hover:border-emerald-300 dark:border-slate-600 dark:hover:border-slate-500'
-                        }`}
-                      >
-                          <div className={`w-12 h-12 rounded-full flex items-center justify-center text-2xl ${
-                              publishTarget === 'TEAM' ? 'bg-emerald-200 text-emerald-800' : 'bg-slate-100 text-slate-500 dark:bg-slate-700'
-                          }`}>
-                              👥
-                          </div>
-                          <div>
-                              <h3 className="font-bold text-lg text-slate-800 dark:text-white">Team Training (Private)</h3>
-                              <p className="text-sm text-slate-500 mt-1 dark:text-slate-400">Visible only to your downline or people with the link.</p>
-                              <span className="inline-block mt-3 px-3 py-1 bg-green-100 text-green-700 text-xs font-bold rounded-full dark:bg-green-900/30 dark:text-green-300">
-                                  Instantly Published
-                              </span>
-                          </div>
-                      </button>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
+                            {/* Team Only Option */}
+                            <button 
+                                onClick={() => setPublishTarget('TEAM')}
+                                className={`p-8 rounded-3xl border-2 transition-all flex flex-col items-center text-center gap-4 ${
+                                    publishTarget === 'TEAM' 
+                                    ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20' 
+                                    : 'border-slate-100 hover:border-emerald-200 bg-white dark:bg-slate-800 dark:border-slate-700 dark:hover:border-slate-600'
+                                }`}
+                            >
+                                <div className={`w-16 h-16 rounded-full flex items-center justify-center text-3xl shadow-sm ${
+                                    publishTarget === 'TEAM' ? 'bg-emerald-200 text-emerald-800' : 'bg-slate-100 text-slate-500 dark:bg-slate-700'
+                                }`}>
+                                    👥
+                                </div>
+                                <div>
+                                    <h3 className="font-bold text-lg text-slate-800 dark:text-white">Team Training</h3>
+                                    <p className="text-sm text-slate-500 mt-2 dark:text-slate-400 leading-relaxed">Visible only to your downline.</p>
+                                </div>
+                            </button>
 
-                      {/* Global Option */}
-                      <button 
-                        onClick={() => setPublishTarget('GLOBAL')}
-                        className={`p-6 rounded-2xl border-2 transition-all flex flex-col items-center text-center gap-4 ${
-                            publishTarget === 'GLOBAL' 
-                            ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/30' 
-                            : 'border-slate-200 hover:border-blue-300 dark:border-slate-600 dark:hover:border-slate-500'
-                        }`}
-                      >
-                          <div className={`w-12 h-12 rounded-full flex items-center justify-center text-2xl ${
-                              publishTarget === 'GLOBAL' ? 'bg-blue-200 text-blue-800' : 'bg-slate-100 text-slate-500 dark:bg-slate-700'
-                          }`}>
-                              🌍
-                          </div>
-                          <div>
-                              <h3 className="font-bold text-lg text-slate-800 dark:text-white">Global Library (Public)</h3>
-                              <p className="text-sm text-slate-500 mt-1 dark:text-slate-400">Visible to ALL FBOs on the platform. Build your reputation.</p>
-                              <span className="inline-block mt-3 px-3 py-1 bg-orange-100 text-orange-700 text-xs font-bold rounded-full dark:bg-orange-900/30 dark:text-orange-300">
-                                  Requires Admin Review
-                              </span>
-                          </div>
-                      </button>
-                  </div>
-                  
-                  <div className="pt-6 border-t border-slate-100 dark:border-slate-700 max-w-md mx-auto">
-                      <div className="flex justify-between text-sm text-slate-500 mb-6 dark:text-slate-400">
-                          <span>Modules: {course.modules.length}</span>
-                          <span>Track: {course.track}</span>
-                      </div>
+                            {/* Global Option */}
+                            <button 
+                                onClick={() => setPublishTarget('GLOBAL')}
+                                className={`p-8 rounded-3xl border-2 transition-all flex flex-col items-center text-center gap-4 ${
+                                    publishTarget === 'GLOBAL' 
+                                    ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20' 
+                                    : 'border-slate-100 hover:border-blue-200 bg-white dark:bg-slate-800 dark:border-slate-700 dark:hover:border-slate-600'
+                                }`}
+                            >
+                                <div className={`w-16 h-16 rounded-full flex items-center justify-center text-3xl shadow-sm ${
+                                    publishTarget === 'GLOBAL' ? 'bg-blue-200 text-blue-800' : 'bg-slate-100 text-slate-500 dark:bg-slate-700'
+                                }`}>
+                                    🌍
+                                </div>
+                                <div>
+                                    <h3 className="font-bold text-lg text-slate-800 dark:text-white">Global Library</h3>
+                                    <p className="text-sm text-slate-500 mt-2 dark:text-slate-400 leading-relaxed">Public to all FBOs (Review required).</p>
+                                </div>
+                            </button>
+                        </div>
+                        
+                        <div className="flex flex-col items-center gap-4">
+                            <div className="flex gap-8 text-sm text-slate-500 font-medium dark:text-slate-400">
+                                <span>{course.modules.length} Modules</span>
+                                <span className="w-px h-4 bg-slate-300 dark:bg-slate-700"></span>
+                                <span>{course.track}</span>
+                            </div>
 
-                      <button 
-                        onClick={handleSubmit}
-                        className={`w-full py-4 rounded-xl font-bold text-lg shadow-lg hover:scale-105 transition-all text-white ${
-                            publishTarget === 'GLOBAL' ? 'bg-blue-600 hover:bg-blue-700' : 'bg-emerald-600 hover:bg-emerald-700'
-                        }`}
-                      >
-                        {publishTarget === 'GLOBAL' ? 'Submit for Global Review' : 'Publish to Team Portal'}
-                      </button>
+                            <button 
+                                onClick={handleSubmit}
+                                className={`w-full max-w-sm py-4 rounded-xl font-bold text-lg shadow-xl hover:scale-105 transition-all text-white ${
+                                    publishTarget === 'GLOBAL' ? 'bg-blue-600 hover:bg-blue-700 shadow-blue-200' : 'bg-emerald-600 hover:bg-emerald-700 shadow-emerald-200'
+                                }`}
+                            >
+                                {publishTarget === 'GLOBAL' ? 'Submit for Review' : 'Publish Now'}
+                            </button>
+                        </div>
+                    </div>
                   </div>
               </div>
             )}
         </div>
-      </div>
-      
-      {/* Navigation Footer (Mobile mainly) */}
-      <div className="flex justify-between mt-6 md:hidden pb-6 shrink-0">
-          <button 
-            disabled={step === 1} 
-            onClick={() => setStep(prev => Math.max(1, prev - 1) as any)}
-            className="text-slate-500 font-bold disabled:opacity-30 dark:text-slate-400"
-          >
-            &larr; Back
-          </button>
-          <button 
-            disabled={step === 4} 
-            onClick={() => setStep(prev => Math.min(4, prev + 1) as any)}
-            className="text-emerald-600 font-bold disabled:opacity-30 dark:text-emerald-400"
-          >
-            Next &rarr;
-          </button>
       </div>
     </div>
   );
@@ -1263,21 +1333,16 @@ const CourseBuilder: React.FC<CourseBuilderProps> = ({ currentUserHandle, onSubm
 const ToolbarBtn: React.FC<{ icon: any, label: string, onClick: () => void }> = ({ icon: Icon, label, onClick }) => (
     <button 
         onClick={onClick}
-        className="flex items-center gap-2 px-3 py-2 rounded-lg bg-slate-100 text-slate-700 hover:bg-emerald-100 hover:text-emerald-700 transition-colors font-medium text-xs whitespace-nowrap dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-emerald-900/30 dark:hover:text-emerald-400"
+        className="flex flex-col items-center gap-1 px-3 py-2 rounded-xl text-slate-500 hover:bg-slate-100 hover:text-emerald-700 transition-colors group dark:text-slate-400 dark:hover:bg-slate-700 dark:hover:text-emerald-400"
     >
-        <Icon size={14} /> {label}
+        <Icon size={20} className="group-hover:scale-110 transition-transform" />
+        <span className="text-[10px] font-bold">{label}</span>
     </button>
 );
 
 const ArrowLeftIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-6 h-6">
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-5 h-5 text-slate-400 group-hover:text-slate-600 dark:text-slate-500 dark:group-hover:text-slate-300">
         <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
-    </svg>
-);
-
-const TrashIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4">
-        <path strokeLinecap="round" strokeLinejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
     </svg>
 );
 

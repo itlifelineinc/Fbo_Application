@@ -2,7 +2,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Course, Module, Chapter, CourseTrack, CourseLevel, CourseStatus, ContentBlock, BlockType } from '../types';
-import { Eye, X, PlayCircle, FileText, HelpCircle, ChevronDown, ChevronRight, CheckCircle, Menu, BookOpen, Clock, Plus, Trash2, ArrowUp, ArrowDown, LayoutTemplate, Type, Image as ImageIcon, List, Quote, AlertCircle, ArrowLeft, ShoppingBag, Users, Sparkles, Save } from 'lucide-react';
+import { Eye, X, PlayCircle, FileText, HelpCircle, ChevronDown, ChevronRight, CheckCircle, Menu, BookOpen, Clock, Plus, Trash2, ArrowUp, ArrowDown, LayoutTemplate, Type, Image as ImageIcon, List, Quote, AlertCircle, ArrowLeft, ShoppingBag, Users, Sparkles, Save, Search, Check } from 'lucide-react';
 
 interface CourseBuilderProps {
   currentUserHandle: string;
@@ -37,52 +37,77 @@ const getEmptyCourse = (authorHandle: string): Course => ({
 // --- TEMPLATES DEFINITION ---
 const TEMPLATES: {id: string, name: string, description: string, icon: any, blocks: ContentBlock[]}[] = [
     {
-        id: 'blank',
-        name: 'Blank Slate',
-        description: 'Start fresh with an empty canvas.',
-        icon: FileText,
-        blocks: []
-    },
-    {
-        id: 'standard',
-        name: 'Standard Lesson',
-        description: 'Classic lecture format with intro & summary.',
-        icon: BookOpen,
+        id: 'hook-story',
+        name: 'The "Hook & Story"',
+        description: 'Engage emotionally. Best for introductions and vision sharing.',
+        icon: Sparkles,
         blocks: [
-            { id: '1', type: 'heading', style: 'h2', content: 'Introduction' },
-            { id: '2', type: 'paragraph', content: 'Start with a hook to grab the students attention and explain what they will learn.' },
-            { id: '3', type: 'image', content: '' },
-            { id: '4', type: 'heading', style: 'h2', content: 'Core Concepts' },
-            { id: '5', type: 'paragraph', content: 'Explain the main topic in detail here. Break it down into digestible parts.' },
-            { id: '6', type: 'callout', style: 'tip', content: 'Pro Tip: Remember to emphasize this key takeaway.' }
+            { id: '1', type: 'heading', style: 'h2', content: 'The Turning Point' },
+            { id: '2', type: 'paragraph', content: 'Start with a relatable struggle or a "what if" question to hook the learner immediately.' },
+            { id: '3', type: 'quote', content: '"People don\'t buy what you do; they buy why you do it."' },
+            { id: '4', type: 'image', content: '' },
+            { id: '5', type: 'heading', style: 'h3', content: 'The Solution' },
+            { id: '6', type: 'paragraph', content: 'Explain how the Forever opportunity or product resolved the struggle.' },
+            { id: '7', type: 'callout', style: 'tip', content: 'Key Lesson: Vulnerability builds trust.' }
         ]
     },
     {
-        id: 'case-study',
-        name: 'Case Study',
-        description: 'Real-world scenario analysis.',
-        icon: Users,
+        id: 'how-to',
+        name: 'The "How-To" Guide',
+        description: 'Step-by-step instruction. Best for technical skills or processes.',
+        icon: List,
         blocks: [
-            { id: '1', type: 'heading', style: 'h2', content: 'The Scenario' },
-            { id: '2', type: 'paragraph', content: 'Describe a specific situation or problem an FBO faced in the field.' },
-            { id: '3', type: 'quote', content: 'Include a direct quote from the person involved to add authenticity.' },
-            { id: '4', type: 'heading', style: 'h3', content: 'The Approach' },
-            { id: '5', type: 'list', style: 'bullet', content: 'Step 1: Identified the customer need\nStep 2: Recommended the C9 Pack\nStep 3: Followed up after 3 days' },
-            { id: '6', type: 'callout', style: 'info', content: 'Result: 2CC achieved in one week and a loyal customer gained.' }
+            { id: '1', type: 'heading', style: 'h2', content: 'Step-by-Step Walkthrough' },
+            { id: '2', type: 'paragraph', content: 'Briefly explain what the user will achieve by the end of this lesson.' },
+            { id: '3', type: 'heading', style: 'h3', content: 'Step 1: Preparation' },
+            { id: '4', type: 'list', style: 'bullet', content: 'Gather materials\nCheck requirements\nSet aside time' },
+            { id: '5', type: 'heading', style: 'h3', content: 'Step 2: Execution' },
+            { id: '6', type: 'paragraph', content: 'Describe the core action in detail.' },
+            { id: '7', type: 'callout', style: 'warning', content: 'Common Pitfall: Don\'t skip the preparation phase.' }
         ]
     },
     {
-        id: 'product-spotlight',
-        name: 'Product Spotlight',
-        description: 'Deep dive into a specific product.',
+        id: 'product-deep-dive',
+        name: 'Product Deep Dive',
+        description: 'Comprehensive product training. Best for sales enablement.',
         icon: ShoppingBag,
         blocks: [
             { id: '1', type: 'heading', style: 'h2', content: 'Product Overview' },
             { id: '2', type: 'image', content: '' },
-            { id: '3', type: 'paragraph', content: 'Briefly describe what the product is and who it is for.' },
-            { id: '4', type: 'heading', style: 'h3', content: 'Key Benefits' },
-            { id: '5', type: 'list', style: 'bullet', content: 'Benefit 1: Supports immune health\nBenefit 2: High in vitamins\nBenefit 3: Great taste' },
-            { id: '6', type: 'callout', style: 'warning', content: 'Compliance Note: Do not make medical claims.' }
+            { id: '3', type: 'paragraph', content: 'What is it? Who is it for? Why is it unique?' },
+            { id: '4', type: 'heading', style: 'h3', content: 'Key Ingredients & Benefits' },
+            { id: '5', type: 'list', style: 'bullet', content: 'Benefit 1: ...\nBenefit 2: ...\nBenefit 3: ...' },
+            { id: '6', type: 'heading', style: 'h3', content: 'Compliance & Safety' },
+            { id: '7', type: 'callout', style: 'info', content: 'Note: Not intended to diagnose, treat, cure, or prevent any disease.' }
+        ]
+    },
+    {
+        id: 'case-study',
+        name: 'Case Study Analysis',
+        description: 'Real-world proof. Best for business building training.',
+        icon: Users,
+        blocks: [
+            { id: '1', type: 'heading', style: 'h2', content: 'The Scenario' },
+            { id: '2', type: 'paragraph', content: 'Describe a specific situation an FBO faced in the field (e.g., a skeptical prospect).' },
+            { id: '3', type: 'heading', style: 'h3', content: 'The Approach' },
+            { id: '4', type: 'list', style: 'number', content: 'Listened actively\nAcknowledged concerns\nProvided third-party validation' },
+            { id: '5', type: 'heading', style: 'h3', content: 'The Outcome' },
+            { id: '6', type: 'callout', style: 'tip', content: 'Result: A new customer and a referral.' }
+        ]
+    },
+    {
+        id: 'faq-buster',
+        name: 'FAQ Buster',
+        description: 'Overcoming objections. Best for closing skills.',
+        icon: HelpCircle,
+        blocks: [
+            { id: '1', type: 'heading', style: 'h2', content: 'Common Objections' },
+            { id: '2', type: 'paragraph', content: 'Introduction to the mindset of handling objections.' },
+            { id: '3', type: 'heading', style: 'h3', content: '"It\'s too expensive"' },
+            { id: '4', type: 'paragraph', content: 'Script: "Compared to what? Let\'s break down the daily cost vs. value..."' },
+            { id: '5', type: 'heading', style: 'h3', content: '"I don\'t have time"' },
+            { id: '6', type: 'paragraph', content: 'Script: "That\'s exactly why you need this business. To buy back your time."' },
+            { id: '7', type: 'callout', style: 'warning', content: 'Remember: Never argue. Always validate first.' }
         ]
     }
 ];
@@ -497,6 +522,9 @@ const CourseBuilder: React.FC<CourseBuilderProps> = ({ currentUserHandle, onSubm
   // Preview Mode State
   const [isPreviewMode, setIsPreviewMode] = useState(false);
 
+  // Template Mode State within Editor
+  const [isTemplateMode, setIsTemplateMode] = useState(false);
+
   // Ref for the step navigation container to handle scrolling
   const stepsContainerRef = useRef<HTMLDivElement>(null);
 
@@ -513,6 +541,7 @@ const CourseBuilder: React.FC<CourseBuilderProps> = ({ currentUserHandle, onSubm
                   setCurrentBlocks([{ id: 'init', type: 'paragraph', content: chap.content }]);
               } else {
                   setCurrentBlocks([]);
+                  setIsTemplateMode(true); // Default to template selection if empty
               }
           }
       }
@@ -669,6 +698,7 @@ const CourseBuilder: React.FC<CourseBuilderProps> = ({ currentUserHandle, onSubm
           // Deep copy to give unique IDs
           const newBlocks = template.blocks.map(b => ({ ...b, id: `blk_${Date.now()}_${Math.random()}` }));
           setCurrentBlocks(newBlocks);
+          setIsTemplateMode(false); // Return to editor view
       }
   };
 
@@ -704,6 +734,7 @@ const CourseBuilder: React.FC<CourseBuilderProps> = ({ currentUserHandle, onSubm
         })
       }));
       setEditingChapter(null);
+      setIsTemplateMode(false); // Reset template mode
   };
 
   const handleSubmit = () => {
@@ -939,10 +970,19 @@ const CourseBuilder: React.FC<CourseBuilderProps> = ({ currentUserHandle, onSubm
 
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 animate-fade-in">
+         <style>{`
+            .no-scrollbar::-webkit-scrollbar {
+              display: none;
+            }
+            .no-scrollbar {
+              -ms-overflow-style: none;
+              scrollbar-width: none;
+            }
+         `}</style>
          <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-md transition-opacity" onClick={saveBlocksToChapter} />
          <div className="relative w-full max-w-5xl bg-white h-[90vh] shadow-2xl flex flex-col rounded-3xl overflow-hidden ring-1 ring-black/5 dark:bg-slate-900 dark:ring-white/10">
             {/* Header */}
-            <div className="px-8 py-5 border-b border-slate-100 flex justify-between items-center bg-white z-10 dark:bg-slate-900 dark:border-slate-800">
+            <div className="px-8 py-5 border-b border-slate-100 flex justify-between items-center bg-white z-10 dark:bg-slate-900 dark:border-slate-800 shrink-0">
                <div className="flex items-center gap-6">
                    <button onClick={saveBlocksToChapter} className="text-slate-400 hover:text-slate-800 transition-colors p-1 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 dark:hover:text-white">
                         <ArrowLeft size={24} />
@@ -953,30 +993,14 @@ const CourseBuilder: React.FC<CourseBuilderProps> = ({ currentUserHandle, onSubm
                    </div>
                </div>
                <div className="flex gap-4 items-center">
-                   {/* Template Selector */}
-                   <div className="relative group">
-                       <button className="flex items-center gap-2 text-sm font-bold text-slate-600 bg-slate-50 px-4 py-2.5 rounded-xl hover:bg-slate-100 transition-colors dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700">
-                           <LayoutTemplate size={16} /> Templates
-                       </button>
-                       <div className="absolute right-0 top-full mt-2 w-72 bg-white border border-slate-100 rounded-2xl shadow-xl p-2 hidden group-hover:block z-50 dark:bg-slate-800 dark:border-slate-700 animate-fade-in">
-                           <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2 px-3 mt-2">Quick Start</div>
-                           {TEMPLATES.map(t => (
-                               <button 
-                                key={t.id} 
-                                onClick={() => applyTemplate(t.id)}
-                                className="w-full text-left px-3 py-3 hover:bg-slate-50 rounded-xl flex items-start gap-3 transition-colors dark:hover:bg-slate-700/50"
-                               >
-                                   <div className="p-2 bg-emerald-50 text-emerald-600 rounded-lg dark:bg-emerald-900/30 dark:text-emerald-400">
-                                      <t.icon size={16} />
-                                   </div>
-                                   <div>
-                                      <div className="text-sm font-bold text-slate-800 dark:text-slate-200">{t.name}</div>
-                                      <div className="text-xs text-slate-500 mt-0.5 leading-tight dark:text-slate-400">{t.description}</div>
-                                   </div>
-                               </button>
-                           ))}
-                       </div>
-                   </div>
+                   {/* Toggle Template Mode */}
+                   <button 
+                     onClick={() => setIsTemplateMode(!isTemplateMode)}
+                     className={`flex items-center gap-2 text-sm font-bold px-4 py-2.5 rounded-xl transition-colors ${isTemplateMode ? 'bg-emerald-50 text-emerald-600 border border-emerald-100 dark:bg-emerald-900/30 dark:text-emerald-400 dark:border-emerald-800' : 'text-slate-600 bg-slate-50 hover:bg-slate-100 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700'}`}
+                   >
+                       <LayoutTemplate size={16} /> 
+                       {isTemplateMode ? 'Cancel Templates' : 'Templates'}
+                   </button>
                    <button onClick={saveBlocksToChapter} className="bg-slate-900 text-white px-6 py-2.5 rounded-xl font-bold hover:bg-slate-800 transition-colors text-sm shadow-lg shadow-slate-200 dark:bg-emerald-600 dark:hover:bg-emerald-700 dark:shadow-none flex items-center gap-2">
                        <Save size={16} /> Save Changes
                    </button>
@@ -985,187 +1009,219 @@ const CourseBuilder: React.FC<CourseBuilderProps> = ({ currentUserHandle, onSubm
             
             <div className="flex-1 flex overflow-hidden">
                 {/* Scrollable Content Area */}
-                <div className="flex-1 overflow-y-auto bg-slate-50 dark:bg-slate-950">
-                    <div className="max-w-3xl mx-auto py-12 px-8 pb-32 space-y-10">
-                        
-                        {/* Meta Fields Card */}
-                        <div className={CARD_CLASS}>
-                            <div className="flex justify-between items-center mb-6">
-                                <h4 className={LABEL_CLASS}>Lesson Metadata</h4>
-                                <span className="text-xs font-mono text-slate-300 dark:text-slate-600">ID: {activeChapter.id}</span>
+                <div className="flex-1 overflow-y-auto no-scrollbar bg-slate-50 dark:bg-slate-950">
+                    
+                    {isTemplateMode ? (
+                        // --- TEMPLATE GALLERY VIEW ---
+                        <div className="max-w-5xl mx-auto py-12 px-8 animate-fade-in">
+                            <div className="text-center mb-10">
+                                <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">Choose a Structure</h2>
+                                <p className="text-slate-500 dark:text-slate-400">Jumpstart your lesson with a proven layout. Select one to apply.</p>
                             </div>
-                            <div className="space-y-6">
-                                <div>
-                                    <label className={LABEL_CLASS}>Title</label>
-                                    <input 
-                                        type="text" 
-                                        value={activeChapter.title} 
-                                        onChange={e => updateActiveChapter('title', e.target.value)}
-                                        className="w-full p-0 border-b border-slate-200 text-2xl font-bold font-heading focus:border-emerald-500 focus:ring-0 outline-none bg-transparent text-slate-900 py-2 dark:border-slate-700 dark:text-white"
-                                        placeholder="Enter lesson title..."
-                                    />
+                            
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                {TEMPLATES.map(t => (
+                                    <button 
+                                        key={t.id} 
+                                        onClick={() => applyTemplate(t.id)}
+                                        className="text-left bg-white border border-slate-200 rounded-2xl p-6 hover:shadow-xl hover:border-emerald-400 hover:-translate-y-1 transition-all group dark:bg-slate-900 dark:border-slate-700 dark:hover:border-emerald-500"
+                                    >
+                                        <div className="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform dark:bg-emerald-900/30 dark:text-emerald-400">
+                                            <t.icon size={24} />
+                                        </div>
+                                        <h3 className="font-bold text-lg text-slate-800 mb-2 dark:text-white">{t.name}</h3>
+                                        <p className="text-sm text-slate-500 leading-relaxed mb-4 dark:text-slate-400">{t.description}</p>
+                                        <div className="flex items-center gap-2 text-xs font-bold text-emerald-600 dark:text-emerald-400">
+                                            Use Template <ArrowLeft size={12} className="rotate-180" />
+                                        </div>
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    ) : (
+                        // --- EDITOR VIEW ---
+                        <div className="max-w-3xl mx-auto py-12 px-8 pb-32 space-y-10">
+                            {/* Meta Fields Card */}
+                            <div className={CARD_CLASS}>
+                                <div className="flex justify-between items-center mb-6">
+                                    <h4 className={LABEL_CLASS}>Lesson Metadata</h4>
+                                    <span className="text-xs font-mono text-slate-300 dark:text-slate-600">ID: {activeChapter.id}</span>
                                 </div>
-                                <div className="grid grid-cols-2 gap-8">
-                                    <MediaInput 
-                                        label="Header Image (Optional)" 
-                                        value={activeChapter.headerImageUrl || ''} 
-                                        onChange={val => updateActiveChapter('headerImageUrl', val)}
-                                        compact
-                                    />
+                                <div className="space-y-6">
                                     <div>
-                                        <label className={LABEL_CLASS}>Duration (Minutes)</label>
+                                        <label className={LABEL_CLASS}>Title</label>
                                         <input 
-                                            type="number" 
-                                            value={activeChapter.durationMinutes} 
-                                            onChange={e => updateActiveChapter('durationMinutes', parseInt(e.target.value))}
-                                            className={INPUT_CLASS}
+                                            type="text" 
+                                            value={activeChapter.title} 
+                                            onChange={e => updateActiveChapter('title', e.target.value)}
+                                            className="w-full p-0 border-b border-slate-200 text-2xl font-bold font-heading focus:border-emerald-500 focus:ring-0 outline-none bg-transparent text-slate-900 py-2 dark:border-slate-700 dark:text-white"
+                                            placeholder="Enter lesson title..."
                                         />
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-8">
+                                        <MediaInput 
+                                            label="Header Image (Optional)" 
+                                            value={activeChapter.headerImageUrl || ''} 
+                                            onChange={val => updateActiveChapter('headerImageUrl', val)}
+                                            compact
+                                        />
+                                        <div>
+                                            <label className={LABEL_CLASS}>Duration (Minutes)</label>
+                                            <input 
+                                                type="number" 
+                                                value={activeChapter.durationMinutes} 
+                                                onChange={e => updateActiveChapter('durationMinutes', parseInt(e.target.value))}
+                                                className={INPUT_CLASS}
+                                            />
+                                        </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
 
-                        <div className="flex items-center gap-4 py-2">
-                            <div className="h-px bg-slate-200 flex-1 dark:bg-slate-800"></div>
-                            <span className="text-xs font-bold text-slate-400 uppercase tracking-widest bg-slate-100 px-3 py-1 rounded-full dark:bg-slate-800 dark:text-slate-500">Content</span>
-                            <div className="h-px bg-slate-200 flex-1 dark:bg-slate-800"></div>
-                        </div>
+                            <div className="flex items-center gap-4 py-2">
+                                <div className="h-px bg-slate-200 flex-1 dark:bg-slate-800"></div>
+                                <span className="text-xs font-bold text-slate-400 uppercase tracking-widest bg-slate-100 px-3 py-1 rounded-full dark:bg-slate-800 dark:text-slate-500">Content</span>
+                                <div className="h-px bg-slate-200 flex-1 dark:bg-slate-800"></div>
+                            </div>
 
-                        {/* Blocks Editor */}
-                        <div className="space-y-4 min-h-[300px]">
-                            {currentBlocks.map((block, idx) => (
-                                <div key={block.id} className="group relative bg-white border border-slate-200 rounded-3xl p-8 hover:shadow-xl hover:shadow-slate-200/50 transition-all hover:border-emerald-300 dark:bg-slate-900 dark:border-slate-700 dark:hover:border-emerald-700 dark:shadow-none">
-                                    {/* Block Controls */}
-                                    <div className="absolute -right-3 top-6 flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-opacity z-10 bg-white p-1 rounded-xl border border-slate-100 shadow-lg dark:bg-slate-800 dark:border-slate-700">
-                                        <button onClick={() => moveBlock(idx, 'up')} className="p-2 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-600 dark:hover:bg-slate-700 dark:text-slate-500"><ArrowUp size={14} /></button>
-                                        <button onClick={() => moveBlock(idx, 'down')} className="p-2 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-600 dark:hover:bg-slate-700 dark:text-slate-500"><ArrowDown size={14} /></button>
-                                        <div className="w-4 h-px bg-slate-100 mx-auto my-1 dark:bg-slate-700"></div>
-                                        <button onClick={() => deleteBlock(block.id)} className="p-2 rounded-lg hover:bg-red-50 text-slate-400 hover:text-red-500 dark:hover:bg-red-900/30"><Trash2 size={14} /></button>
-                                    </div>
-
-                                    {/* Block Content */}
-                                    {block.type === 'heading' && (
-                                        <div className="flex gap-4 items-center">
-                                            <div className="text-xs font-bold text-slate-300 w-8 text-right font-mono">H{block.style === 'h1' ? '1' : block.style === 'h3' ? '3' : '2'}</div>
-                                            <select 
-                                                value={block.style || 'h2'} 
-                                                onChange={e => {
-                                                    const newBlocks = [...currentBlocks];
-                                                    newBlocks[idx].style = e.target.value as any;
-                                                    setCurrentBlocks(newBlocks);
-                                                }}
-                                                className="opacity-0 w-0 h-0 absolute" 
-                                            />
-                                            <input 
-                                                type="text" 
-                                                value={block.content} 
-                                                onChange={e => updateBlock(block.id, e.target.value)}
-                                                className={`w-full outline-none font-bold placeholder-slate-200 bg-transparent font-heading dark:text-white dark:placeholder-slate-700 ${block.style === 'h1' ? 'text-4xl' : block.style === 'h3' ? 'text-xl' : 'text-2xl'}`}
-                                                placeholder="Heading Text"
-                                            />
+                            {/* Blocks Editor */}
+                            <div className="space-y-4 min-h-[300px]">
+                                {currentBlocks.map((block, idx) => (
+                                    <div key={block.id} className="group relative bg-white border border-slate-200 rounded-3xl p-8 hover:shadow-xl hover:shadow-slate-200/50 transition-all hover:border-emerald-300 dark:bg-slate-900 dark:border-slate-700 dark:hover:border-emerald-700 dark:shadow-none">
+                                        {/* Block Controls */}
+                                        <div className="absolute -right-3 top-6 flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-opacity z-10 bg-white p-1 rounded-xl border border-slate-100 shadow-lg dark:bg-slate-800 dark:border-slate-700">
+                                            <button onClick={() => moveBlock(idx, 'up')} className="p-2 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-600 dark:hover:bg-slate-700 dark:text-slate-500"><ArrowUp size={14} /></button>
+                                            <button onClick={() => moveBlock(idx, 'down')} className="p-2 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-600 dark:hover:bg-slate-700 dark:text-slate-500"><ArrowDown size={14} /></button>
+                                            <div className="w-4 h-px bg-slate-100 mx-auto my-1 dark:bg-slate-700"></div>
+                                            <button onClick={() => deleteBlock(block.id)} className="p-2 rounded-lg hover:bg-red-50 text-slate-400 hover:text-red-500 dark:hover:bg-red-900/30"><Trash2 size={14} /></button>
                                         </div>
-                                    )}
 
-                                    {block.type === 'paragraph' && (
-                                        <textarea 
-                                            value={block.content} 
-                                            onChange={e => updateBlock(block.id, e.target.value)}
-                                            className="w-full outline-none text-slate-600 resize-none h-auto min-h-[5rem] bg-transparent text-lg leading-relaxed dark:text-slate-300 dark:placeholder-slate-700"
-                                            placeholder="Type your paragraph here..."
-                                        />
-                                    )}
-
-                                    {block.type === 'quote' && (
-                                        <div className="flex gap-6">
-                                            <div className="w-1 bg-emerald-400 rounded-full shrink-0"></div>
-                                            <textarea 
-                                                value={block.content} 
-                                                onChange={e => updateBlock(block.id, e.target.value)}
-                                                className="w-full outline-none text-slate-500 italic resize-none h-auto min-h-[4rem] text-xl font-serif bg-transparent dark:text-slate-400"
-                                                placeholder="Enter quote..."
-                                            />
-                                        </div>
-                                    )}
-
-                                    {block.type === 'image' && (
-                                        <div className="space-y-3">
-                                            <label className={LABEL_CLASS}>Image Block</label>
-                                            <MediaInput 
-                                                value={block.content} 
-                                                onChange={val => updateBlock(block.id, val)}
-                                                compact
-                                            />
-                                        </div>
-                                    )}
-
-                                    {block.type === 'list' && (
-                                        <div className="flex gap-4">
-                                            <div className="mt-1.5 p-1.5 bg-slate-100 rounded-lg text-slate-400 dark:bg-slate-800"><List size={16} /></div>
-                                            <textarea 
-                                                value={block.content} 
-                                                onChange={e => updateBlock(block.id, e.target.value)}
-                                                className="w-full outline-none text-slate-700 resize-none h-auto min-h-[6rem] bg-transparent text-lg dark:text-slate-300"
-                                                placeholder="List items (one per line)..."
-                                            />
-                                        </div>
-                                    )}
-
-                                    {block.type === 'callout' && (
-                                        <div className={`p-6 rounded-2xl border flex gap-4 ${block.style === 'warning' ? 'bg-red-50 border-red-100 dark:bg-red-900/10 dark:border-red-900/30' : 'bg-blue-50 border-blue-100 dark:bg-blue-900/10 dark:border-blue-900/30'}`}>
-                                            <div className="mt-1">
-                                                {block.style === 'warning' ? <AlertCircle className="text-red-500" size={20} /> : <HelpCircle className="text-blue-500" size={20} />}
-                                            </div>
-                                            <div className="flex-1">
+                                        {/* Block Content */}
+                                        {block.type === 'heading' && (
+                                            <div className="flex gap-4 items-center">
+                                                <div className="text-xs font-bold text-slate-300 w-8 text-right font-mono">H{block.style === 'h1' ? '1' : block.style === 'h3' ? '3' : '2'}</div>
                                                 <select 
-                                                    value={block.style || 'info'} 
+                                                    value={block.style || 'h2'} 
                                                     onChange={e => {
                                                         const newBlocks = [...currentBlocks];
                                                         newBlocks[idx].style = e.target.value as any;
                                                         setCurrentBlocks(newBlocks);
                                                     }}
-                                                    className="bg-transparent text-[10px] font-bold opacity-50 outline-none mb-1 block uppercase tracking-wide dark:text-slate-300"
-                                                >
-                                                    <option value="info">Info Box</option>
-                                                    <option value="warning">Warning Box</option>
-                                                    <option value="tip">Pro Tip</option>
-                                                </select>
+                                                    className="opacity-0 w-0 h-0 absolute" 
+                                                />
                                                 <input 
                                                     type="text" 
                                                     value={block.content} 
                                                     onChange={e => updateBlock(block.id, e.target.value)}
-                                                    className="w-full bg-transparent outline-none font-bold text-slate-800 text-lg dark:text-slate-200"
-                                                    placeholder="Callout text..."
+                                                    className={`w-full outline-none font-bold placeholder-slate-200 bg-transparent font-heading dark:text-white dark:placeholder-slate-700 ${block.style === 'h1' ? 'text-4xl' : block.style === 'h3' ? 'text-xl' : 'text-2xl'}`}
+                                                    placeholder="Heading Text"
                                                 />
                                             </div>
-                                        </div>
-                                    )}
-                                </div>
-                            ))}
-                            
-                            {/* Empty State */}
-                            {currentBlocks.length === 0 && (
-                                <div className="text-center py-20 border-2 border-dashed border-slate-200 rounded-3xl bg-slate-50/50 text-slate-400 dark:border-slate-700 dark:bg-slate-900/50 dark:text-slate-500">
-                                    <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-6 shadow-sm dark:bg-slate-800">
-                                        <Sparkles size={24} className="text-emerald-400" />
+                                        )}
+
+                                        {block.type === 'paragraph' && (
+                                            <textarea 
+                                                value={block.content} 
+                                                onChange={e => updateBlock(block.id, e.target.value)}
+                                                className="w-full outline-none text-slate-600 resize-none h-auto min-h-[5rem] bg-transparent text-lg leading-relaxed dark:text-slate-300 dark:placeholder-slate-700"
+                                                placeholder="Type your paragraph here..."
+                                            />
+                                        )}
+
+                                        {block.type === 'quote' && (
+                                            <div className="flex gap-6">
+                                                <div className="w-1 bg-emerald-400 rounded-full shrink-0"></div>
+                                                <textarea 
+                                                    value={block.content} 
+                                                    onChange={e => updateBlock(block.id, e.target.value)}
+                                                    className="w-full outline-none text-slate-500 italic resize-none h-auto min-h-[4rem] text-xl font-serif bg-transparent dark:text-slate-400"
+                                                    placeholder="Enter quote..."
+                                                />
+                                            </div>
+                                        )}
+
+                                        {block.type === 'image' && (
+                                            <div className="space-y-3">
+                                                <label className={LABEL_CLASS}>Image Block</label>
+                                                <MediaInput 
+                                                    value={block.content} 
+                                                    onChange={val => updateBlock(block.id, val)}
+                                                    compact
+                                                />
+                                            </div>
+                                        )}
+
+                                        {block.type === 'list' && (
+                                            <div className="flex gap-4">
+                                                <div className="mt-1.5 p-1.5 bg-slate-100 rounded-lg text-slate-400 dark:bg-slate-800"><List size={16} /></div>
+                                                <textarea 
+                                                    value={block.content} 
+                                                    onChange={e => updateBlock(block.id, e.target.value)}
+                                                    className="w-full outline-none text-slate-700 resize-none h-auto min-h-[6rem] bg-transparent text-lg dark:text-slate-300"
+                                                    placeholder="List items (one per line)..."
+                                                />
+                                            </div>
+                                        )}
+
+                                        {block.type === 'callout' && (
+                                            <div className={`p-6 rounded-2xl border flex gap-4 ${block.style === 'warning' ? 'bg-red-50 border-red-100 dark:bg-red-900/10 dark:border-red-900/30' : 'bg-blue-50 border-blue-100 dark:bg-blue-900/10 dark:border-blue-900/30'}`}>
+                                                <div className="mt-1">
+                                                    {block.style === 'warning' ? <AlertCircle className="text-red-500" size={20} /> : <HelpCircle className="text-blue-500" size={20} />}
+                                                </div>
+                                                <div className="flex-1">
+                                                    <select 
+                                                        value={block.style || 'info'} 
+                                                        onChange={e => {
+                                                            const newBlocks = [...currentBlocks];
+                                                            newBlocks[idx].style = e.target.value as any;
+                                                            setCurrentBlocks(newBlocks);
+                                                        }}
+                                                        className="bg-transparent text-[10px] font-bold opacity-50 outline-none mb-1 block uppercase tracking-wide dark:text-slate-300"
+                                                    >
+                                                        <option value="info">Info Box</option>
+                                                        <option value="warning">Warning Box</option>
+                                                        <option value="tip">Pro Tip</option>
+                                                    </select>
+                                                    <input 
+                                                        type="text" 
+                                                        value={block.content} 
+                                                        onChange={e => updateBlock(block.id, e.target.value)}
+                                                        className="w-full bg-transparent outline-none font-bold text-slate-800 text-lg dark:text-slate-200"
+                                                        placeholder="Callout text..."
+                                                    />
+                                                </div>
+                                            </div>
+                                        )}
                                     </div>
-                                    <p className="font-bold text-lg text-slate-600 dark:text-slate-400">Your Lesson Canvas</p>
-                                    <p className="text-sm mt-2 opacity-70">Add blocks from the toolbar below or pick a template.</p>
-                                </div>
-                            )}
+                                ))}
+                                
+                                {/* Empty State */}
+                                {currentBlocks.length === 0 && (
+                                    <div className="text-center py-20 border-2 border-dashed border-slate-200 rounded-3xl bg-slate-50/50 text-slate-400 dark:border-slate-700 dark:bg-slate-900/50 dark:text-slate-500">
+                                        <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-6 shadow-sm dark:bg-slate-800">
+                                            <Sparkles size={24} className="text-emerald-400" />
+                                        </div>
+                                        <p className="font-bold text-lg text-slate-600 dark:text-slate-400">Your Lesson Canvas</p>
+                                        <p className="text-sm mt-2 opacity-70">Add blocks from the toolbar below or pick a template.</p>
+                                    </div>
+                                )}
+                            </div>
                         </div>
-                    </div>
+                    )}
                 </div>
 
-                {/* Bottom Toolbar (Floating) */}
-                <div className="absolute bottom-8 left-1/2 -translate-x-1/2 bg-white/90 backdrop-blur-xl border border-slate-200/50 p-2 rounded-2xl shadow-2xl flex gap-1 z-30 dark:bg-slate-800/90 dark:border-slate-700">
-                    <ToolbarBtn icon={Type} label="Text" onClick={() => addBlock('paragraph')} />
-                    <ToolbarBtn icon={LayoutTemplate} label="Header" onClick={() => addBlock('heading', 'h2')} />
-                    <div className="w-px bg-slate-200 mx-1 dark:bg-slate-700"></div>
-                    <ToolbarBtn icon={ImageIcon} label="Img" onClick={() => addBlock('image')} />
-                    <ToolbarBtn icon={List} label="List" onClick={() => addBlock('list')} />
-                    <ToolbarBtn icon={Quote} label="Quote" onClick={() => addBlock('quote')} />
-                    <ToolbarBtn icon={AlertCircle} label="Note" onClick={() => addBlock('callout', 'info')} />
-                </div>
+                {/* Bottom Toolbar (Floating) - Only show in editor mode */}
+                {!isTemplateMode && (
+                    <div className="absolute bottom-8 left-1/2 -translate-x-1/2 bg-white/90 backdrop-blur-xl border border-slate-200/50 p-2 rounded-2xl shadow-2xl flex gap-1 z-30 dark:bg-slate-800/90 dark:border-slate-700">
+                        <ToolbarBtn icon={Type} label="Text" onClick={() => addBlock('paragraph')} />
+                        <ToolbarBtn icon={LayoutTemplate} label="Header" onClick={() => addBlock('heading', 'h2')} />
+                        <div className="w-px bg-slate-200 mx-1 dark:bg-slate-700"></div>
+                        <ToolbarBtn icon={ImageIcon} label="Img" onClick={() => addBlock('image')} />
+                        <ToolbarBtn icon={List} label="List" onClick={() => addBlock('list')} />
+                        <ToolbarBtn icon={Quote} label="Quote" onClick={() => addBlock('quote')} />
+                        <ToolbarBtn icon={AlertCircle} label="Note" onClick={() => addBlock('callout', 'info')} />
+                    </div>
+                )}
             </div>
          </div>
       </div>

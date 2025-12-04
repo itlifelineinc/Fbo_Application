@@ -2,15 +2,16 @@
 import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Course, CourseStatus, Student } from '../types';
-import { CheckCircle, PlayCircle, Clock, BookOpen, User, Lock, ArrowLeft, Star, Quote } from 'lucide-react';
+import { CheckCircle, PlayCircle, Clock, BookOpen, User, Lock, ArrowLeft, Star, Quote, ShoppingCart } from 'lucide-react';
 
 interface CourseLandingPageProps {
   courses: Course[];
   currentUser: Student;
   onEnrollCourse: (courseId: string) => void;
+  students?: Student[]; // Optional for backward compat, but needed for creator lookup
 }
 
-const CourseLandingPage: React.FC<CourseLandingPageProps> = ({ courses, currentUser, onEnrollCourse }) => {
+const CourseLandingPage: React.FC<CourseLandingPageProps> = ({ courses, currentUser, onEnrollCourse, students }) => {
   const { courseId } = useParams();
   const navigate = useNavigate();
   const course = courses.find(c => c.id === courseId);
@@ -19,16 +20,40 @@ const CourseLandingPage: React.FC<CourseLandingPageProps> = ({ courses, currentU
 
   const isEnrolled = currentUser.enrolledCourses?.includes(course.id);
 
+  // --- LOGIC: Access & Pricing ---
+  const isTeamMember = currentUser.sponsorId === course.authorHandle; // Direct Downline
+  const isAuthor = currentUser.handle === course.authorHandle; // Self
+  const isGlobalFree = !course.settings.price || course.settings.price === 0;
+  
+  // You have access if: You own it OR You are in the team OR It's globally free
+  const hasFreeAccess = isAuthor || isTeamMember || isGlobalFree;
+  
+  // "Purchase" simulation
+  const handlePurchase = () => {
+      // In a real app, integrate Stripe/PayPal here.
+      if(window.confirm(`Confirm purchase for $${course.settings.price}?`)) {
+          alert("Purchase Successful! Welcome to the course.");
+          onEnrollCourse(course.id);
+          navigate(`/training/course/${course.id}`);
+      }
+  };
+
+  const handleEnroll = () => {
+      onEnrollCourse(course.id);
+      navigate(`/training/course/${course.id}`);
+  };
+
+  // --- LOGIC: Creator Lookup ---
+  // Try to find the author in the student list to get real name/role. Fallback to handle.
+  const authorProfile = students?.find(s => s.handle === course.authorHandle);
+  const authorName = authorProfile ? authorProfile.name : course.authorHandle;
+  const authorRole = authorProfile ? authorProfile.role : 'Instructor';
+  const authorInitial = authorName.charAt(0).toUpperCase();
+
   // Calculate stats
   const totalDuration = course.modules.reduce((acc, m) => acc + m.chapters.reduce((cAcc, c) => cAcc + c.durationMinutes, 0), 0);
   const durationStr = totalDuration > 60 ? `${Math.floor(totalDuration / 60)} Hrs ${totalDuration % 60} Mins` : `${totalDuration} Mins`;
   const totalLessons = course.modules.reduce((acc, m) => acc + m.chapters.length, 0);
-
-  const handleEnroll = () => {
-      onEnrollCourse(course.id);
-      // Navigate to the module selection or first lesson
-      navigate(`/training/course/${course.id}`);
-  };
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 animate-fade-in pb-20">
@@ -60,6 +85,11 @@ const CourseLandingPage: React.FC<CourseLandingPageProps> = ({ courses, currentU
                       <span className="px-3 py-1 bg-white/20 backdrop-blur-md text-white text-xs font-bold rounded-full uppercase tracking-wider border border-white/10">
                           {course.level} Level
                       </span>
+                      {isTeamMember && (
+                          <span className="px-3 py-1 bg-yellow-500/90 backdrop-blur-md text-white text-xs font-bold rounded-full uppercase tracking-wider shadow-lg">
+                              Team Exclusive: Free
+                          </span>
+                      )}
                   </div>
                   
                   <h1 className="text-4xl md:text-6xl font-bold text-white font-heading leading-tight drop-shadow-lg">
@@ -94,12 +124,19 @@ const CourseLandingPage: React.FC<CourseLandingPageProps> = ({ courses, currentU
                               <PlayCircle size={22} fill="currentColor" />
                               Go to Classroom
                           </button>
-                      ) : (
+                      ) : hasFreeAccess ? (
                           <button 
                             onClick={handleEnroll}
                             className="bg-emerald-600 text-white px-10 py-4 rounded-xl font-bold text-lg hover:bg-emerald-500 transition-all shadow-xl shadow-emerald-900/30 flex items-center gap-3 hover:scale-105"
                           >
-                              <span className="text-xl">+</span> Add to Classroom
+                              <span className="text-xl">+</span> Add to Classroom (Free)
+                          </button>
+                      ) : (
+                          <button 
+                            onClick={handlePurchase}
+                            className="bg-blue-600 text-white px-10 py-4 rounded-xl font-bold text-lg hover:bg-blue-500 transition-all shadow-xl shadow-blue-900/30 flex items-center gap-3 hover:scale-105"
+                          >
+                              <ShoppingCart size={22} /> Buy Course for ${course.settings.price}
                           </button>
                       )}
                   </div>
@@ -157,8 +194,8 @@ const CourseLandingPage: React.FC<CourseLandingPageProps> = ({ courses, currentU
                                               {chap.type === 'VIDEO' ? <PlayCircle size={16} /> : <BookOpen size={16} />}
                                               <span>{chap.title}</span>
                                           </div>
-                                          {isEnrolled ? (
-                                              <span className="text-emerald-600 font-bold text-xs">Unlocked</span>
+                                          {isEnrolled || hasFreeAccess ? (
+                                              <span className="text-emerald-600 font-bold text-xs">Available</span>
                                           ) : (
                                               <Lock size={14} className="text-slate-300" />
                                           )}
@@ -205,16 +242,16 @@ const CourseLandingPage: React.FC<CourseLandingPageProps> = ({ courses, currentU
           <div className="relative">
               <div className="sticky top-24 space-y-6">
                   
-                  {/* Instructor Card */}
+                  {/* Instructor Card (Dynamic) */}
                   <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-200 dark:bg-slate-800 dark:border-slate-700">
                       <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">Course Creator</h3>
                       <div className="flex items-center gap-4">
-                          <div className="w-14 h-14 bg-emerald-100 rounded-full flex items-center justify-center text-emerald-800 font-bold text-lg dark:bg-emerald-900 dark:text-emerald-200">
-                              {course.authorHandle.charAt(1).toUpperCase()}
+                          <div className="w-14 h-14 bg-emerald-100 rounded-full flex items-center justify-center text-emerald-800 font-bold text-lg dark:bg-emerald-900 dark:text-emerald-200 overflow-hidden">
+                              {authorProfile?.avatarUrl ? <img src={authorProfile.avatarUrl} className="w-full h-full object-cover"/> : authorInitial}
                           </div>
                           <div>
-                              <p className="font-bold text-slate-900 text-lg dark:text-white">{course.authorHandle}</p>
-                              <p className="text-sm text-slate-500 dark:text-slate-400">Senior Manager</p>
+                              <p className="font-bold text-slate-900 text-lg dark:text-white">{authorName}</p>
+                              <p className="text-sm text-slate-500 dark:text-slate-400">{authorRole}</p>
                           </div>
                       </div>
                   </div>
@@ -232,12 +269,17 @@ const CourseLandingPage: React.FC<CourseLandingPageProps> = ({ courses, currentU
                       </ul>
                   </div>
 
-                  {/* Pricing/Value Proposition */}
-                  <div className="bg-emerald-50 p-6 rounded-3xl border border-emerald-100 text-center dark:bg-emerald-900/20 dark:border-emerald-800">
-                      <p className="text-emerald-800 font-bold mb-2 dark:text-emerald-300">100% Free for Team Members</p>
-                      <p className="text-xs text-emerald-600 dark:text-emerald-400">
-                          This training is exclusive to the FBO Growth Academy. 
-                          {isEnrolled ? " You are already enrolled." : " Add it to your classroom to start tracking progress."}
+                  {/* Pricing/Value Proposition - DYNAMIC TEXT */}
+                  <div className={`p-6 rounded-3xl border text-center ${isTeamMember ? 'bg-emerald-50 border-emerald-100 dark:bg-emerald-900/20 dark:border-emerald-800' : 'bg-slate-50 border-slate-200 dark:bg-slate-800 dark:border-slate-700'}`}>
+                      <p className={`font-bold mb-2 ${isTeamMember ? 'text-emerald-800 dark:text-emerald-300' : 'text-slate-800 dark:text-slate-200'}`}>
+                          {isTeamMember ? "100% Free for Team Members" : isGlobalFree ? "Free Course" : `Premium Access: $${course.settings.price}`}
+                      </p>
+                      <p className="text-xs opacity-80 leading-relaxed">
+                          {isTeamMember 
+                            ? "This training is exclusive to the FBO Growth Academy. Since you are in the creator's team, you have full access for free." 
+                            : isGlobalFree 
+                            ? "This course is made available for free to the global community."
+                            : "Invest in your growth. Purchase this course to unlock all modules and materials."}
                       </p>
                   </div>
 

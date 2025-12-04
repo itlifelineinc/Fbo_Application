@@ -32,7 +32,8 @@ const getEmptyCourse = (authorHandle: string): Course => ({
     pointsReward: 100,
     certificateEnabled: true,
     requiresAssessment: false,
-    teamOnly: false
+    teamOnly: false,
+    price: 0 // Default free
   }
 });
 
@@ -204,7 +205,7 @@ const MediaInput: React.FC<{
                 <span className="text-sm font-bold">{compact ? 'Select Image' : 'Click to Upload'}</span>
              </div>
            )}
-           <input type="file" ref={fileInputRef} className="hidden" accept={accept} onChange={handleFileChange} />
+           <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleFileChange} />
         </div>
       )}
     </div>
@@ -213,7 +214,6 @@ const MediaInput: React.FC<{
 
 // --- PREVIEW COMPONENT ---
 const CoursePreview: React.FC<{ course: Course; onClose: () => void }> = ({ course, onClose }) => {
-    // ... (Preview Logic remains mostly the same, simplified for brevity in this response but would keep existing code)
     // Mode state: 'LANDING' -> 'MODULES' -> 'PLAYER'
     const [viewMode, setViewMode] = useState<'LANDING' | 'MODULES' | 'PLAYER'>('LANDING');
     
@@ -229,7 +229,6 @@ const CoursePreview: React.FC<{ course: Course; onClose: () => void }> = ({ cour
     const totalDuration = course.modules.reduce((acc, m) => acc + m.chapters.reduce((cAcc, c) => cAcc + c.durationMinutes, 0), 0);
     const durationStr = totalDuration > 60 ? `${Math.floor(totalDuration / 60)}h ${totalDuration % 60}m` : `${totalDuration}m`;
 
-    // Reusing the existing Preview Logic, just ensure it renders correctly
     return (
         <div className="fixed inset-0 z-50 bg-white flex flex-col dark:bg-slate-950 animate-fade-in">
              <div className="bg-slate-900 text-white h-16 flex items-center justify-between px-6 shrink-0 shadow-md z-50">
@@ -261,6 +260,10 @@ const CourseBuilder: React.FC<CourseBuilderProps> = ({ currentUserHandle, onSubm
 
   // New Testimonial State
   const [newTestimonial, setNewTestimonial] = useState<CourseTestimonial>({ id: '', name: '', role: '', quote: '' });
+  
+  // Temporary State for Adding Items
+  const [tempOutcome, setTempOutcome] = useState('');
+  const [tempAudience, setTempAudience] = useState('');
 
   // Sync Blocks when opening editor
   useEffect(() => {
@@ -308,6 +311,18 @@ const CourseBuilder: React.FC<CourseBuilderProps> = ({ currentUserHandle, onSubm
 
   const removeListString = (field: 'targetAudience' | 'learningOutcomes', index: number) => {
       setCourse(prev => ({ ...prev, [field]: prev[field].filter((_, i) => i !== index) }));
+  };
+
+  const handleAddOutcome = () => {
+      if (!tempOutcome.trim()) return;
+      addListString('learningOutcomes', tempOutcome);
+      setTempOutcome('');
+  };
+
+  const handleAddAudience = () => {
+      if (!tempAudience.trim()) return;
+      addListString('targetAudience', tempAudience);
+      setTempAudience('');
   };
 
   // Testimonial Handlers
@@ -418,10 +433,6 @@ const CourseBuilder: React.FC<CourseBuilderProps> = ({ currentUserHandle, onSubm
                 </div>
             </div>
             <div className="space-y-6">
-                <div>
-                    <label className={LABEL_CLASS}>Description</label>
-                    <textarea value={course.description} onChange={e => updateCourseInfo('description', e.target.value)} className={`${INPUT_CLASS} h-40 resize-none`} placeholder="Detailed overview..." />
-                </div>
                 <MediaInput label="Course Thumbnail" value={course.thumbnailUrl} onChange={(val) => updateCourseInfo('thumbnailUrl', val)} accept="image/*" />
             </div>
         </div>
@@ -479,10 +490,26 @@ const CourseBuilder: React.FC<CourseBuilderProps> = ({ currentUserHandle, onSubm
                 </div>
             </div>
             <div className="space-y-6">
-                <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4">Access</h3>
+                <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4">Access & Pricing</h3>
                  <div className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl dark:bg-slate-900">
                     <div className="flex flex-col"><span className="text-sm font-bold text-slate-700 dark:text-slate-300">Assessment Required</span><span className="text-xs text-slate-400">Users must pass quiz</span></div>
                     <label className="relative inline-flex items-center cursor-pointer"><input type="checkbox" checked={course.settings.requiresAssessment} onChange={e => updateSettings('requiresAssessment', e.target.checked)} className="sr-only peer" /><div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500 dark:bg-slate-700"></div></label>
+                </div>
+                
+                {/* Price Input */}
+                <div>
+                    <label className={LABEL_CLASS}>Price (USD)</label>
+                    <input 
+                        type="number" 
+                        value={course.settings.price || 0} 
+                        onChange={e => updateSettings('price', parseFloat(e.target.value))} 
+                        className={INPUT_CLASS} 
+                        placeholder="0.00"
+                        min="0"
+                    />
+                    <p className="text-[10px] text-slate-400 mt-2 ml-1">
+                        Set to 0 for free access. Team members (downline) always get free access regardless of this price.
+                    </p>
                 </div>
             </div>
         </div>
@@ -493,21 +520,35 @@ const CourseBuilder: React.FC<CourseBuilderProps> = ({ currentUserHandle, onSubm
           <h2 className="text-xl font-bold text-slate-900 border-b border-slate-100 pb-6 mb-6 font-heading dark:text-slate-100 dark:border-slate-700">Landing Page Content</h2>
           
           <div className="space-y-8">
+              {/* About the Course (Moved from Step 1) */}
+              <div>
+                  <div className="flex justify-between items-center mb-1">
+                      <label className={LABEL_CLASS}>About this Course</label>
+                      <span className={`text-xs font-bold ${course.description.length > 700 ? 'text-red-500' : 'text-slate-400'}`}>{course.description.length}/700</span>
+                  </div>
+                  <textarea
+                      value={course.description}
+                      onChange={e => updateCourseInfo('description', e.target.value.slice(0, 700))}
+                      className={`${INPUT_CLASS} h-32 resize-none`}
+                      placeholder="Detailed overview for the landing page..."
+                  />
+              </div>
+
               {/* Learning Outcomes */}
               <div>
                   <label className={LABEL_CLASS}>What students will learn</label>
                   <div className="flex gap-2 mb-2">
                       <input 
                         type="text" 
+                        value={tempOutcome}
+                        onChange={(e) => setTempOutcome(e.target.value)}
                         placeholder="e.g. Master the 4CC active habit" 
                         className={INPUT_CLASS} 
-                        onKeyDown={(e) => {
-                            if(e.key === 'Enter') {
-                                addListString('learningOutcomes', (e.target as HTMLInputElement).value);
-                                (e.target as HTMLInputElement).value = '';
-                            }
-                        }}
+                        onKeyDown={(e) => { if(e.key === 'Enter') handleAddOutcome(); }}
                       />
+                      <button onClick={handleAddOutcome} className="bg-slate-900 text-white p-3 rounded-xl hover:bg-slate-800 transition-colors shadow-md dark:bg-emerald-600 dark:hover:bg-emerald-700">
+                          <Plus size={24} />
+                      </button>
                   </div>
                   <div className="flex flex-wrap gap-2">
                       {course.learningOutcomes.map((item, idx) => (
@@ -524,15 +565,15 @@ const CourseBuilder: React.FC<CourseBuilderProps> = ({ currentUserHandle, onSubm
                   <div className="flex gap-2 mb-2">
                       <input 
                         type="text" 
+                        value={tempAudience}
+                        onChange={(e) => setTempAudience(e.target.value)}
                         placeholder="e.g. New Supervisors" 
                         className={INPUT_CLASS} 
-                        onKeyDown={(e) => {
-                            if(e.key === 'Enter') {
-                                addListString('targetAudience', (e.target as HTMLInputElement).value);
-                                (e.target as HTMLInputElement).value = '';
-                            }
-                        }}
+                        onKeyDown={(e) => { if(e.key === 'Enter') handleAddAudience(); }}
                       />
+                      <button onClick={handleAddAudience} className="bg-slate-900 text-white p-3 rounded-xl hover:bg-slate-800 transition-colors shadow-md dark:bg-emerald-600 dark:hover:bg-emerald-700">
+                          <Plus size={24} />
+                      </button>
                   </div>
                   <div className="flex flex-wrap gap-2">
                       {course.targetAudience.map((item, idx) => (
@@ -548,43 +589,43 @@ const CourseBuilder: React.FC<CourseBuilderProps> = ({ currentUserHandle, onSubm
                   <label className={LABEL_CLASS}>Student Testimonials</label>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4 items-end bg-slate-50 p-4 rounded-2xl dark:bg-slate-900">
                       <div>
-                          <label className="text-[10px] uppercase font-bold text-slate-400">Name</label>
+                          <label className="text-[10px] uppercase font-bold text-slate-400 mb-1 block">Name</label>
                           <input 
                             type="text" 
-                            className="w-full text-sm p-2 rounded border border-slate-200 dark:bg-slate-800 dark:border-slate-700 dark:text-white"
+                            className="w-full text-sm p-2 rounded border border-slate-200 outline-none focus:border-emerald-500 bg-white dark:bg-slate-950 dark:border-slate-700 dark:text-white"
                             value={newTestimonial.name}
                             onChange={(e) => setNewTestimonial({...newTestimonial, name: e.target.value})}
                           />
                       </div>
                       <div>
-                          <label className="text-[10px] uppercase font-bold text-slate-400">Role/Title</label>
+                          <label className="text-[10px] uppercase font-bold text-slate-400 mb-1 block">Role/Title</label>
                           <input 
                             type="text" 
-                            className="w-full text-sm p-2 rounded border border-slate-200 dark:bg-slate-800 dark:border-slate-700 dark:text-white"
+                            className="w-full text-sm p-2 rounded border border-slate-200 outline-none focus:border-emerald-500 bg-white dark:bg-slate-950 dark:border-slate-700 dark:text-white"
                             value={newTestimonial.role}
                             onChange={(e) => setNewTestimonial({...newTestimonial, role: e.target.value})}
                           />
                       </div>
                       <div>
-                          <label className="text-[10px] uppercase font-bold text-slate-400">Quote</label>
+                          <label className="text-[10px] uppercase font-bold text-slate-400 mb-1 block">Quote</label>
                           <input 
                             type="text" 
-                            className="w-full text-sm p-2 rounded border border-slate-200 dark:bg-slate-800 dark:border-slate-700 dark:text-white"
+                            className="w-full text-sm p-2 rounded border border-slate-200 outline-none focus:border-emerald-500 bg-white dark:bg-slate-950 dark:border-slate-700 dark:text-white"
                             value={newTestimonial.quote}
                             onChange={(e) => setNewTestimonial({...newTestimonial, quote: e.target.value})}
                           />
                       </div>
-                      <button onClick={addTestimonial} className="bg-slate-800 text-white p-2 rounded text-xs font-bold md:col-span-3 dark:bg-emerald-600">Add Testimonial</button>
+                      <button onClick={addTestimonial} className="bg-slate-800 text-white p-2 rounded-lg text-xs font-bold md:col-span-3 hover:bg-slate-700 transition-colors dark:bg-emerald-600 dark:hover:bg-emerald-700">Add Testimonial</button>
                   </div>
 
                   <div className="space-y-2">
                       {course.testimonials?.map((t) => (
-                          <div key={t.id} className="flex items-center justify-between p-3 border border-slate-200 rounded-xl bg-white dark:bg-slate-800 dark:border-slate-700">
+                          <div key={t.id} className="flex items-center justify-between p-3 border border-slate-200 rounded-xl bg-white shadow-sm dark:bg-slate-800 dark:border-slate-700">
                               <div>
                                   <p className="font-bold text-sm text-slate-800 dark:text-white">{t.name} <span className="text-slate-400 font-normal text-xs">| {t.role}</span></p>
                                   <p className="text-xs text-slate-500 italic dark:text-slate-400">"{t.quote}"</p>
                               </div>
-                              <button onClick={() => removeTestimonial(t.id)} className="text-red-400 hover:text-red-600"><Trash2 size={16}/></button>
+                              <button onClick={() => removeTestimonial(t.id)} className="text-red-400 hover:text-red-600 p-2"><Trash2 size={16}/></button>
                           </div>
                       ))}
                   </div>

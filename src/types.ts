@@ -38,6 +38,15 @@ export interface QuizQuestion {
   correctAnswer: number; // Index
 }
 
+export type BlockType = 'paragraph' | 'heading' | 'image' | 'list' | 'quote' | 'callout';
+
+export interface ContentBlock {
+  id: string;
+  type: BlockType;
+  content: string; // Text content or Image URL
+  style?: 'h1' | 'h2' | 'h3' | 'bullet' | 'number' | 'info' | 'warning' | 'tip'; // Sub-styles
+}
+
 export interface Chapter {
   id: string;
   title: string;
@@ -45,6 +54,7 @@ export interface Chapter {
   headerImageUrl?: string;
   summary?: string;
   content: string; // Rich text / Markdown
+  blocks?: ContentBlock[]; // Structured content
   videoUrl?: string; // Link or Upload
   pdfUrl?: string;
   durationMinutes: number;
@@ -62,6 +72,14 @@ export interface Module {
   coverImageUrl?: string;
   order: number;
   chapters: Chapter[];
+}
+
+export interface CourseTestimonial {
+    id: string;
+    name: string;
+    role: string;
+    quote: string;
+    avatarUrl?: string;
 }
 
 export interface CourseSettings {
@@ -85,6 +103,7 @@ export interface Course {
   thumbnailUrl: string;
   bannerImageUrl?: string;
   trailerVideoUrl?: string;
+  testimonials?: CourseTestimonial[]; // New field
   
   modules: Module[];
   settings: CourseSettings;
@@ -112,6 +131,15 @@ export interface Student {
   progress: number; 
   completedModules: string[]; // IDs of completed modules
   completedChapters: string[]; // IDs of completed chapters
+  enrolledCourses: string[]; // IDs of courses the student has started/chosen
+  
+  // Track where the student left off
+  lastAccessed?: {
+    courseId: string;
+    moduleId: string;
+    chapterId: string;
+  };
+
   sponsorId?: string;
   caseCredits: number;
   avatarUrl?: string;

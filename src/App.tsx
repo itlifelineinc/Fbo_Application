@@ -1,6 +1,5 @@
-
 import React, { useState, useEffect } from 'react';
-import { HashRouter, Routes, Route, Navigate, Link } from 'react-router-dom';
+import { HashRouter, Routes, Route, Navigate, Link, useNavigate } from 'react-router-dom';
 import Layout from './components/Layout';
 import Dashboard from './components/Dashboard';
 import CourseBuilder from './components/CourseBuilder';
@@ -13,7 +12,11 @@ import ChatPortal from './components/ChatPortal';
 import CommunityPortal from './components/CommunityPortal';
 import Login from './components/Login';
 import CourseReview from './components/CourseReview';
-import SalesPageBuilder from './pages/SalesPageBuilder'; // Import the new page
+import SalesPageBuilder from './pages/SalesPageBuilder'; 
+import TrainingPortal from './components/TrainingPortal';
+import CourseModulesPage from './components/CourseModulesPage';
+import CourseCard from './components/CourseCard'; 
+import CourseLandingPage from './components/CourseLandingPage';
 import { INITIAL_COURSES, INITIAL_STUDENTS, INITIAL_MESSAGES, INITIAL_POSTS, INITIAL_COHORTS } from './constants';
 import { Course, Module, Student, SaleRecord, UserRole, Message, CourseTrack, CommunityPost, CommunityComment, Cohort, CourseStatus } from './types';
 
@@ -25,24 +28,31 @@ interface ProtectedRouteProps {
   onLogout: () => void;
   theme: 'light' | 'dark';
   onToggleTheme: () => void;
+  courses: Course[];
 }
 
-const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, currentUser, onLogout, theme, onToggleTheme }) => {
+const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, currentUser, onLogout, theme, onToggleTheme, courses }) => {
   if (!currentUser) {
     return <Navigate to="/" replace />;
   }
   return (
-    <Layout currentUser={currentUser} onLogout={onLogout} theme={theme} onToggleTheme={onToggleTheme}>
+    <Layout currentUser={currentUser} onLogout={onLogout} theme={theme} onToggleTheme={onToggleTheme} courses={courses}>
       {children}
     </Layout>
   );
 };
 
-const CourseList: React.FC<{ courses: Course[] }> = ({ courses }) => {
-  // Only show PUBLISHED courses to students
-  const publishedCourses = courses.filter(c => c.status === CourseStatus.PUBLISHED);
+// --- Updated CourseList (My Classroom) ---
+const CourseList: React.FC<{ courses: Course[]; currentUser: Student }> = ({ courses, currentUser }) => {
+  const navigate = useNavigate();
+  
+  // Show courses that are PUBLISHED AND the user is Enrolled in
+  const myCourses = courses.filter(c => 
+      c.status === CourseStatus.PUBLISHED && 
+      (currentUser.enrolledCourses?.includes(c.id))
+  );
 
-  const coursesByTrack = publishedCourses.reduce((acc, course) => {
+  const coursesByTrack = myCourses.reduce((acc, course) => {
     if (!acc[course.track]) {
       acc[course.track] = [];
     }
@@ -51,42 +61,44 @@ const CourseList: React.FC<{ courses: Course[] }> = ({ courses }) => {
   }, {} as Record<string, Course[]>);
 
   return (
-    <div className="space-y-10 animate-fade-in">
-       <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-emerald-950 font-heading dark:text-emerald-400">Training Portal</h1>
-          <p className="text-emerald-700 mt-2 dark:text-emerald-300">Master the skills you need to grow your Forever business.</p>
+    <div className="space-y-12 animate-fade-in pb-20">
+       <div className="mb-8">
+          <h1 className="text-3xl font-bold text-emerald-950 font-heading dark:text-emerald-400">My Classroom</h1>
+          <p className="text-slate-500 mt-2 text-lg dark:text-slate-400">Continue your journey where you left off.</p>
        </div>
 
+       {Object.keys(coursesByTrack).length === 0 && (
+           <div className="text-center py-20 bg-white rounded-3xl border-2 border-dashed border-slate-200 dark:bg-slate-800 dark:border-slate-700">
+               <div className="text-6xl mb-4">🎓</div>
+               <h3 className="text-xl font-bold text-slate-800 dark:text-white mb-2">No courses started yet</h3>
+               <p className="text-slate-400 font-medium mb-6">Explore the Global Library to find your first course.</p>
+               <Link to="/training/global" className="bg-emerald-600 text-white px-6 py-3 rounded-xl font-bold hover:bg-emerald-700 transition-colors">
+                   Browse Library
+               </Link>
+           </div>
+       )}
+
        {Object.keys(coursesByTrack).map((track) => (
-         <div key={track} className="space-y-4">
-            <h2 className="text-xl font-bold text-slate-800 border-l-4 border-emerald-500 pl-3 font-heading dark:text-slate-200">{track}</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {coursesByTrack[track].map(course => (
-                <div key={course.id} className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden flex flex-col group hover:shadow-md transition-shadow dark:bg-slate-800 dark:border-slate-700">
-                  <div className="h-40 overflow-hidden relative">
-                      <img src={course.thumbnailUrl} alt={course.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
-                      <div className="absolute bottom-3 left-4 text-white font-bold font-heading text-lg shadow-black/50 drop-shadow-md">{course.title}</div>
-                  </div>
-                  <div className="p-6 flex-1 flex flex-col">
-                      <p className="text-sm text-slate-500 mb-4 flex-1 line-clamp-2 dark:text-slate-400">{course.description}</p>
-                      
-                      <div className="space-y-2">
-                        <div className="text-xs font-semibold text-slate-400 uppercase tracking-wider dark:text-slate-500">Modules ({course.modules?.length || 0})</div>
-                        {course.modules?.map(m => (
-                            <Link 
-                              key={m.id} 
-                              to={`/classroom/${course.id}/${m.id}/${m.chapters?.[0]?.id}`}
-                              className="block p-3 rounded-lg bg-slate-50 hover:bg-emerald-50 hover:text-emerald-700 transition-colors text-sm font-medium text-slate-700 flex justify-between items-center dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-emerald-900/30 dark:hover:text-emerald-400"
-                            >
-                              <span className="truncate flex-1 mr-2">{m.title}</span>
-                              <span className="text-xs bg-white px-2 py-1 rounded border border-slate-200 text-slate-400 whitespace-nowrap dark:bg-slate-600 dark:border-slate-500 dark:text-slate-300">{m.chapters?.length || 0} lessons</span>
-                            </Link>
-                        ))}
-                      </div>
-                  </div>
-                </div>
-              ))}
+         <div key={track} className="space-y-6">
+            <h2 className="text-xl font-bold text-slate-800 border-l-4 border-emerald-500 pl-4 font-heading dark:text-slate-200">{track}</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {coursesByTrack[track].map(course => {
+                  // Calculate user progress for this specific course
+                  const totalModules = course.modules.length;
+                  const completedInCourse = course.modules.filter(m => currentUser.completedModules?.includes(m.id)).length;
+                  const progressPercent = totalModules > 0 ? Math.round((completedInCourse / totalModules) * 100) : 0;
+
+                  return (
+                    <CourseCard 
+                        key={course.id}
+                        course={course}
+                        onClick={() => navigate(`/training/course/${course.id}`)}
+                        progress={progressPercent}
+                        showTrackBadge={false} 
+                        actionLabel="Continue"
+                    />
+                  );
+              })}
             </div>
          </div>
        ))}
@@ -249,16 +261,48 @@ const App: React.FC = () => {
     handleUpdateStudent(updatedStudent);
   };
 
-  const handleCompleteLesson = (moduleId: string) => {
+  const handleCompleteLesson = (moduleId: string, chapterId: string) => {
      if(!currentUser) return;
-     if(!currentUser.completedModules?.includes(moduleId)) {
-         const updatedStudent = {
-             ...currentUser,
-             completedModules: [...(currentUser.completedModules || []), moduleId],
-             progress: Math.min(100, (currentUser.progress || 0) + 5)
-         };
-         handleUpdateStudent(updatedStudent);
+     
+     // 1. Calculate course ID based on where this module lives
+     const course = courses.find(c => c.modules.some(m => m.id === moduleId));
+     if (!course) return;
+
+     // 2. Prepare update object
+     let updatedStudent = { ...currentUser };
+
+     // 3. Mark Chapter as Completed if not already
+     if(!updatedStudent.completedChapters.includes(chapterId)) {
+         updatedStudent.completedChapters = [...updatedStudent.completedChapters, chapterId];
+         // Simple progress calc: just +1% for demo, or real math
+         updatedStudent.progress = Math.min(100, (updatedStudent.progress || 0) + 1); 
      }
+     
+     // Also mark module as complete if all chapters are done (simplified check)
+     if (!updatedStudent.completedModules.includes(moduleId)) {
+         updatedStudent.completedModules = [...updatedStudent.completedModules, moduleId];
+     }
+
+     // 4. Update "Last Accessed" to this chapter (so they return here or next)
+     updatedStudent.lastAccessed = {
+         courseId: course.id,
+         moduleId: moduleId,
+         chapterId: chapterId
+     };
+
+     handleUpdateStudent(updatedStudent);
+  };
+
+  // --- Enrollment Handler ---
+  const handleEnrollCourse = (courseId: string) => {
+      if (!currentUser) return;
+      if (currentUser.enrolledCourses?.includes(courseId)) return; // Already enrolled
+
+      const updatedStudent = {
+          ...currentUser,
+          enrolledCourses: [...(currentUser.enrolledCourses || []), courseId]
+      };
+      handleUpdateStudent(updatedStudent);
   };
 
   return (
@@ -270,7 +314,7 @@ const App: React.FC = () => {
         } />
 
         <Route path="/dashboard" element={
-            <ProtectedRoute currentUser={currentUser} onLogout={handleLogout} theme={theme} onToggleTheme={toggleTheme}>
+            <ProtectedRoute currentUser={currentUser} onLogout={handleLogout} theme={theme} onToggleTheme={toggleTheme} courses={courses}>
                 <Dashboard 
                     currentUser={currentUser!} 
                     students={students} 
@@ -281,13 +325,13 @@ const App: React.FC = () => {
         } />
         
         <Route path="/sales" element={
-            <ProtectedRoute currentUser={currentUser} onLogout={handleLogout} theme={theme} onToggleTheme={toggleTheme}>
+            <ProtectedRoute currentUser={currentUser} onLogout={handleLogout} theme={theme} onToggleTheme={toggleTheme} courses={courses}>
                 <SalesPortal currentUser={currentUser!} onSubmitSale={handleSubmitSale} />
             </ProtectedRoute>
         } />
         
         <Route path="/chat" element={
-            <ProtectedRoute currentUser={currentUser} onLogout={handleLogout} theme={theme} onToggleTheme={toggleTheme}>
+            <ProtectedRoute currentUser={currentUser} onLogout={handleLogout} theme={theme} onToggleTheme={toggleTheme} courses={courses}>
                 <ChatPortal 
                     currentUser={currentUser!} 
                     students={students} 
@@ -298,7 +342,7 @@ const App: React.FC = () => {
         } />
 
         <Route path="/community" element={
-            <ProtectedRoute currentUser={currentUser} onLogout={handleLogout} theme={theme} onToggleTheme={toggleTheme}>
+            <ProtectedRoute currentUser={currentUser} onLogout={handleLogout} theme={theme} onToggleTheme={toggleTheme} courses={courses}>
                 <CommunityPortal 
                     currentUser={currentUser!}
                     posts={posts}
@@ -311,7 +355,7 @@ const App: React.FC = () => {
         } />
         
         <Route path="/students" element={
-            <ProtectedRoute currentUser={currentUser} onLogout={handleLogout} theme={theme} onToggleTheme={toggleTheme}>
+            <ProtectedRoute currentUser={currentUser} onLogout={handleLogout} theme={theme} onToggleTheme={toggleTheme} courses={courses}>
                 {currentUser?.role !== UserRole.STUDENT ? (
                     <StudentsList 
                         currentUser={currentUser!} 
@@ -325,7 +369,7 @@ const App: React.FC = () => {
         } />
         
         <Route path="/students/:studentId" element={
-            <ProtectedRoute currentUser={currentUser} onLogout={handleLogout} theme={theme} onToggleTheme={toggleTheme}>
+            <ProtectedRoute currentUser={currentUser} onLogout={handleLogout} theme={theme} onToggleTheme={toggleTheme} courses={courses}>
                 <StudentProfile 
                     students={students} 
                     courses={courses} 
@@ -338,7 +382,7 @@ const App: React.FC = () => {
         } />
         
         <Route path="/course-review/:courseId" element={
-            <ProtectedRoute currentUser={currentUser} onLogout={handleLogout} theme={theme} onToggleTheme={toggleTheme}>
+            <ProtectedRoute currentUser={currentUser} onLogout={handleLogout} theme={theme} onToggleTheme={toggleTheme} courses={courses}>
                  {(currentUser?.role === UserRole.ADMIN || currentUser?.role === UserRole.SUPER_ADMIN) ? (
                     <CourseReview courses={courses} onReviewCourse={handleReviewCourse} />
                  ) : <Navigate to="/dashboard" />}
@@ -346,7 +390,7 @@ const App: React.FC = () => {
         } />
         
         <Route path="/builder" element={
-             <ProtectedRoute currentUser={currentUser} onLogout={handleLogout} theme={theme} onToggleTheme={toggleTheme}>
+             <ProtectedRoute currentUser={currentUser} onLogout={handleLogout} theme={theme} onToggleTheme={toggleTheme} courses={courses}>
                 {(currentUser?.role === UserRole.ADMIN || currentUser?.role === UserRole.SUPER_ADMIN || currentUser?.role === UserRole.SPONSOR) ? (
                     <CourseBuilder 
                         currentUserHandle={currentUser!.handle} 
@@ -358,23 +402,70 @@ const App: React.FC = () => {
 
         {/* New Route for Sales Page Builder - Accessible to all logged-in users for demo purposes */}
         <Route path="/sales-builder" element={
-             <ProtectedRoute currentUser={currentUser} onLogout={handleLogout} theme={theme} onToggleTheme={toggleTheme}>
+             <ProtectedRoute currentUser={currentUser} onLogout={handleLogout} theme={theme} onToggleTheme={toggleTheme} courses={courses}>
                 <SalesPageBuilder />
              </ProtectedRoute>
         } />
         
         <Route path="/courses" element={
-            <ProtectedRoute currentUser={currentUser} onLogout={handleLogout} theme={theme} onToggleTheme={toggleTheme}>
-                <CourseList courses={courses} />
+            <ProtectedRoute currentUser={currentUser} onLogout={handleLogout} theme={theme} onToggleTheme={toggleTheme} courses={courses}>
+                <CourseList courses={courses} currentUser={currentUser!} />
             </ProtectedRoute>
         } />
         
+        {/* Global Portal (All Published Courses) */}
+        <Route path="/training/global" element={
+            <ProtectedRoute currentUser={currentUser} onLogout={handleLogout} theme={theme} onToggleTheme={toggleTheme} courses={courses}>
+                <TrainingPortal 
+                    courses={courses} 
+                    mode="GLOBAL" 
+                    currentUser={currentUser!} 
+                    onEnrollCourse={handleEnrollCourse}
+                />
+            </ProtectedRoute>
+        } />
+
+        {/* Team Portal (Team Specific Courses) */}
+        <Route path="/training/team" element={
+            <ProtectedRoute currentUser={currentUser} onLogout={handleLogout} theme={theme} onToggleTheme={toggleTheme} courses={courses}>
+                <TrainingPortal 
+                    courses={courses} 
+                    mode="TEAM" 
+                    currentUser={currentUser!} 
+                    onEnrollCourse={handleEnrollCourse}
+                />
+            </ProtectedRoute>
+        } />
+
+        {/* --- NEW ROUTE: Landing Page for Enrollment --- */}
+        <Route path="/training/preview/:courseId" element={
+            <ProtectedRoute currentUser={currentUser} onLogout={handleLogout} theme={theme} onToggleTheme={toggleTheme} courses={courses}>
+                {/* PASS STUDENTS HERE FOR CREATOR LOOKUP */}
+                <CourseLandingPage 
+                    courses={courses} 
+                    currentUser={currentUser!} 
+                    onEnrollCourse={handleEnrollCourse}
+                    students={students} 
+                />
+            </ProtectedRoute>
+        } />
+
+        <Route path="/training/course/:courseId" element={
+            <ProtectedRoute currentUser={currentUser} onLogout={handleLogout} theme={theme} onToggleTheme={toggleTheme} courses={courses}>
+                <CourseModulesPage 
+                    courses={courses} 
+                    completedModules={currentUser?.completedModules || []} 
+                />
+            </ProtectedRoute>
+        } />
+
         <Route path="/classroom/:courseId/:moduleId/:lessonId" element={
-            <ProtectedRoute currentUser={currentUser} onLogout={handleLogout} theme={theme} onToggleTheme={toggleTheme}>
+            <ProtectedRoute currentUser={currentUser} onLogout={handleLogout} theme={theme} onToggleTheme={toggleTheme} courses={courses}>
                 <Classroom 
                     courses={courses} 
                     onCompleteLesson={handleCompleteLesson} 
                     onUpdateStats={handleUpdateStats}
+                    completedChapters={currentUser?.completedChapters || []}
                 />
             </ProtectedRoute>
         } />

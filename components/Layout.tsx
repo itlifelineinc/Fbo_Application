@@ -198,6 +198,21 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
     }
   }, [isNavbarOpen, shouldHeaderBeStatic]);
 
+  // Click outside logic to close floating navbar immediately (overrides 3s timer)
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      // Only attach if in floating mode and navbar is currently open
+      if (!shouldHeaderBeStatic && isNavbarOpen && navbarRef.current && !navbarRef.current.contains(event.target as Node)) {
+        setIsNavbarOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isNavbarOpen, shouldHeaderBeStatic]);
+
   // Role Checks
   const isStudent = currentUser.role === UserRole.STUDENT;
   const isAdminOrSuper = currentUser.role === UserRole.ADMIN || currentUser.role === UserRole.SUPER_ADMIN;
@@ -207,16 +222,17 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
   // Logic for showing Team Training: If user has a sponsor OR is a sponsor/admin themselves
   const hasTeamAccess = currentUser.sponsorId || currentUser.role !== UserRole.STUDENT;
 
+  // Modernized Header Classes
+  // Glassmorphism: bg-white/80, backdrop-blur-xl, subtle border
   const headerClass = shouldHeaderBeStatic
-    ? "hidden lg:flex bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 h-16 items-center justify-between px-8 z-20 shrink-0"
-    : `hidden lg:flex bg-white/95 backdrop-blur-md dark:bg-slate-900/95 border-b border-slate-200 dark:border-slate-800 h-16 items-center justify-between px-8 z-40 absolute top-0 left-0 right-0 shadow-md transition-transform duration-300 ease-in-out ${isNavbarOpen ? 'translate-y-0' : '-translate-y-full'}`;
+    ? "hidden lg:flex h-16 items-center justify-between px-8 z-20 shrink-0 border-b border-slate-100/60 dark:border-slate-800/60 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl sticky top-0"
+    : `hidden lg:flex h-16 items-center justify-between px-8 z-40 absolute top-0 left-0 right-0 transition-transform duration-300 ease-in-out border-b border-slate-100/60 dark:border-slate-800/60 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl shadow-sm ${isNavbarOpen ? 'translate-y-0' : '-translate-y-full'}`;
 
   // Breadcrumb Generation
   const getBreadcrumbs = () => {
     const path = location.pathname;
     
     // 1. Classroom Route (Deepest Level)
-    // Pattern: /classroom/:courseId/:moduleId/:lessonId
     const classroomMatch = path.match(/^\/classroom\/([^/]+)\/([^/]+)\/([^/]+)/);
     if (classroomMatch) {
         const [_, cId, mId, lId] = classroomMatch;
@@ -234,13 +250,12 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
                 <span className="text-slate-300 dark:text-slate-600">/</span>
                 <span className="truncate max-w-[150px] hidden sm:inline" title={module?.title}>{module?.title}</span>
                 <span className="text-slate-300 dark:text-slate-600 hidden sm:inline">/</span>
-                <span className="font-bold text-slate-800 dark:text-white truncate max-w-[200px]" title={chapter?.title}>{chapter?.title || 'Lesson'}</span>
+                <span className="font-semibold text-slate-800 dark:text-white truncate max-w-[200px]" title={chapter?.title}>{chapter?.title || 'Lesson'}</span>
             </div>
         );
     }
 
-    // 2. Course Overview Route (Intermediate Level)
-    // Pattern: /training/course/:courseId
+    // 2. Course Overview Route
     const courseMatch = path.match(/^\/training\/course\/([^/]+)/);
     if (courseMatch) {
         const [_, cId] = courseMatch;
@@ -251,12 +266,12 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
                 <span className="text-slate-300 dark:text-slate-600">/</span>
                 <Link to="/training/global" className="hover:text-emerald-600 transition-colors">Training</Link>
                 <span className="text-slate-300 dark:text-slate-600">/</span>
-                <span className="font-bold text-slate-800 dark:text-white truncate max-w-[250px]">{course?.title || 'Course Overview'}</span>
+                <span className="font-semibold text-slate-800 dark:text-white truncate max-w-[250px]">{course?.title || 'Course Overview'}</span>
             </div>
         );
     }
 
-    // 3. Fallback Map for Static Routes
+    // 3. Fallback Map
     const BREADCRUMB_MAP: Record<string, string[]> = {
       '/sales-builder': ['Sales', 'Sales Pages'],
       '/sales': ['Sales', 'Sales Log'],
@@ -269,7 +284,6 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
       '/builder': ['Admin', 'Course Builder'],
     };
 
-    // Check exact match first
     if (BREADCRUMB_MAP[location.pathname]) {
        return (
          <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
@@ -277,7 +291,7 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
             {BREADCRUMB_MAP[location.pathname].map((item, idx) => (
                 <React.Fragment key={idx}>
                     <span className="text-slate-300 dark:text-slate-600">/</span>
-                    <span className={idx === BREADCRUMB_MAP[location.pathname].length - 1 ? "font-bold text-slate-800 dark:text-white" : ""}>
+                    <span className={idx === BREADCRUMB_MAP[location.pathname].length - 1 ? "font-semibold text-slate-800 dark:text-white" : ""}>
                         {item}
                     </span>
                 </React.Fragment>
@@ -286,14 +300,13 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
        );
     }
 
-    // Fallback to URL segments for other dynamic paths (e.g., /students/123)
+    // Fallback to URL segments
     const pathSegments = location.pathname.split('/').filter(p => p);
     return (
         <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400 capitalize">
             <Link to="/dashboard" className="hover:text-emerald-600 transition-colors">Home</Link>
             {pathSegments.map((segment, index) => {
                 const isLast = index === pathSegments.length - 1;
-                // Heuristic to make IDs look nicer or hide them
                 const displayName = (segment.length > 8 && /\d/.test(segment)) ? 'Details' : segment.replace(/-/g, ' ');
                 const to = `/${pathSegments.slice(0, index + 1).join('/')}`;
 
@@ -301,7 +314,7 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
                     <React.Fragment key={to}>
                         <span className="text-slate-300 dark:text-slate-600">/</span>
                         {isLast ? (
-                            <span className="font-bold text-slate-800 dark:text-white">{displayName}</span>
+                            <span className="font-semibold text-slate-800 dark:text-white">{displayName}</span>
                         ) : (
                             <Link to={to} className="hover:text-emerald-600 transition-colors">{displayName}</Link>
                         )}
@@ -314,6 +327,15 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
 
   return (
     <div className="flex h-screen bg-slate-50 dark:bg-slate-950 overflow-hidden transition-colors duration-300">
+      <style>{`
+        .no-scrollbar::-webkit-scrollbar {
+          display: none;
+        }
+        .no-scrollbar {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
+        }
+      `}</style>
       
       {/* Mobile Overlay */}
       {isMobileMenuOpen && (
@@ -347,7 +369,7 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
           </button>
         </div>
 
-        {/* Clickable User Profile Section */}
+        {/* Clickable User Profile Section (Mobile Only) */}
         <div className="px-6 py-4 bg-emerald-800/30 dark:bg-emerald-900/30 lg:hidden">
            <Link 
              to={`/students/${currentUser.id}`}
@@ -368,7 +390,7 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
           </Link>
         </div>
 
-        <nav className="flex-1 py-6 px-3 space-y-1 overflow-y-auto">
+        <nav className="flex-1 py-6 px-3 space-y-1 overflow-y-auto no-scrollbar">
           <NavItem 
             to="/dashboard" 
             icon={<HomeIcon />} 
@@ -488,7 +510,7 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
           )}
         </nav>
 
-        {/* Sidebar Logout: Only show on Mobile or collapsed state logic if needed */}
+        {/* Sidebar Logout: Only show on Mobile */}
         <div className="p-4 border-t border-emerald-800 dark:border-emerald-900 lg:hidden">
           <button 
             onClick={onLogout}
@@ -508,39 +530,45 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
             <div className="flex items-center gap-4 text-sm text-slate-500 dark:text-slate-400">
                {/* Show Breadcrumbs on non-dashboard pages, Greeting on dashboard */}
                {isDashboard ? (
-                   <span className="font-medium text-lg">👋 Hi, {currentUser.name}</span>
+                   // New Typography: Dosis font, larger size for friendly greeting
+                   <span className="font-dosis font-semibold text-2xl text-slate-800 dark:text-white tracking-tight">
+                     Hi, {currentUser.name.split(' ')[0]}
+                   </span>
                ) : (
                    getBreadcrumbs()
                )}
             </div>
             
             <div className="relative">
+               {/* Updated Pill-Shaped Profile Button */}
                <button 
                  onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)} 
-                 className="flex items-center gap-3 focus:outline-none hover:bg-slate-50 dark:hover:bg-slate-800 p-2 rounded-xl transition-colors"
+                 className="group flex items-center gap-3 focus:outline-none pl-1 pr-4 py-1 rounded-full transition-all border border-slate-200/60 bg-white/50 hover:bg-white hover:shadow-sm dark:bg-slate-800/50 dark:border-slate-700 dark:hover:bg-slate-800"
                >
-                  <div className="text-right hidden xl:block">
-                      <p className="text-sm font-bold text-slate-700 dark:text-slate-200">{currentUser.name}</p>
-                      <p className="text-xs text-slate-500 dark:text-slate-400">{currentUser.role}</p>
-                  </div>
-                  <div className="w-9 h-9 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold text-sm overflow-hidden border border-emerald-200 dark:bg-emerald-900 dark:text-emerald-300 dark:border-emerald-800">
+                  <div className="w-9 h-9 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold text-xs overflow-hidden ring-2 ring-white dark:ring-slate-900 shadow-sm">
                       {currentUser.avatarUrl ? (
                           <img src={currentUser.avatarUrl} alt={currentUser.name} className="w-full h-full object-cover" />
                       ) : (
                           currentUser.name.charAt(0)
                       )}
                   </div>
-                  <ChevronDown size={16} className={`text-slate-400 transition-transform ${isProfileMenuOpen ? 'rotate-180' : ''}`} />
+                  
+                  <div className="text-left hidden xl:block">
+                      <p className="text-sm font-semibold text-slate-700 dark:text-slate-200 leading-tight">{currentUser.name}</p>
+                      <p className="text-[10px] text-slate-400 dark:text-slate-500 font-medium uppercase tracking-wide">{currentUser.role}</p>
+                  </div>
+                  
+                  <ChevronDown size={14} className={`text-slate-400 transition-transform ${isProfileMenuOpen ? 'rotate-180' : ''} group-hover:text-slate-600 dark:group-hover:text-slate-300 ml-1`} />
                </button>
 
                {/* Profile Dropdown */}
                {isProfileMenuOpen && (
                   <>
                     <div className="fixed inset-0 z-10" onClick={() => setIsProfileMenuOpen(false)}></div>
-                    <div className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-xl border border-slate-100 py-2 z-20 animate-fade-in dark:bg-slate-800 dark:border-slate-700">
+                    <div className="absolute right-0 mt-3 w-56 bg-white/95 backdrop-blur-xl rounded-2xl shadow-xl border border-slate-100 py-2 z-20 animate-fade-in dark:bg-slate-800/95 dark:border-slate-700">
                         <div className="px-4 py-3 border-b border-slate-100 dark:border-slate-700">
                             <p className="text-sm font-bold text-slate-800 dark:text-white">Signed in as</p>
-                            <p className="text-xs text-slate-500 truncate dark:text-slate-400">{currentUser.email}</p>
+                            <p className="text-xs text-slate-500 truncate dark:text-slate-400 mt-0.5">{currentUser.email}</p>
                         </div>
                         
                         <div className="py-2">
@@ -580,7 +608,7 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
         {!shouldHeaderBeStatic && !isNavbarOpen && (
              <button 
                onClick={() => setIsNavbarOpen(true)}
-               className="hidden lg:flex absolute top-4 right-8 z-30 bg-white/90 dark:bg-slate-800/90 p-2.5 rounded-full shadow-lg border border-slate-200 dark:border-slate-700 text-slate-500 hover:text-emerald-600 transition-all hover:scale-110"
+               className="hidden lg:flex absolute top-4 right-8 z-30 bg-white/90 dark:bg-slate-800/90 p-2.5 rounded-full shadow-lg border border-slate-200 dark:border-slate-700 text-slate-500 hover:text-emerald-600 transition-all hover:scale-110 backdrop-blur-sm"
                title="Show Menu"
              >
                 <ChevronDownIcon />

@@ -1,6 +1,7 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Student, UserRole } from '../types';
+import { Student, UserRole, Course } from '../types';
 import { LogOut, Settings, Moon, Sun, ChevronDown } from 'lucide-react';
 
 interface LayoutProps {
@@ -9,6 +10,7 @@ interface LayoutProps {
   onLogout: () => void;
   theme: 'light' | 'dark';
   onToggleTheme: () => void;
+  courses: Course[];
 }
 
 // Icons
@@ -132,7 +134,7 @@ function ArrowRightOnRectangleIcon() {
   );
 }
 
-const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme, onToggleTheme }) => {
+const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme, onToggleTheme, courses }) => {
   const location = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isSalesMenuOpen, setIsSalesMenuOpen] = useState(false);
@@ -211,7 +213,50 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
 
   // Breadcrumb Generation
   const getBreadcrumbs = () => {
-    // Map of paths to their directory structure in the sidebar/conceptually
+    const path = location.pathname;
+    
+    // 1. Classroom Route (Deepest Level)
+    // Pattern: /classroom/:courseId/:moduleId/:lessonId
+    const classroomMatch = path.match(/^\/classroom\/([^/]+)\/([^/]+)\/([^/]+)/);
+    if (classroomMatch) {
+        const [_, cId, mId, lId] = classroomMatch;
+        const course = courses.find(c => c.id === cId);
+        const module = course?.modules.find(m => m.id === mId);
+        const chapter = module?.chapters.find(c => c.id === lId);
+        
+        return (
+            <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
+                <Link to="/dashboard" className="hover:text-emerald-600 transition-colors">Home</Link>
+                <span className="text-slate-300 dark:text-slate-600">/</span>
+                <Link to="/training/global" className="hover:text-emerald-600 transition-colors">Training</Link>
+                <span className="text-slate-300 dark:text-slate-600">/</span>
+                <Link to={`/training/course/${cId}`} className="hover:text-emerald-600 transition-colors truncate max-w-[150px]" title={course?.title}>{course?.title || 'Course'}</Link>
+                <span className="text-slate-300 dark:text-slate-600">/</span>
+                <span className="truncate max-w-[150px] hidden sm:inline" title={module?.title}>{module?.title}</span>
+                <span className="text-slate-300 dark:text-slate-600 hidden sm:inline">/</span>
+                <span className="font-bold text-slate-800 dark:text-white truncate max-w-[200px]" title={chapter?.title}>{chapter?.title || 'Lesson'}</span>
+            </div>
+        );
+    }
+
+    // 2. Course Overview Route (Intermediate Level)
+    // Pattern: /training/course/:courseId
+    const courseMatch = path.match(/^\/training\/course\/([^/]+)/);
+    if (courseMatch) {
+        const [_, cId] = courseMatch;
+        const course = courses.find(c => c.id === cId);
+        return (
+            <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
+                <Link to="/dashboard" className="hover:text-emerald-600 transition-colors">Home</Link>
+                <span className="text-slate-300 dark:text-slate-600">/</span>
+                <Link to="/training/global" className="hover:text-emerald-600 transition-colors">Training</Link>
+                <span className="text-slate-300 dark:text-slate-600">/</span>
+                <span className="font-bold text-slate-800 dark:text-white truncate max-w-[250px]">{course?.title || 'Course Overview'}</span>
+            </div>
+        );
+    }
+
+    // 3. Fallback Map for Static Routes
     const BREADCRUMB_MAP: Record<string, string[]> = {
       '/sales-builder': ['Sales', 'Sales Pages'],
       '/sales': ['Sales', 'Sales Log'],
@@ -241,7 +286,7 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
        );
     }
 
-    // Fallback to URL segments for dynamic paths (e.g., /students/123)
+    // Fallback to URL segments for other dynamic paths (e.g., /students/123)
     const pathSegments = location.pathname.split('/').filter(p => p);
     return (
         <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400 capitalize">

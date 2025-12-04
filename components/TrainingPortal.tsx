@@ -2,15 +2,17 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Course, CourseStatus, Student } from '../types';
-import { PlayCircle, Lock, BookOpen, Clock } from 'lucide-react';
+import { Lock } from 'lucide-react';
+import CourseCard from './CourseCard';
 
 interface TrainingPortalProps {
   courses: Course[];
   mode: 'GLOBAL' | 'TEAM';
   currentUser: Student;
+  onEnrollCourse: (courseId: string) => void;
 }
 
-const TrainingPortal: React.FC<TrainingPortalProps> = ({ courses, mode, currentUser }) => {
+const TrainingPortal: React.FC<TrainingPortalProps> = ({ courses, mode, currentUser, onEnrollCourse }) => {
   const navigate = useNavigate();
 
   // Filter Logic
@@ -29,6 +31,13 @@ const TrainingPortal: React.FC<TrainingPortalProps> = ({ courses, mode, currentU
     }
     return false;
   });
+
+  const handleCourseClick = (courseId: string) => {
+      // 1. Enroll user (add to enrolledCourses list if not already there)
+      onEnrollCourse(courseId);
+      // 2. Navigate
+      navigate(`/training/course/${courseId}`);
+  };
 
   return (
     <div className="space-y-8 animate-fade-in pb-20">
@@ -54,61 +63,22 @@ const TrainingPortal: React.FC<TrainingPortalProps> = ({ courses, mode, currentU
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {filteredCourses.map(course => (
-            <div 
-                key={course.id}
-                onClick={() => navigate(`/training/course/${course.id}`)}
-                className="group relative h-[420px] rounded-[2rem] overflow-hidden cursor-pointer shadow-xl shadow-slate-200/50 hover:shadow-2xl transition-all duration-500 dark:shadow-none dark:border dark:border-slate-700"
-            >
-                {/* Background Image */}
-                <div className="absolute inset-0">
-                    <img 
-                        src={course.thumbnailUrl} 
-                        alt={course.title} 
-                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                    />
-                    {/* Gradient Overlay */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-900/60 to-transparent opacity-90 group-hover:opacity-80 transition-opacity" />
-                </div>
+          {filteredCourses.map(course => {
+            // Check if enrolled to show progress or 'Start'
+            const isEnrolled = currentUser.enrolledCourses?.includes(course.id);
+            const totalModules = course.modules.length;
+            const completedInCourse = course.modules.filter(m => currentUser.completedModules?.includes(m.id)).length;
+            const progressPercent = totalModules > 0 ? Math.round((completedInCourse / totalModules) * 100) : 0;
 
-                {/* Content Overlay */}
-                <div className="absolute inset-0 p-8 flex flex-col justify-end">
-                    
-                    {/* Top Badges */}
-                    <div className="absolute top-6 left-6 flex gap-2">
-                        <span className="bg-white/20 backdrop-blur-md text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider border border-white/10">
-                            {course.track}
-                        </span>
-                    </div>
-
-                    {/* Main Info */}
-                    <div className="transform translate-y-4 group-hover:translate-y-0 transition-transform duration-500">
-                        <h2 className="text-3xl font-bold text-white font-heading leading-tight mb-3 drop-shadow-md">
-                            {course.title}
-                        </h2>
-                        
-                        <div className="flex items-center gap-4 text-slate-300 text-xs font-bold uppercase tracking-widest mb-4">
-                            <span className="flex items-center gap-1.5">
-                                <BookOpen size={14} className="text-emerald-400"/> MODULES ({course.modules.length})
-                            </span>
-                            <span className="w-1 h-1 bg-slate-500 rounded-full" />
-                            <span className="flex items-center gap-1.5">
-                                <Clock size={14} className="text-emerald-400"/> {course.level}
-                            </span>
-                        </div>
-
-                        <p className="text-slate-300 text-sm line-clamp-2 mb-6 opacity-0 group-hover:opacity-100 transition-opacity duration-500 delay-100">
-                            {course.subtitle}
-                        </p>
-
-                        <button className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-4 rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-emerald-900/20 transition-all active:scale-95 group-hover:bg-emerald-500">
-                            <PlayCircle size={20} fill="currentColor" className="text-emerald-900" />
-                            Start Learning
-                        </button>
-                    </div>
-                </div>
-            </div>
-          ))}
+            return (
+                <CourseCard 
+                    key={course.id}
+                    course={course}
+                    onClick={() => handleCourseClick(course.id)}
+                    progress={isEnrolled ? progressPercent : undefined}
+                />
+            );
+          })}
         </div>
       )}
     </div>

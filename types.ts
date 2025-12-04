@@ -122,6 +122,7 @@ export interface Student {
   progress: number; 
   completedModules: string[]; // IDs of completed modules
   completedChapters: string[]; // IDs of completed chapters
+  enrolledCourses: string[]; // IDs of courses the student has started/chosen
   
   // Track where the student left off
   lastAccessed?: {

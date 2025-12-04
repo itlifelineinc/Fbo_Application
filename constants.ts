@@ -13,6 +13,7 @@ export const INITIAL_STUDENTS: Student[] = [
     progress: 100,
     completedModules: [],
     completedChapters: [],
+    enrolledCourses: ['c1'],
     caseCredits: 100, 
     sponsorId: '',
     learningStats: { totalTimeSpent: 0, questionsAsked: 0, learningStreak: 0, lastLoginDate: '' }
@@ -28,6 +29,7 @@ export const INITIAL_STUDENTS: Student[] = [
     progress: 100,
     completedModules: [],
     completedChapters: [],
+    enrolledCourses: ['c1'],
     caseCredits: 10,
     sponsorId: '@forever_system',
     learningStats: { totalTimeSpent: 0, questionsAsked: 0, learningStreak: 0, lastLoginDate: '' }
@@ -43,6 +45,7 @@ export const INITIAL_STUDENTS: Student[] = [
     progress: 65,
     completedModules: ['m1'],
     completedChapters: ['c1-m1-1'],
+    enrolledCourses: ['c1'],
     sponsorId: '@forever_system',
     caseCredits: 4.5, 
     quizResults: [
@@ -63,6 +66,7 @@ export const INITIAL_STUDENTS: Student[] = [
     progress: 15,
     completedModules: [],
     completedChapters: [],
+    enrolledCourses: ['c1'],
     sponsorId: '@alice_success',
     caseCredits: 0.5, 
     quizResults: [

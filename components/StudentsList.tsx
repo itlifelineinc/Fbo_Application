@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Student, UserRole } from '../types';
@@ -58,6 +59,7 @@ const StudentsList: React.FC<StudentsListProps> = ({ students, onAddStudent, cur
       progress: 0,
       completedModules: [],
       completedChapters: [],
+      enrolledCourses: [],
       caseCredits: 0,
       sponsorId: currentUser.handle, // Auto-assign to current user (Sponsor/Admin)
       learningStats: { totalTimeSpent: 0, questionsAsked: 0, learningStreak: 0, lastLoginDate: '' }

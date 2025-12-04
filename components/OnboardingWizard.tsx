@@ -107,6 +107,7 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onEnroll, existingS
       progress: 0,
       completedModules: [],
       completedChapters: [],
+      enrolledCourses: [],
       sponsorId: verifiedSponsor.handle,
       caseCredits: 0, // Starts at 0, needs 2 to become sponsor
       quizResults: quizAnswers,

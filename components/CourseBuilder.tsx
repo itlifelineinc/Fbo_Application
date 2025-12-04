@@ -768,13 +768,32 @@ const CourseBuilder: React.FC<CourseBuilderProps> = ({ currentUserHandle, onSubm
 
   const handleSubmit = () => {
     const isGlobal = publishTarget === 'GLOBAL';
+    
+    // Identity Generation Logic:
+    // If the ID is still a 'draft_' ID, we generate a permanent, readable slug ID.
+    // e.g., 'Product Mastery' -> 'product-mastery-8321'
+    let finalId = course.id;
+    if (finalId.startsWith('draft_')) {
+        const safeTitle = course.title
+            .toLowerCase()
+            .replace(/[^a-z0-9]/g, '-') // Replace non-alphanumeric with hyphens
+            .replace(/-+/g, '-') // collapse multiple hyphens
+            .replace(/^-|-$/g, '') // trim hyphens
+            .substring(0, 30); // max length
+            
+        const random = Math.floor(1000 + Math.random() * 9000); // 4 digit random
+        finalId = safeTitle ? `${safeTitle}-${random}` : `course-${Date.now()}`;
+    }
+
     const finalCourse = { 
-        ...course, 
+        ...course,
+        id: finalId, // Assign new permanent ID
         status: isGlobal ? CourseStatus.UNDER_REVIEW : CourseStatus.PUBLISHED,
         settings: {
             ...course.settings,
             teamOnly: !isGlobal
-        }
+        },
+        updatedAt: Date.now()
     };
     
     onSubmitCourse(finalCourse);
@@ -785,7 +804,7 @@ const CourseBuilder: React.FC<CourseBuilderProps> = ({ currentUserHandle, onSubm
         alert("Course published to your Team Training portal successfully!");
     }
     
-    setCourse(getEmptyCourse(currentUserHandle)); // Reset
+    setCourse(getEmptyCourse(currentUserHandle)); // Reset form for next course
     setStep(1);
     navigate('/dashboard');
   };

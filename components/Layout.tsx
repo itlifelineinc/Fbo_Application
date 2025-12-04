@@ -223,10 +223,10 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
   const hasTeamAccess = currentUser.sponsorId || currentUser.role !== UserRole.STUDENT;
 
   // Modernized Header Classes
-  // Glassmorphism: bg-white/80, backdrop-blur-xl, subtle border
+  // "Floating Island" Style: dark transparent with rounded corners and margins.
   const headerClass = shouldHeaderBeStatic
-    ? "hidden lg:flex h-16 items-center justify-between px-8 z-20 shrink-0 border-b border-slate-100/60 dark:border-slate-800/60 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl sticky top-0"
-    : `hidden lg:flex h-16 items-center justify-between px-8 z-40 absolute top-0 left-0 right-0 transition-transform duration-300 ease-in-out border-b border-slate-100/60 dark:border-slate-800/60 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl shadow-sm ${isNavbarOpen ? 'translate-y-0' : '-translate-y-full'}`;
+    ? "hidden lg:flex h-16 items-center justify-between px-6 z-30 shrink-0 mx-6 mt-4 rounded-2xl bg-slate-900/80 backdrop-blur-md border border-white/10 shadow-lg sticky top-4 transition-all duration-300"
+    : `hidden lg:flex h-16 items-center justify-between px-6 z-40 mx-6 mt-4 rounded-2xl absolute top-0 left-0 right-0 bg-slate-900/90 backdrop-blur-md border border-white/10 shadow-2xl transition-transform duration-300 ease-in-out ${isNavbarOpen ? 'translate-y-0' : '-translate-y-[200%]'}`;
 
   // Breadcrumb Generation
   const getBreadcrumbs = () => {
@@ -241,16 +241,16 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
         const chapter = module?.chapters.find(c => c.id === lId);
         
         return (
-            <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
-                <Link to="/dashboard" className="hover:text-emerald-600 transition-colors">Home</Link>
-                <span className="text-slate-300 dark:text-slate-600">/</span>
-                <Link to="/training/global" className="hover:text-emerald-600 transition-colors">Training</Link>
-                <span className="text-slate-300 dark:text-slate-600">/</span>
-                <Link to={`/training/course/${cId}`} className="hover:text-emerald-600 transition-colors truncate max-w-[150px]" title={course?.title}>{course?.title || 'Course'}</Link>
-                <span className="text-slate-300 dark:text-slate-600">/</span>
-                <span className="truncate max-w-[150px] hidden sm:inline" title={module?.title}>{module?.title}</span>
-                <span className="text-slate-300 dark:text-slate-600 hidden sm:inline">/</span>
-                <span className="font-semibold text-slate-800 dark:text-white truncate max-w-[200px]" title={chapter?.title}>{chapter?.title || 'Lesson'}</span>
+            <div className="flex items-center gap-2 text-sm text-slate-300">
+                <Link to="/dashboard" className="hover:text-white transition-colors">Home</Link>
+                <span className="text-slate-500">/</span>
+                <Link to="/training/global" className="hover:text-white transition-colors">Training</Link>
+                <span className="text-slate-500">/</span>
+                <Link to={`/training/course/${cId}`} className="hover:text-white transition-colors truncate max-w-[150px]" title={course?.title}>{course?.title || 'Course'}</Link>
+                <span className="text-slate-500">/</span>
+                <span className="truncate max-w-[150px] hidden sm:inline text-slate-400" title={module?.title}>{module?.title}</span>
+                <span className="text-slate-500 hidden sm:inline">/</span>
+                <span className="font-semibold text-white truncate max-w-[200px]" title={chapter?.title}>{chapter?.title || 'Lesson'}</span>
             </div>
         );
     }
@@ -261,12 +261,12 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
         const [_, cId] = courseMatch;
         const course = courses.find(c => c.id === cId);
         return (
-            <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
-                <Link to="/dashboard" className="hover:text-emerald-600 transition-colors">Home</Link>
-                <span className="text-slate-300 dark:text-slate-600">/</span>
-                <Link to="/training/global" className="hover:text-emerald-600 transition-colors">Training</Link>
-                <span className="text-slate-300 dark:text-slate-600">/</span>
-                <span className="font-semibold text-slate-800 dark:text-white truncate max-w-[250px]">{course?.title || 'Course Overview'}</span>
+            <div className="flex items-center gap-2 text-sm text-slate-300">
+                <Link to="/dashboard" className="hover:text-white transition-colors">Home</Link>
+                <span className="text-slate-500">/</span>
+                <Link to="/training/global" className="hover:text-white transition-colors">Training</Link>
+                <span className="text-slate-500">/</span>
+                <span className="font-semibold text-white truncate max-w-[250px]">{course?.title || 'Course Overview'}</span>
             </div>
         );
     }
@@ -286,12 +286,12 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
 
     if (BREADCRUMB_MAP[location.pathname]) {
        return (
-         <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
-            <Link to="/dashboard" className="hover:text-emerald-600 transition-colors">Home</Link>
+         <div className="flex items-center gap-2 text-sm text-slate-300">
+            <Link to="/dashboard" className="hover:text-white transition-colors">Home</Link>
             {BREADCRUMB_MAP[location.pathname].map((item, idx) => (
                 <React.Fragment key={idx}>
-                    <span className="text-slate-300 dark:text-slate-600">/</span>
-                    <span className={idx === BREADCRUMB_MAP[location.pathname].length - 1 ? "font-semibold text-slate-800 dark:text-white" : ""}>
+                    <span className="text-slate-500">/</span>
+                    <span className={idx === BREADCRUMB_MAP[location.pathname].length - 1 ? "font-semibold text-white" : ""}>
                         {item}
                     </span>
                 </React.Fragment>
@@ -303,8 +303,8 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
     // Fallback to URL segments
     const pathSegments = location.pathname.split('/').filter(p => p);
     return (
-        <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400 capitalize">
-            <Link to="/dashboard" className="hover:text-emerald-600 transition-colors">Home</Link>
+        <div className="flex items-center gap-2 text-sm text-slate-300 capitalize">
+            <Link to="/dashboard" className="hover:text-white transition-colors">Home</Link>
             {pathSegments.map((segment, index) => {
                 const isLast = index === pathSegments.length - 1;
                 const displayName = (segment.length > 8 && /\d/.test(segment)) ? 'Details' : segment.replace(/-/g, ' ');
@@ -312,11 +312,11 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
 
                 return (
                     <React.Fragment key={to}>
-                        <span className="text-slate-300 dark:text-slate-600">/</span>
+                        <span className="text-slate-500">/</span>
                         {isLast ? (
-                            <span className="font-semibold text-slate-800 dark:text-white">{displayName}</span>
+                            <span className="font-semibold text-white">{displayName}</span>
                         ) : (
-                            <Link to={to} className="hover:text-emerald-600 transition-colors">{displayName}</Link>
+                            <Link to={to} className="hover:text-white transition-colors">{displayName}</Link>
                         )}
                     </React.Fragment>
                 );
@@ -527,11 +527,11 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
         
         {/* Desktop Navbar */}
         <header ref={navbarRef} className={headerClass}>
-            <div className="flex items-center gap-4 text-sm text-slate-500 dark:text-slate-400">
+            <div className="flex items-center gap-4 text-sm text-slate-300">
                {/* Show Breadcrumbs on non-dashboard pages, Greeting on dashboard */}
                {isDashboard ? (
                    // New Typography: Dosis font, larger size for friendly greeting
-                   <span className="font-dosis font-semibold text-2xl text-slate-800 dark:text-white tracking-tight">
+                   <span className="font-dosis font-semibold text-2xl text-white tracking-tight">
                      Hi, {currentUser.name.split(' ')[0]}
                    </span>
                ) : (
@@ -540,12 +540,12 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
             </div>
             
             <div className="relative">
-               {/* Updated Pill-Shaped Profile Button */}
+               {/* Updated Pill-Shaped Profile Button with Dark Styles */}
                <button 
                  onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)} 
-                 className="group flex items-center gap-3 focus:outline-none pl-1 pr-4 py-1 rounded-full transition-all border border-slate-200/60 bg-white/50 hover:bg-white hover:shadow-sm dark:bg-slate-800/50 dark:border-slate-700 dark:hover:bg-slate-800"
+                 className="group flex items-center gap-3 focus:outline-none pl-1 pr-4 py-1 rounded-full transition-all border border-white/10 bg-white/5 hover:bg-white/10 hover:shadow-sm"
                >
-                  <div className="w-9 h-9 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold text-xs overflow-hidden ring-2 ring-white dark:ring-slate-900 shadow-sm">
+                  <div className="w-9 h-9 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold text-xs overflow-hidden ring-2 ring-slate-800 shadow-sm">
                       {currentUser.avatarUrl ? (
                           <img src={currentUser.avatarUrl} alt={currentUser.name} className="w-full h-full object-cover" />
                       ) : (
@@ -554,18 +554,18 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
                   </div>
                   
                   <div className="text-left hidden xl:block">
-                      <p className="text-sm font-semibold text-slate-700 dark:text-slate-200 leading-tight">{currentUser.name}</p>
-                      <p className="text-[10px] text-slate-400 dark:text-slate-500 font-medium uppercase tracking-wide">{currentUser.role}</p>
+                      <p className="text-sm font-semibold text-slate-100 leading-tight">{currentUser.name}</p>
+                      <p className="text-[10px] text-emerald-400 font-medium uppercase tracking-wide">{currentUser.role}</p>
                   </div>
                   
-                  <ChevronDown size={14} className={`text-slate-400 transition-transform ${isProfileMenuOpen ? 'rotate-180' : ''} group-hover:text-slate-600 dark:group-hover:text-slate-300 ml-1`} />
+                  <ChevronDown size={14} className={`text-slate-400 transition-transform ${isProfileMenuOpen ? 'rotate-180' : ''} group-hover:text-slate-200 ml-1`} />
                </button>
 
                {/* Profile Dropdown */}
                {isProfileMenuOpen && (
                   <>
                     <div className="fixed inset-0 z-10" onClick={() => setIsProfileMenuOpen(false)}></div>
-                    <div className="absolute right-0 mt-3 w-56 bg-white/95 backdrop-blur-xl rounded-2xl shadow-xl border border-slate-100 py-2 z-20 animate-fade-in dark:bg-slate-800/95 dark:border-slate-700">
+                    <div className="absolute right-0 mt-3 w-56 bg-white/95 backdrop-blur-xl rounded-2xl shadow-xl border border-slate-100 py-2 z-20 animate-fade-in dark:bg-slate-900/95 dark:border-slate-700">
                         <div className="px-4 py-3 border-b border-slate-100 dark:border-slate-700">
                             <p className="text-sm font-bold text-slate-800 dark:text-white">Signed in as</p>
                             <p className="text-xs text-slate-500 truncate dark:text-slate-400 mt-0.5">{currentUser.email}</p>
@@ -574,7 +574,7 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
                         <div className="py-2">
                             <button 
                                 onClick={() => { onToggleTheme(); setIsProfileMenuOpen(false); }}
-                                className="w-full text-left px-4 py-2 text-sm text-slate-600 hover:bg-slate-50 flex items-center gap-2 transition-colors dark:text-slate-300 dark:hover:bg-slate-700"
+                                className="w-full text-left px-4 py-2 text-sm text-slate-600 hover:bg-slate-50 flex items-center gap-2 transition-colors dark:text-slate-300 dark:hover:bg-slate-800"
                             >
                                 {theme === 'light' ? <Moon size={16} /> : <Sun size={16} />}
                                 <span>{theme === 'light' ? 'Dark Mode' : 'Light Mode'}</span>
@@ -582,7 +582,7 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
                             <Link 
                                 to={`/students/${currentUser.id}`}
                                 onClick={() => setIsProfileMenuOpen(false)}
-                                className="w-full text-left px-4 py-2 text-sm text-slate-600 hover:bg-slate-50 flex items-center gap-2 transition-colors dark:text-slate-300 dark:hover:bg-slate-700"
+                                className="w-full text-left px-4 py-2 text-sm text-slate-600 hover:bg-slate-50 flex items-center gap-2 transition-colors dark:text-slate-300 dark:hover:bg-slate-800"
                             >
                                 <Settings size={16} />
                                 <span>Settings</span>
@@ -608,7 +608,7 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
         {!shouldHeaderBeStatic && !isNavbarOpen && (
              <button 
                onClick={() => setIsNavbarOpen(true)}
-               className="hidden lg:flex absolute top-4 right-8 z-30 bg-white/90 dark:bg-slate-800/90 p-2.5 rounded-full shadow-lg border border-slate-200 dark:border-slate-700 text-slate-500 hover:text-emerald-600 transition-all hover:scale-110 backdrop-blur-sm"
+               className="hidden lg:flex absolute top-4 right-8 z-30 bg-slate-900/90 p-2.5 rounded-full shadow-lg border border-slate-700 text-slate-400 hover:text-white transition-all hover:scale-110 backdrop-blur-sm"
                title="Show Menu"
              >
                 <ChevronDownIcon />

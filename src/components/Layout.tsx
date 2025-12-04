@@ -1,7 +1,8 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Student, UserRole } from '../types';
+import { Student, UserRole, Course } from '../types';
+import { LogOut, Settings, Moon, Sun, ChevronDown } from 'lucide-react';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -9,6 +10,7 @@ interface LayoutProps {
   onLogout: () => void;
   theme: 'light' | 'dark';
   onToggleTheme: () => void;
+  courses: Course[];
 }
 
 // Icons
@@ -24,6 +26,22 @@ function BookOpenIcon() {
   return (
     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
       <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" />
+    </svg>
+  );
+}
+
+function GlobeEducationIcon() {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+      <path strokeLinecap="round" strokeLinejoin="round" d="M12 21a9.004 9.004 0 008.716-6.747M12 21a9.004 9.004 0 01-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S12 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S12 3 12 3m0 0a8.997 8.997 0 017.843 4.582M12 3a8.997 8.997 0 00-7.843 4.582m15.686 0A11.953 11.953 0 0112 10.5c-2.998 0-5.74-1.1-7.843-2.918m15.686 0A8.959 8.959 0 0121 12c0 .778-.099 1.533-.284 2.253m0 0A17.919 17.919 0 0112 16.5c-3.162 0-6.133-.815-8.716-2.247m0 0A9.015 9.015 0 013 12c0-1.605.42-3.113 1.157-4.418" />
+    </svg>
+  );
+}
+
+function UserGroupIcon() {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+      <path strokeLinecap="round" strokeLinejoin="round" d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m.94 3.198l.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0112 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 016 18.719m12 0a5.971 5.971 0 00-.941-3.197m0 0A5.995 5.995 0 0012 12.75a5.995 5.995 0 00-5.058 2.772m0 0a3 3 0 00-4.681 2.72 8.986 8.986 0 003.74.477m.94-3.197a5.971 5.971 0 00-.94 3.197M15 6.75a3 3 0 11-6 0 3 3 0 016 0zm6 3a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0zm-13.5 0a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z" />
     </svg>
   );
 }
@@ -116,12 +134,19 @@ function ArrowRightOnRectangleIcon() {
   );
 }
 
-const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme, onToggleTheme }) => {
+const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme, onToggleTheme, courses }) => {
   const location = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isSalesMenuOpen, setIsSalesMenuOpen] = useState(false);
+  const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
+  
+  // Navbar Auto-hide State
+  const [isNavbarOpen, setIsNavbarOpen] = useState(false);
+  const navbarRef = useRef<HTMLElement>(null);
+  const navTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const isActive = (path: string) => location.pathname === path;
+  const isDashboard = location.pathname === '/dashboard';
 
   // Check if we are in a builder mode (full screen tools)
   const isBuilder = location.pathname.startsWith('/sales-builder') || location.pathname.startsWith('/builder');
@@ -133,19 +158,176 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
     }
   }, [location.pathname]);
 
+  // Navbar auto-hide logic: Only apply for builder pages now. Standard pages get static header.
+  const shouldHeaderBeStatic = isDashboard || !isBuilder;
+
+  useEffect(() => {
+    if (!shouldHeaderBeStatic && isNavbarOpen) {
+      const hideNav = () => setIsNavbarOpen(false);
+      const resetTimer = () => {
+        if (navTimerRef.current) clearTimeout(navTimerRef.current);
+        navTimerRef.current = setTimeout(hideNav, 3000); // 3 seconds inactivity
+      };
+
+      // Initial start
+      resetTimer();
+
+      const navEl = navbarRef.current;
+      if (navEl) {
+        navEl.addEventListener('mousemove', resetTimer);
+        navEl.addEventListener('click', resetTimer);
+        navEl.addEventListener('keydown', resetTimer);
+        navEl.addEventListener('mouseenter', resetTimer);
+      }
+
+      return () => {
+        if (navTimerRef.current) clearTimeout(navTimerRef.current);
+        if (navEl) {
+          navEl.removeEventListener('mousemove', resetTimer);
+          navEl.removeEventListener('click', resetTimer);
+          navEl.removeEventListener('keydown', resetTimer);
+          navEl.removeEventListener('mouseenter', resetTimer);
+        }
+      };
+    } else if (shouldHeaderBeStatic) {
+        // Always open if static
+        setIsNavbarOpen(true);
+    } else {
+        // Default close for builders
+        setIsNavbarOpen(false);
+    }
+  }, [isNavbarOpen, shouldHeaderBeStatic]);
+
   // Role Checks
   const isStudent = currentUser.role === UserRole.STUDENT;
   const isAdminOrSuper = currentUser.role === UserRole.ADMIN || currentUser.role === UserRole.SUPER_ADMIN;
   // Allow Sponsors to access builder too
   const canBuildCourses = isAdminOrSuper || currentUser.role === UserRole.SPONSOR;
+  
+  // Logic for showing Team Training: If user has a sponsor OR is a sponsor/admin themselves
+  const hasTeamAccess = currentUser.sponsorId || currentUser.role !== UserRole.STUDENT;
+
+  const headerClass = shouldHeaderBeStatic
+    ? "hidden lg:flex bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 h-16 items-center justify-between px-8 z-20 shrink-0"
+    : `hidden lg:flex bg-white/95 backdrop-blur-md dark:bg-slate-900/95 border-b border-slate-200 dark:border-slate-800 h-16 items-center justify-between px-8 z-40 absolute top-0 left-0 right-0 shadow-md transition-transform duration-300 ease-in-out ${isNavbarOpen ? 'translate-y-0' : '-translate-y-full'}`;
+
+  // Breadcrumb Generation
+  const getBreadcrumbs = () => {
+    const path = location.pathname;
+    
+    // 1. Classroom Route (Deepest Level)
+    // Pattern: /classroom/:courseId/:moduleId/:lessonId
+    const classroomMatch = path.match(/^\/classroom\/([^/]+)\/([^/]+)\/([^/]+)/);
+    if (classroomMatch) {
+        const [_, cId, mId, lId] = classroomMatch;
+        const course = courses.find(c => c.id === cId);
+        const module = course?.modules.find(m => m.id === mId);
+        const chapter = module?.chapters.find(c => c.id === lId);
+        
+        return (
+            <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
+                <Link to="/dashboard" className="hover:text-emerald-600 transition-colors">Home</Link>
+                <span className="text-slate-300 dark:text-slate-600">/</span>
+                <Link to="/training/global" className="hover:text-emerald-600 transition-colors">Training</Link>
+                <span className="text-slate-300 dark:text-slate-600">/</span>
+                <Link to={`/training/course/${cId}`} className="hover:text-emerald-600 transition-colors truncate max-w-[150px]" title={course?.title}>{course?.title || 'Course'}</Link>
+                <span className="text-slate-300 dark:text-slate-600">/</span>
+                <span className="truncate max-w-[150px] hidden sm:inline" title={module?.title}>{module?.title}</span>
+                <span className="text-slate-300 dark:text-slate-600 hidden sm:inline">/</span>
+                <span className="font-bold text-slate-800 dark:text-white truncate max-w-[200px]" title={chapter?.title}>{chapter?.title || 'Lesson'}</span>
+            </div>
+        );
+    }
+
+    // 2. Course Overview Route (Intermediate Level)
+    // Pattern: /training/course/:courseId
+    const courseMatch = path.match(/^\/training\/course\/([^/]+)/);
+    if (courseMatch) {
+        const [_, cId] = courseMatch;
+        const course = courses.find(c => c.id === cId);
+        return (
+            <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
+                <Link to="/dashboard" className="hover:text-emerald-600 transition-colors">Home</Link>
+                <span className="text-slate-300 dark:text-slate-600">/</span>
+                <Link to="/training/global" className="hover:text-emerald-600 transition-colors">Training</Link>
+                <span className="text-slate-300 dark:text-slate-600">/</span>
+                <span className="font-bold text-slate-800 dark:text-white truncate max-w-[250px]">{course?.title || 'Course Overview'}</span>
+            </div>
+        );
+    }
+
+    // 3. Fallback Map for Static Routes
+    const BREADCRUMB_MAP: Record<string, string[]> = {
+      '/sales-builder': ['Sales', 'Sales Pages'],
+      '/sales': ['Sales', 'Sales Log'],
+      '/chat': ['Communication', 'Team Chat'],
+      '/courses': ['Training', 'My Classroom'],
+      '/training/global': ['Training', 'Global Library'],
+      '/training/team': ['Training', 'Team Portal'],
+      '/community': ['Community', 'Global Hub'],
+      '/students': ['Team', 'Members'],
+      '/builder': ['Admin', 'Course Builder'],
+    };
+
+    // Check exact match first
+    if (BREADCRUMB_MAP[location.pathname]) {
+       return (
+         <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
+            <Link to="/dashboard" className="hover:text-emerald-600 transition-colors">Home</Link>
+            {BREADCRUMB_MAP[location.pathname].map((item, idx) => (
+                <React.Fragment key={idx}>
+                    <span className="text-slate-300 dark:text-slate-600">/</span>
+                    <span className={idx === BREADCRUMB_MAP[location.pathname].length - 1 ? "font-bold text-slate-800 dark:text-white" : ""}>
+                        {item}
+                    </span>
+                </React.Fragment>
+            ))}
+         </div>
+       );
+    }
+
+    // Fallback to URL segments for other dynamic paths (e.g., /students/123)
+    const pathSegments = location.pathname.split('/').filter(p => p);
+    return (
+        <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400 capitalize">
+            <Link to="/dashboard" className="hover:text-emerald-600 transition-colors">Home</Link>
+            {pathSegments.map((segment, index) => {
+                const isLast = index === pathSegments.length - 1;
+                // Heuristic to make IDs look nicer or hide them
+                const displayName = (segment.length > 8 && /\d/.test(segment)) ? 'Details' : segment.replace(/-/g, ' ');
+                const to = `/${pathSegments.slice(0, index + 1).join('/')}`;
+
+                return (
+                    <React.Fragment key={to}>
+                        <span className="text-slate-300 dark:text-slate-600">/</span>
+                        {isLast ? (
+                            <span className="font-bold text-slate-800 dark:text-white">{displayName}</span>
+                        ) : (
+                            <Link to={to} className="hover:text-emerald-600 transition-colors">{displayName}</Link>
+                        )}
+                    </React.Fragment>
+                );
+            })}
+        </div>
+    );
+  };
 
   return (
     <div className="flex h-screen bg-slate-50 dark:bg-slate-950 overflow-hidden transition-colors duration-300">
+      <style>{`
+        .no-scrollbar::-webkit-scrollbar {
+          display: none;
+        }
+        .no-scrollbar {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
+        }
+      `}</style>
       
       {/* Mobile Overlay */}
       {isMobileMenuOpen && (
         <div 
-          className="fixed inset-0 bg-black/50 z-20 lg:hidden backdrop-blur-sm transition-opacity"
+          className="fixed inset-0 bg-black/50 z-50 lg:hidden backdrop-blur-sm transition-opacity"
           onClick={() => setIsMobileMenuOpen(false)}
         />
       )}
@@ -153,9 +335,10 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
       {/* Sidebar - Responsive */}
       <aside 
         className={`
-          fixed lg:static inset-y-0 left-0 z-30 w-64 bg-emerald-900 text-white flex flex-col shadow-xl 
+          fixed inset-y-0 left-0 z-50 w-64 bg-emerald-900 text-white flex flex-col shadow-xl 
           transform transition-transform duration-300 ease-in-out dark:bg-emerald-950
-          ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
+          lg:static lg:translate-x-0
+          ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}
         `}
       >
         <div className="p-6 border-b border-emerald-800 flex justify-between items-center dark:border-emerald-900">
@@ -167,14 +350,14 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
             </div>
             <span>FBO Academy</span>
           </div>
-          {/* Mobile Close Button */}
+          {/* Close Button */}
           <button onClick={() => setIsMobileMenuOpen(false)} className="lg:hidden text-emerald-300 hover:text-white">
             <XMarkIcon />
           </button>
         </div>
 
         {/* Clickable User Profile Section */}
-        <div className="px-6 py-4 bg-emerald-800/30 dark:bg-emerald-900/30">
+        <div className="px-6 py-4 bg-emerald-800/30 dark:bg-emerald-900/30 lg:hidden">
            <Link 
              to={`/students/${currentUser.id}`}
              onClick={() => setIsMobileMenuOpen(false)}
@@ -194,7 +377,7 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
           </Link>
         </div>
 
-        <nav className="flex-1 py-6 px-3 space-y-1 overflow-y-auto">
+        <nav className="flex-1 py-6 px-3 space-y-1 overflow-y-auto no-scrollbar">
           <NavItem 
             to="/dashboard" 
             icon={<HomeIcon />} 
@@ -209,14 +392,39 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
             active={isActive('/chat')} 
             onClick={() => setIsMobileMenuOpen(false)}
           />
+          
+          <div className="my-2 border-t border-emerald-800 dark:border-emerald-900 mx-4 opacity-50"></div>
+          
+          <div className="px-4 py-2 text-xs font-bold text-emerald-400 uppercase tracking-wider">Training</div>
+          
           <NavItem 
             to="/courses" 
             icon={<BookOpenIcon />} 
-            label="My Training" 
+            label="My Classroom" 
             active={isActive('/courses') || location.pathname.startsWith('/classroom')} 
             onClick={() => setIsMobileMenuOpen(false)}
           />
           
+          <NavItem 
+            to="/training/global" 
+            icon={<GlobeEducationIcon />} 
+            label="Global Training" 
+            active={isActive('/training/global')} 
+            onClick={() => setIsMobileMenuOpen(false)}
+          />
+
+          {hasTeamAccess && (
+            <NavItem 
+              to="/training/team" 
+              icon={<UserGroupIcon />} 
+              label="Team Training" 
+              active={isActive('/training/team')} 
+              onClick={() => setIsMobileMenuOpen(false)}
+            />
+          )}
+
+          <div className="my-2 border-t border-emerald-800 dark:border-emerald-900 mx-4 opacity-50"></div>
+
           {/* Sales & CC Dropdown */}
           <div className="space-y-1">
             <button
@@ -289,7 +497,8 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
           )}
         </nav>
 
-        <div className="p-4 border-t border-emerald-800 dark:border-emerald-900">
+        {/* Sidebar Logout: Only show on Mobile or collapsed state logic if needed */}
+        <div className="p-4 border-t border-emerald-800 dark:border-emerald-900 lg:hidden">
           <button 
             onClick={onLogout}
             className="flex items-center gap-3 px-4 py-3 rounded-lg w-full text-emerald-300 hover:bg-emerald-800/50 hover:text-white transition-colors"
@@ -301,9 +510,94 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
       </aside>
 
       {/* Main Content - Adjusted for Builders */}
-      <div className="flex-1 flex flex-col h-screen overflow-hidden dark:bg-slate-950">
+      <div className="flex-1 flex flex-col h-screen overflow-hidden dark:bg-slate-950 relative">
+        
+        {/* Desktop Navbar */}
+        <header ref={navbarRef} className={headerClass}>
+            <div className="flex items-center gap-4 text-sm text-slate-500 dark:text-slate-400">
+               {/* Show Breadcrumbs on non-dashboard pages, Greeting on dashboard */}
+               {isDashboard ? (
+                   <span className="font-medium text-lg">👋 Hi, {currentUser.name}</span>
+               ) : (
+                   getBreadcrumbs()
+               )}
+            </div>
+            
+            <div className="relative">
+               <button 
+                 onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)} 
+                 className="flex items-center gap-3 focus:outline-none hover:bg-slate-50 dark:hover:bg-slate-800 p-2 rounded-xl transition-colors"
+               >
+                  <div className="text-right hidden xl:block">
+                      <p className="text-sm font-bold text-slate-700 dark:text-slate-200">{currentUser.name}</p>
+                      <p className="text-xs text-slate-500 dark:text-slate-400">{currentUser.role}</p>
+                  </div>
+                  <div className="w-9 h-9 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold text-sm overflow-hidden border border-emerald-200 dark:bg-emerald-900 dark:text-emerald-300 dark:border-emerald-800">
+                      {currentUser.avatarUrl ? (
+                          <img src={currentUser.avatarUrl} alt={currentUser.name} className="w-full h-full object-cover" />
+                      ) : (
+                          currentUser.name.charAt(0)
+                      )}
+                  </div>
+                  <ChevronDown size={16} className={`text-slate-400 transition-transform ${isProfileMenuOpen ? 'rotate-180' : ''}`} />
+               </button>
+
+               {/* Profile Dropdown */}
+               {isProfileMenuOpen && (
+                  <>
+                    <div className="fixed inset-0 z-10" onClick={() => setIsProfileMenuOpen(false)}></div>
+                    <div className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-xl border border-slate-100 py-2 z-20 animate-fade-in dark:bg-slate-800 dark:border-slate-700">
+                        <div className="px-4 py-3 border-b border-slate-100 dark:border-slate-700">
+                            <p className="text-sm font-bold text-slate-800 dark:text-white">Signed in as</p>
+                            <p className="text-xs text-slate-500 truncate dark:text-slate-400">{currentUser.email}</p>
+                        </div>
+                        
+                        <div className="py-2">
+                            <button 
+                                onClick={() => { onToggleTheme(); setIsProfileMenuOpen(false); }}
+                                className="w-full text-left px-4 py-2 text-sm text-slate-600 hover:bg-slate-50 flex items-center gap-2 transition-colors dark:text-slate-300 dark:hover:bg-slate-700"
+                            >
+                                {theme === 'light' ? <Moon size={16} /> : <Sun size={16} />}
+                                <span>{theme === 'light' ? 'Dark Mode' : 'Light Mode'}</span>
+                            </button>
+                            <Link 
+                                to={`/students/${currentUser.id}`}
+                                onClick={() => setIsProfileMenuOpen(false)}
+                                className="w-full text-left px-4 py-2 text-sm text-slate-600 hover:bg-slate-50 flex items-center gap-2 transition-colors dark:text-slate-300 dark:hover:bg-slate-700"
+                            >
+                                <Settings size={16} />
+                                <span>Settings</span>
+                            </Link>
+                        </div>
+
+                        <div className="border-t border-slate-100 pt-2 dark:border-slate-700">
+                            <button 
+                                onClick={onLogout}
+                                className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2 transition-colors dark:hover:bg-red-900/20"
+                            >
+                                <LogOut size={16} />
+                                <span>Sign Out</span>
+                            </button>
+                        </div>
+                    </div>
+                  </>
+               )}
+            </div>
+        </header>
+
+        {/* Trigger Button for Desktop Navbar (visible when hidden, mostly for builders) */}
+        {!shouldHeaderBeStatic && !isNavbarOpen && (
+             <button 
+               onClick={() => setIsNavbarOpen(true)}
+               className="hidden lg:flex absolute top-4 right-8 z-30 bg-white/90 dark:bg-slate-800/90 p-2.5 rounded-full shadow-lg border border-slate-200 dark:border-slate-700 text-slate-500 hover:text-emerald-600 transition-all hover:scale-110"
+               title="Show Menu"
+             >
+                <ChevronDownIcon />
+             </button>
+        )}
+
         {/* Mobile Header */}
-        <header className="lg:hidden bg-white border-b border-slate-200 p-4 flex justify-between items-center z-10 shadow-sm dark:bg-slate-900 dark:border-slate-800">
+        <header className="lg:hidden bg-white border-b border-slate-200 p-4 flex justify-between items-center z-10 shadow-sm dark:bg-slate-900 dark:border-slate-800 shrink-0">
            <div className="flex items-center gap-2 font-bold text-lg text-emerald-900 font-heading dark:text-emerald-400">
              <div className="w-6 h-6 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-full flex items-center justify-center text-emerald-900 shadow-sm">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-3 h-3">

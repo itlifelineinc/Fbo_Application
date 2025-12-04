@@ -2,7 +2,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Course, Module, Chapter, CourseTrack, CourseLevel, CourseStatus, ContentBlock, BlockType } from '../types';
-import { Eye, X, PlayCircle, FileText, HelpCircle, ChevronDown, ChevronRight, CheckCircle, Menu, BookOpen, Clock, Plus, Trash2, ArrowUp, ArrowDown, LayoutTemplate, Type, Image as ImageIcon, List, Quote, AlertCircle, ArrowLeft, ShoppingBag, Users, Sparkles, Save, Search, Check } from 'lucide-react';
+import { Eye, X, PlayCircle, FileText, HelpCircle, ChevronDown, ChevronRight, CheckCircle, Menu, BookOpen, Clock, Plus, Trash2, ArrowUp, ArrowDown, LayoutTemplate, Type, Image as ImageIcon, List, Quote, AlertCircle, ArrowLeft, ShoppingBag, Users, Sparkles, Save, Search, Check, Wand2, Loader2 } from 'lucide-react';
+import { generateModuleContent } from '../services/geminiService';
 
 interface CourseBuilderProps {
   currentUserHandle: string;
@@ -199,7 +200,7 @@ const MediaInput: React.FC<{
            ) : (
              <div className="flex flex-col items-center gap-2">
                 <div className="p-3 bg-white rounded-full shadow-sm dark:bg-slate-800"><ImageIcon size={compact ? 16 : 24} /></div>
-                <span className={compact ? 'text-xs font-bold' : 'text-sm font-bold'}>{compact ? 'Select Image' : 'Click to Upload'}</span>
+                <span className="text-sm font-bold">{compact ? 'Select Image' : 'Click to Upload'}</span>
              </div>
            )}
            <input type="file" ref={fileInputRef} className="hidden" accept={accept} onChange={handleFileChange} />
@@ -532,6 +533,9 @@ const CourseBuilder: React.FC<CourseBuilderProps> = ({ currentUserHandle, onSubm
   // Template Mode State within Editor
   const [isTemplateMode, setIsTemplateMode] = useState(false);
 
+  // AI Generation State
+  const [isGeneratingAI, setIsGeneratingAI] = useState(false);
+
   // Ref for the step navigation container to handle scrolling
   const stepsContainerRef = useRef<HTMLDivElement>(null);
 
@@ -590,6 +594,24 @@ const CourseBuilder: React.FC<CourseBuilderProps> = ({ currentUserHandle, onSubm
       chapters: []
     };
     setCourse(prev => ({ ...prev, modules: [...prev.modules, newModule] }));
+  };
+
+  const handleAIGenerate = async () => {
+      const topic = prompt("What should this module be about? (e.g. 'Handling Objections')");
+      if (!topic) return;
+
+      setIsGeneratingAI(true);
+      const generatedModule = await generateModuleContent(topic);
+      setIsGeneratingAI(false);
+
+      if (generatedModule) {
+          // Adjust order
+          generatedModule.order = course.modules.length + 1;
+          setCourse(prev => ({ ...prev, modules: [...prev.modules, generatedModule] }));
+          alert("Module Generated Successfully!");
+      } else {
+          alert("Failed to generate module. Please try again.");
+      }
   };
 
   const updateModule = (id: string, field: keyof Module, value: any) => {
@@ -849,9 +871,19 @@ const CourseBuilder: React.FC<CourseBuilderProps> = ({ currentUserHandle, onSubm
             <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100 font-heading">Curriculum</h2>
             <p className="text-sm text-slate-500 dark:text-slate-400">Structure your course with modules and lessons.</p>
         </div>
-        <button onClick={addModule} className="bg-slate-900 text-white px-5 py-2.5 rounded-xl font-bold hover:bg-slate-800 transition-colors shadow-lg shadow-slate-200 dark:bg-emerald-600 dark:hover:bg-emerald-700 dark:shadow-none flex items-center gap-2">
-          <Plus size={18} /> New Module
-        </button>
+        <div className="flex gap-2">
+            <button 
+                onClick={handleAIGenerate} 
+                disabled={isGeneratingAI}
+                className="bg-indigo-600 text-white px-4 py-2.5 rounded-xl font-bold hover:bg-indigo-700 transition-colors shadow-lg shadow-indigo-200 dark:shadow-none flex items-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
+            >
+                {isGeneratingAI ? <Loader2 className="animate-spin" size={18} /> : <Wand2 size={18} />}
+                {isGeneratingAI ? 'Generating...' : 'AI Generate'}
+            </button>
+            <button onClick={addModule} className="bg-slate-900 text-white px-5 py-2.5 rounded-xl font-bold hover:bg-slate-800 transition-colors shadow-lg shadow-slate-200 dark:bg-emerald-600 dark:hover:bg-emerald-700 dark:shadow-none flex items-center gap-2">
+            <Plus size={18} /> New Module
+            </button>
+        </div>
       </div>
       
       <div className="flex-1 overflow-y-auto space-y-6 pr-2 no-scrollbar pb-20">
@@ -871,13 +903,16 @@ const CourseBuilder: React.FC<CourseBuilderProps> = ({ currentUserHandle, onSubm
                 <div className="w-10 h-10 rounded-xl bg-slate-100 text-slate-500 flex items-center justify-center font-bold text-sm shrink-0 dark:bg-slate-700 dark:text-slate-400">
                     {mIdx + 1}
                 </div>
-                <input 
-                  type="text" 
-                  value={module.title}
-                  onChange={(e) => updateModule(module.id, 'title', e.target.value)}
-                  className="flex-1 bg-transparent border-none p-0 text-lg font-bold text-slate-900 placeholder-slate-400 focus:ring-0 dark:text-white"
-                  placeholder="Module Title (e.g. Introduction)"
-                />
+                <div className="flex-1">
+                    <input 
+                    type="text" 
+                    value={module.title}
+                    onChange={(e) => updateModule(module.id, 'title', e.target.value)}
+                    className="w-full bg-transparent border-none p-0 text-lg font-bold text-slate-900 placeholder-slate-400 focus:ring-0 dark:text-white"
+                    placeholder="Module Title (e.g. Introduction)"
+                    />
+                    {module.summary && <p className="text-xs text-slate-400 mt-1">{module.summary}</p>}
+                </div>
                 <div className="flex items-center gap-2">
                     <button onClick={() => addChapter(module.id)} className="text-xs bg-emerald-50 text-emerald-700 px-3 py-2 rounded-lg font-bold hover:bg-emerald-100 transition-colors dark:bg-emerald-900/30 dark:text-emerald-400">
                     + Lesson

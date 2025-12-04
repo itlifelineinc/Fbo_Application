@@ -1,5 +1,6 @@
+
 import { GoogleGenAI, Type } from "@google/genai";
-import { Module } from '../types';
+import { Module, Chapter } from '../types';
 
 const apiKey = process.env.API_KEY || '';
 const ai = new GoogleGenAI({ apiKey });
@@ -10,37 +11,60 @@ export const generateModuleContent = async (topic: string): Promise<Module | nul
     const response = await ai.models.generateContent({
       model: 'gemini-2.5-flash',
       contents: `Create a detailed training module for a business course about "${topic}". 
-      The output must be a JSON object representing a Module.
-      Include 2-3 lessons. The content of lessons should be informative educational text (approx 100 words each).`,
+      The output must be a JSON object.
+      Include 2-3 lessons (chapters). The content of chapters should be informative educational text (approx 150 words each) formatted in Markdown.`,
       config: {
         responseMimeType: "application/json",
         responseSchema: {
           type: Type.OBJECT,
           properties: {
-            id: { type: Type.STRING },
             title: { type: Type.STRING },
-            description: { type: Type.STRING },
-            lessons: {
+            summary: { type: Type.STRING },
+            chapters: {
               type: Type.ARRAY,
               items: {
                 type: Type.OBJECT,
                 properties: {
-                  id: { type: Type.STRING },
                   title: { type: Type.STRING },
                   content: { type: Type.STRING },
-                  durationMinutes: { type: Type.NUMBER }
+                  durationMinutes: { type: Type.NUMBER },
+                  actionSteps: { 
+                      type: Type.ARRAY,
+                      items: { type: Type.STRING }
+                  }
                 },
-                required: ['id', 'title', 'content', 'durationMinutes']
+                required: ['title', 'content', 'durationMinutes', 'actionSteps']
               }
             }
           },
-          required: ['id', 'title', 'description', 'lessons']
+          required: ['title', 'summary', 'chapters']
         }
       }
     });
 
     if (response.text) {
-      return JSON.parse(response.text) as Module;
+      const data = JSON.parse(response.text);
+      // Map to ensure IDs and types are correct
+      const module: Module = {
+          id: `mod_ai_${Date.now()}`,
+          title: data.title,
+          summary: data.summary,
+          order: 0, // Assigned by caller
+          chapters: data.chapters.map((c: any, idx: number) => ({
+              id: `chap_ai_${Date.now()}_${idx}`,
+              title: c.title,
+              content: c.content,
+              durationMinutes: c.durationMinutes,
+              actionSteps: c.actionSteps || [],
+              type: 'TEXT',
+              isPublished: true,
+              blocks: [
+                  { id: `b1_${idx}`, type: 'heading', style: 'h2', content: c.title },
+                  { id: `b2_${idx}`, type: 'paragraph', content: c.content }
+              ]
+          }))
+      };
+      return module;
     }
     return null;
   } catch (error) {
@@ -121,4 +145,21 @@ export const analyzeReceipt = async (base64Image: string): Promise<{ amount: num
     console.error("Gemini Receipt Analysis Error:", error);
     return null;
   }
+};
+
+// 4. Generate Onboarding Plan
+export const generateOnboardingPlan = async (name: string, goal: string, availability: string): Promise<string> => {
+    try {
+        const response = await ai.models.generateContent({
+            model: 'gemini-2.5-flash',
+            contents: `Create a short, personalized, motivating 3-step 'First Week Plan' for a new business owner named ${name}. 
+            Their primary goal is: ${goal}.
+            Their availability is: ${availability}.
+            Format as a simple Markdown list. Keep it encouraging and specific to Network Marketing basics (List making, contacting, product use).`,
+        });
+        return response.text || "1. Make a list of 10 friends.\n2. Try the products yourself.\n3. Watch the training videos.";
+    } catch (error) {
+        console.error("Gemini Onboarding Error:", error);
+        return "1. Make a list of 10 friends.\n2. Try the products yourself.\n3. Watch the training videos.";
+    }
 };

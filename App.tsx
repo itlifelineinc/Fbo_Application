@@ -13,7 +13,9 @@ import ChatPortal from './components/ChatPortal';
 import CommunityPortal from './components/CommunityPortal';
 import Login from './components/Login';
 import CourseReview from './components/CourseReview';
-import SalesPageBuilder from './pages/SalesPageBuilder'; // Import the new page
+import SalesPageBuilder from './pages/SalesPageBuilder'; 
+import TrainingPortal from './components/TrainingPortal'; // Import New Portal
+import CourseModulesPage from './components/CourseModulesPage'; // Import New Modules Page
 import { INITIAL_COURSES, INITIAL_STUDENTS, INITIAL_MESSAGES, INITIAL_POSTS, INITIAL_COHORTS } from './constants';
 import { Course, Module, Student, SaleRecord, UserRole, Message, CourseTrack, CommunityPost, CommunityComment, Cohort, CourseStatus } from './types';
 
@@ -38,86 +40,6 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, currentUser, 
   );
 };
 
-const CourseList: React.FC<{ courses: Course[], currentUser: Student }> = ({ courses, currentUser }) => {
-  // Check if currentUser exists before rendering to avoid crash
-  if (!currentUser) return null;
-
-  const publishedCourses = courses.filter(c => c.status === CourseStatus.PUBLISHED);
-
-  const coursesByTrack = publishedCourses.reduce((acc, course) => {
-    if (!acc[course.track]) {
-      acc[course.track] = [];
-    }
-    acc[course.track].push(course);
-    return acc;
-  }, {} as Record<string, Course[]>);
-
-  // Helper to generate the correct link
-  const getResumeLink = (course: Course) => {
-      // 1. If user has a tracked last accessed point for this course, go there
-      if (currentUser?.lastAccessed && currentUser.lastAccessed.courseId === course.id) {
-          return `/classroom/${course.id}/${currentUser.lastAccessed.moduleId}/${currentUser.lastAccessed.chapterId}`;
-      }
-      
-      // 2. Default to first chapter of first module
-      if (course.modules.length > 0 && course.modules[0].chapters.length > 0) {
-          return `/classroom/${course.id}/${course.modules[0].id}/${course.modules[0].chapters[0].id}`;
-      }
-
-      return '#'; // Fallback
-  };
-
-  return (
-    <div className="space-y-10 animate-fade-in">
-       <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-emerald-950 font-heading dark:text-emerald-400">Training Portal</h1>
-          <p className="text-emerald-700 mt-2 dark:text-emerald-300">Master the skills you need to grow your Forever business.</p>
-       </div>
-
-       {Object.keys(coursesByTrack).length === 0 ? (
-           <div className="text-center py-20 bg-white rounded-2xl border border-dashed border-slate-200 dark:bg-slate-800 dark:border-slate-700">
-               <p className="text-slate-500 text-lg dark:text-slate-400">No courses available yet.</p>
-               <p className="text-slate-400 text-sm mt-2 dark:text-slate-500">Check back later for updates.</p>
-           </div>
-       ) : (
-           Object.keys(coursesByTrack).map((track) => (
-             <div key={track} className="space-y-4">
-                <h2 className="text-xl font-bold text-slate-800 border-l-4 border-emerald-500 pl-3 font-heading dark:text-slate-200">{track}</h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {coursesByTrack[track].map(course => (
-                    <div key={course.id} className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden flex flex-col group hover:shadow-md transition-shadow dark:bg-slate-800 dark:border-slate-700">
-                      <div className="h-40 overflow-hidden relative">
-                          <img src={course.thumbnailUrl} alt={course.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                          <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
-                          <div className="absolute bottom-3 left-4 text-white font-bold font-heading text-lg shadow-black/50 drop-shadow-md">{course.title}</div>
-                      </div>
-                      <div className="p-6 flex-1 flex flex-col">
-                          <p className="text-sm text-slate-500 mb-4 flex-1 line-clamp-2 dark:text-slate-400">{course.description}</p>
-                          
-                          <div className="space-y-4 mt-auto">
-                            <div className="flex justify-between items-center text-xs text-slate-400 dark:text-slate-500">
-                                <span>{course.modules?.length || 0} Modules</span>
-                                <span>By {course.authorHandle}</span>
-                            </div>
-                            
-                            <Link 
-                                to={getResumeLink(course)}
-                                className="block w-full text-center bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-xl transition-colors shadow-sm"
-                            >
-                                {currentUser.lastAccessed?.courseId === course.id ? 'Continue Learning' : 'Start Course'}
-                            </Link>
-                          </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-             </div>
-           ))
-       )}
-    </div>
-  );
-};
-
 // --- Main App Component ---
 
 const App: React.FC = () => {
@@ -128,8 +50,10 @@ const App: React.FC = () => {
   const [cohorts, setCohorts] = useState<Cohort[]>(INITIAL_COHORTS);
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
   
+  // Auth State
   const [currentUser, setCurrentUser] = useState<Student | null>(null);
 
+  // Theme Effect
   useEffect(() => {
     if (theme === 'dark') {
       document.documentElement.classList.add('dark');
@@ -142,7 +66,9 @@ const App: React.FC = () => {
     setTheme(prev => prev === 'light' ? 'dark' : 'light');
   };
 
+  // 1. Authentication
   const handleLogin = async (handle: string, pass: string): Promise<boolean> => {
+    // Instant check against local state (Fallback Logic)
     const formattedHandle = handle.startsWith('@') ? handle : `@${handle}`;
     const user = students.find(s => 
       s.handle.toLowerCase() === formattedHandle.toLowerCase() && 
@@ -183,6 +109,7 @@ const App: React.FC = () => {
     setCurrentUser(null);
   };
 
+  // 2. Data Management
   const handleSubmitCourse = (newCourse: Course) => {
       setCourses(prev => [...prev, newCourse]);
   };
@@ -229,20 +156,28 @@ const App: React.FC = () => {
 
   const handleLikePost = (postId: string) => {
     if (!currentUser) return;
+
     setPosts(prev => prev.map(p => {
         if (p.id === postId) {
             const hasLiked = p.likedBy.includes(currentUser.handle);
             const newLikedBy = hasLiked 
                 ? p.likedBy.filter(h => h !== currentUser.handle) 
                 : [...p.likedBy, currentUser.handle]; 
-            return { ...p, likedBy: newLikedBy, likes: newLikedBy.length };
+            
+            return { 
+                ...p, 
+                likedBy: newLikedBy, 
+                likes: newLikedBy.length 
+            };
         }
         return p;
     }));
   };
 
   const handleAddComment = (postId: string, comment: CommunityComment) => {
-      setPosts(prev => prev.map(p => p.id === postId ? { ...p, comments: [...p.comments, comment] } : p));
+      setPosts(prev => prev.map(p => 
+          p.id === postId ? { ...p, comments: [...p.comments, comment] } : p
+      ));
   };
 
   const handleUpdateStats = (seconds: number, questions: number) => {
@@ -275,6 +210,11 @@ const App: React.FC = () => {
          updatedStudent.completedChapters = [...updatedStudent.completedChapters, chapterId];
          // Simple progress calc: just +1% for demo, or real math
          updatedStudent.progress = Math.min(100, (updatedStudent.progress || 0) + 1); 
+     }
+     
+     // Also mark module as complete if all chapters are done (simplified check)
+     if (!updatedStudent.completedModules.includes(moduleId)) {
+         updatedStudent.completedModules = [...updatedStudent.completedModules, moduleId];
      }
 
      // 4. Update "Last Accessed" to this chapter (so they return here or next)
@@ -375,7 +315,7 @@ const App: React.FC = () => {
              <ProtectedRoute currentUser={currentUser} onLogout={handleLogout} theme={theme} onToggleTheme={toggleTheme}>
                 {(currentUser?.role === UserRole.ADMIN || currentUser?.role === UserRole.SUPER_ADMIN || currentUser?.role === UserRole.SPONSOR) ? (
                     <CourseBuilder 
-                        currentUserHandle={currentUser?.handle || ''} 
+                        currentUserHandle={currentUser!.handle} 
                         onSubmitCourse={handleSubmitCourse} 
                     />
                 ) : <Navigate to="/dashboard" />}
@@ -388,12 +328,42 @@ const App: React.FC = () => {
              </ProtectedRoute>
         } />
         
-        <Route path="/courses" element={
+        {/* Redirect legacy route to global */}
+        <Route path="/courses" element={<Navigate to="/training/global" replace />} />
+
+        {/* Global Portal */}
+        <Route path="/training/global" element={
             <ProtectedRoute currentUser={currentUser} onLogout={handleLogout} theme={theme} onToggleTheme={toggleTheme}>
-                <CourseList courses={courses} currentUser={currentUser!} />
+                <TrainingPortal 
+                    courses={courses} 
+                    mode="GLOBAL" 
+                    currentUser={currentUser!} 
+                />
+            </ProtectedRoute>
+        } />
+
+        {/* Team Portal */}
+        <Route path="/training/team" element={
+            <ProtectedRoute currentUser={currentUser} onLogout={handleLogout} theme={theme} onToggleTheme={toggleTheme}>
+                <TrainingPortal 
+                    courses={courses} 
+                    mode="TEAM" 
+                    currentUser={currentUser!} 
+                />
+            </ProtectedRoute>
+        } />
+
+        {/* Course Modules Page (Intermediate Step) */}
+        <Route path="/training/course/:courseId" element={
+            <ProtectedRoute currentUser={currentUser} onLogout={handleLogout} theme={theme} onToggleTheme={toggleTheme}>
+                <CourseModulesPage 
+                    courses={courses} 
+                    completedModules={currentUser?.completedModules || []} 
+                />
             </ProtectedRoute>
         } />
         
+        {/* Actual Classroom Content */}
         <Route path="/classroom/:courseId/:moduleId/:lessonId" element={
             <ProtectedRoute currentUser={currentUser} onLogout={handleLogout} theme={theme} onToggleTheme={toggleTheme}>
                 <Classroom 

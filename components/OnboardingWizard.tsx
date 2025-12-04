@@ -1,6 +1,9 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { Student, QuizResult, UserRole } from '../types';
+import { generateOnboardingPlan } from '../services/geminiService';
+import { Loader2, Sparkles } from 'lucide-react';
 
 interface OnboardingWizardProps {
   onEnroll: (student: Student) => void;
@@ -22,6 +25,10 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onEnroll, existingS
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [generatedHandle, setGeneratedHandle] = useState('');
+
+  // AI State
+  const [isGeneratingPlan, setIsGeneratingPlan] = useState(false);
+  const [welcomePlan, setWelcomePlan] = useState('');
 
   // Auto-fill sponsor from URL
   useEffect(() => {
@@ -83,7 +90,7 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onEnroll, existingS
     return `@${base}${random}`;
   };
 
-  const handleFinish = () => {
+  const handleFinish = async () => {
     if (!name || !email || !password || !verifiedSponsor) return;
 
     const newHandle = generateHandle(name);
@@ -106,8 +113,17 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onEnroll, existingS
       learningStats: { totalTimeSpent: 0, questionsAsked: 0, learningStreak: 0, lastLoginDate: '' }
     };
 
+    // Trigger Enrollment
     onEnroll(newStudent);
     setStep(4); // Go to success screen
+
+    // Trigger AI Generation
+    const goal = getAnswer('Primary Goal') || 'Success';
+    const availability = getAnswer('Availability') || 'Flexible';
+    setIsGeneratingPlan(true);
+    const plan = await generateOnboardingPlan(name.split(' ')[0], goal, availability);
+    setWelcomePlan(plan);
+    setIsGeneratingPlan(false);
   };
 
   const nextStep = () => setStep(s => s + 1);
@@ -325,7 +341,7 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onEnroll, existingS
 
           {/* Step 4: Success */}
           {step === 4 && (
-             <div className="text-center space-y-6 animate-fade-in py-8">
+             <div className="text-center space-y-6 animate-fade-in py-4">
                 <div className="w-24 h-24 bg-green-100 rounded-full flex items-center justify-center mx-auto text-green-600 mb-6 animate-bounce">
                     <CheckBadgeIcon />
                 </div>
@@ -334,17 +350,25 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onEnroll, existingS
                     <p className="text-xs text-slate-500 uppercase tracking-wider font-semibold mb-2">Your New FBO Handle</p>
                     <p className="text-2xl font-mono font-bold text-emerald-600">{generatedHandle}</p>
                 </div>
-                <p className="text-slate-600 max-w-md mx-auto text-sm">
-                    You are currently a <strong>Student (0 CC)</strong>. 
-                    Complete your training and achieve <strong>2 Case Credits (CC)</strong> to become a Sponsor and start building your own team!
-                </p>
                 
-                <div className="pt-8">
+                {/* AI Plan Section */}
+                <div className="mt-8 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl p-6 text-white text-left relative overflow-hidden">
+                    <div className="absolute top-0 right-0 p-4 opacity-20"><Sparkles size={48} /></div>
+                    <h3 className="font-bold text-lg mb-2 flex items-center gap-2">
+                        {isGeneratingPlan ? <Loader2 className="animate-spin" /> : <Sparkles size={18} />} 
+                        Your Personalized Plan
+                    </h3>
+                    <div className="text-sm text-indigo-100 leading-relaxed whitespace-pre-wrap">
+                        {isGeneratingPlan ? "Creating your custom success roadmap..." : welcomePlan}
+                    </div>
+                </div>
+
+                <div className="pt-4">
                     <button 
                         onClick={() => navigate('/')}
-                        className="bg-emerald-900 text-white px-8 py-3 rounded-xl font-bold shadow-lg hover:bg-emerald-800 transition-all"
+                        className="bg-emerald-900 text-white px-8 py-3 rounded-xl font-bold shadow-lg hover:bg-emerald-800 transition-all w-full"
                     >
-                        Go to Sign In
+                        Go to Dashboard
                     </button>
                 </div>
              </div>

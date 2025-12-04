@@ -33,10 +33,8 @@ const TrainingPortal: React.FC<TrainingPortalProps> = ({ courses, mode, currentU
   });
 
   const handleCourseClick = (courseId: string) => {
-      // 1. Enroll user (add to enrolledCourses list if not already there)
-      onEnrollCourse(courseId);
-      // 2. Navigate
-      navigate(`/training/course/${courseId}`);
+      // Navigate to the Sales/Landing Page first for enrollment decision
+      navigate(`/training/preview/${courseId}`);
   };
 
   return (
@@ -64,18 +62,16 @@ const TrainingPortal: React.FC<TrainingPortalProps> = ({ courses, mode, currentU
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {filteredCourses.map(course => {
-            // Check if enrolled to show progress or 'Start'
+            // Check if enrolled just to show a visual indicator if needed, but actions are consistent
             const isEnrolled = currentUser.enrolledCourses?.includes(course.id);
-            const totalModules = course.modules.length;
-            const completedInCourse = course.modules.filter(m => currentUser.completedModules?.includes(m.id)).length;
-            const progressPercent = totalModules > 0 ? Math.round((completedInCourse / totalModules) * 100) : 0;
-
+            
             return (
                 <CourseCard 
                     key={course.id}
                     course={course}
                     onClick={() => handleCourseClick(course.id)}
-                    progress={isEnrolled ? progressPercent : undefined}
+                    actionLabel={isEnrolled ? "Continue Learning" : "View Details"}
+                    progress={isEnrolled ? 0 : undefined} // Reset progress visual on catalog to keep it clean, or pass real progress if desired
                 />
             );
           })}

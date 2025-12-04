@@ -17,6 +17,7 @@ import SalesPageBuilder from './pages/SalesPageBuilder';
 import TrainingPortal from './components/TrainingPortal';
 import CourseModulesPage from './components/CourseModulesPage';
 import CourseCard from './components/CourseCard'; 
+import CourseLandingPage from './components/CourseLandingPage';
 import { INITIAL_COURSES, INITIAL_STUDENTS, INITIAL_MESSAGES, INITIAL_POSTS, INITIAL_COHORTS } from './constants';
 import { Course, Module, Student, SaleRecord, UserRole, Message, CourseTrack, CommunityPost, CommunityComment, Cohort, CourseStatus } from './types';
 
@@ -95,6 +96,7 @@ const CourseList: React.FC<{ courses: Course[]; currentUser: Student }> = ({ cou
                         onClick={() => navigate(`/training/course/${course.id}`)}
                         progress={progressPercent}
                         showTrackBadge={false} 
+                        actionLabel="Continue"
                     />
                   );
               })}
@@ -430,6 +432,17 @@ const App: React.FC = () => {
                 <TrainingPortal 
                     courses={courses} 
                     mode="TEAM" 
+                    currentUser={currentUser!} 
+                    onEnrollCourse={handleEnrollCourse}
+                />
+            </ProtectedRoute>
+        } />
+
+        {/* --- NEW ROUTE: Landing Page for Enrollment --- */}
+        <Route path="/training/preview/:courseId" element={
+            <ProtectedRoute currentUser={currentUser} onLogout={handleLogout} theme={theme} onToggleTheme={toggleTheme} courses={courses}>
+                <CourseLandingPage 
+                    courses={courses} 
                     currentUser={currentUser!} 
                     onEnrollCourse={handleEnrollCourse}
                 />

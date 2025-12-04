@@ -74,6 +74,14 @@ export interface Module {
   chapters: Chapter[];
 }
 
+export interface CourseTestimonial {
+    id: string;
+    name: string;
+    role: string;
+    quote: string;
+    avatarUrl?: string;
+}
+
 export interface CourseSettings {
   gamificationEnabled: boolean; 
   pointsReward: number; 
@@ -95,6 +103,7 @@ export interface Course {
   thumbnailUrl: string;
   bannerImageUrl?: string;
   trailerVideoUrl?: string;
+  testimonials?: CourseTestimonial[]; // New field
   
   modules: Module[];
   settings: CourseSettings;

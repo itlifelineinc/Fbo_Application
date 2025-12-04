@@ -1,19 +1,23 @@
 
 import React from 'react';
 import { Course } from '../types';
-import { PlayCircle, BookOpen, Clock } from 'lucide-react';
+import { PlayCircle, BookOpen, Clock, Info } from 'lucide-react';
 
 interface CourseCardProps {
   course: Course;
   onClick: () => void;
   progress?: number; // Optional progress percentage (0-100)
   showTrackBadge?: boolean;
+  actionLabel?: string; // "Start Learning" vs "View Details"
 }
 
-const CourseCard: React.FC<CourseCardProps> = ({ course, onClick, progress, showTrackBadge = true }) => {
+const CourseCard: React.FC<CourseCardProps> = ({ course, onClick, progress, showTrackBadge = true, actionLabel }) => {
   // Calculate duration string
   const totalDuration = course.modules.reduce((acc, m) => acc + m.chapters.reduce((cAcc, c) => cAcc + c.durationMinutes, 0), 0);
   const durationStr = totalDuration > 60 ? `${Math.floor(totalDuration / 60)}h ${totalDuration % 60}m` : `${totalDuration}m`;
+
+  const isEnrolled = progress !== undefined;
+  const label = actionLabel || (isEnrolled ? (progress > 0 ? 'Continue' : 'Start Learning') : 'View Details');
 
   return (
     <div 
@@ -31,8 +35,8 @@ const CourseCard: React.FC<CourseCardProps> = ({ course, onClick, progress, show
             <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-900/60 to-transparent opacity-90 group-hover:opacity-80 transition-opacity" />
         </div>
 
-        {/* Progress Bar (Netflix Style) */}
-        {progress !== undefined && progress > 0 && (
+        {/* Progress Bar (Netflix Style) - Only if enrolled */}
+        {isEnrolled && progress! > 0 && (
             <div className="absolute bottom-0 left-0 right-0 h-1.5 bg-slate-700/50 z-20">
                 <div 
                     className="h-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]" 
@@ -73,9 +77,13 @@ const CourseCard: React.FC<CourseCardProps> = ({ course, onClick, progress, show
                     {course.subtitle}
                 </p>
 
-                <button className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-4 rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-emerald-900/20 transition-all active:scale-95 group-hover:bg-emerald-500">
-                    <PlayCircle size={20} fill="currentColor" className="text-emerald-900" />
-                    {progress !== undefined && progress > 0 ? 'Continue Learning' : 'Start Learning'}
+                <button className={`w-full font-bold py-4 rounded-xl flex items-center justify-center gap-2 shadow-lg transition-all active:scale-95 ${
+                    isEnrolled 
+                    ? 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-emerald-900/20 group-hover:bg-emerald-500' 
+                    : 'bg-white text-slate-900 hover:bg-slate-100'
+                }`}>
+                    {isEnrolled ? <PlayCircle size={20} fill="currentColor" className="text-emerald-900" /> : <Info size={20} />}
+                    {label}
                 </button>
             </div>
         </div>

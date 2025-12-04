@@ -1,8 +1,8 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Course, CourseStatus, Student } from '../types';
-import { CheckCircle, PlayCircle, Clock, BookOpen, User, Lock, ArrowLeft, Star, Quote, ShoppingCart } from 'lucide-react';
+import { CheckCircle, PlayCircle, Clock, BookOpen, User, Lock, ArrowLeft, Star, Quote, ShoppingCart, ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface CourseLandingPageProps {
   courses: Course[];
@@ -15,6 +15,20 @@ const CourseLandingPage: React.FC<CourseLandingPageProps> = ({ courses, currentU
   const { courseId } = useParams();
   const navigate = useNavigate();
   const course = courses.find(c => c.id === courseId);
+  
+  // Testimonial Carousel State
+  const [activeTestimonial, setActiveTestimonial] = useState(0);
+
+  // Auto-slide effect
+  useEffect(() => {
+    if (!course?.testimonials || course.testimonials.length <= 1) return;
+    
+    const interval = setInterval(() => {
+        setActiveTestimonial(prev => (prev + 1) % course.testimonials!.length);
+    }, 5000); // 5 seconds
+    
+    return () => clearInterval(interval);
+  }, [course?.testimonials]);
 
   if (!course) return <div className="p-10 text-center dark:text-white">Course not found</div>;
 
@@ -41,6 +55,16 @@ const CourseLandingPage: React.FC<CourseLandingPageProps> = ({ courses, currentU
   const handleEnroll = () => {
       onEnrollCourse(course.id);
       navigate(`/training/course/${course.id}`);
+  };
+
+  const nextTestimonial = () => {
+      if (!course.testimonials) return;
+      setActiveTestimonial(prev => (prev + 1) % course.testimonials!.length);
+  };
+
+  const prevTestimonial = () => {
+      if (!course.testimonials) return;
+      setActiveTestimonial(prev => (prev - 1 + course.testimonials!.length) % course.testimonials!.length);
   };
 
   // --- LOGIC: Creator Lookup ---
@@ -207,32 +231,80 @@ const CourseLandingPage: React.FC<CourseLandingPageProps> = ({ courses, currentU
                   </div>
               </div>
 
-              {/* Testimonials */}
+              {/* Testimonials - Modern Sliding Carousel */}
               {course.testimonials && course.testimonials.length > 0 && (
-                  <div>
+                  <div className="relative">
                       <h2 className="text-2xl font-bold text-slate-900 mb-6 font-heading dark:text-white">Success Stories</h2>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                          {course.testimonials.map((t) => (
-                              <div key={t.id} className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 dark:bg-slate-800 dark:border-slate-700">
-                                  <div className="flex gap-1 text-yellow-400 mb-4">
-                                      {[1,2,3,4,5].map(i => <Star key={i} size={14} fill="currentColor" />)}
+                      
+                      <div className="relative bg-white dark:bg-slate-800 rounded-3xl p-8 shadow-lg border border-slate-100 dark:border-slate-700 overflow-hidden">
+                          {/* Background decoration */}
+                          <div className="absolute top-0 right-0 -mr-8 -mt-8 w-32 h-32 bg-emerald-100 dark:bg-emerald-900/30 rounded-full blur-2xl opacity-50 pointer-events-none"></div>
+                          <div className="absolute bottom-0 left-0 -ml-8 -mb-8 w-32 h-32 bg-yellow-50 dark:bg-yellow-900/10 rounded-full blur-2xl opacity-50 pointer-events-none"></div>
+                          
+                          {/* Content Container with Animation Key */}
+                          <div className="relative z-10 transition-opacity duration-300 ease-in-out" key={activeTestimonial}>
+                              <div className="min-h-[200px] flex flex-col justify-center">
+                                  <div className="flex gap-1 text-yellow-400 mb-6 justify-center">
+                                      {[1,2,3,4,5].map(i => <Star key={i} size={20} fill="currentColor" />)}
                                   </div>
-                                  <div className="relative">
-                                      <Quote size={24} className="absolute -top-2 -left-2 text-emerald-100 dark:text-emerald-900/50" />
-                                      <p className="text-slate-600 italic relative z-10 mb-6 pl-4 dark:text-slate-300">"{t.quote}"</p>
+                                  
+                                  <div className="relative mb-8 px-4 md:px-12">
+                                      <Quote size={40} className="absolute -top-4 -left-2 text-emerald-100 dark:text-emerald-900/30 -z-10" />
+                                      <p className="text-xl md:text-2xl text-slate-700 dark:text-slate-200 text-center font-heading leading-relaxed italic">
+                                          "{course.testimonials[activeTestimonial].quote}"
+                                      </p>
+                                      <Quote size={40} className="absolute -bottom-4 -right-2 text-emerald-100 dark:text-emerald-900/30 -z-10 transform rotate-180" />
                                   </div>
-                                  <div className="flex items-center gap-3">
-                                      <div className="w-10 h-10 bg-slate-200 rounded-full flex items-center justify-center font-bold text-slate-500 overflow-hidden dark:bg-slate-700 dark:text-slate-300">
-                                          {t.avatarUrl ? <img src={t.avatarUrl} className="w-full h-full object-cover" /> : t.name.charAt(0)}
+                                  
+                                  <div className="flex items-center justify-center gap-4 mt-auto">
+                                      <div className="w-14 h-14 bg-slate-200 rounded-full flex items-center justify-center font-bold text-slate-500 overflow-hidden dark:bg-slate-700 dark:text-slate-300 shadow-inner border-2 border-white dark:border-slate-600">
+                                          {course.testimonials[activeTestimonial].avatarUrl ? 
+                                              <img src={course.testimonials[activeTestimonial].avatarUrl} className="w-full h-full object-cover" /> : 
+                                              course.testimonials[activeTestimonial].name.charAt(0)
+                                          }
                                       </div>
-                                      <div>
-                                          <p className="font-bold text-slate-900 text-sm dark:text-white">{t.name}</p>
-                                          <p className="text-xs text-slate-500 dark:text-slate-400">{t.role}</p>
+                                      <div className="text-left">
+                                          <p className="font-bold text-slate-900 dark:text-white text-lg">{course.testimonials[activeTestimonial].name}</p>
+                                          <p className="text-sm text-emerald-600 dark:text-emerald-400 font-medium tracking-wide uppercase text-xs">{course.testimonials[activeTestimonial].role}</p>
                                       </div>
                                   </div>
                               </div>
-                          ))}
+                          </div>
+
+                          {/* Navigation Buttons */}
+                          {course.testimonials.length > 1 && (
+                              <>
+                                  <button 
+                                      onClick={(e) => { e.stopPropagation(); prevTestimonial(); }}
+                                      className="absolute top-1/2 left-2 md:left-4 -translate-y-1/2 p-3 rounded-full bg-white/80 dark:bg-slate-700/80 text-slate-600 dark:text-slate-200 shadow-lg hover:bg-emerald-50 dark:hover:bg-slate-600 hover:text-emerald-600 transition-all hover:scale-110 z-20 backdrop-blur-sm"
+                                      aria-label="Previous testimonial"
+                                  >
+                                      <ChevronLeft size={24} />
+                                  </button>
+                                  <button 
+                                      onClick={(e) => { e.stopPropagation(); nextTestimonial(); }}
+                                      className="absolute top-1/2 right-2 md:right-4 -translate-y-1/2 p-3 rounded-full bg-white/80 dark:bg-slate-700/80 text-slate-600 dark:text-slate-200 shadow-lg hover:bg-emerald-50 dark:hover:bg-slate-600 hover:text-emerald-600 transition-all hover:scale-110 z-20 backdrop-blur-sm"
+                                      aria-label="Next testimonial"
+                                  >
+                                      <ChevronRight size={24} />
+                                  </button>
+                              </>
+                          )}
                       </div>
+
+                      {/* Indicators */}
+                      {course.testimonials.length > 1 && (
+                          <div className="flex justify-center gap-2 mt-6">
+                              {course.testimonials.map((_, idx) => (
+                                  <button 
+                                      key={idx}
+                                      onClick={() => setActiveTestimonial(idx)}
+                                      className={`transition-all duration-300 rounded-full h-2 ${idx === activeTestimonial ? 'w-8 bg-emerald-500' : 'w-2 bg-slate-300 dark:bg-slate-600 hover:bg-emerald-300'}`}
+                                      aria-label={`Go to testimonial ${idx + 1}`}
+                                  />
+                              ))}
+                          </div>
+                      )}
                   </div>
               )}
 

@@ -1,7 +1,9 @@
+
 import React from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, PieChart, Pie, Legend } from 'recharts';
 import { Link, useNavigate } from 'react-router-dom';
 import { Student, UserRole, Course, CourseTrack, CourseStatus } from '../types';
+import { Edit, ExternalLink, Plus } from 'lucide-react';
 
 // --- Child Components & Icons (Defined First) ---
 
@@ -147,6 +149,9 @@ const Dashboard: React.FC<DashboardProps> = ({ students, currentUser, courses, o
       return [CourseTrack.BUSINESS, CourseTrack.SALES, CourseTrack.LEADERSHIP].includes(course.track);
   }).slice(0, 2);
 
+  // Creator Logic: Courses authored by current user
+  const authoredCourses = safeCourses.filter(c => c.authorHandle === currentUser.handle);
+
   // Pending Courses Logic (For Admins)
   const pendingCourses = safeCourses.filter(c => c.status === CourseStatus.UNDER_REVIEW);
 
@@ -207,6 +212,83 @@ const Dashboard: React.FC<DashboardProps> = ({ students, currentUser, courses, o
           {/* Left Column: Charts & Course List */}
           <div className="lg:col-span-2 space-y-8 min-w-0">
             
+            {/* Creator Studio (For Sponsors/Admins) */}
+            {!isStudent && (
+              <div className="bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-slate-100 dark:bg-slate-800 dark:border-slate-700">
+                  <div className="flex justify-between items-center mb-6">
+                      <h2 className="text-lg md:text-xl font-bold text-slate-800 font-heading dark:text-slate-100">
+                          Creator Studio
+                      </h2>
+                      <div className="flex gap-2">
+                          <Link to="/sales-builder" className="bg-slate-100 text-slate-600 px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-slate-200 transition-colors flex items-center gap-1 dark:bg-slate-700 dark:text-slate-300 dark:hover:bg-slate-600">
+                              <Plus size={14} /> Page
+                          </Link>
+                          <Link to="/builder/new" className="bg-emerald-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-emerald-700 transition-colors flex items-center gap-1">
+                              <Plus size={14} /> Course
+                          </Link>
+                      </div>
+                  </div>
+
+                  <div className="space-y-4">
+                      {/* My Courses Section */}
+                      {authoredCourses.length > 0 ? (
+                          <div className="space-y-3">
+                              <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest">Your Courses</h3>
+                              {authoredCourses.map(course => (
+                                  <div key={course.id} className="flex items-center justify-between p-3 bg-slate-50 rounded-xl border border-slate-100 dark:bg-slate-900/50 dark:border-slate-700">
+                                      <div className="flex items-center gap-3">
+                                          <div className="w-10 h-10 rounded-lg bg-slate-200 overflow-hidden shrink-0 dark:bg-slate-700">
+                                              <img src={course.thumbnailUrl} className="w-full h-full object-cover" alt="" />
+                                          </div>
+                                          <div>
+                                              <p className="font-bold text-slate-800 text-sm dark:text-slate-200">{course.title}</p>
+                                              <p className="text-xs text-slate-500 flex gap-2 dark:text-slate-400">
+                                                  <span>{course.modules.length} Modules</span>
+                                                  <span>•</span>
+                                                  <span className={`${course.status === CourseStatus.PUBLISHED ? 'text-green-600' : 'text-orange-500'}`}>{course.status}</span>
+                                              </p>
+                                          </div>
+                                      </div>
+                                      <div className="flex gap-2">
+                                          <Link to={`/builder/${course.id}`} className="p-2 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors dark:text-slate-400 dark:hover:bg-slate-800" title="Edit Course">
+                                              <Edit size={16} />
+                                          </Link>
+                                          <Link to={`/training/preview/${course.id}`} className="p-2 text-slate-500 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors dark:text-slate-400 dark:hover:bg-slate-800" title="View Page">
+                                              <ExternalLink size={16} />
+                                          </Link>
+                                      </div>
+                                  </div>
+                              ))}
+                          </div>
+                      ) : (
+                          <div className="text-center py-6 border-2 border-dashed border-slate-200 rounded-xl dark:border-slate-700">
+                              <p className="text-sm text-slate-400 mb-2">You haven't created any courses yet.</p>
+                              <Link to="/builder/new" className="text-emerald-600 font-bold text-sm hover:underline">Create your first course</Link>
+                          </div>
+                      )}
+
+                      {/* Sales Page Section (Mocked for single draft) */}
+                      <div className="space-y-3 pt-2">
+                          <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest">Your Sales Pages</h3>
+                          <div className="flex items-center justify-between p-3 bg-slate-50 rounded-xl border border-slate-100 dark:bg-slate-900/50 dark:border-slate-700">
+                              <div className="flex items-center gap-3">
+                                  <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center text-blue-600 font-bold text-xs shrink-0 dark:bg-blue-900/30 dark:text-blue-400">
+                                      SP
+                                  </div>
+                                  <div>
+                                      <p className="font-bold text-slate-800 text-sm dark:text-slate-200">My Sales Page (Draft)</p>
+                                      <p className="text-xs text-slate-500 dark:text-slate-400">Active Draft • Last edited recently</p>
+                                  </div>
+                              </div>
+                              <Link to="/sales-builder" className="p-2 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors dark:text-slate-400 dark:hover:bg-slate-800" title="Edit Page">
+                                  <Edit size={16} />
+                              </Link>
+                          </div>
+                      </div>
+                  </div>
+              </div>
+            )}
+
             {/* Progress Chart (Team or Personal) */}
             <div className="bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-slate-100 dark:bg-slate-800 dark:border-slate-700">
                 <div className="flex justify-between items-center mb-8">

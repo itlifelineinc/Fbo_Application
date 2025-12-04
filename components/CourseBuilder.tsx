@@ -1,12 +1,13 @@
 
 import React, { useState, useRef, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { Course, Module, Chapter, CourseTrack, CourseLevel, CourseStatus, ContentBlock, BlockType, CourseTestimonial } from '../types';
 import { Eye, X, PlayCircle, FileText, HelpCircle, ChevronDown, ChevronRight, CheckCircle, Menu, BookOpen, Clock, Plus, Trash2, ArrowUp, ArrowDown, LayoutTemplate, Type, Image as ImageIcon, List, Quote, AlertCircle, ArrowLeft, ShoppingBag, Users, Sparkles, Save, Search, Check, Wand2, Loader2, MessageSquare } from 'lucide-react';
 import { generateModuleContent } from '../services/geminiService';
 
 interface CourseBuilderProps {
   currentUserHandle: string;
+  courses: Course[];
   onSubmitCourse: (course: Course) => void;
 }
 
@@ -246,8 +247,10 @@ const CoursePreview: React.FC<{ course: Course; onClose: () => void }> = ({ cour
 };
 
 
-const CourseBuilder: React.FC<CourseBuilderProps> = ({ currentUserHandle, onSubmitCourse }) => {
+const CourseBuilder: React.FC<CourseBuilderProps> = ({ currentUserHandle, courses, onSubmitCourse }) => {
   const navigate = useNavigate();
+  const { courseId } = useParams(); // Get ID from URL for editing
+  
   const [step, setStep] = useState<1 | 2 | 3 | 4>(1); 
   const [course, setCourse] = useState<Course>(getEmptyCourse(currentUserHandle));
   const [editingChapter, setEditingChapter] = useState<{moduleId: string, chapterId: string} | null>(null);
@@ -264,6 +267,18 @@ const CourseBuilder: React.FC<CourseBuilderProps> = ({ currentUserHandle, onSubm
   // Temporary State for Adding Items
   const [tempOutcome, setTempOutcome] = useState('');
   const [tempAudience, setTempAudience] = useState('');
+
+  // --- LOAD EXISTING COURSE LOGIC ---
+  useEffect(() => {
+      if (courseId && courseId !== 'new') {
+          const existingCourse = courses.find(c => c.id === courseId);
+          if (existingCourse) {
+              setCourse(existingCourse);
+              // Set initial publish target state based on settings
+              setPublishTarget(existingCourse.settings.teamOnly ? 'TEAM' : 'GLOBAL');
+          }
+      }
+  }, [courseId, courses]);
 
   // Sync Blocks when opening editor
   useEffect(() => {
@@ -391,14 +406,23 @@ const CourseBuilder: React.FC<CourseBuilderProps> = ({ currentUserHandle, onSubm
   const handleSubmit = () => {
     const isGlobal = publishTarget === 'GLOBAL';
     let finalId = course.id;
+    // Only generate new ID if it's a fresh draft
     if (finalId.startsWith('draft_')) {
         const safeTitle = course.title.toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '').substring(0, 30);
         const random = Math.floor(1000 + Math.random() * 9000); finalId = safeTitle ? `${safeTitle}-${random}` : `course-${Date.now()}`;
     }
     const finalCourse = { ...course, id: finalId, status: isGlobal ? CourseStatus.UNDER_REVIEW : CourseStatus.PUBLISHED, settings: { ...course.settings, teamOnly: !isGlobal }, updatedAt: Date.now() };
     onSubmitCourse(finalCourse);
-    if (isGlobal) { alert("Course submitted for Global Review!"); } else { alert("Course published to Team Training!"); }
-    setCourse(getEmptyCourse(currentUserHandle)); setStep(1); navigate('/dashboard');
+    
+    const action = course.id.startsWith('draft_') ? "Created" : "Updated";
+    if (isGlobal) { alert(`Course ${action} & Submitted for Global Review!`); } else { alert(`Course ${action} & Published to Team Training!`); }
+    
+    // Only reset if creating new, else go back to dashboard
+    if(courseId === 'new') {
+        setCourse(getEmptyCourse(currentUserHandle)); 
+        setStep(1); 
+    }
+    navigate('/dashboard');
   };
 
   // --- RENDERERS ---
@@ -693,8 +717,8 @@ const CourseBuilder: React.FC<CourseBuilderProps> = ({ currentUserHandle, onSubm
       
       {/* Modern Header */}
       <div className="flex items-center justify-between mb-10 shrink-0">
-         <div className="flex items-center gap-6"><button onClick={() => navigate('/dashboard')} className="group flex items-center justify-center w-12 h-12 rounded-full bg-white border border-slate-200 shadow-sm hover:shadow-md hover:border-slate-300 transition-all dark:bg-slate-800 dark:border-slate-700 dark:hover:border-slate-600"><ArrowLeftIcon /></button><div><h1 className="text-3xl font-bold text-slate-900 font-heading tracking-tight dark:text-white">Course Builder</h1><p className="text-sm text-slate-500 font-medium mt-1 dark:text-slate-400">Crafting: <span className="text-emerald-600 dark:text-emerald-400">{course.title || 'Untitled Course'}</span></p></div></div>
-         <div className="flex gap-3"><button onClick={() => setIsPreviewMode(true)} className="flex items-center gap-2 bg-white text-slate-700 px-6 py-3 rounded-xl text-sm font-bold border border-slate-200 hover:bg-slate-50 hover:border-slate-300 transition-all shadow-sm dark:bg-slate-800 dark:border-slate-700 dark:text-white dark:hover:bg-slate-700"><Eye size={18} /> <span className="hidden sm:inline">Preview</span></button>{step === 4 && (<button onClick={handleSubmit} className="flex items-center gap-2 bg-emerald-600 text-white px-8 py-3 rounded-xl text-sm font-bold hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-200 dark:shadow-none"><Sparkles size={18} /> Publish</button>)}</div>
+         <div className="flex items-center gap-6"><button onClick={() => navigate('/dashboard')} className="group flex items-center justify-center w-12 h-12 rounded-full bg-white border border-slate-200 shadow-sm hover:shadow-md hover:border-slate-300 transition-all dark:bg-slate-800 dark:border-slate-700 dark:hover:border-slate-600"><ArrowLeftIcon /></button><div><h1 className="text-3xl font-bold text-slate-900 font-heading tracking-tight dark:text-white">Course Builder</h1><p className="text-sm text-slate-500 font-medium mt-1 dark:text-slate-400">{courseId !== 'new' ? 'Editing' : 'Crafting'}: <span className="text-emerald-600 dark:text-emerald-400">{course.title || 'Untitled Course'}</span></p></div></div>
+         <div className="flex gap-3"><button onClick={() => setIsPreviewMode(true)} className="flex items-center gap-2 bg-white text-slate-700 px-6 py-3 rounded-xl text-sm font-bold border border-slate-200 hover:bg-slate-50 hover:border-slate-300 transition-all shadow-sm dark:bg-slate-800 dark:border-slate-700 dark:text-white dark:hover:bg-slate-700"><Eye size={18} /> <span className="hidden sm:inline">Preview</span></button>{step === 4 && (<button onClick={handleSubmit} className="flex items-center gap-2 bg-emerald-600 text-white px-8 py-3 rounded-xl text-sm font-bold hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-200 dark:shadow-none"><Sparkles size={18} /> {courseId === 'new' ? 'Publish' : 'Update'}</button>)}</div>
       </div>
 
       {renderChapterEditor()}
@@ -707,7 +731,7 @@ const CourseBuilder: React.FC<CourseBuilderProps> = ({ currentUserHandle, onSubm
             {step === 2 && renderStep2_Curriculum()}
             {step === 3 && renderStep3_Settings()}
             {step === 4 && (
-              <div className="space-y-8 animate-fade-in text-center py-12"><div className={CARD_CLASS}><div className="max-w-2xl mx-auto"><h2 className="text-3xl font-bold text-slate-900 dark:text-white mb-3 font-heading">Ready to Launch?</h2><p className="text-slate-500 dark:text-slate-400 text-lg mb-10">Choose visibility for your course.</p><div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10"><button onClick={() => setPublishTarget('TEAM')} className={`p-8 rounded-3xl border-2 transition-all flex flex-col items-center text-center gap-4 ${publishTarget === 'TEAM' ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20' : 'border-slate-100 hover:border-emerald-200 bg-white dark:bg-slate-800 dark:border-slate-700 dark:hover:border-slate-600'}`}><div className={`w-16 h-16 rounded-full flex items-center justify-center text-3xl shadow-sm ${publishTarget === 'TEAM' ? 'bg-emerald-200 text-emerald-800' : 'bg-slate-100 text-slate-500 dark:bg-slate-700'}`}>👥</div><div><h3 className="font-bold text-lg text-slate-800 dark:text-white">Team Training</h3><p className="text-sm text-slate-500 mt-2 dark:text-slate-400 leading-relaxed">Visible only to your downline.</p></div></button><button onClick={() => setPublishTarget('GLOBAL')} className={`p-8 rounded-3xl border-2 transition-all flex flex-col items-center text-center gap-4 ${publishTarget === 'GLOBAL' ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20' : 'border-slate-100 hover:border-blue-200 bg-white dark:bg-slate-800 dark:border-slate-700 dark:hover:border-slate-600'}`}><div className={`w-16 h-16 rounded-full flex items-center justify-center text-3xl shadow-sm ${publishTarget === 'GLOBAL' ? 'bg-blue-200 text-blue-800' : 'bg-slate-100 text-slate-500 dark:bg-slate-700'}`}>🌍</div><div><h3 className="font-bold text-lg text-slate-800 dark:text-white">Global Library</h3><p className="text-sm text-slate-500 mt-2 dark:text-slate-400 leading-relaxed">Public to all FBOs (Review required).</p></div></button></div><div className="flex flex-col items-center gap-4"><div className="flex gap-8 text-sm text-slate-500 font-medium dark:text-slate-400"><span>{course.modules.length} Modules</span><span className="w-px h-4 bg-slate-300 dark:bg-slate-700"></span><span>{course.track}</span></div><button onClick={handleSubmit} className={`w-full max-w-sm py-4 rounded-xl font-bold text-lg shadow-xl hover:scale-105 transition-all text-white ${publishTarget === 'GLOBAL' ? 'bg-blue-600 hover:bg-blue-700 shadow-blue-200' : 'bg-emerald-600 hover:bg-emerald-700 shadow-emerald-200'}`}>{publishTarget === 'GLOBAL' ? 'Submit for Review' : 'Publish Now'}</button></div></div></div></div>
+              <div className="space-y-8 animate-fade-in text-center py-12"><div className={CARD_CLASS}><div className="max-w-2xl mx-auto"><h2 className="text-3xl font-bold text-slate-900 dark:text-white mb-3 font-heading">Ready to Launch?</h2><p className="text-slate-500 dark:text-slate-400 text-lg mb-10">Choose visibility for your course.</p><div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10"><button onClick={() => setPublishTarget('TEAM')} className={`p-8 rounded-3xl border-2 transition-all flex flex-col items-center text-center gap-4 ${publishTarget === 'TEAM' ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20' : 'border-slate-100 hover:border-emerald-200 bg-white dark:bg-slate-800 dark:border-slate-700 dark:hover:border-slate-600'}`}><div className={`w-16 h-16 rounded-full flex items-center justify-center text-3xl shadow-sm ${publishTarget === 'TEAM' ? 'bg-emerald-200 text-emerald-800' : 'bg-slate-100 text-slate-500 dark:bg-slate-700'}`}>👥</div><div><h3 className="font-bold text-lg text-slate-800 dark:text-white">Team Training</h3><p className="text-sm text-slate-500 mt-2 dark:text-slate-400 leading-relaxed">Visible only to your downline.</p></div></button><button onClick={() => setPublishTarget('GLOBAL')} className={`p-8 rounded-3xl border-2 transition-all flex flex-col items-center text-center gap-4 ${publishTarget === 'GLOBAL' ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20' : 'border-slate-100 hover:border-blue-200 bg-white dark:bg-slate-800 dark:border-slate-700 dark:hover:border-slate-600'}`}><div className={`w-16 h-16 rounded-full flex items-center justify-center text-3xl shadow-sm ${publishTarget === 'GLOBAL' ? 'bg-blue-200 text-blue-800' : 'bg-slate-100 text-slate-500 dark:bg-slate-700'}`}>🌍</div><div><h3 className="font-bold text-lg text-slate-800 dark:text-white">Global Library</h3><p className="text-sm text-slate-500 mt-2 dark:text-slate-400 leading-relaxed">Public to all FBOs (Review required).</p></div></button></div><div className="flex flex-col items-center gap-4"><div className="flex gap-8 text-sm text-slate-500 font-medium dark:text-slate-400"><span>{course.modules.length} Modules</span><span className="w-px h-4 bg-slate-300 dark:bg-slate-700"></span><span>{course.track}</span></div><button onClick={handleSubmit} className={`w-full max-w-sm py-4 rounded-xl font-bold text-lg shadow-xl hover:scale-105 transition-all text-white ${publishTarget === 'GLOBAL' ? 'bg-blue-600 hover:bg-blue-700 shadow-blue-200' : 'bg-emerald-600 hover:bg-emerald-700 shadow-emerald-200'}`}>{publishTarget === 'GLOBAL' ? (courseId === 'new' ? 'Submit for Review' : 'Update & Submit') : (courseId === 'new' ? 'Publish Now' : 'Update Course')}</button></div></div></div></div>
             )}
         </div>
       </div>

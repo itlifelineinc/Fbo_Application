@@ -176,8 +176,19 @@ const App: React.FC = () => {
   };
 
   // 2. Data Management
-  const handleSubmitCourse = (newCourse: Course) => {
-      setCourses(prev => [...prev, newCourse]);
+  // Modified to handle both Create (New) and Update (Edit)
+  const handleSaveCourse = (savedCourse: Course) => {
+      setCourses(prev => {
+          const index = prev.findIndex(c => c.id === savedCourse.id);
+          if (index >= 0) {
+              // Update existing
+              const updated = [...prev];
+              updated[index] = savedCourse;
+              return updated;
+          }
+          // Create new
+          return [...prev, savedCourse];
+      });
   };
 
   const handleReviewCourse = (courseId: string, status: CourseStatus) => {
@@ -389,24 +400,26 @@ const App: React.FC = () => {
             </ProtectedRoute>
         } />
         
-        <Route path="/builder" element={
+        <Route path="/builder" element={<Navigate to="/builder/new" replace />} />
+        <Route path="/builder/:courseId" element={
              <ProtectedRoute currentUser={currentUser} onLogout={handleLogout} theme={theme} onToggleTheme={toggleTheme} courses={courses}>
                 {(currentUser?.role === UserRole.ADMIN || currentUser?.role === UserRole.SUPER_ADMIN || currentUser?.role === UserRole.SPONSOR) ? (
                     <CourseBuilder 
                         currentUserHandle={currentUser!.handle} 
-                        onSubmitCourse={handleSubmitCourse} 
+                        courses={courses}
+                        onSubmitCourse={handleSaveCourse} 
                     />
                 ) : <Navigate to="/dashboard" />}
              </ProtectedRoute>
         } />
 
-        {/* New Route for Sales Page Builder - Accessible to all logged-in users for demo purposes */}
         <Route path="/sales-builder" element={
              <ProtectedRoute currentUser={currentUser} onLogout={handleLogout} theme={theme} onToggleTheme={toggleTheme} courses={courses}>
                 <SalesPageBuilder />
              </ProtectedRoute>
         } />
         
+        {/* My Classroom (Enrolled Courses Only) */}
         <Route path="/courses" element={
             <ProtectedRoute currentUser={currentUser} onLogout={handleLogout} theme={theme} onToggleTheme={toggleTheme} courses={courses}>
                 <CourseList courses={courses} currentUser={currentUser!} />
@@ -437,7 +450,7 @@ const App: React.FC = () => {
             </ProtectedRoute>
         } />
 
-        {/* --- NEW ROUTE: Landing Page for Enrollment --- */}
+        {/* Landing Page for Enrollment */}
         <Route path="/training/preview/:courseId" element={
             <ProtectedRoute currentUser={currentUser} onLogout={handleLogout} theme={theme} onToggleTheme={toggleTheme} courses={courses}>
                 {/* PASS STUDENTS HERE FOR CREATOR LOOKUP */}

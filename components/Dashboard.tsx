@@ -261,20 +261,18 @@ const Dashboard: React.FC<DashboardProps> = ({ students, currentUser, courses, o
                 </div>
             </div>
             
-            {/* Navigation Arrows (Absolute transparent buttons) */}
+            {/* Navigation Arrows (Semi-transparent Glass Overlay) */}
             <button 
                 onClick={prevStat}
-                className="absolute left-0 top-0 bottom-0 px-2 flex items-center justify-center text-slate-400 hover:text-emerald-600 transition-colors z-10 focus:outline-none bg-transparent"
-                style={{ backgroundColor: 'transparent' }}
+                className="absolute left-2 top-1/2 -translate-y-1/2 p-2 rounded-full bg-white/40 dark:bg-black/30 backdrop-blur-md border border-white/20 shadow-sm text-slate-700 dark:text-slate-200 hover:bg-white/60 dark:hover:bg-black/50 transition-all z-10"
             >
-                <ChevronLeft size={32} className="drop-shadow-sm opacity-50 hover:opacity-100" />
+                <ChevronLeft size={20} />
             </button>
             <button 
                 onClick={nextStat}
-                className="absolute right-0 top-0 bottom-0 px-2 flex items-center justify-center text-slate-400 hover:text-emerald-600 transition-colors z-10 focus:outline-none bg-transparent"
-                style={{ backgroundColor: 'transparent' }}
+                className="absolute right-2 top-1/2 -translate-y-1/2 p-2 rounded-full bg-white/40 dark:bg-black/30 backdrop-blur-md border border-white/20 shadow-sm text-slate-700 dark:text-slate-200 hover:bg-white/60 dark:hover:bg-black/50 transition-all z-10"
             >
-                <ChevronRight size={32} className="drop-shadow-sm opacity-50 hover:opacity-100" />
+                <ChevronRight size={20} />
             </button>
 
             {/* Pagination Dots */}

@@ -433,7 +433,7 @@ const CourseBuilder: React.FC<CourseBuilderProps> = ({ currentUserHandle, course
   // --- RENDERERS ---
 
   const renderStep1_Info = () => (
-    <div className="space-y-8 animate-fade-in">
+    <div className="space-y-8">
       <div className={CARD_CLASS}>
         <h2 className="text-lg md:text-xl font-bold text-slate-900 border-b border-slate-100 pb-6 mb-6 font-heading dark:text-slate-100 dark:border-slate-700">Basic Information</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -470,7 +470,7 @@ const CourseBuilder: React.FC<CourseBuilderProps> = ({ currentUserHandle, course
   );
 
   const renderStep2_Curriculum = () => (
-    <div className="space-y-6 animate-fade-in h-full flex flex-col">
+    <div className="space-y-6 h-full flex flex-col">
       <div className="flex justify-between items-center mb-2 px-2">
         <div><h2 className="text-lg md:text-xl font-bold text-slate-800 dark:text-slate-100 font-heading">Curriculum</h2><p className="text-sm text-slate-500 dark:text-slate-400">Structure your course.</p></div>
         <div className="flex gap-2">
@@ -517,7 +517,7 @@ const CourseBuilder: React.FC<CourseBuilderProps> = ({ currentUserHandle, course
   );
 
   const renderStep3_Settings = () => (
-    <div className="space-y-8 animate-fade-in">
+    <div className="space-y-8">
       {/* General Settings */}
       <div className={CARD_CLASS}>
         <h2 className="text-lg md:text-xl font-bold text-slate-900 border-b border-slate-100 pb-6 mb-6 font-heading dark:text-slate-100 dark:border-slate-700">Course Configuration</h2>
@@ -734,6 +734,15 @@ const CourseBuilder: React.FC<CourseBuilderProps> = ({ currentUserHandle, course
   return (
     <div className="max-w-7xl mx-auto h-full flex flex-col p-4 md:p-8 pb-32 animate-fade-in relative">
       <style>{`.no-scrollbar::-webkit-scrollbar { display: none; } .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }`}</style>
+      <style>{`
+        @keyframes dock-open {
+          0% { opacity: 0; transform: translateY(40px) scale(0.92); filter: blur(4px); }
+          100% { opacity: 1; transform: translateY(0) scale(1); filter: blur(0px); }
+        }
+        .animate-dock-open {
+          animation: dock-open 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+        }
+      `}</style>
       
       {/* Modern Header */}
       <div className="flex items-center justify-between mb-6 md:mb-10 shrink-0">
@@ -747,26 +756,26 @@ const CourseBuilder: React.FC<CourseBuilderProps> = ({ currentUserHandle, course
       <div className="flex-1 relative overflow-hidden">
         
         {/* Content Area */}
-        <div className="h-full overflow-y-auto no-scrollbar pb-32">
+        <div key={step} className="h-full overflow-y-auto no-scrollbar pb-32 animate-dock-open origin-bottom">
             {step === 1 && renderStep1_Info()}
             {step === 2 && renderStep2_Curriculum()}
             {step === 3 && renderStep3_Settings()}
             {step === 4 && (
-              <div className="space-y-8 animate-fade-in text-center py-12"><div className={CARD_CLASS}><div className="max-w-2xl mx-auto"><h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-3 font-heading">Ready to Launch?</h2><p className="text-slate-500 dark:text-slate-400 text-lg mb-10">Choose visibility for your course.</p><div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10"><button onClick={() => setPublishTarget('TEAM')} className={`p-4 md:p-8 rounded-3xl border-2 transition-all flex flex-col items-center text-center gap-4 ${publishTarget === 'TEAM' ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20' : 'border-slate-100 hover:border-emerald-200 bg-white dark:bg-slate-800 dark:border-slate-700 dark:hover:border-slate-600'}`}><div className={`w-16 h-16 rounded-full flex items-center justify-center text-3xl shadow-sm ${publishTarget === 'TEAM' ? 'bg-emerald-200 text-emerald-800' : 'bg-slate-100 text-slate-500 dark:bg-slate-700'}`}>👥</div><div><h3 className="font-bold text-lg text-slate-800 dark:text-white">Team Training</h3><p className="text-sm text-slate-500 mt-2 dark:text-slate-400 leading-relaxed">Visible only to your downline.</p></div></button><button onClick={() => setPublishTarget('GLOBAL')} className={`p-4 md:p-8 rounded-3xl border-2 transition-all flex flex-col items-center text-center gap-4 ${publishTarget === 'GLOBAL' ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20' : 'border-slate-100 hover:border-blue-200 bg-white dark:bg-slate-800 dark:border-slate-700 dark:hover:border-slate-600'}`}><div className={`w-16 h-16 rounded-full flex items-center justify-center text-3xl shadow-sm ${publishTarget === 'GLOBAL' ? 'bg-blue-200 text-blue-800' : 'bg-slate-100 text-slate-500 dark:bg-slate-700'}`}>🌍</div><div><h3 className="font-bold text-lg text-slate-800 dark:text-white">Global Library</h3><p className="text-sm text-slate-500 mt-2 dark:text-slate-400 leading-relaxed">Public to all FBOs (Review required).</p></div></button></div><div className="flex flex-col items-center gap-4"><div className="flex gap-8 text-sm text-slate-500 font-medium dark:text-slate-400"><span>{course.modules.length} Modules</span><span className="w-px h-4 bg-slate-300 dark:bg-slate-700"></span><span>{course.track}</span></div><button onClick={handleSubmit} className={`w-full max-w-sm py-3 md:py-4 rounded-xl font-bold text-lg shadow-xl hover:scale-105 transition-all text-white ${publishTarget === 'GLOBAL' ? 'bg-blue-600 hover:bg-blue-700 shadow-blue-200' : 'bg-emerald-600 hover:bg-emerald-700 shadow-emerald-200'}`}>{publishTarget === 'GLOBAL' ? (courseId === 'new' ? 'Submit for Review' : 'Update & Submit') : (courseId === 'new' ? 'Publish Now' : 'Update Course')}</button></div></div></div></div>
+              <div className="space-y-8 text-center py-12"><div className={CARD_CLASS}><div className="max-w-2xl mx-auto"><h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-3 font-heading">Ready to Launch?</h2><p className="text-slate-500 dark:text-slate-400 text-lg mb-10">Choose visibility for your course.</p><div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10"><button onClick={() => setPublishTarget('TEAM')} className={`p-4 md:p-8 rounded-3xl border-2 transition-all flex flex-col items-center text-center gap-4 ${publishTarget === 'TEAM' ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20' : 'border-slate-100 hover:border-emerald-200 bg-white dark:bg-slate-800 dark:border-slate-700 dark:hover:border-slate-600'}`}><div className={`w-16 h-16 rounded-full flex items-center justify-center text-3xl shadow-sm ${publishTarget === 'TEAM' ? 'bg-emerald-200 text-emerald-800' : 'bg-slate-100 text-slate-500 dark:bg-slate-700'}`}>👥</div><div><h3 className="font-bold text-lg text-slate-800 dark:text-white">Team Training</h3><p className="text-sm text-slate-500 mt-2 dark:text-slate-400 leading-relaxed">Visible only to your downline.</p></div></button><button onClick={() => setPublishTarget('GLOBAL')} className={`p-4 md:p-8 rounded-3xl border-2 transition-all flex flex-col items-center text-center gap-4 ${publishTarget === 'GLOBAL' ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20' : 'border-slate-100 hover:border-blue-200 bg-white dark:bg-slate-800 dark:border-slate-700 dark:hover:border-slate-600'}`}><div className={`w-16 h-16 rounded-full flex items-center justify-center text-3xl shadow-sm ${publishTarget === 'GLOBAL' ? 'bg-blue-200 text-blue-800' : 'bg-slate-100 text-slate-500 dark:bg-slate-700'}`}>🌍</div><div><h3 className="font-bold text-lg text-slate-800 dark:text-white">Global Library</h3><p className="text-sm text-slate-500 mt-2 dark:text-slate-400 leading-relaxed">Public to all FBOs (Review required).</p></div></button></div><div className="flex flex-col items-center gap-4"><div className="flex gap-8 text-sm text-slate-500 font-medium dark:text-slate-400"><span>{course.modules.length} Modules</span><span className="w-px h-4 bg-slate-300 dark:bg-slate-700"></span><span>{course.track}</span></div><button onClick={handleSubmit} className={`w-full max-w-sm py-3 md:py-4 rounded-xl font-bold text-lg shadow-xl hover:scale-105 transition-all text-white ${publishTarget === 'GLOBAL' ? 'bg-blue-600 hover:bg-blue-700 shadow-blue-200' : 'bg-emerald-600 hover:bg-emerald-700 shadow-emerald-200'}`}>{publishTarget === 'GLOBAL' ? (courseId === 'new' ? 'Submit for Review' : 'Update & Submit') : (courseId === 'new' ? 'Publish Now' : 'Update Course')}</button></div></div></div></div>
             )}
         </div>
 
         {/* Floating Bottom Navigation (Replaces Sidebar & Mobile Nav) */}
         <div className="fixed bottom-8 left-1/2 transform -translate-x-1/2 z-40 w-auto max-w-[90vw]">
-            <div className="flex items-center bg-white/80 backdrop-blur-xl border border-white/20 shadow-2xl rounded-full p-2 gap-1 dark:bg-slate-900/80 dark:border-slate-700 ring-1 ring-black/5">
+            <div className="flex items-center bg-white/80 backdrop-blur-xl border border-white/20 shadow-2xl rounded-full p-2 gap-1 dark:bg-slate-900/80 dark:border-slate-700 ring-1 ring-black/5 transition-all duration-300 hover:scale-105">
                 {BUILDER_STEPS.map(s => (
                     <button 
                         key={s.id} 
                         onClick={() => setStep(s.id as any)}
-                        className={`flex items-center gap-2 px-4 py-2.5 rounded-full transition-all group relative ${
+                        className={`flex items-center gap-2 px-4 py-2.5 rounded-full transition-all duration-300 group relative ease-out ${
                             step === s.id 
-                            ? 'bg-slate-900 text-white shadow-lg shadow-slate-900/20 dark:bg-white dark:text-slate-900' 
-                            : 'text-slate-500 hover:bg-slate-200/50 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white'
+                            ? 'bg-slate-900 text-white shadow-lg shadow-slate-900/20 dark:bg-white dark:text-slate-900 scale-110 -translate-y-2' 
+                            : 'text-slate-500 hover:bg-slate-200/50 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white hover:scale-105 active:scale-95'
                         }`}
                     >
                         <s.icon size={20} strokeWidth={2.5} className={step === s.id ? 'animate-pulse' : ''} />

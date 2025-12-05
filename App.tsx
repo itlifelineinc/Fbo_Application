@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { HashRouter, Routes, Route, Navigate, Link, useNavigate } from 'react-router-dom';
 import Layout from './components/Layout';
@@ -395,6 +394,7 @@ const App: React.FC = () => {
                 {(currentUser?.role === UserRole.ADMIN || currentUser?.role === UserRole.SUPER_ADMIN || currentUser?.role === UserRole.SPONSOR) ? (
                     <CourseBuilder 
                         currentUserHandle={currentUser!.handle} 
+                        courses={courses}
                         onSubmitCourse={handleSubmitCourse} 
                     />
                 ) : <Navigate to="/dashboard" />}

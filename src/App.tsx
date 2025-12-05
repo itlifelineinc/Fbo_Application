@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { HashRouter, Routes, Route, Navigate, Link, useNavigate } from 'react-router-dom';
 import Layout from './components/Layout';
@@ -63,7 +64,7 @@ const CourseList: React.FC<{ courses: Course[]; currentUser: Student }> = ({ cou
   return (
     <div className="space-y-12 animate-fade-in pb-20">
        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-emerald-950 font-heading dark:text-emerald-400">My Classroom</h1>
+          <h1 className="text-2xl md:text-3xl font-bold text-emerald-950 font-heading dark:text-emerald-400">My Classroom</h1>
           <p className="text-slate-500 mt-2 text-lg dark:text-slate-400">Continue your journey where you left off.</p>
        </div>
 

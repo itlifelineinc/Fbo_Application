@@ -41,7 +41,7 @@ const TrainingPortal: React.FC<TrainingPortalProps> = ({ courses, mode, currentU
     <div className="space-y-8 animate-fade-in pb-20">
       <div className="flex justify-between items-end">
         <div>
-            <h1 className="text-3xl font-bold text-slate-900 font-heading dark:text-white">
+            <h1 className="text-2xl md:text-3xl font-bold text-slate-900 font-heading dark:text-white">
                 {mode === 'GLOBAL' ? 'Global Training Library' : 'Team Training Portal'}
             </h1>
             <p className="text-slate-500 mt-2 text-lg dark:text-slate-400">

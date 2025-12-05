@@ -29,7 +29,7 @@ const CourseModulesPage: React.FC<CourseModulesPageProps> = ({ courses, complete
         </button>
         <div>
             <div className="text-xs font-bold text-emerald-600 uppercase tracking-widest mb-1 dark:text-emerald-400">Course Curriculum</div>
-            <h1 className="text-3xl md:text-4xl font-bold text-slate-900 font-heading dark:text-white">{course.title}</h1>
+            <h1 className="text-2xl md:text-4xl font-bold text-slate-900 font-heading dark:text-white">{course.title}</h1>
         </div>
       </div>
 
@@ -43,7 +43,7 @@ const CourseModulesPage: React.FC<CourseModulesPageProps> = ({ courses, complete
                 <div 
                     key={module.id}
                     onClick={() => firstChapterId && navigate(`/classroom/${course.id}/${module.id}/${firstChapterId}`)}
-                    className="group relative h-64 rounded-3xl overflow-hidden cursor-pointer shadow-lg hover:shadow-2xl transition-all duration-300 ring-1 ring-slate-900/5 dark:ring-white/10"
+                    className="group relative h-56 md:h-64 rounded-3xl overflow-hidden cursor-pointer shadow-lg hover:shadow-2xl transition-all duration-300 ring-1 ring-slate-900/5 dark:ring-white/10"
                 >
                     {/* Background Image (Using Course Thumbnail for Consistency) */}
                     <div className="absolute inset-0">
@@ -75,7 +75,7 @@ const CourseModulesPage: React.FC<CourseModulesPageProps> = ({ courses, complete
                             <div className="text-xs font-bold text-emerald-300 uppercase tracking-widest mb-2 flex items-center gap-1">
                                 <Layers size={12} /> CHAPTERS ({module.chapters.length})
                             </div>
-                            <h3 className="text-2xl font-bold text-white font-heading leading-tight group-hover:text-emerald-200 transition-colors">
+                            <h3 className="text-xl md:text-2xl font-bold text-white font-heading leading-tight group-hover:text-emerald-200 transition-colors">
                                 {module.title}
                             </h3>
                             <div className="h-1 w-12 bg-emerald-500 rounded-full mt-4 group-hover:w-full transition-all duration-500" />

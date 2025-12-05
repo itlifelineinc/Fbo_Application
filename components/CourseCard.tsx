@@ -22,7 +22,7 @@ const CourseCard: React.FC<CourseCardProps> = ({ course, onClick, progress, show
   return (
     <div 
         onClick={onClick}
-        className="group relative h-[420px] rounded-[2rem] overflow-hidden cursor-pointer shadow-xl shadow-slate-200/50 hover:shadow-2xl transition-all duration-500 dark:shadow-none dark:border dark:border-slate-700"
+        className="group relative h-[360px] md:h-[420px] rounded-[1.5rem] md:rounded-[2rem] overflow-hidden cursor-pointer shadow-xl shadow-slate-200/50 hover:shadow-2xl transition-all duration-500 dark:shadow-none dark:border dark:border-slate-700"
     >
         {/* Background Image */}
         <div className="absolute inset-0">
@@ -46,7 +46,7 @@ const CourseCard: React.FC<CourseCardProps> = ({ course, onClick, progress, show
         )}
 
         {/* Content Overlay */}
-        <div className="absolute inset-0 p-8 flex flex-col justify-end">
+        <div className="absolute inset-0 p-6 md:p-8 flex flex-col justify-end">
             
             {/* Top Badges */}
             {showTrackBadge && (
@@ -59,7 +59,7 @@ const CourseCard: React.FC<CourseCardProps> = ({ course, onClick, progress, show
 
             {/* Main Info */}
             <div className="transform translate-y-4 group-hover:translate-y-0 transition-transform duration-500">
-                <h2 className="text-3xl font-bold text-white font-heading leading-tight mb-3 drop-shadow-md line-clamp-2">
+                <h2 className="text-2xl md:text-3xl font-bold text-white font-heading leading-tight mb-2 md:mb-3 drop-shadow-md line-clamp-2">
                     {course.title}
                 </h2>
                 

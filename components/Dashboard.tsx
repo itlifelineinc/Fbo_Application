@@ -1,14 +1,14 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, PieChart, Pie, Legend } from 'recharts';
 import { Link, useNavigate } from 'react-router-dom';
 import { Student, UserRole, Course, CourseTrack, CourseStatus } from '../types';
-import { Edit, ExternalLink, Plus } from 'lucide-react';
+import { Edit, ExternalLink, Plus, ChevronLeft, ChevronRight } from 'lucide-react';
 
 // --- Child Components & Icons (Defined First) ---
 
 const StatCard: React.FC<{ title: string; value: string; icon: React.ReactNode; trend: string }> = ({ title, value, icon, trend }) => (
-  <div className="bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-slate-100 flex items-center gap-5 hover:shadow-md transition-shadow dark:bg-slate-800 dark:border-slate-700">
+  <div className="bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-slate-100 flex items-center gap-5 hover:shadow-md transition-shadow dark:bg-slate-800 dark:border-slate-700 h-full relative">
     <div className="p-4 bg-emerald-50 text-emerald-600 rounded-2xl shrink-0 dark:bg-emerald-900/30 dark:text-emerald-400">
       {icon}
     </div>
@@ -166,6 +166,50 @@ const Dashboard: React.FC<DashboardProps> = ({ students, currentUser, courses, o
     alert('Invite link copied to clipboard!');
   };
 
+  // Stats Data
+  const stats = [
+    !isStudent && {
+        id: 'users',
+        title: isAdmin ? "Total Users" : "Team Members",
+        value: visibleStudents.length.toString(),
+        icon: <UserGroupIcon />,
+        trend: isAdmin ? "+12% growth" : "Active & Growing"
+    },
+    {
+        id: 'completion',
+        title: isStudent ? "My Completion" : "Avg. Team Completion",
+        value: isStudent ? `${calculatedProgress}%` : `${averageProgress}%`,
+        icon: <ChartBarIcon />,
+        trend: "Based on assigned courses"
+    },
+    {
+        id: 'cc',
+        title: isStudent ? "My CC" : "Total Team CC",
+        value: isStudent ? currentUser.caseCredits?.toString() : visibleStudents.reduce((acc,s) => acc + (s.caseCredits || 0), 0).toFixed(1),
+        icon: <CurrencyDollarIcon />,
+        trend: "Case Credits"
+    }
+  ].filter(Boolean) as { id: string, title: string, value: string, icon: React.ReactNode, trend: string }[];
+
+  // Carousel State
+  const [currentStatIndex, setCurrentStatIndex] = useState(0);
+
+  // Auto-slide effect for mobile/tablet carousel
+  useEffect(() => {
+    const timer = setInterval(() => {
+        setCurrentStatIndex((prev) => (prev + 1) % stats.length);
+    }, 5000);
+    return () => clearInterval(timer);
+  }, [stats.length]);
+
+  const nextStat = () => {
+      setCurrentStatIndex((prev) => (prev + 1) % stats.length);
+  };
+
+  const prevStat = () => {
+      setCurrentStatIndex((prev) => (prev - 1 + stats.length) % stats.length);
+  };
+
   return (
     <div className="space-y-8 animate-fade-in">
       <header>
@@ -182,28 +226,68 @@ const Dashboard: React.FC<DashboardProps> = ({ students, currentUser, courses, o
         </p>
       </header>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
-        {!isStudent && (
-            <StatCard 
-            title={isAdmin ? "Total Users" : "Team Members"} 
-            value={visibleStudents.length.toString()} 
-            icon={<UserGroupIcon />} 
-            trend={isAdmin ? "+12% growth" : "Active & Growing"}
-            />
-        )}
-        <StatCard 
-          title={isStudent ? "My Completion" : "Avg. Team Completion"} 
-          value={isStudent ? `${calculatedProgress}%` : `${averageProgress}%`} 
-          icon={<ChartBarIcon />}
-          trend="Based on assigned courses" 
-        />
-        <StatCard 
-          title={isStudent ? "My CC" : "Total Team CC"} 
-          value={isStudent ? currentUser.caseCredits?.toString() : visibleStudents.reduce((acc,s) => acc + (s.caseCredits || 0), 0).toFixed(1)} 
-          icon={<CurrencyDollarIcon />} 
-          trend="Case Credits"
-        />
+      {/* Stats Section */}
+      <div className="mb-4">
+        {/* Desktop Grid (Visible only on lg and up) */}
+        <div className="hidden lg:grid grid-cols-3 gap-6">
+            {stats.map((stat) => (
+                <StatCard 
+                    key={stat.id}
+                    title={stat.title}
+                    value={stat.value}
+                    icon={stat.icon}
+                    trend={stat.trend}
+                />
+            ))}
+        </div>
+
+        {/* Mobile/Tablet Slider (Visible on < lg) */}
+        <div className="lg:hidden relative group">
+            <div className="overflow-hidden rounded-2xl">
+                <div 
+                    className="flex transition-transform duration-500 ease-in-out" 
+                    style={{ transform: `translateX(-${currentStatIndex * 100}%)` }}
+                >
+                    {stats.map((stat) => (
+                        <div key={stat.id} className="min-w-full">
+                            <StatCard 
+                                title={stat.title}
+                                value={stat.value}
+                                icon={stat.icon}
+                                trend={stat.trend}
+                            />
+                        </div>
+                    ))}
+                </div>
+            </div>
+            
+            {/* Navigation Arrows (Absolute transparent buttons) */}
+            <button 
+                onClick={prevStat}
+                className="absolute left-0 top-0 bottom-0 px-2 flex items-center justify-center text-slate-400 hover:text-emerald-600 transition-colors z-10 focus:outline-none bg-transparent"
+                style={{ backgroundColor: 'transparent' }}
+            >
+                <ChevronLeft size={32} className="drop-shadow-sm opacity-50 hover:opacity-100" />
+            </button>
+            <button 
+                onClick={nextStat}
+                className="absolute right-0 top-0 bottom-0 px-2 flex items-center justify-center text-slate-400 hover:text-emerald-600 transition-colors z-10 focus:outline-none bg-transparent"
+                style={{ backgroundColor: 'transparent' }}
+            >
+                <ChevronRight size={32} className="drop-shadow-sm opacity-50 hover:opacity-100" />
+            </button>
+
+            {/* Pagination Dots */}
+            <div className="flex justify-center gap-2 mt-4">
+                {stats.map((_, idx) => (
+                    <button 
+                        key={idx}
+                        onClick={() => setCurrentStatIndex(idx)}
+                        className={`h-1.5 rounded-full transition-all duration-300 ${idx === currentStatIndex ? 'w-6 bg-emerald-500' : 'w-2 bg-slate-300 dark:bg-slate-700'}`}
+                    />
+                ))}
+            </div>
+        </div>
       </div>
 
       {/* Main Grid Layout */}

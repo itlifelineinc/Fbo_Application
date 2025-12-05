@@ -198,6 +198,21 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
     }
   }, [isNavbarOpen, shouldHeaderBeStatic]);
 
+  // Click outside logic to close floating navbar immediately (overrides 3s timer)
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      // Only attach if in floating mode and navbar is currently open
+      if (!shouldHeaderBeStatic && isNavbarOpen && navbarRef.current && !navbarRef.current.contains(event.target as Node)) {
+        setIsNavbarOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isNavbarOpen, shouldHeaderBeStatic]);
+
   // Role Checks
   const isStudent = currentUser.role === UserRole.STUDENT;
   const isAdminOrSuper = currentUser.role === UserRole.ADMIN || currentUser.role === UserRole.SUPER_ADMIN;
@@ -207,16 +222,17 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
   // Logic for showing Team Training: If user has a sponsor OR is a sponsor/admin themselves
   const hasTeamAccess = currentUser.sponsorId || currentUser.role !== UserRole.STUDENT;
 
+  // Modernized Header Classes
+  // "Floating Island" Style: dark transparent with rounded corners and margins.
   const headerClass = shouldHeaderBeStatic
-    ? "hidden lg:flex bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 h-16 items-center justify-between px-8 z-20 shrink-0"
-    : `hidden lg:flex bg-white/95 backdrop-blur-md dark:bg-slate-900/95 border-b border-slate-200 dark:border-slate-800 h-16 items-center justify-between px-8 z-40 absolute top-0 left-0 right-0 shadow-md transition-transform duration-300 ease-in-out ${isNavbarOpen ? 'translate-y-0' : '-translate-y-full'}`;
+    ? "hidden lg:flex h-16 items-center justify-between px-6 z-30 shrink-0 mx-6 mt-4 rounded-2xl bg-slate-900/80 backdrop-blur-md border border-white/10 shadow-lg sticky top-4 transition-all duration-300"
+    : `hidden lg:flex h-16 items-center justify-between px-6 z-40 mx-6 mt-4 rounded-2xl absolute top-0 left-0 right-0 bg-slate-900/90 backdrop-blur-md border border-white/10 shadow-2xl transition-transform duration-300 ease-in-out ${isNavbarOpen ? 'translate-y-0' : '-translate-y-[200%]'}`;
 
   // Breadcrumb Generation
   const getBreadcrumbs = () => {
     const path = location.pathname;
     
     // 1. Classroom Route (Deepest Level)
-    // Pattern: /classroom/:courseId/:moduleId/:lessonId
     const classroomMatch = path.match(/^\/classroom\/([^/]+)\/([^/]+)\/([^/]+)/);
     if (classroomMatch) {
         const [_, cId, mId, lId] = classroomMatch;
@@ -225,38 +241,37 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
         const chapter = module?.chapters.find(c => c.id === lId);
         
         return (
-            <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
-                <Link to="/dashboard" className="hover:text-emerald-600 transition-colors">Home</Link>
-                <span className="text-slate-300 dark:text-slate-600">/</span>
-                <Link to="/training/global" className="hover:text-emerald-600 transition-colors">Training</Link>
-                <span className="text-slate-300 dark:text-slate-600">/</span>
-                <Link to={`/training/course/${cId}`} className="hover:text-emerald-600 transition-colors truncate max-w-[150px]" title={course?.title}>{course?.title || 'Course'}</Link>
-                <span className="text-slate-300 dark:text-slate-600">/</span>
-                <span className="truncate max-w-[150px] hidden sm:inline" title={module?.title}>{module?.title}</span>
-                <span className="text-slate-300 dark:text-slate-600 hidden sm:inline">/</span>
-                <span className="font-bold text-slate-800 dark:text-white truncate max-w-[200px]" title={chapter?.title}>{chapter?.title || 'Lesson'}</span>
+            <div className="flex items-center gap-2 text-sm text-slate-300">
+                <Link to="/dashboard" className="hover:text-white transition-colors">Home</Link>
+                <span className="text-slate-500">/</span>
+                <Link to="/training/global" className="hover:text-white transition-colors">Training</Link>
+                <span className="text-slate-500">/</span>
+                <Link to={`/training/course/${cId}`} className="hover:text-white transition-colors truncate max-w-[150px]" title={course?.title}>{course?.title || 'Course'}</Link>
+                <span className="text-slate-500">/</span>
+                <span className="truncate max-w-[150px] hidden sm:inline text-slate-400" title={module?.title}>{module?.title}</span>
+                <span className="text-slate-500 hidden sm:inline">/</span>
+                <span className="font-semibold text-white truncate max-w-[200px]" title={chapter?.title}>{chapter?.title || 'Lesson'}</span>
             </div>
         );
     }
 
-    // 2. Course Overview Route (Intermediate Level)
-    // Pattern: /training/course/:courseId
+    // 2. Course Overview Route
     const courseMatch = path.match(/^\/training\/course\/([^/]+)/);
     if (courseMatch) {
         const [_, cId] = courseMatch;
         const course = courses.find(c => c.id === cId);
         return (
-            <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
-                <Link to="/dashboard" className="hover:text-emerald-600 transition-colors">Home</Link>
-                <span className="text-slate-300 dark:text-slate-600">/</span>
-                <Link to="/training/global" className="hover:text-emerald-600 transition-colors">Training</Link>
-                <span className="text-slate-300 dark:text-slate-600">/</span>
-                <span className="font-bold text-slate-800 dark:text-white truncate max-w-[250px]">{course?.title || 'Course Overview'}</span>
+            <div className="flex items-center gap-2 text-sm text-slate-300">
+                <Link to="/dashboard" className="hover:text-white transition-colors">Home</Link>
+                <span className="text-slate-500">/</span>
+                <Link to="/training/global" className="hover:text-white transition-colors">Training</Link>
+                <span className="text-slate-500">/</span>
+                <span className="font-semibold text-white truncate max-w-[250px]">{course?.title || 'Course Overview'}</span>
             </div>
         );
     }
 
-    // 3. Fallback Map for Static Routes
+    // 3. Fallback Map
     const BREADCRUMB_MAP: Record<string, string[]> = {
       '/sales-builder': ['Sales', 'Sales Pages'],
       '/sales': ['Sales', 'Sales Log'],
@@ -269,15 +284,14 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
       '/builder': ['Admin', 'Course Builder'],
     };
 
-    // Check exact match first
     if (BREADCRUMB_MAP[location.pathname]) {
        return (
-         <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
-            <Link to="/dashboard" className="hover:text-emerald-600 transition-colors">Home</Link>
+         <div className="flex items-center gap-2 text-sm text-slate-300">
+            <Link to="/dashboard" className="hover:text-white transition-colors">Home</Link>
             {BREADCRUMB_MAP[location.pathname].map((item, idx) => (
                 <React.Fragment key={idx}>
-                    <span className="text-slate-300 dark:text-slate-600">/</span>
-                    <span className={idx === BREADCRUMB_MAP[location.pathname].length - 1 ? "font-bold text-slate-800 dark:text-white" : ""}>
+                    <span className="text-slate-500">/</span>
+                    <span className={idx === BREADCRUMB_MAP[location.pathname].length - 1 ? "font-semibold text-white" : ""}>
                         {item}
                     </span>
                 </React.Fragment>
@@ -286,24 +300,23 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
        );
     }
 
-    // Fallback to URL segments for other dynamic paths (e.g., /students/123)
+    // Fallback to URL segments
     const pathSegments = location.pathname.split('/').filter(p => p);
     return (
-        <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400 capitalize">
-            <Link to="/dashboard" className="hover:text-emerald-600 transition-colors">Home</Link>
+        <div className="flex items-center gap-2 text-sm text-slate-300 capitalize">
+            <Link to="/dashboard" className="hover:text-white transition-colors">Home</Link>
             {pathSegments.map((segment, index) => {
                 const isLast = index === pathSegments.length - 1;
-                // Heuristic to make IDs look nicer or hide them
                 const displayName = (segment.length > 8 && /\d/.test(segment)) ? 'Details' : segment.replace(/-/g, ' ');
                 const to = `/${pathSegments.slice(0, index + 1).join('/')}`;
 
                 return (
                     <React.Fragment key={to}>
-                        <span className="text-slate-300 dark:text-slate-600">/</span>
+                        <span className="text-slate-500">/</span>
                         {isLast ? (
-                            <span className="font-bold text-slate-800 dark:text-white">{displayName}</span>
+                            <span className="font-semibold text-white">{displayName}</span>
                         ) : (
-                            <Link to={to} className="hover:text-emerald-600 transition-colors">{displayName}</Link>
+                            <Link to={to} className="hover:text-white transition-colors">{displayName}</Link>
                         )}
                     </React.Fragment>
                 );
@@ -343,11 +356,7 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
       >
         <div className="p-6 border-b border-emerald-800 flex justify-between items-center dark:border-emerald-900">
           <div className="flex items-center gap-2 font-bold text-xl tracking-tight font-heading">
-            <div className="w-8 h-8 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-full flex items-center justify-center text-emerald-900 shadow-lg">
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-5 h-5">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-              </svg>
-            </div>
+            <img src="https://upload.wikimedia.org/wikipedia/en/thumb/8/8f/Forever_Living_Products_logo.svg/300px-Forever_Living_Products_logo.svg.png" alt="FBO Academy" className="h-10 w-auto object-contain" />
             <span>FBO Academy</span>
           </div>
           {/* Close Button */}
@@ -356,7 +365,7 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
           </button>
         </div>
 
-        {/* Clickable User Profile Section */}
+        {/* Clickable User Profile Section (Mobile Only) */}
         <div className="px-6 py-4 bg-emerald-800/30 dark:bg-emerald-900/30 lg:hidden">
            <Link 
              to={`/students/${currentUser.id}`}
@@ -497,7 +506,7 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
           )}
         </nav>
 
-        {/* Sidebar Logout: Only show on Mobile or collapsed state logic if needed */}
+        {/* Sidebar Logout: Only show on Mobile */}
         <div className="p-4 border-t border-emerald-800 dark:border-emerald-900 lg:hidden">
           <button 
             onClick={onLogout}
@@ -514,48 +523,54 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
         
         {/* Desktop Navbar */}
         <header ref={navbarRef} className={headerClass}>
-            <div className="flex items-center gap-4 text-sm text-slate-500 dark:text-slate-400">
+            <div className="flex items-center gap-4 text-sm text-slate-300">
                {/* Show Breadcrumbs on non-dashboard pages, Greeting on dashboard */}
                {isDashboard ? (
-                   <span className="font-medium text-lg">👋 Hi, {currentUser.name}</span>
+                   // New Typography: Dosis font, larger size for friendly greeting
+                   <span className="font-dosis font-semibold text-2xl text-white tracking-tight">
+                     Hi, {currentUser.name.split(' ')[0]}
+                   </span>
                ) : (
                    getBreadcrumbs()
                )}
             </div>
             
             <div className="relative">
+               {/* Updated Pill-Shaped Profile Button with Dark Styles */}
                <button 
                  onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)} 
-                 className="flex items-center gap-3 focus:outline-none hover:bg-slate-50 dark:hover:bg-slate-800 p-2 rounded-xl transition-colors"
+                 className="group flex items-center gap-3 focus:outline-none pl-1 pr-4 py-1 rounded-full transition-all border border-white/10 bg-white/5 hover:bg-white/10 hover:shadow-sm"
                >
-                  <div className="text-right hidden xl:block">
-                      <p className="text-sm font-bold text-slate-700 dark:text-slate-200">{currentUser.name}</p>
-                      <p className="text-xs text-slate-500 dark:text-slate-400">{currentUser.role}</p>
-                  </div>
-                  <div className="w-9 h-9 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold text-sm overflow-hidden border border-emerald-200 dark:bg-emerald-900 dark:text-emerald-300 dark:border-emerald-800">
+                  <div className="w-9 h-9 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold text-xs overflow-hidden ring-2 ring-slate-800 shadow-sm">
                       {currentUser.avatarUrl ? (
                           <img src={currentUser.avatarUrl} alt={currentUser.name} className="w-full h-full object-cover" />
                       ) : (
                           currentUser.name.charAt(0)
                       )}
                   </div>
-                  <ChevronDown size={16} className={`text-slate-400 transition-transform ${isProfileMenuOpen ? 'rotate-180' : ''}`} />
+                  
+                  <div className="text-left hidden xl:block">
+                      <p className="text-sm font-semibold text-slate-100 leading-tight">{currentUser.name}</p>
+                      <p className="text-[10px] text-emerald-400 font-medium uppercase tracking-wide">{currentUser.role}</p>
+                  </div>
+                  
+                  <ChevronDown size={14} className={`text-slate-400 transition-transform ${isProfileMenuOpen ? 'rotate-180' : ''} group-hover:text-slate-200 ml-1`} />
                </button>
 
                {/* Profile Dropdown */}
                {isProfileMenuOpen && (
                   <>
                     <div className="fixed inset-0 z-10" onClick={() => setIsProfileMenuOpen(false)}></div>
-                    <div className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-xl border border-slate-100 py-2 z-20 animate-fade-in dark:bg-slate-800 dark:border-slate-700">
+                    <div className="absolute right-0 mt-3 w-56 bg-white/95 backdrop-blur-xl rounded-2xl shadow-xl border border-slate-100 py-2 z-20 animate-fade-in dark:bg-slate-900/95 dark:border-slate-700">
                         <div className="px-4 py-3 border-b border-slate-100 dark:border-slate-700">
                             <p className="text-sm font-bold text-slate-800 dark:text-white">Signed in as</p>
-                            <p className="text-xs text-slate-500 truncate dark:text-slate-400">{currentUser.email}</p>
+                            <p className="text-xs text-slate-500 truncate dark:text-slate-400 mt-0.5">{currentUser.email}</p>
                         </div>
                         
                         <div className="py-2">
                             <button 
                                 onClick={() => { onToggleTheme(); setIsProfileMenuOpen(false); }}
-                                className="w-full text-left px-4 py-2 text-sm text-slate-600 hover:bg-slate-50 flex items-center gap-2 transition-colors dark:text-slate-300 dark:hover:bg-slate-700"
+                                className="w-full text-left px-4 py-2 text-sm text-slate-600 hover:bg-slate-50 flex items-center gap-2 transition-colors dark:text-slate-300 dark:hover:bg-slate-800"
                             >
                                 {theme === 'light' ? <Moon size={16} /> : <Sun size={16} />}
                                 <span>{theme === 'light' ? 'Dark Mode' : 'Light Mode'}</span>
@@ -563,7 +578,7 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
                             <Link 
                                 to={`/students/${currentUser.id}`}
                                 onClick={() => setIsProfileMenuOpen(false)}
-                                className="w-full text-left px-4 py-2 text-sm text-slate-600 hover:bg-slate-50 flex items-center gap-2 transition-colors dark:text-slate-300 dark:hover:bg-slate-700"
+                                className="w-full text-left px-4 py-2 text-sm text-slate-600 hover:bg-slate-50 flex items-center gap-2 transition-colors dark:text-slate-300 dark:hover:bg-slate-800"
                             >
                                 <Settings size={16} />
                                 <span>Settings</span>
@@ -589,7 +604,7 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
         {!shouldHeaderBeStatic && !isNavbarOpen && (
              <button 
                onClick={() => setIsNavbarOpen(true)}
-               className="hidden lg:flex absolute top-4 right-8 z-30 bg-white/90 dark:bg-slate-800/90 p-2.5 rounded-full shadow-lg border border-slate-200 dark:border-slate-700 text-slate-500 hover:text-emerald-600 transition-all hover:scale-110"
+               className="hidden lg:flex absolute top-4 right-8 z-30 bg-slate-900/90 p-2.5 rounded-full shadow-lg border border-slate-700 text-slate-400 hover:text-white transition-all hover:scale-110 backdrop-blur-sm"
                title="Show Menu"
              >
                 <ChevronDownIcon />
@@ -599,11 +614,7 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
         {/* Mobile Header */}
         <header className="lg:hidden bg-white border-b border-slate-200 p-4 flex justify-between items-center z-10 shadow-sm dark:bg-slate-900 dark:border-slate-800 shrink-0">
            <div className="flex items-center gap-2 font-bold text-lg text-emerald-900 font-heading dark:text-emerald-400">
-             <div className="w-6 h-6 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-full flex items-center justify-center text-emerald-900 shadow-sm">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-3 h-3">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-                </svg>
-             </div>
+             <img src="https://upload.wikimedia.org/wikipedia/en/thumb/8/8f/Forever_Living_Products_logo.svg/300px-Forever_Living_Products_logo.svg.png" alt="FBO Academy" className="h-8 w-auto object-contain" />
              <span>FBO Academy</span>
            </div>
            <button onClick={() => setIsMobileMenuOpen(true)} className="text-slate-600 p-2 rounded-lg hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800">

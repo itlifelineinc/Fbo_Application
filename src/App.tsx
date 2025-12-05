@@ -20,6 +20,7 @@ import CourseCard from './components/CourseCard';
 import CourseLandingPage from './components/CourseLandingPage';
 import { INITIAL_COURSES, INITIAL_STUDENTS, INITIAL_MESSAGES, INITIAL_POSTS, INITIAL_COHORTS } from './constants';
 import { Course, Module, Student, SaleRecord, UserRole, Message, CourseTrack, CommunityPost, CommunityComment, Cohort, CourseStatus } from './types';
+import { updateStudentRank } from './services/rankEngine';
 
 // --- Protected Route ---
 
@@ -64,7 +65,7 @@ const CourseList: React.FC<{ courses: Course[]; currentUser: Student }> = ({ cou
   return (
     <div className="space-y-12 animate-fade-in pb-20">
        <div className="mb-8">
-          <h1 className="text-2xl md:text-3xl font-bold text-emerald-950 font-heading dark:text-emerald-400">My Classroom</h1>
+          <h1 className="text-3xl font-bold text-emerald-950 font-heading dark:text-emerald-400">My Classroom</h1>
           <p className="text-slate-500 mt-2 text-lg dark:text-slate-400">Continue your journey where you left off.</p>
        </div>
 
@@ -213,14 +214,16 @@ const App: React.FC = () => {
 
   const handleSubmitSale = (sale: SaleRecord) => {
     if (!currentUser) return;
-    const updatedStudent = {
-        ...currentUser,
-        caseCredits: (currentUser.caseCredits || 0) + sale.ccEarned,
-        salesHistory: [sale, ...(currentUser.salesHistory || [])]
+    
+    // 1. Process Rank Logic (Reset & Promote)
+    let updatedStudent = updateStudentRank(currentUser, sale.ccEarned);
+    
+    // 2. Append history
+    updatedStudent = {
+        ...updatedStudent,
+        salesHistory: [sale, ...(updatedStudent.salesHistory || [])]
     };
-    if (updatedStudent.role === UserRole.STUDENT && updatedStudent.caseCredits >= 2) {
-        updatedStudent.role = UserRole.SPONSOR;
-    }
+
     handleUpdateStudent(updatedStudent);
   };
 

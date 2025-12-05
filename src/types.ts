@@ -31,6 +31,22 @@ export enum CourseStatus {
   ARCHIVED = 'Archived'
 }
 
+export interface RankDefinition {
+  id: string;
+  name: string;
+  targetCC: number; 
+  monthsAllowed: number;
+  nextRankId: string | null;
+}
+
+export interface RankProgress {
+  currentRankId: string;
+  currentCycleCC: number; // Resets to 0 on promotion
+  targetCC: number;       // CC required for NEXT rank
+  cycleStartDate: string; 
+  history: { rankId: string; dateAchieved: string; totalCCAtTime: number }[];
+}
+
 export interface QuizQuestion {
   id: string;
   question: string;
@@ -53,7 +69,7 @@ export interface Chapter {
   type?: 'VIDEO' | 'TEXT';
   headerImageUrl?: string;
   summary?: string;
-  content: string; // Rich text / Markdown
+  content: string; // Fallback HTML/Markdown string
   blocks?: ContentBlock[]; // Structured content
   videoUrl?: string; // Link or Upload
   pdfUrl?: string;
@@ -141,7 +157,9 @@ export interface Student {
   };
 
   sponsorId?: string;
-  caseCredits: number;
+  caseCredits: number; // Lifetime Total (History)
+  rankProgress?: RankProgress; // New: Cycle Tracking
+  
   avatarUrl?: string;
   cohortId?: string;
   quizResults?: QuizResult[];

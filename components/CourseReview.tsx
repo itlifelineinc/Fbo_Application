@@ -38,6 +38,15 @@ const CourseReview: React.FC<CourseReviewProps> = ({ courses, onReviewCourse }) 
       navigate('/dashboard');
   };
 
+  // --- INTERNAL BACK NAVIGATION ---
+  const handleBack = () => {
+      if (activeView !== 'OVERVIEW') {
+          setActiveView('OVERVIEW');
+      } else {
+          navigate(-1);
+      }
+  };
+
   // --- RENDERERS ---
 
   const renderOverview = () => (
@@ -220,7 +229,7 @@ const CourseReview: React.FC<CourseReviewProps> = ({ courses, onReviewCourse }) 
       {/* Sticky Top Bar */}
       <div className="bg-white border-b border-slate-200 px-6 py-3 flex justify-between items-center shadow-sm shrink-0 z-20 dark:bg-slate-800 dark:border-slate-700">
          <div className="flex items-center gap-4">
-             <button onClick={() => navigate(-1)} className="p-2 hover:bg-slate-100 rounded-full text-slate-500 transition-colors dark:text-slate-400 dark:hover:bg-slate-700">
+             <button onClick={handleBack} className="p-2 hover:bg-slate-100 rounded-full text-slate-500 transition-colors dark:text-slate-400 dark:hover:bg-slate-700">
                 <ArrowLeftIcon />
              </button>
              <div>

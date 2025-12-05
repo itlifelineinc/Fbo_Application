@@ -2,7 +2,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Course, Module, Chapter, CourseTrack, CourseLevel, CourseStatus, ContentBlock, BlockType, CourseTestimonial } from '../types';
-import { Eye, X, PlayCircle, FileText, HelpCircle, ChevronDown, ChevronRight, CheckCircle, Menu, BookOpen, Clock, Plus, Trash2, ArrowUp, ArrowDown, LayoutTemplate, Type, Image as ImageIcon, List, Quote, AlertCircle, ArrowLeft, ShoppingBag, Users, Sparkles, Save, Search, Check, Wand2, Loader2, MessageSquare } from 'lucide-react';
+import { Eye, X, PlayCircle, FileText, HelpCircle, ChevronDown, ChevronRight, CheckCircle, Menu, BookOpen, Clock, Plus, Trash2, ArrowUp, ArrowDown, LayoutTemplate, Type, Image as ImageIcon, List, Quote, AlertCircle, ArrowLeft, ShoppingBag, Users, Sparkles, Save, Search, Check, Wand2, Loader2, MessageSquare, Settings, Rocket } from 'lucide-react';
 import { generateModuleContent } from '../services/geminiService';
 
 interface CourseBuilderProps {
@@ -268,6 +268,13 @@ const CourseBuilder: React.FC<CourseBuilderProps> = ({ currentUserHandle, course
   const [tempOutcome, setTempOutcome] = useState('');
   const [tempAudience, setTempAudience] = useState('');
 
+  const BUILDER_STEPS = [
+    { id: 1, label: 'Info', fullLabel: 'Basic Info', icon: FileText },
+    { id: 2, label: 'Curriculum', fullLabel: 'Curriculum', icon: BookOpen },
+    { id: 3, label: 'Settings', fullLabel: 'Settings', icon: Settings },
+    { id: 4, label: 'Launch', fullLabel: 'Review & Launch', icon: Rocket }
+  ];
+
   // --- LOAD EXISTING COURSE LOGIC ---
   useEffect(() => {
       if (courseId && courseId !== 'new') {
@@ -297,17 +304,6 @@ const CourseBuilder: React.FC<CourseBuilderProps> = ({ currentUserHandle, course
           }
       }
   }, [editingChapter]);
-
-  useEffect(() => {
-    if (stepsContainerRef.current) {
-        const activeTab = stepsContainerRef.current.querySelector(`[data-step-id="${step}"]`) as HTMLElement;
-        if (activeTab) {
-            const container = stepsContainerRef.current;
-            const scrollLeft = activeTab.offsetLeft - (container.clientWidth / 2) + (activeTab.clientWidth / 2);
-            container.scrollTo({ left: scrollLeft, behavior: 'smooth' });
-        }
-    }
-  }, [step]);
 
   // --- HANDLERS ---
   const updateCourseInfo = (field: keyof Course, value: any) => {
@@ -727,7 +723,7 @@ const CourseBuilder: React.FC<CourseBuilderProps> = ({ currentUserHandle, course
   }
 
   return (
-    <div className="max-w-7xl mx-auto h-full flex flex-col p-4 md:p-8 animate-fade-in">
+    <div className="max-w-7xl mx-auto h-full flex flex-col p-4 md:p-8 pb-24 lg:pb-8 animate-fade-in relative">
       <style>{`.no-scrollbar::-webkit-scrollbar { display: none; } .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }`}</style>
       
       {/* Modern Header */}
@@ -739,8 +735,24 @@ const CourseBuilder: React.FC<CourseBuilderProps> = ({ currentUserHandle, course
       {renderChapterEditor()}
 
       {/* Main Container */}
-      <div className="flex flex-col lg:flex-row flex-1 min-h-0 gap-8 overflow-hidden">
-        <div className="w-full lg:w-64 flex flex-row lg:flex-col gap-2 shrink-0 overflow-x-auto lg:overflow-visible pb-2 lg:pb-0 no-scrollbar">{[{ id: 1, label: 'Basic Info', icon: '📝' }, { id: 2, label: 'Curriculum', icon: '📚' }, { id: 3, label: 'Settings', icon: '⚙️' }, { id: 4, label: 'Review', icon: '🚀' }].map(s => (<button key={s.id} data-step-id={s.id} onClick={() => setStep(s.id as any)} className={`flex items-center gap-3 px-5 py-4 rounded-2xl text-sm font-bold transition-all whitespace-nowrap ${step === s.id ? 'bg-white text-emerald-600 shadow-lg shadow-slate-200/50 border border-emerald-100 ring-1 ring-emerald-50 dark:bg-emerald-900/20 dark:text-emerald-400 dark:border-emerald-800 dark:shadow-none dark:ring-0' : 'text-slate-500 hover:bg-white/50 hover:text-slate-700 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-300'}`}><span className="text-lg opacity-80">{s.icon}</span><span>{s.label}</span>{step === s.id && <div className="ml-auto w-1.5 h-1.5 rounded-full bg-emerald-500"></div>}</button>))}</div>
+      <div className="flex flex-col lg:flex-row flex-1 min-h-0 gap-8 overflow-hidden pb-16 lg:pb-0">
+        
+        {/* Desktop Sidebar (Hidden on Mobile) */}
+        <div className="hidden lg:flex w-64 flex-col gap-2 shrink-0">
+            {BUILDER_STEPS.map(s => (
+                <button 
+                    key={s.id} 
+                    onClick={() => setStep(s.id as any)} 
+                    className={`flex items-center gap-3 px-5 py-4 rounded-2xl text-sm font-bold transition-all whitespace-nowrap w-full text-left ${step === s.id ? 'bg-white text-emerald-600 shadow-lg shadow-slate-200/50 border border-emerald-100 ring-1 ring-emerald-50 dark:bg-emerald-900/20 dark:text-emerald-400 dark:border-emerald-800 dark:shadow-none dark:ring-0' : 'text-slate-500 hover:bg-white/50 hover:text-slate-700 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-300'}`}
+                >
+                    <span className="text-lg opacity-80"><s.icon size={20} /></span>
+                    <span>{s.fullLabel}</span>
+                    {step === s.id && <div className="ml-auto w-1.5 h-1.5 rounded-full bg-emerald-500"></div>}
+                </button>
+            ))}
+        </div>
+
+        {/* Content Area */}
         <div className="flex-1 overflow-y-auto no-scrollbar pb-20">
             {step === 1 && renderStep1_Info()}
             {step === 2 && renderStep2_Curriculum()}
@@ -749,6 +761,20 @@ const CourseBuilder: React.FC<CourseBuilderProps> = ({ currentUserHandle, course
               <div className="space-y-8 animate-fade-in text-center py-12"><div className={CARD_CLASS}><div className="max-w-2xl mx-auto"><h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-3 font-heading">Ready to Launch?</h2><p className="text-slate-500 dark:text-slate-400 text-lg mb-10">Choose visibility for your course.</p><div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10"><button onClick={() => setPublishTarget('TEAM')} className={`p-8 rounded-3xl border-2 transition-all flex flex-col items-center text-center gap-4 ${publishTarget === 'TEAM' ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20' : 'border-slate-100 hover:border-emerald-200 bg-white dark:bg-slate-800 dark:border-slate-700 dark:hover:border-slate-600'}`}><div className={`w-16 h-16 rounded-full flex items-center justify-center text-3xl shadow-sm ${publishTarget === 'TEAM' ? 'bg-emerald-200 text-emerald-800' : 'bg-slate-100 text-slate-500 dark:bg-slate-700'}`}>👥</div><div><h3 className="font-bold text-lg text-slate-800 dark:text-white">Team Training</h3><p className="text-sm text-slate-500 mt-2 dark:text-slate-400 leading-relaxed">Visible only to your downline.</p></div></button><button onClick={() => setPublishTarget('GLOBAL')} className={`p-8 rounded-3xl border-2 transition-all flex flex-col items-center text-center gap-4 ${publishTarget === 'GLOBAL' ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20' : 'border-slate-100 hover:border-blue-200 bg-white dark:bg-slate-800 dark:border-slate-700 dark:hover:border-slate-600'}`}><div className={`w-16 h-16 rounded-full flex items-center justify-center text-3xl shadow-sm ${publishTarget === 'GLOBAL' ? 'bg-blue-200 text-blue-800' : 'bg-slate-100 text-slate-500 dark:bg-slate-700'}`}>🌍</div><div><h3 className="font-bold text-lg text-slate-800 dark:text-white">Global Library</h3><p className="text-sm text-slate-500 mt-2 dark:text-slate-400 leading-relaxed">Public to all FBOs (Review required).</p></div></button></div><div className="flex flex-col items-center gap-4"><div className="flex gap-8 text-sm text-slate-500 font-medium dark:text-slate-400"><span>{course.modules.length} Modules</span><span className="w-px h-4 bg-slate-300 dark:bg-slate-700"></span><span>{course.track}</span></div><button onClick={handleSubmit} className={`w-full max-w-sm py-4 rounded-xl font-bold text-lg shadow-xl hover:scale-105 transition-all text-white ${publishTarget === 'GLOBAL' ? 'bg-blue-600 hover:bg-blue-700 shadow-blue-200' : 'bg-emerald-600 hover:bg-emerald-700 shadow-emerald-200'}`}>{publishTarget === 'GLOBAL' ? (courseId === 'new' ? 'Submit for Review' : 'Update & Submit') : (courseId === 'new' ? 'Publish Now' : 'Update Course')}</button></div></div></div></div>
             )}
         </div>
+      </div>
+
+      {/* Mobile Bottom Navigation (Visible < lg) */}
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 flex justify-around items-center px-2 py-3 z-40 dark:bg-slate-900 dark:border-slate-800 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)]">
+          {BUILDER_STEPS.map(s => (
+              <button 
+                  key={s.id} 
+                  onClick={() => setStep(s.id as any)}
+                  className={`flex flex-col items-center gap-1 p-2 rounded-xl transition-all ${step === s.id ? 'text-emerald-600 bg-emerald-50 dark:bg-emerald-900/20 dark:text-emerald-400' : 'text-slate-400 hover:text-slate-600 dark:text-slate-500'}`}
+              >
+                  <s.icon size={22} strokeWidth={step === s.id ? 2.5 : 2} />
+                  <span className="text-[10px] font-bold">{s.label}</span>
+              </button>
+          ))}
       </div>
     </div>
   );

@@ -4,6 +4,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { Student, UserRole, Course } from '../types';
 import { LogOut, Settings, Moon, Sun, ChevronDown, Award } from 'lucide-react';
 import { RANKS } from '../constants';
+import { Logo } from './Logo';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -359,10 +360,7 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
         `}
       >
         <div className="p-6 border-b border-emerald-800 flex justify-between items-center dark:border-emerald-900">
-          <div className="flex items-center gap-2 font-bold text-xl tracking-tight font-heading">
-            <img src="file:///C:/Users/Richmond/Downloads/pngwing.com%20(16).png" alt="Nexu" className="h-10 w-auto object-contain" />
-            <span>Nexu</span>
-          </div>
+          <Logo className="w-8 h-8" textClassName="text-xl font-bold text-white" />
           {/* Close Button */}
           <button onClick={() => setIsMobileMenuOpen(false)} className="lg:hidden text-emerald-300 hover:text-white">
             <XMarkIcon />
@@ -622,10 +620,7 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
 
         {/* Mobile Header */}
         <header className="lg:hidden bg-white border-b border-slate-200 p-4 flex justify-between items-center z-10 shadow-sm dark:bg-slate-900 dark:border-slate-800 shrink-0">
-           <div className="flex items-center gap-2 font-bold text-lg text-emerald-900 font-heading dark:text-emerald-400">
-             <img src="file:///C:/Users/Richmond/Downloads/pngwing.com%20(16).png" alt="Nexu" className="h-8 w-auto object-contain" />
-             <span>Nexu</span>
-           </div>
+           <Logo className="w-8 h-8" textClassName="text-xl font-bold text-emerald-900 dark:text-emerald-400" />
            <button onClick={() => setIsMobileMenuOpen(true)} className="text-slate-600 p-2 rounded-lg hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800">
              <Bars3Icon />
            </button>

@@ -53,6 +53,7 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onEnroll, existingS
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [passwordStrength, setPasswordStrength] = useState(0); // 0 to 4
 
   // 2. OTP
   const [otp, setOtp] = useState(['', '', '', '']);
@@ -64,6 +65,7 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onEnroll, existingS
   // WhatsApp State (Smart handling)
   const [whatsappCountry, setWhatsappCountry] = useState(country);
   const [localWhatsapp, setLocalWhatsapp] = useState('');
+  const [whatsappError, setWhatsappError] = useState('');
   
   const [bio, setBio] = useState('');
   const [customHandle, setCustomHandle] = useState('');
@@ -112,6 +114,20 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onEnroll, existingS
       }
   }, [customHandle]);
 
+  // Password Strength Logic
+  useEffect(() => {
+      let score = 0;
+      if (!password) {
+          setPasswordStrength(0);
+          return;
+      }
+      if (password.length > 6) score += 1;
+      if (password.length > 10) score += 1;
+      if (/[A-Z]/.test(password)) score += 1;
+      if (/[0-9]/.test(password) || /[^A-Za-z0-9]/.test(password)) score += 1;
+      setPasswordStrength(score);
+  }, [password]);
+
   const checkHandleAvailability = (val: string) => {
       setHandleStatus('CHECKING');
       const formatted = val.startsWith('@') ? val : `@${val}`;
@@ -156,6 +172,7 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onEnroll, existingS
           val = val.substring(1);
       }
       setLocalWhatsapp(val);
+      if (whatsappError) setWhatsappError(''); // Clear error on type
   };
 
   // OTP Logic
@@ -321,8 +338,8 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onEnroll, existingS
     if (!password) {
         newErrors.password = 'Password is required.';
         isValid = false;
-    } else if (password.length < 6) {
-        newErrors.password = 'Password must be at least 6 characters.';
+    } else if (passwordStrength < 3) {
+        newErrors.password = 'Password is too weak. Try adding symbols or numbers.';
         isValid = false;
     }
 
@@ -341,12 +358,41 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onEnroll, existingS
       }
   };
 
+  // Step 3 Validation: WhatsApp Length
+  const handleStep3Next = () => {
+      // Only validate if user entered a number (optional but strictly checked if present)
+      if (localWhatsapp) {
+          const config = COUNTRY_CONFIG[whatsappCountry];
+          if (localWhatsapp.length !== config.len) {
+              setWhatsappError(`Invalid length for ${whatsappCountry}. Expected ${config.len} digits.`);
+              return; // Stop if invalid
+          }
+      }
+      // If valid or empty, proceed
+      nextStep();
+  };
+
   // Steps Nav
   const nextStep = () => setStep(s => s + 1);
   const prevStep = () => setStep(s => Math.max(0, s - 1));
 
   const currentCountryConfig = COUNTRY_CONFIG[country] || COUNTRY_CONFIG['Ghana'];
   const whatsappCountryConfig = COUNTRY_CONFIG[whatsappCountry] || COUNTRY_CONFIG['Ghana'];
+
+  // Helper for Password Strength Color
+  const getStrengthColor = () => {
+      if (passwordStrength === 0) return 'bg-slate-200 dark:bg-slate-700';
+      if (passwordStrength <= 2) return 'bg-red-500';
+      if (passwordStrength === 3) return 'bg-yellow-500';
+      return 'bg-green-500';
+  };
+  
+  const getStrengthText = () => {
+      if (passwordStrength === 0) return '';
+      if (passwordStrength <= 2) return 'Weak';
+      if (passwordStrength === 3) return 'Good';
+      return 'Strong';
+  };
 
   return (
     <div className="fixed inset-0 flex flex-col items-center justify-center p-0 md:p-6 lg:p-8 overflow-hidden bg-slate-950">
@@ -582,6 +628,20 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onEnroll, existingS
                                     {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                                 </button>
                             </div>
+                            
+                            {/* Strength Meter */}
+                            {password && (
+                                <div className="mt-1">
+                                    <div className="flex h-1.5 bg-slate-200 rounded-full overflow-hidden dark:bg-slate-700">
+                                        <div 
+                                            className={`h-full transition-all duration-300 ${getStrengthColor()}`} 
+                                            style={{ width: `${(passwordStrength / 4) * 100}%` }}
+                                        ></div>
+                                    </div>
+                                    <p className="text-[10px] text-right mt-0.5 font-bold text-slate-400 dark:text-slate-500">{getStrengthText()}</p>
+                                </div>
+                            )}
+                            
                             {errors.password && <span className="text-xs text-red-500 font-medium">{errors.password}</span>}
                         </div>
 
@@ -724,9 +784,10 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onEnroll, existingS
                                 value={localWhatsapp}
                                 onChange={handleWhatsappChange}
                                 placeholder={whatsappCountryConfig.placeholder}
-                                className="w-full pl-20 p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all text-sm text-slate-900 dark:bg-slate-800 dark:border-slate-700 dark:text-white dark:focus:ring-emerald-900/30"
+                                className={`w-full pl-20 p-3 bg-slate-50 border rounded-xl outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all text-sm text-slate-900 dark:bg-slate-800 dark:text-white dark:focus:ring-emerald-900/30 ${whatsappError ? 'border-red-500 bg-red-50 dark:bg-red-900/10' : 'border-slate-200 dark:border-slate-700'}`}
                             />
                         </div>
+                        {whatsappError && <span className="text-xs text-red-500 font-medium ml-1">{whatsappError}</span>}
                     </div>
                     
                     <div className="flex flex-col gap-1.5 relative">
@@ -745,7 +806,7 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onEnroll, existingS
                 <div className="flex justify-between pt-6">
                     <button onClick={prevStep} className="text-slate-400 font-bold px-4 text-sm">Back</button>
                     <button 
-                        onClick={nextStep} 
+                        onClick={handleStep3Next} 
                         disabled={!customHandle || handleStatus !== 'AVAILABLE'}
                         className="bg-emerald-600 text-white px-8 py-3 rounded-xl font-bold shadow-md hover:bg-emerald-700 disabled:opacity-50 text-sm"
                     >
@@ -822,7 +883,7 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onEnroll, existingS
 
                 {!verifiedSponsor && !isScanning && (
                     <div className="text-xs text-slate-400 mt-4">
-                        No sponsor? Use <span className="font-mono text-emerald-600 cursor-pointer dark:text-emerald-400" onClick={() => {setSponsorHandle('@forever_system'); verifySponsor(); }}>@forever_system</span>
+                        No sponsor? Use <span className="font-mono text-emerald-600 font-bold cursor-pointer dark:text-emerald-400 hover:underline" onClick={() => setSponsorHandle('@forever_system')}>@forever_system</span>
                     </div>
                 )}
 
@@ -888,13 +949,13 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onEnroll, existingS
                 </div>
                 
                 {/* AI Plan Section */}
-                <div className="mt-6 bg-gradient-to-br from-indigo-600 to-purple-700 rounded-2xl p-6 text-white text-left relative overflow-hidden shadow-lg">
+                <div className="mt-6 bg-gradient-to-br from-indigo-600 to-purple-700 rounded-2xl p-6 text-white text-left relative overflow-hidden shadow-lg h-64 flex flex-col">
                     <div className="absolute top-0 right-0 p-4 opacity-20"><Sparkles size={48} /></div>
-                    <h3 className="font-bold text-base mb-3 flex items-center gap-2">
+                    <h3 className="font-bold text-base mb-3 flex items-center gap-2 shrink-0">
                         {isGeneratingPlan ? <Loader2 className="animate-spin" size={18} /> : <Sparkles size={18} />} 
                         Your Personalized Plan
                     </h3>
-                    <div className="text-sm text-indigo-100 leading-relaxed whitespace-pre-wrap font-medium">
+                    <div className="text-sm text-indigo-100 leading-relaxed font-medium overflow-y-auto no-scrollbar flex-1 whitespace-pre-wrap">
                         {isGeneratingPlan ? "Creating your custom success roadmap..." : welcomePlan}
                     </div>
                 </div>

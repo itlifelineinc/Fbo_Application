@@ -31,6 +31,22 @@ export enum CourseStatus {
   ARCHIVED = 'Archived'
 }
 
+export interface RankDefinition {
+  id: string;
+  name: string;
+  targetCC: number; 
+  monthsAllowed: number;
+  nextRankId: string | null;
+}
+
+export interface RankProgress {
+  currentRankId: string;
+  currentCycleCC: number; // Resets to 0 on promotion
+  targetCC: number;       // CC required for NEXT rank
+  cycleStartDate: string; 
+  history: { rankId: string; dateAchieved: string; totalCCAtTime: number }[];
+}
+
 export interface QuizQuestion {
   id: string;
   question: string;
@@ -127,6 +143,14 @@ export interface Student {
   role: UserRole;
   name: string;
   email: string;
+  
+  // Extended Profile
+  phoneNumber?: string;
+  country?: string;
+  foreverId?: string; // FLP ID
+  whatsappNumber?: string;
+  bio?: string;
+
   enrolledDate: string;
   progress: number; 
   completedModules: string[]; // IDs of completed modules
@@ -141,7 +165,9 @@ export interface Student {
   };
 
   sponsorId?: string;
-  caseCredits: number;
+  caseCredits: number; // Lifetime Total (History)
+  rankProgress?: RankProgress; // New: Cycle Tracking
+  
   avatarUrl?: string;
   cohortId?: string;
   quizResults?: QuizResult[];

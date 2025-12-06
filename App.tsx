@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { HashRouter, Routes, Route, Navigate, Link, useNavigate } from 'react-router-dom';
 import Layout from './components/Layout';
@@ -188,6 +189,25 @@ const App: React.FC = () => {
     setStudents(prev => [...prev, newStudent]);
   };
 
+  // New handler for Self Enrollment (Auto-Login)
+  const handleSelfEnrollment = (newStudent: Student) => {
+    // 1. Add to DB (State)
+    setStudents(prev => [...prev, newStudent]);
+    
+    // 2. Auto-login immediately
+    // The wizard creates the student with initialized stats, but we ensure login date is today.
+    const loggedInUser = {
+        ...newStudent,
+        learningStats: {
+            ...newStudent.learningStats,
+            lastLoginDate: new Date().toISOString().split('T')[0],
+            learningStreak: 1
+        }
+    };
+    
+    setCurrentUser(loggedInUser);
+  };
+
   const handleUpdateStudent = (updatedStudent: Student) => {
     setStudents(prev => prev.map(s => s.id === updatedStudent.id ? updatedStudent : s));
     if (currentUser && currentUser.id === updatedStudent.id) {
@@ -308,7 +328,7 @@ const App: React.FC = () => {
   return (
     <HashRouter>
       <Routes>
-        <Route path="/join" element={<OnboardingWizard onEnroll={handleAddStudent} existingStudents={students} />} />
+        <Route path="/join" element={<OnboardingWizard onEnroll={handleSelfEnrollment} existingStudents={students} />} />
         <Route path="/" element={
            currentUser ? <Navigate to="/dashboard" replace /> : <Login onLogin={handleLogin} />
         } />

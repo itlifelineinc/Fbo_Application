@@ -102,7 +102,12 @@ const Dashboard: React.FC<DashboardProps> = ({ students, currentUser, courses, o
   
   // Team Activity
   const activeDownlines = visibleStudents.filter(s => (s.caseCredits > 0 || s.progress > 0) && s.id !== currentUser.id).length;
-  
+  // Calculate Team Volume (CC produced by downline in current cycle)
+  // For a Sponsor, visibleStudents includes their downline. 
+  // We sum up the currentCycleCC of everyone in visibleStudents EXCEPT the current user (if included)
+  const myDownline = students.filter(s => s.sponsorId === currentUser.handle);
+  const teamVolume = myDownline.reduce((acc, s) => acc + (s.rankProgress?.currentCycleCC || 0), 0);
+
   // Courses Data
   const safeCourses = courses || [];
   const newCourses = safeCourses.filter(c => c.status === CourseStatus.PUBLISHED && !currentUser.enrolledCourses.includes(c.id)).slice(0, 2);
@@ -218,11 +223,11 @@ const Dashboard: React.FC<DashboardProps> = ({ students, currentUser, courses, o
   // Stats for the Carousel
   const stats = [
     {
-        id: 'rank',
-        title: "Current Rank",
-        value: currentRankName,
-        icon: <AwardIcon />,
-        trend: "Keep pushing!",
+        id: 'team_cc',
+        title: "Team CC Summary",
+        value: `${teamVolume.toFixed(2)} CC`,
+        icon: <Globe size={24} />,
+        trend: "Total Group Volume",
         color: 'purple'
     },
     {

@@ -20,6 +20,7 @@ import CourseCard from './components/CourseCard';
 import CourseLandingPage from './components/CourseLandingPage';
 import { INITIAL_COURSES, INITIAL_STUDENTS, INITIAL_MESSAGES, INITIAL_POSTS, INITIAL_COHORTS } from './constants';
 import { Course, Module, Student, SaleRecord, UserRole, Message, CourseTrack, CommunityPost, CommunityComment, Cohort, CourseStatus } from './types';
+import { updateStudentRank } from './services/rankEngine';
 
 // --- Protected Route ---
 
@@ -221,14 +222,18 @@ const App: React.FC = () => {
 
   const handleSubmitSale = (sale: SaleRecord) => {
     if (!currentUser) return;
-    const updatedStudent = {
-        ...currentUser,
-        caseCredits: (currentUser.caseCredits || 0) + sale.ccEarned,
-        salesHistory: [sale, ...(currentUser.salesHistory || [])]
+
+    // 1. Calculate New Rank & Cycle CC using the Rank Engine
+    // This updates lifetime CC, cycle CC, and checks for promotion
+    let updatedStudent = updateStudentRank(currentUser, sale.ccEarned);
+
+    // 2. Append the Sale Record to history
+    updatedStudent = {
+        ...updatedStudent,
+        salesHistory: [sale, ...(updatedStudent.salesHistory || [])]
     };
-    if (updatedStudent.role === UserRole.STUDENT && updatedStudent.caseCredits >= 2) {
-        updatedStudent.role = UserRole.SPONSOR;
-    }
+
+    // 3. Persist
     handleUpdateStudent(updatedStudent);
   };
 

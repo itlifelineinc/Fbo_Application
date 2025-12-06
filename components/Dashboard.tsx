@@ -100,6 +100,11 @@ const Dashboard: React.FC<DashboardProps> = ({ students, currentUser, courses, o
   const nextRankDef = RANKS[rankProgress.currentRankId]?.nextRankId ? RANKS[RANKS[rankProgress.currentRankId].nextRankId!] : null;
   const ccNeeded = nextRankDef ? Math.max(0, rankProgress.targetCC - rankProgress.currentCycleCC).toFixed(2) : '0';
   
+  // Progress Percentage for Timeline
+  const progressPercent = nextRankDef 
+    ? Math.min(100, Math.max(0, (rankProgress.currentCycleCC / rankProgress.targetCC) * 100))
+    : 100;
+
   // Team Activity
   const activeDownlines = visibleStudents.filter(s => (s.caseCredits > 0 || s.progress > 0) && s.id !== currentUser.id).length;
   // Calculate Team Volume (CC produced by downline in current cycle)
@@ -443,7 +448,7 @@ const Dashboard: React.FC<DashboardProps> = ({ students, currentUser, courses, o
                             3-Month Activity Tracker
                         </h3>
                         <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                            Rank Accumulation
+                            Rank Accumulation ({rankProgress.currentCycleCC.toFixed(2)} / {rankProgress.targetCC} CC)
                         </p>
                     </div>
                 </div>
@@ -451,8 +456,11 @@ const Dashboard: React.FC<DashboardProps> = ({ students, currentUser, courses, o
                 <div className="relative pt-4 pb-2">
                     {/* Progress Bar Background */}
                     <div className="absolute top-1/2 left-0 w-full h-1 bg-slate-100 -translate-y-1/2 rounded-full dark:bg-slate-700"></div>
-                    {/* Active Progress */}
-                    <div className="absolute top-1/2 left-0 w-1/2 h-1 bg-emerald-500 -translate-y-1/2 rounded-full shadow-[0_0_10px_rgba(16,185,129,0.4)]"></div>
+                    {/* Active Progress - Dynamic Width */}
+                    <div 
+                        className="absolute top-1/2 left-0 h-1 bg-emerald-500 -translate-y-1/2 rounded-full shadow-[0_0_10px_rgba(16,185,129,0.4)] transition-all duration-700" 
+                        style={{ width: `${progressPercent}%` }}
+                    ></div>
 
                     <div className="relative flex justify-between">
                         {/* Month 1 (Past) */}
@@ -470,7 +478,7 @@ const Dashboard: React.FC<DashboardProps> = ({ students, currentUser, courses, o
                         <div className="flex flex-col items-center gap-3">
                             <div className="w-10 h-10 rounded-full bg-emerald-600 border-4 border-white shadow-lg flex items-center justify-center text-white font-bold text-sm z-10 dark:border-slate-800 relative">
                                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-20"></span>
-                                Now
+                                {rankProgress.currentCycleCC.toFixed(1)}
                             </div>
                             <div className="text-center">
                                 <p className="text-xs font-bold text-emerald-600 dark:text-emerald-400">{monthNames[currentDate.getMonth()]}</p>
@@ -481,7 +489,7 @@ const Dashboard: React.FC<DashboardProps> = ({ students, currentUser, courses, o
                         {/* Month 3 (Future) */}
                         <div className="flex flex-col items-center gap-3">
                             <div className="w-8 h-8 rounded-full bg-white border-2 border-slate-200 flex items-center justify-center text-slate-400 font-bold text-xs z-10 dark:bg-slate-800 dark:border-slate-600">
-                                3
+                                {nextRankDef ? nextRankDef.targetCC : 'Max'}
                             </div>
                             <div className="text-center">
                                 <p className="text-xs font-bold text-slate-400 dark:text-slate-500">{monthNames[nextMonth.getMonth()]}</p>

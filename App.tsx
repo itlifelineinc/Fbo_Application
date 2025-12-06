@@ -220,21 +220,53 @@ const App: React.FC = () => {
     setStudents(prev => prev.filter(s => s.id !== studentId));
   };
 
+  // --- REVISED: Sales Logic with Upline Propagation ---
   const handleSubmitSale = (sale: SaleRecord) => {
     if (!currentUser) return;
 
-    // 1. Calculate New Rank & Cycle CC using the Rank Engine
-    // This updates lifetime CC, cycle CC, and checks for promotion
-    let updatedStudent = updateStudentRank(currentUser, sale.ccEarned);
+    const ccAmount = sale.ccEarned;
+    
+    // We will build a new list of students with all updates applied
+    let updatedStudentsList = [...students];
 
-    // 2. Append the Sale Record to history
-    updatedStudent = {
-        ...updatedStudent,
-        salesHistory: [sale, ...(updatedStudent.salesHistory || [])]
+    // Recursive function to update user and propagate CC to sponsor
+    const propagateCC = (studentHandle: string, amount: number) => {
+        const studentIndex = updatedStudentsList.findIndex(s => s.handle === studentHandle);
+        if (studentIndex === -1) return; // Stop if not found
+
+        const currentStudent = updatedStudentsList[studentIndex];
+        
+        // 1. Update this student's Rank & CC
+        let updatedStudent = updateStudentRank(currentStudent, amount);
+
+        // 2. If this is the originator (the one logging the sale), add the sales record history
+        if (studentHandle === currentUser.handle) {
+            updatedStudent = {
+                ...updatedStudent,
+                salesHistory: [sale, ...(updatedStudent.salesHistory || [])]
+            };
+        }
+
+        // 3. Commit update to our local list
+        updatedStudentsList[studentIndex] = updatedStudent;
+
+        // 4. Propagate to Sponsor (if exists)
+        if (updatedStudent.sponsorId) {
+            propagateCC(updatedStudent.sponsorId, amount);
+        }
     };
 
-    // 3. Persist
-    handleUpdateStudent(updatedStudent);
+    // Start propagation
+    propagateCC(currentUser.handle, ccAmount);
+
+    // Final Commit to State
+    setStudents(updatedStudentsList);
+
+    // Update Current User if their data changed
+    const freshCurrentUser = updatedStudentsList.find(s => s.id === currentUser.id);
+    if (freshCurrentUser) {
+        setCurrentUser(freshCurrentUser);
+    }
   };
 
   const handleSendMessage = (newMessage: Message) => {

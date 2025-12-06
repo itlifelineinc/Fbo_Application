@@ -1,5 +1,7 @@
+
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { Logo } from './Logo';
 
 interface LoginProps {
   onLogin: (handle: string, pass: string) => Promise<boolean>;
@@ -47,14 +49,9 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
       <div className="max-w-md w-full bg-white rounded-3xl shadow-2xl p-8 md:p-10 animate-fade-in">
         
         {/* Header */}
-        <div className="text-center mb-8">
-          <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto text-emerald-800 mb-4">
-             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-8 h-8">
-               <path fillRule="evenodd" d="M12 1.5a5.25 5.25 0 00-5.25 5.25v3a3 3 0 00-3 3v6.75a3 3 0 003 3h10.5a3 3 0 003-3v-6.75a3 3 0 00-3-3v-3c0-2.9-2.35-5.25-5.25-5.25zm3.75 8.25v-3a3.75 3.75 0 10-7.5 0v3h7.5z" clipRule="evenodd" />
-             </svg>
-          </div>
-          <h1 className="text-3xl font-bold text-emerald-950 font-heading">FBO Academy</h1>
-          <p className="text-slate-500 mt-2">
+        <div className="flex flex-col items-center justify-center mb-8">
+          <Logo className="w-16 h-16" textClassName="text-3xl font-bold text-emerald-950 font-heading mt-2" />
+          <p className="text-slate-500 mt-2 text-center">
             {mode === 'LOGIN' ? 'Sign in to access your dashboard' : 'Recover your account'}
           </p>
         </div>

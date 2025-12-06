@@ -4,6 +4,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { Student, UserRole, Course } from '../types';
 import { LogOut, Settings, Moon, Sun, ChevronDown, Award } from 'lucide-react';
 import { RANKS } from '../constants';
+import { Logo } from './Logo';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -359,10 +360,7 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
         `}
       >
         <div className="p-6 border-b border-emerald-800 flex justify-between items-center dark:border-emerald-900">
-          <div className="flex items-center gap-2 font-bold text-xl tracking-tight font-heading">
-            <img src="https://upload.wikimedia.org/wikipedia/en/thumb/8/8f/Forever_Living_Products_logo.svg/300px-Forever_Living_Products_logo.svg.png" alt="FBO Academy" className="h-10 w-auto object-contain" />
-            <span>FBO Academy</span>
-          </div>
+          <Logo className="w-8 h-8" textClassName="text-xl font-bold text-white" />
           {/* Close Button */}
           <button onClick={() => setIsMobileMenuOpen(false)} className="lg:hidden text-emerald-300 hover:text-white">
             <XMarkIcon />
@@ -528,16 +526,15 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
         {/* Desktop Navbar */}
         <header ref={navbarRef} className={headerClass}>
             <div className="flex items-center gap-4 text-sm text-slate-300">
-               {/* Show Breadcrumbs on non-dashboard pages, Greeting on dashboard */}
+               {/* Show Breadcrumbs on non-dashboard pages, Rank on dashboard */}
                {isDashboard ? (
-                   // New Typography: Dosis font, larger size for friendly greeting
-                   <div className="flex items-center gap-3">
-                        <span className="font-dosis font-semibold text-2xl text-white tracking-tight">
-                            Hi, {currentUser.name.split(' ')[0]}
-                        </span>
-                        <div className="flex items-center gap-1.5 px-3 py-1 bg-emerald-800/50 border border-emerald-700/50 rounded-full text-xs font-bold uppercase tracking-wider text-emerald-300 shadow-sm">
-                            <Award size={14} className="text-yellow-400" />
-                            {currentRankName}
+                   <div className="flex items-center gap-3 pl-1">
+                        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500/20 to-emerald-900/20 border border-emerald-500/30 flex items-center justify-center shadow-lg shadow-emerald-900/10">
+                            <Award size={20} className="text-yellow-400 drop-shadow-sm" />
+                        </div>
+                        <div className="flex flex-col">
+                            <span className="text-[10px] font-bold text-emerald-400/80 uppercase tracking-widest leading-tight">Current Rank</span>
+                            <span className="font-heading font-bold text-lg text-white leading-none tracking-wide text-shadow-sm">{currentRankName}</span>
                         </div>
                    </div>
                ) : (
@@ -623,10 +620,7 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
 
         {/* Mobile Header */}
         <header className="lg:hidden bg-white border-b border-slate-200 p-4 flex justify-between items-center z-10 shadow-sm dark:bg-slate-900 dark:border-slate-800 shrink-0">
-           <div className="flex items-center gap-2 font-bold text-lg text-emerald-900 font-heading dark:text-emerald-400">
-             <img src="https://upload.wikimedia.org/wikipedia/en/thumb/8/8f/Forever_Living_Products_logo.svg/300px-Forever_Living_Products_logo.svg.png" alt="FBO Academy" className="h-8 w-auto object-contain" />
-             <span>FBO Academy</span>
-           </div>
+           <Logo className="w-8 h-8" textClassName="text-xl font-bold text-emerald-900 dark:text-emerald-400" />
            <button onClick={() => setIsMobileMenuOpen(true)} className="text-slate-600 p-2 rounded-lg hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800">
              <Bars3Icon />
            </button>

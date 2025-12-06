@@ -3,7 +3,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { Student, QuizResult, UserRole } from '../types';
 import { generateOnboardingPlan } from '../services/geminiService';
-import { Loader2, Sparkles, User, Users, Shield, Camera, QrCode, CheckCircle, XCircle, Smartphone, Globe, Mail, UserCheck } from 'lucide-react';
+import { Loader2, Sparkles, User, Users, Shield, Camera, QrCode, CheckCircle, XCircle, Smartphone, Globe, Mail, UserCheck, Eye, EyeOff, Lock, Hash } from 'lucide-react';
 
 interface OnboardingWizardProps {
   onEnroll: (student: Student) => void;
@@ -32,6 +32,13 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onEnroll, existingS
   const [country, setCountry] = useState('Ghana');
   const [foreverId, setForeverId] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [adminCode, setAdminCode] = useState('');
+  
+  // UI States for Step 1
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   // 2. OTP
   const [otp, setOtp] = useState(['', '', '', '']);
@@ -193,6 +200,86 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onEnroll, existingS
     setIsGeneratingPlan(false);
   };
 
+  // --- Validation Logic ---
+  const validateStep1 = (): boolean => {
+    const newErrors: Record<string, string> = {};
+    let isValid = true;
+
+    // 1. Name Validation
+    if (!name.trim()) {
+        newErrors.name = 'Full Name is required.';
+        isValid = false;
+    } else if (name.trim().split(/\s+/).length < 2) {
+        newErrors.name = 'Please enter at least First and Last name.';
+        isValid = false;
+    }
+
+    // 2. Email Validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!email.trim()) {
+        newErrors.email = 'Email is required.';
+        isValid = false;
+    } else if (!emailRegex.test(email)) {
+        newErrors.email = 'Please enter a valid email address.';
+        isValid = false;
+    }
+
+    // 3. Forever ID Validation
+    const fboRegex = /^\d{12}$/;
+    
+    // Logic: Optional for Students/Admins (if new), but Compulsory for Sponsors
+    // If entered by ANYONE, it must be valid.
+    if (selectedRole === UserRole.SPONSOR) {
+        if (!foreverId.trim()) {
+            newErrors.foreverId = 'FBO ID is required for Team Leaders.';
+            isValid = false;
+        } else if (!fboRegex.test(foreverId)) {
+            newErrors.foreverId = 'ID must be exactly 12 digits (numeric).';
+            isValid = false;
+        }
+    } else {
+        // Optional for Students/Admins, but if provided must be valid
+        if (foreverId.trim() && !fboRegex.test(foreverId)) {
+            newErrors.foreverId = 'Invalid ID format. Must be 12 digits.';
+            isValid = false;
+        }
+    }
+
+    // 4. Admin Code Validation
+    if (selectedRole === UserRole.ADMIN) {
+        if (!adminCode.trim()) {
+            newErrors.adminCode = 'Admin Code is required.';
+            isValid = false;
+        } else if (adminCode !== 'NEXU-ADMIN-2025') { // Mock validation
+            newErrors.adminCode = 'Invalid Admin Code. Contact Super Admin.';
+            isValid = false;
+        }
+    }
+
+    // 5. Password Validation
+    if (!password) {
+        newErrors.password = 'Password is required.';
+        isValid = false;
+    } else if (password.length < 6) {
+        newErrors.password = 'Password must be at least 6 characters.';
+        isValid = false;
+    }
+
+    if (password !== confirmPassword) {
+        newErrors.confirmPassword = 'Passwords do not match.';
+        isValid = false;
+    }
+
+    setErrors(newErrors);
+    return isValid;
+  };
+
+  const handleStep1Next = () => {
+      if (validateStep1()) {
+          nextStep();
+      }
+  };
+
   // Steps Nav
   const nextStep = () => setStep(s => s + 1);
   const prevStep = () => setStep(s => Math.max(0, s - 1));
@@ -217,7 +304,7 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onEnroll, existingS
           {step === 0 && (
             <div className="space-y-8 animate-fade-in text-center">
                 <h1 className="text-3xl font-bold text-emerald-950 font-heading">Choose Your Journey</h1>
-                <p className="text-slate-500">How will you be using the FBO Academy?</p>
+                <p className="text-slate-500">How will you be using Nexu?</p>
                 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <RoleCard 
@@ -263,7 +350,16 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onEnroll, existingS
 
                 <div className="space-y-4">
                     <div className="grid grid-cols-2 gap-4">
-                        <InputGroup label="Full Name" value={name} onChange={setName} placeholder="Jane Doe" icon={<User size={16} />} />
+                        <div>
+                            <InputGroup 
+                                label="Full Name (First & Last)" 
+                                value={name} 
+                                onChange={setName} 
+                                placeholder="Jane Doe" 
+                                icon={<User size={16} />} 
+                                error={errors.name}
+                            />
+                        </div>
                         <div className="flex flex-col gap-1">
                             <label className="text-xs font-bold text-slate-500 uppercase">Country</label>
                             <div className="relative">
@@ -271,24 +367,97 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onEnroll, existingS
                                 <select 
                                     value={country} 
                                     onChange={(e) => setCountry(e.target.value)}
-                                    className="w-full pl-10 p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-emerald-500 appearance-none"
+                                    className="w-full pl-10 p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-emerald-500 appearance-none text-slate-900"
                                 >
                                     {COUNTRIES.map(c => <option key={c} value={c}>{c}</option>)}
                                 </select>
                             </div>
                         </div>
                     </div>
-                    <InputGroup label="Email Address" value={email} onChange={setEmail} type="email" placeholder="jane@example.com" icon={<Mail size={16} />} />
-                    <InputGroup label="Phone Number" value={phone} onChange={setPhone} type="tel" placeholder="+233 55 123 4567" icon={<Smartphone size={16} />} />
-                    <InputGroup label="Forever ID (Optional)" value={foreverId} onChange={setForeverId} placeholder="360-000-..." />
-                    <InputGroup label="Create Password" value={password} onChange={setPassword} type="password" placeholder="••••••••" />
+                    
+                    <InputGroup 
+                        label="Email Address" 
+                        value={email} 
+                        onChange={setEmail} 
+                        type="email" 
+                        placeholder="jane@example.com" 
+                        icon={<Mail size={16} />} 
+                        error={errors.email}
+                    />
+                    
+                    <InputGroup 
+                        label="Phone Number" 
+                        value={phone} 
+                        onChange={setPhone} 
+                        type="tel" 
+                        placeholder="+233 55 123 4567" 
+                        icon={<Smartphone size={16} />} 
+                    />
+                    
+                    <InputGroup 
+                        label={`Forever ID (12 Digits)${selectedRole === UserRole.SPONSOR ? ' *' : ' (Optional)'}`} 
+                        value={foreverId} 
+                        onChange={setForeverId} 
+                        placeholder="233100024741"
+                        icon={<Hash size={16} />}
+                        error={errors.foreverId}
+                    />
+
+                    {/* Admin Code Field */}
+                    {selectedRole === UserRole.ADMIN && (
+                        <InputGroup 
+                            label="Admin Access Code *" 
+                            value={adminCode} 
+                            onChange={setAdminCode} 
+                            placeholder="Enter code from Super Admin"
+                            icon={<Lock size={16} />}
+                            error={errors.adminCode}
+                        />
+                    )}
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="flex flex-col gap-1">
+                            <label className="text-xs font-bold text-slate-500 uppercase">Password *</label>
+                            <div className="relative">
+                                <Lock size={16} className="absolute left-3 top-3.5 text-slate-400" />
+                                <input 
+                                    type={showPassword ? "text" : "password"}
+                                    value={password}
+                                    onChange={(e) => setPassword(e.target.value)}
+                                    placeholder="••••••••"
+                                    className={`w-full pl-10 pr-10 p-3 bg-slate-50 border rounded-xl outline-none focus:border-emerald-500 transition-all text-slate-900 ${errors.password ? 'border-red-500 bg-red-50' : 'border-slate-200'}`}
+                                />
+                                <button onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-3.5 text-slate-400 hover:text-slate-600">
+                                    {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                                </button>
+                            </div>
+                            {errors.password && <span className="text-xs text-red-500 font-medium">{errors.password}</span>}
+                        </div>
+
+                        <div className="flex flex-col gap-1">
+                            <label className="text-xs font-bold text-slate-500 uppercase">Confirm Password *</label>
+                            <div className="relative">
+                                <Lock size={16} className="absolute left-3 top-3.5 text-slate-400" />
+                                <input 
+                                    type={showConfirmPassword ? "text" : "password"}
+                                    value={confirmPassword}
+                                    onChange={(e) => setConfirmPassword(e.target.value)}
+                                    placeholder="••••••••"
+                                    className={`w-full pl-10 pr-10 p-3 bg-slate-50 border rounded-xl outline-none focus:border-emerald-500 transition-all text-slate-900 ${errors.confirmPassword ? 'border-red-500 bg-red-50' : 'border-slate-200'}`}
+                                />
+                                <button onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="absolute right-3 top-3.5 text-slate-400 hover:text-slate-600">
+                                    {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                                </button>
+                            </div>
+                            {errors.confirmPassword && <span className="text-xs text-red-500 font-medium">{errors.confirmPassword}</span>}
+                        </div>
+                    </div>
                 </div>
 
                 <div className="flex justify-between pt-4">
                     <button onClick={prevStep} className="text-slate-400 font-bold px-4">Back</button>
                     <button 
-                        onClick={nextStep} 
-                        disabled={!name || !email || !password}
+                        onClick={handleStep1Next} 
                         className="bg-emerald-600 text-white px-8 py-3 rounded-xl font-bold shadow-lg hover:bg-emerald-700 disabled:opacity-50"
                     >
                         Send Verification Code
@@ -314,7 +483,7 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onEnroll, existingS
                             maxLength={1}
                             value={digit}
                             onChange={(e) => handleOtpChange(idx, e.target.value)}
-                            className="w-14 h-16 text-center text-2xl font-bold border-2 border-slate-200 rounded-xl focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 outline-none transition-all"
+                            className="w-14 h-16 text-center text-2xl font-bold border-2 border-slate-200 rounded-xl focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 outline-none transition-all text-slate-900"
                         />
                     ))}
                 </div>
@@ -366,7 +535,7 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onEnroll, existingS
                                 type="text" 
                                 value={customHandle}
                                 onChange={handleHandleChange}
-                                className={`w-full pl-8 pr-10 p-3 bg-slate-50 border rounded-xl outline-none transition-all font-mono ${
+                                className={`w-full pl-8 pr-10 p-3 bg-slate-50 border rounded-xl outline-none transition-all font-mono text-slate-900 ${
                                     handleStatus === 'AVAILABLE' ? 'border-emerald-500 focus:ring-emerald-100' :
                                     handleStatus === 'TAKEN' ? 'border-red-500 focus:ring-red-100' :
                                     'border-slate-200 focus:border-blue-500'
@@ -390,7 +559,7 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onEnroll, existingS
                         <textarea 
                             value={bio}
                             onChange={(e) => setBio(e.target.value)}
-                            className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-emerald-500 h-20 resize-none text-sm"
+                            className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-emerald-500 h-20 resize-none text-sm text-slate-900"
                             placeholder="I help people achieve financial freedom..."
                         />
                     </div>
@@ -440,7 +609,7 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onEnroll, existingS
                                 value={sponsorHandle}
                                 onChange={(e) => setSponsorHandle(e.target.value)}
                                 placeholder="@sponsor_handle"
-                                className="w-full text-center text-xl font-bold font-mono border-2 border-slate-200 rounded-xl py-4 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 outline-none"
+                                className="w-full text-center text-xl font-bold font-mono border-2 border-slate-200 rounded-xl py-4 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 outline-none text-slate-900"
                             />
                         </div>
                         <button onClick={verifySponsor} className="text-sm font-bold text-emerald-600 hover:underline">Verify</button>
@@ -582,7 +751,7 @@ const RoleCard: React.FC<{ role: UserRole, icon: any, label: string, desc: strin
     </div>
 );
 
-const InputGroup: React.FC<{ label: string, value: string, onChange: (v: string) => void, type?: string, placeholder?: string, icon?: any }> = ({ label, value, onChange, type = "text", placeholder, icon }) => (
+const InputGroup: React.FC<{ label: string, value: string, onChange: (v: string) => void, type?: string, placeholder?: string, icon?: any, error?: string }> = ({ label, value, onChange, type = "text", placeholder, icon, error }) => (
     <div className="flex flex-col gap-1">
         <label className="text-xs font-bold text-slate-500 uppercase">{label}</label>
         <div className="relative">
@@ -592,9 +761,10 @@ const InputGroup: React.FC<{ label: string, value: string, onChange: (v: string)
                 value={value}
                 onChange={(e) => onChange(e.target.value)}
                 placeholder={placeholder}
-                className={`w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-emerald-500 transition-all ${icon ? 'pl-10' : ''}`}
+                className={`w-full p-3 bg-slate-50 border rounded-xl outline-none focus:border-emerald-500 transition-all text-slate-900 ${icon ? 'pl-10' : ''} ${error ? 'border-red-500 bg-red-50' : 'border-slate-200'}`}
             />
         </div>
+        {error && <span className="text-xs text-red-500 font-medium">{error}</span>}
     </div>
 );
 

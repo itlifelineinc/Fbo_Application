@@ -5,14 +5,14 @@ import { Course, Student, UserRole, Message, CourseTrack, CommunityPost, Cohort,
 export const RANKS: Record<string, RankDefinition> = {
   'NOVUS': {
     id: 'NOVUS',
-    name: 'Distributor (Novus)',
+    name: 'Distributor',
     targetCC: 2,
     monthsAllowed: 2,
     nextRankId: 'AS_SUP'
   },
   'AS_SUP': {
     id: 'AS_SUP',
-    name: 'Assistant Supervisor',
+    name: 'Asst. Supervisor',
     targetCC: 25,
     monthsAllowed: 2,
     nextRankId: 'SUP'
@@ -26,7 +26,7 @@ export const RANKS: Record<string, RankDefinition> = {
   },
   'AS_MGR': {
     id: 'AS_MGR',
-    name: 'Assistant Manager',
+    name: 'Asst. Manager',
     targetCC: 120,
     monthsAllowed: 2,
     nextRankId: 'MGR'

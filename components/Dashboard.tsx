@@ -424,12 +424,23 @@ const Dashboard: React.FC<DashboardProps> = ({ students, currentUser, courses, o
 
             {/* 3-Month Timeline Tracker */}
             <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 dark:bg-slate-800 dark:border-slate-700">
-                <div className="flex justify-between items-center mb-6">
-                    <h3 className="font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
-                        <Calendar size={18} className="text-emerald-500" />
-                        3-Month Activity Tracker
-                    </h3>
-                    <span className="text-xs font-medium text-slate-400">Rank Accumulation Period</span>
+                <div className="flex items-center gap-3 mb-6">
+                    <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-600 shrink-0 dark:bg-emerald-900/20 dark:text-emerald-400">
+                        <Calendar size={20} />
+                    </div>
+                    <div>
+                        {/* Mobile View: Concise */}
+                        <h3 className="font-bold text-slate-800 dark:text-slate-100 text-base md:hidden">
+                            Activity Cycle
+                        </h3>
+                        {/* Desktop View: Full Detail */}
+                        <h3 className="hidden md:block font-bold text-slate-800 dark:text-slate-100 text-base">
+                            3-Month Activity Tracker
+                        </h3>
+                        <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                            Rank Accumulation
+                        </p>
+                    </div>
                 </div>
                 
                 <div className="relative pt-4 pb-2">

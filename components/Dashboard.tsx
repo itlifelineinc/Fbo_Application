@@ -1,9 +1,9 @@
 
 import React, { useState, useEffect } from 'react';
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Brush } from 'recharts';
 import { Link, useNavigate } from 'react-router-dom';
 import { Student, UserRole, Course, CourseTrack, CourseStatus } from '../types';
-import { Edit, ExternalLink, Plus, ChevronLeft, ChevronRight, User, Users, TrendingUp, Calendar, MessageCircle, ShoppingBag, Globe, Bell, ArrowUpRight, CheckCircle, Lightbulb } from 'lucide-react';
+import { Edit, ExternalLink, Plus, Minus, ChevronLeft, ChevronRight, User, Users, TrendingUp, Calendar, MessageCircle, ShoppingBag, Globe, Bell, ArrowUpRight, CheckCircle, Lightbulb } from 'lucide-react';
 import { RANKS } from '../constants';
 
 // --- Icons (Defined Before Usage) ---
@@ -71,6 +71,8 @@ const Dashboard: React.FC<DashboardProps> = ({ students, currentUser, courses, o
   const navigate = useNavigate();
   // State for graph filtering
   const [graphRange, setGraphRange] = useState<'6M' | 'YEAR' | '30D'>('6M');
+  // State for Zoom Indices (Controlled Brush)
+  const [zoomIndices, setZoomIndices] = useState<{start: number, end: number} | null>(null);
 
   const isStudent = currentUser.role === UserRole.STUDENT;
   const isSponsor = currentUser.role === UserRole.SPONSOR;
@@ -114,7 +116,6 @@ const Dashboard: React.FC<DashboardProps> = ({ students, currentUser, courses, o
   };
 
   // --- Dynamic Graph Data Logic ---
-  // Calculates data for the "Monthly CC Growth" chart
   const getPerformanceData = () => {
     const data = [];
     const history = currentUser.salesHistory || [];
@@ -130,19 +131,17 @@ const Dashboard: React.FC<DashboardProps> = ({ students, currentUser, courses, o
 
             let ccValue = 0;
             if (history.length > 0) {
-                // Sum actual sales for this day
                 ccValue = history
                     .filter((sale: any) => sale.date === dateKey)
                     .reduce((acc: number, sale: any) => acc + (sale.ccEarned || 0), 0);
             } else {
-                // Simulation: Small random daily activity for demo purposes if no sales exist
-                const base = (currentUser.caseCredits / 180); // Avg daily
+                const base = (currentUser.caseCredits / 180);
                 ccValue = Math.max(0, base * (0.5 + Math.random()));
             }
             data.push({ name: dayLabel, cc: parseFloat(ccValue.toFixed(2)) });
         }
     } else if (graphRange === 'YEAR') {
-        // Mode 2: This Year (Jan to Current Month)
+        // Mode 2: This Year
         const currentYear = today.getFullYear();
         for (let i = 0; i <= today.getMonth(); i++) {
              const d = new Date(currentYear, i, 1);
@@ -155,27 +154,25 @@ const Dashboard: React.FC<DashboardProps> = ({ students, currentUser, courses, o
                     .filter((sale: any) => sale.date.startsWith(monthKey))
                     .reduce((acc: number, sale: any) => acc + (sale.ccEarned || 0), 0);
              } else {
-                 // Simulation: Linear growth over the year
                  const factor = (i + 1) / (today.getMonth() + 1);
                  ccValue = currentUser.caseCredits * factor * (0.8 + Math.random() * 0.4);
              }
              data.push({ name: monthName, cc: parseFloat(ccValue.toFixed(2)) });
         }
     } else {
-        // Mode 3: Last 6 Months (Default)
+        // Mode 3: Last 6 Months
         for (let i = 5; i >= 0; i--) {
             const d = new Date();
             d.setMonth(today.getMonth() - i);
             const monthName = d.toLocaleString('default', { month: 'short' });
-            const monthKey = d.toISOString().slice(0, 7); // "YYYY-MM"
-
+            const monthKey = d.toISOString().slice(0, 7);
+            
             let ccValue = 0;
             if (history.length > 0) {
                 ccValue = history
                     .filter((sale: any) => sale.date.startsWith(monthKey))
                     .reduce((acc: number, sale: any) => acc + (sale.ccEarned || 0), 0);
             } else {
-                // Fallback simulation curve
                 const factors = [0.1, 0.25, 0.4, 0.6, 0.8, 1.0];
                 ccValue = currentUser.caseCredits * factors[5 - i];
             }
@@ -186,6 +183,37 @@ const Dashboard: React.FC<DashboardProps> = ({ students, currentUser, courses, o
   };
 
   const performanceData = getPerformanceData();
+
+  // --- Zoom Handlers ---
+  // Reset zoom when data range changes
+  useEffect(() => {
+      setZoomIndices({ start: 0, end: performanceData.length - 1 });
+  }, [graphRange, performanceData.length]);
+
+  const handleZoom = (direction: 'in' | 'out') => {
+      if (!zoomIndices) return;
+      const total = performanceData.length;
+      const currentStart = zoomIndices.start;
+      const currentEnd = zoomIndices.end;
+      const currentSpan = currentEnd - currentStart;
+
+      let newStart = currentStart;
+      
+      if (direction === 'in') {
+          // Zoom in: Cut range by 25% from the left (anchor right)
+          const reduction = Math.ceil(currentSpan * 0.25);
+          // Don't zoom in closer than 3 items
+          if (currentSpan - reduction > 2) {
+              newStart = currentStart + reduction;
+          }
+      } else {
+          // Zoom out: Expand range to left
+          const expansion = Math.ceil(currentSpan * 0.25);
+          newStart = Math.max(0, currentStart - expansion);
+      }
+      
+      setZoomIndices({ start: newStart, end: currentEnd });
+  };
 
   // Stats for the Carousel
   const stats = [
@@ -464,7 +492,8 @@ const Dashboard: React.FC<DashboardProps> = ({ students, currentUser, courses, o
                         <option value="30D">Last 30 Days</option>
                     </select>
                 </div>
-                <div className="h-64 w-full min-w-0">
+                
+                <div className="h-64 w-full min-w-0 relative group">
                   <ResponsiveContainer width="100%" height="100%">
                     <AreaChart data={performanceData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                       <defs>
@@ -481,8 +510,36 @@ const Dashboard: React.FC<DashboardProps> = ({ students, currentUser, courses, o
                         cursor={{ stroke: '#10b981', strokeWidth: 1, strokeDasharray: '4 4' }}
                       />
                       <Area type="monotone" dataKey="cc" stroke="#10b981" strokeWidth={3} fillOpacity={1} fill="url(#colorCc)" />
+                      <Brush 
+                        dataKey="name" 
+                        height={30} 
+                        stroke="#10b981"
+                        startIndex={zoomIndices?.start}
+                        endIndex={zoomIndices?.end}
+                        onChange={(e: any) => setZoomIndices({ start: e.startIndex, end: e.endIndex })}
+                        tickFormatter={(value) => value}
+                        alwaysShowText={false}
+                      />
                     </AreaChart>
                   </ResponsiveContainer>
+
+                  {/* Google Maps style Zoom Controls */}
+                  <div className="absolute right-4 bottom-12 flex flex-col bg-white dark:bg-slate-700 rounded-lg shadow-lg border border-slate-200 dark:border-slate-600 overflow-hidden opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10">
+                      <button 
+                        onClick={() => handleZoom('in')}
+                        className="p-2 hover:bg-slate-50 dark:hover:bg-slate-600 text-slate-600 dark:text-slate-300 border-b border-slate-100 dark:border-slate-600 transition-colors"
+                        title="Zoom In"
+                      >
+                          <Plus size={16} />
+                      </button>
+                      <button 
+                        onClick={() => handleZoom('out')}
+                        className="p-2 hover:bg-slate-50 dark:hover:bg-slate-600 text-slate-600 dark:text-slate-300 transition-colors"
+                        title="Zoom Out"
+                      >
+                          <Minus size={16} />
+                      </button>
+                  </div>
                 </div>
             </div>
 

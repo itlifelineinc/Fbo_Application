@@ -286,7 +286,12 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onEnroll, existingS
   const prevStep = () => setStep(s => Math.max(0, s - 1));
 
   return (
-    <div className="fixed inset-0 bg-slate-100 dark:bg-slate-950 flex flex-col items-center justify-center p-0 md:p-6 lg:p-8 overflow-hidden">
+    <div className={`fixed inset-0 flex flex-col items-center justify-center p-0 md:p-6 lg:p-8 overflow-hidden
+      bg-slate-100 dark:bg-slate-950
+      md:bg-gradient-to-br md:from-slate-100 md:via-emerald-50 md:to-teal-50
+      dark:md:from-slate-900 dark:md:via-emerald-950 dark:md:to-slate-800
+      desktop-animated-bg
+    `}>
       <style>{`
         .no-scrollbar::-webkit-scrollbar {
           display: none;
@@ -295,9 +300,20 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onEnroll, existingS
           -ms-overflow-style: none;  /* IE and Edge */
           scrollbar-width: none;  /* Firefox */
         }
+        @media (min-width: 768px) {
+            .desktop-animated-bg {
+                background-size: 200% 200%;
+                animation: gradient-move 20s ease infinite;
+            }
+        }
+        @keyframes gradient-move {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
       `}</style>
 
-      <div className="w-full max-w-2xl bg-white dark:bg-slate-900 rounded-none md:rounded-3xl shadow-none md:shadow-2xl flex flex-col h-full md:h-auto md:max-h-[90vh] overflow-hidden relative transition-all duration-300">
+      <div className="w-full max-w-2xl bg-white dark:bg-slate-900 rounded-none md:rounded-3xl shadow-none md:shadow-2xl flex flex-col h-full md:h-auto md:max-h-[90vh] overflow-hidden relative transition-all duration-300 md:border md:border-slate-200 dark:md:border-slate-800">
         
         {/* Progress Header - Fixed */}
         <div className="bg-white dark:bg-slate-900 px-6 py-4 border-b border-slate-100 dark:border-slate-800 shrink-0 z-10 flex items-center justify-between">

@@ -286,44 +286,87 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onEnroll, existingS
   const prevStep = () => setStep(s => Math.max(0, s - 1));
 
   return (
-    <div className={`fixed inset-0 flex flex-col items-center justify-center p-0 md:p-6 lg:p-8 overflow-hidden
-      bg-slate-100 dark:bg-slate-950
-      md:bg-gradient-to-br md:from-slate-100 md:via-emerald-50 md:to-teal-50
-      dark:md:from-slate-900 dark:md:via-emerald-950 dark:md:to-slate-800
-      desktop-animated-bg
-    `}>
+    <div className="fixed inset-0 flex flex-col items-center justify-center p-0 md:p-6 lg:p-8 overflow-hidden bg-slate-950">
       <style>{`
         .no-scrollbar::-webkit-scrollbar {
           display: none;
         }
         .no-scrollbar {
-          -ms-overflow-style: none;  /* IE and Edge */
-          scrollbar-width: none;  /* Firefox */
+          -ms-overflow-style: none;
+          scrollbar-width: none;
         }
-        @media (min-width: 768px) {
-            .desktop-animated-bg {
-                background-size: 200% 200%;
-                animation: gradient-move 20s ease infinite;
-            }
+        
+        /* Moving Blob Animation */
+        @keyframes blob {
+          0% { transform: translate(0px, 0px) scale(1); }
+          33% { transform: translate(30px, -50px) scale(1.1); }
+          66% { transform: translate(-20px, 20px) scale(0.9); }
+          100% { transform: translate(0px, 0px) scale(1); }
         }
-        @keyframes gradient-move {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
+        .animate-blob {
+          animation: blob 10s infinite;
+        }
+        .animation-delay-2000 {
+          animation-delay: 2s;
+        }
+        .animation-delay-4000 {
+          animation-delay: 4s;
+        }
+
+        /* Shining Particle Animation */
+        @keyframes particle-shine {
+            0% { transform: translateY(0) translateX(0) scale(0); opacity: 0; }
+            20% { opacity: 0.8; transform: translateY(-20px) translateX(10px) scale(1); }
+            80% { opacity: 0.8; }
+            100% { transform: translateY(-100px) translateX(50px) scale(0); opacity: 0; }
+        }
+        .animate-particle {
+            animation: particle-shine 8s infinite linear;
         }
       `}</style>
 
-      <div className="w-full max-w-2xl bg-white dark:bg-slate-900 rounded-none md:rounded-3xl shadow-none md:shadow-2xl flex flex-col h-full md:h-auto md:max-h-[90vh] overflow-hidden relative transition-all duration-300 md:border md:border-slate-200 dark:md:border-slate-800">
+      {/* Background Effects (Desktop Only) - Complex Gradients & Particles */}
+      <div className="absolute inset-0 overflow-hidden hidden md:block pointer-events-none">
+         {/* Moving Gradient Orbs */}
+         <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-emerald-600/20 rounded-full blur-[100px] animate-blob" />
+         <div className="absolute top-[20%] right-[-10%] w-[50%] h-[50%] bg-blue-600/20 rounded-full blur-[100px] animate-blob animation-delay-2000" />
+         <div className="absolute bottom-[-10%] left-[20%] w-[50%] h-[50%] bg-indigo-600/20 rounded-full blur-[100px] animate-blob animation-delay-4000" />
+         
+         {/* Shining Particles */}
+         <div className="absolute inset-0">
+            {[...Array(25)].map((_, i) => (
+                <div 
+                    key={i} 
+                    className="absolute bg-white rounded-full animate-particle shadow-[0_0_10px_rgba(255,255,255,0.8)]"
+                    style={{
+                        top: `${Math.random() * 100}%`,
+                        left: `${Math.random() * 100}%`,
+                        width: `${Math.random() * 4 + 2}px`,
+                        height: `${Math.random() * 4 + 2}px`,
+                        animationDelay: `${Math.random() * 5}s`,
+                        animationDuration: `${Math.random() * 10 + 10}s`,
+                        opacity: Math.random() * 0.5 + 0.3
+                    }}
+                />
+            ))}
+         </div>
+         
+         {/* Subtle overlay to blend */}
+         <div className="absolute inset-0 bg-slate-950/20"></div>
+      </div>
+
+      {/* Main Card Container */}
+      <div className="w-full max-w-2xl bg-white/95 dark:bg-slate-900/80 backdrop-blur-xl rounded-none md:rounded-3xl shadow-none md:shadow-2xl flex flex-col h-full md:h-auto md:max-h-[90vh] overflow-hidden relative transition-all duration-300 md:border md:border-white/10 z-10">
         
         {/* Progress Header - Fixed */}
-        <div className="bg-white dark:bg-slate-900 px-6 py-4 border-b border-slate-100 dark:border-slate-800 shrink-0 z-10 flex items-center justify-between">
+        <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm px-6 py-4 border-b border-slate-100 dark:border-slate-800 shrink-0 z-10 flex items-center justify-between">
             <div className="flex items-center gap-2">
                 <Logo className="w-6 h-6" showText={false} />
                 <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Step {step + 1} of 7</span>
             </div>
             <div className="flex gap-1.5">
                 {[0,1,2,3,4,5,6].map(i => (
-                    <div key={i} className={`h-1 w-4 md:w-6 rounded-full transition-all duration-300 ${i <= step ? 'bg-emerald-500' : 'bg-slate-100 dark:bg-slate-800'}`}></div>
+                    <div key={i} className={`h-1 w-4 md:w-6 rounded-full transition-all duration-300 ${i <= step ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]' : 'bg-slate-200 dark:bg-slate-800'}`}></div>
                 ))}
             </div>
         </div>
@@ -367,7 +410,7 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onEnroll, existingS
                 </div>
 
                 <div className="pt-4">
-                    <button onClick={nextStep} className="w-full bg-emerald-600 text-white py-3.5 rounded-xl font-bold hover:bg-emerald-700 transition-all shadow-lg active:scale-95 text-sm md:text-base">
+                    <button onClick={nextStep} className="w-full bg-emerald-600 text-white py-3.5 rounded-xl font-bold hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-900/20 active:scale-95 text-sm md:text-base">
                         Continue as {selectedRole === UserRole.STUDENT ? 'New FBO' : selectedRole === UserRole.SPONSOR ? 'Sponsor' : 'Admin'}
                     </button>
                     <div className="text-center mt-4">

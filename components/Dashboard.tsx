@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { Link, useNavigate } from 'react-router-dom';
 import { Student, UserRole, Course, CourseTrack, CourseStatus } from '../types';
-import { Edit, ExternalLink, Plus, ChevronLeft, ChevronRight, User, Users, TrendingUp, Calendar, MessageCircle, ShoppingBag, Globe, Bell, ArrowUpRight } from 'lucide-react';
+import { Edit, ExternalLink, Plus, ChevronLeft, ChevronRight, User, Users, TrendingUp, Calendar, MessageCircle, ShoppingBag, Globe, Bell, ArrowUpRight, CheckCircle, Lightbulb } from 'lucide-react';
 import { RANKS } from '../constants';
 
 // --- Icons (Defined Before Usage) ---
@@ -175,6 +175,49 @@ const Dashboard: React.FC<DashboardProps> = ({ students, currentUser, courses, o
   const nextMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1);
   const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
+  // --- AI Suggestions Logic ---
+  const getAISuggestions = () => {
+    const suggestions: { type: 'goal' | 'team' | 'win' | 'learning', text: string }[] = [];
+    
+    // 1. CC Goal Suggestion
+    const needed = parseFloat(ccNeeded);
+    if (needed > 0 && nextRankDef) {
+        suggestions.push({
+            type: 'goal',
+            text: `You need ${needed} CC more this month to stay on track for ${nextRankDef.name}.`
+        });
+    }
+
+    // 2. Team Suggestion
+    if (!isStudent && visibleStudents.length > 1) {
+        // Find a recent recruit or someone with low progress
+        const memberToContact = visibleStudents.find(s => s.id !== currentUser.id && s.progress < 20) || visibleStudents[visibleStudents.length - 1];
+        if (memberToContact) {
+            suggestions.push({
+                type: 'team',
+                text: `Call your new team member ${memberToContact.name.split(' ')[0]} today to check their progress.`
+            });
+        }
+    } else if (isStudent) {
+        suggestions.push({
+            type: 'team',
+            text: `Connect with your sponsor @${currentUser.sponsorId?.replace('@','')} for a strategy session.`
+        });
+    }
+
+    // 3. Learning/Generic
+    if (suggestions.length < 2) {
+        suggestions.push({
+            type: 'learning',
+            text: "Complete 1 training module today to build your daily habit."
+        });
+    }
+
+    return suggestions;
+  };
+
+  const aiSuggestions = getAISuggestions();
+
   return (
     <div className="space-y-8 animate-fade-in pb-12">
       <header className="flex justify-between items-end">
@@ -262,6 +305,30 @@ const Dashboard: React.FC<DashboardProps> = ({ students, currentUser, courses, o
           {/* Left Column (2/3 width) */}
           <div className="lg:col-span-2 space-y-8 min-w-0">
             
+            {/* AI Suggestions Widget */}
+            <div className="bg-gradient-to-r from-violet-100 to-fuchsia-50 p-6 rounded-2xl border border-violet-100 dark:bg-slate-800 dark:from-slate-800 dark:to-slate-800 dark:border-slate-700 relative overflow-hidden">
+                <div className="absolute top-0 right-0 p-4 opacity-10 pointer-events-none">
+                    <SparklesIcon />
+                </div>
+                <div className="flex items-center gap-3 mb-4 relative z-10">
+                    <div className="p-2 bg-white rounded-lg shadow-sm text-violet-600 dark:bg-slate-700 dark:text-violet-400">
+                        <Lightbulb size={20} />
+                    </div>
+                    <h3 className="font-bold text-slate-800 text-lg dark:text-white font-heading">AI Coach Insights</h3>
+                </div>
+                
+                <div className="space-y-3 relative z-10">
+                    {aiSuggestions.map((suggestion, idx) => (
+                        <div key={idx} className="flex gap-3 items-start bg-white/60 p-3 rounded-xl border border-white/50 dark:bg-slate-700/50 dark:border-slate-600">
+                            <div className="mt-0.5 text-violet-600 dark:text-violet-400">
+                                {suggestion.type === 'goal' ? <ArrowUpRight size={16} /> : suggestion.type === 'team' ? <Users size={16} /> : <CheckCircle size={16} />}
+                            </div>
+                            <p className="text-sm text-slate-700 font-medium dark:text-slate-200">{suggestion.text}</p>
+                        </div>
+                    ))}
+                </div>
+            </div>
+
             {/* 3-Month Timeline Tracker */}
             <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 dark:bg-slate-800 dark:border-slate-700">
                 <div className="flex justify-between items-center mb-6">

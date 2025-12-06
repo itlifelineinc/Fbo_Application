@@ -1,6 +1,18 @@
 
 import { Course, Student, UserRole, Message, CourseTrack, CommunityPost, Cohort, CourseLevel, CourseStatus, RankDefinition } from './types';
 
+export const RANK_ORDER = [
+    'NOVUS',
+    'AS_SUP',
+    'SUP',
+    'AS_MGR',
+    'MGR',
+    'SOARING',
+    'SAPPHIRE',
+    'DIAMOND_SAPPHIRE',
+    'DIAMOND'
+];
+
 // --- RANK RULES (FLP) ---
 export const RANKS: Record<string, RankDefinition> = {
   'NOVUS': {
@@ -34,7 +46,39 @@ export const RANKS: Record<string, RankDefinition> = {
   'MGR': {
     id: 'MGR',
     name: 'Manager',
-    targetCC: 0, // Top rank
+    targetCC: 0, // Requirement to leave is structure based
+    monthsAllowed: 0,
+    nextRankId: 'SOARING',
+    requiredManagersInDownline: 5
+  },
+  'SOARING': {
+    id: 'SOARING',
+    name: 'Soaring Manager',
+    targetCC: 0,
+    monthsAllowed: 0,
+    nextRankId: 'SAPPHIRE',
+    requiredManagersInDownline: 9
+  },
+  'SAPPHIRE': {
+    id: 'SAPPHIRE',
+    name: 'Sapphire Manager',
+    targetCC: 0,
+    monthsAllowed: 0,
+    nextRankId: 'DIAMOND_SAPPHIRE',
+    requiredManagersInDownline: 17
+  },
+  'DIAMOND_SAPPHIRE': {
+    id: 'DIAMOND_SAPPHIRE',
+    name: 'Diamond Sapphire Manager',
+    targetCC: 0,
+    monthsAllowed: 0,
+    nextRankId: 'DIAMOND',
+    requiredManagersInDownline: 25
+  },
+  'DIAMOND': {
+    id: 'DIAMOND',
+    name: 'Diamond Manager',
+    targetCC: 0,
     monthsAllowed: 0,
     nextRankId: null
   }

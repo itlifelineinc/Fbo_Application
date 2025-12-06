@@ -4,7 +4,7 @@ import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { Link, useNavigate } from 'react-router-dom';
 import { Student, UserRole, Course, CourseTrack, CourseStatus } from '../types';
 import { Edit, ExternalLink, Plus, Minus, ChevronLeft, ChevronRight, User, Users, TrendingUp, Calendar, MessageCircle, ShoppingBag, Globe, Bell, ArrowUpRight, CheckCircle, Lightbulb } from 'lucide-react';
-import { RANKS } from '../constants';
+import { RANKS, RANK_ORDER } from '../constants';
 
 // --- Icons (Defined Before Usage) ---
 
@@ -63,6 +63,13 @@ interface DashboardProps {
   onReviewCourse?: (courseId: string, status: CourseStatus) => void;
 }
 
+// Helper to check if rank A is higher or equal to rank B
+const isRankOrHigher = (currentId: string, targetId: string): boolean => {
+    const currentIndex = RANK_ORDER.indexOf(currentId);
+    const targetIndex = RANK_ORDER.indexOf(targetId);
+    return currentIndex >= targetIndex && currentIndex !== -1 && targetIndex !== -1;
+};
+
 // --- Main Component ---
 
 const Dashboard: React.FC<DashboardProps> = ({ students, currentUser, courses, onReviewCourse }) => {
@@ -96,20 +103,34 @@ const Dashboard: React.FC<DashboardProps> = ({ students, currentUser, courses, o
       cycleStartDate: new Date().toISOString(),
       history: []
   };
-  const currentRankName = RANKS[rankProgress.currentRankId]?.name || 'Distributor';
-  const nextRankDef = RANKS[rankProgress.currentRankId]?.nextRankId ? RANKS[RANKS[rankProgress.currentRankId].nextRankId!] : null;
-  const ccNeeded = nextRankDef ? Math.max(0, rankProgress.targetCC - rankProgress.currentCycleCC).toFixed(2) : '0';
+  const currentRankDef = RANKS[rankProgress.currentRankId];
+  const currentRankName = currentRankDef?.name || 'Distributor';
+  const nextRankDef = currentRankDef?.nextRankId ? RANKS[currentRankDef.nextRankId] : null;
   
-  // Progress Percentage for Timeline
-  const progressPercent = nextRankDef 
-    ? Math.min(100, Math.max(0, (rankProgress.currentCycleCC / rankProgress.targetCC) * 100))
-    : 100;
+  // Calculate "Needed"
+  let progressText = '0';
+  let progressTrend = 'You made it!';
+  let progressPercent = 100;
+
+  if (nextRankDef) {
+      if (currentRankDef.targetCC > 0) {
+          // CC Based Progression
+          progressText = Math.max(0, rankProgress.targetCC - rankProgress.currentCycleCC).toFixed(2);
+          progressTrend = `Target: ${rankProgress.targetCC}`;
+          progressPercent = Math.min(100, Math.max(0, (rankProgress.currentCycleCC / rankProgress.targetCC) * 100));
+      } else if (currentRankDef.requiredManagersInDownline && currentRankDef.requiredManagersInDownline > 0) {
+          // Structure Based Progression (Managers)
+          const myManagers = students.filter(s => s.sponsorId === currentUser.handle && s.rankProgress && isRankOrHigher(s.rankProgress.currentRankId, 'MGR')).length;
+          const needed = Math.max(0, currentRankDef.requiredManagersInDownline - myManagers);
+          progressText = `${needed}`;
+          progressTrend = `Target: ${currentRankDef.requiredManagersInDownline} Mgrs`;
+          progressPercent = Math.min(100, Math.max(0, (myManagers / currentRankDef.requiredManagersInDownline) * 100));
+      }
+  }
 
   // Team Activity
   const activeDownlines = visibleStudents.filter(s => (s.caseCredits > 0 || s.progress > 0) && s.id !== currentUser.id).length;
   // Calculate Team Volume (CC produced by downline in current cycle)
-  // For a Sponsor, visibleStudents includes their downline. 
-  // We sum up the currentCycleCC of everyone in visibleStudents EXCEPT the current user (if included)
   const myDownline = students.filter(s => s.sponsorId === currentUser.handle);
   const teamVolume = myDownline.reduce((acc, s) => acc + (s.rankProgress?.currentCycleCC || 0), 0);
 
@@ -245,10 +266,10 @@ const Dashboard: React.FC<DashboardProps> = ({ students, currentUser, courses, o
     },
     {
         id: 'cc_needed',
-        title: "CC To Rank Up",
-        value: nextRankDef ? ccNeeded : "Max Rank",
+        title: currentRankDef.requiredManagersInDownline ? "Managers Needed" : "CC To Rank Up",
+        value: nextRankDef ? progressText : "Max Rank",
         icon: <ArrowUpRight size={24} />,
-        trend: nextRankDef ? `Target: ${rankProgress.targetCC}` : "You made it!",
+        trend: nextRankDef ? progressTrend : "You made it!",
         color: 'orange'
     },
     (!isStudent) && {
@@ -282,13 +303,19 @@ const Dashboard: React.FC<DashboardProps> = ({ students, currentUser, courses, o
   const getAISuggestions = () => {
     const suggestions: { type: 'goal' | 'team' | 'win' | 'learning', text: string }[] = [];
     
-    // 1. CC Goal Suggestion
-    const needed = parseFloat(ccNeeded);
-    if (needed > 0 && nextRankDef) {
-        suggestions.push({
-            type: 'goal',
-            text: `You need ${needed} CC more this month to stay on track for ${nextRankDef.name}.`
-        });
+    // 1. Goal Suggestion
+    if (nextRankDef) {
+        if (currentRankDef.targetCC > 0) {
+            suggestions.push({
+                type: 'goal',
+                text: `You need ${progressText} more CC to stay on track for ${nextRankDef.name}.`
+            });
+        } else {
+            suggestions.push({
+                type: 'goal',
+                text: `Mentor ${progressText} more downline(s) to Manager to reach ${nextRankDef.name}.`
+            });
+        }
     }
 
     // 2. Team Suggestion
@@ -448,7 +475,10 @@ const Dashboard: React.FC<DashboardProps> = ({ students, currentUser, courses, o
                             3-Month Activity Tracker
                         </h3>
                         <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                            Rank Accumulation ({rankProgress.currentCycleCC.toFixed(2)} / {rankProgress.targetCC} CC)
+                            {currentRankDef.targetCC > 0 
+                                ? `Rank Accumulation (${rankProgress.currentCycleCC.toFixed(2)} / ${rankProgress.targetCC} CC)`
+                                : `Leadership Progress (${progressText} Managers Needed)`
+                            }
                         </p>
                     </div>
                 </div>
@@ -489,7 +519,7 @@ const Dashboard: React.FC<DashboardProps> = ({ students, currentUser, courses, o
                         {/* Month 3 (Future) */}
                         <div className="flex flex-col items-center gap-3">
                             <div className="w-8 h-8 rounded-full bg-white border-2 border-slate-200 flex items-center justify-center text-slate-400 font-bold text-xs z-10 dark:bg-slate-800 dark:border-slate-600">
-                                {nextRankDef ? nextRankDef.targetCC : 'Max'}
+                                {nextRankDef ? nextRankDef.targetCC > 0 ? nextRankDef.targetCC : 'Next' : 'Max'}
                             </div>
                             <div className="text-center">
                                 <p className="text-xs font-bold text-slate-400 dark:text-slate-500">{monthNames[nextMonth.getMonth()]}</p>

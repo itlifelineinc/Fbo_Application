@@ -237,7 +237,8 @@ const App: React.FC = () => {
         const currentStudent = updatedStudentsList[studentIndex];
         
         // 1. Update this student's Rank & CC
-        let updatedStudent = updateStudentRank(currentStudent, amount);
+        // CRITICAL: We pass updatedStudentsList so rankEngine sees updates from downlines (e.g. if downline became Manager)
+        let updatedStudent = updateStudentRank(currentStudent, amount, updatedStudentsList);
 
         // 2. If this is the originator (the one logging the sale), add the sales record history
         if (studentHandle === currentUser.handle) {

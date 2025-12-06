@@ -37,6 +37,7 @@ export interface RankDefinition {
   targetCC: number; 
   monthsAllowed: number;
   nextRankId: string | null;
+  requiredManagersInDownline?: number;
 }
 
 export interface RankProgress {

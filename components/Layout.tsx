@@ -360,8 +360,8 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
       >
         <div className="p-6 border-b border-emerald-800 flex justify-between items-center dark:border-emerald-900">
           <div className="flex items-center gap-2 font-bold text-xl tracking-tight font-heading">
-            <img src="https://upload.wikimedia.org/wikipedia/en/thumb/8/8f/Forever_Living_Products_logo.svg/300px-Forever_Living_Products_logo.svg.png" alt="Nexu" className="h-10 w-auto object-contain" />
-            <span>Nexu</span>
+            <img src="https://upload.wikimedia.org/wikipedia/en/thumb/8/8f/Forever_Living_Products_logo.svg/300px-Forever_Living_Products_logo.svg.png" alt="FBO Academy" className="h-10 w-auto object-contain" />
+            <span>FBO Academy</span>
           </div>
           {/* Close Button */}
           <button onClick={() => setIsMobileMenuOpen(false)} className="lg:hidden text-emerald-300 hover:text-white">
@@ -624,8 +624,8 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
         {/* Mobile Header */}
         <header className="lg:hidden bg-white border-b border-slate-200 p-4 flex justify-between items-center z-10 shadow-sm dark:bg-slate-900 dark:border-slate-800 shrink-0">
            <div className="flex items-center gap-2 font-bold text-lg text-emerald-900 font-heading dark:text-emerald-400">
-             <img src="https://upload.wikimedia.org/wikipedia/en/thumb/8/8f/Forever_Living_Products_logo.svg/300px-Forever_Living_Products_logo.svg.png" alt="Nexu" className="h-8 w-auto object-contain" />
-             <span>Nexu</span>
+             <img src="https://upload.wikimedia.org/wikipedia/en/thumb/8/8f/Forever_Living_Products_logo.svg/300px-Forever_Living_Products_logo.svg.png" alt="FBO Academy" className="h-8 w-auto object-contain" />
+             <span>FBO Academy</span>
            </div>
            <button onClick={() => setIsMobileMenuOpen(true)} className="text-slate-600 p-2 rounded-lg hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800">
              <Bars3Icon />

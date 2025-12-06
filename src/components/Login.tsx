@@ -1,7 +1,6 @@
 
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Logo } from './Logo';
 
 interface LoginProps {
   onLogin: (handle: string, pass: string) => Promise<boolean>;
@@ -49,8 +48,13 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
       <div className="max-w-md w-full bg-white rounded-3xl shadow-2xl p-8 md:p-10 animate-fade-in">
         
         {/* Header */}
-        <div className="text-center mb-8 flex flex-col items-center">
-          <Logo className="mb-4 text-3xl" iconClassName="w-20 h-20" />
+        <div className="text-center mb-8">
+          <img 
+            src="https://upload.wikimedia.org/wikipedia/en/thumb/8/8f/Forever_Living_Products_logo.svg/300px-Forever_Living_Products_logo.svg.png" 
+            alt="Forever Living" 
+            className="h-24 mx-auto mb-6 object-contain"
+          />
+          <h1 className="text-3xl font-bold text-emerald-950 font-heading">FBO Academy</h1>
           <p className="text-slate-500 mt-2">
             {mode === 'LOGIN' ? 'Sign in to access your dashboard' : 'Recover your account'}
           </p>

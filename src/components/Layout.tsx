@@ -2,9 +2,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Student, UserRole, Course } from '../types';
-import { LogOut, Settings, Moon, Sun, ChevronDown, Award } from 'lucide-react';
-import { RANKS } from '../constants';
-import { Logo } from './Logo';
+import { LogOut, Settings, Moon, Sun, ChevronDown } from 'lucide-react';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -149,9 +147,6 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
 
   const isActive = (path: string) => location.pathname === path;
   const isDashboard = location.pathname === '/dashboard';
-
-  // Determine current Rank Name for Display
-  const currentRankName = currentUser.rankProgress ? RANKS[currentUser.rankProgress.currentRankId]?.name : 'FBO';
 
   // Check if we are in a builder mode (full screen tools)
   const isBuilder = location.pathname.startsWith('/sales-builder') || location.pathname.startsWith('/builder');
@@ -360,7 +355,10 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
         `}
       >
         <div className="p-6 border-b border-emerald-800 flex justify-between items-center dark:border-emerald-900">
-          <Logo className="text-white" textClassName="text-white" iconClassName="w-10 h-10 text-emerald-600 bg-white" />
+          <div className="flex items-center gap-2 font-bold text-xl tracking-tight font-heading">
+            <img src="https://upload.wikimedia.org/wikipedia/en/thumb/8/8f/Forever_Living_Products_logo.svg/300px-Forever_Living_Products_logo.svg.png" alt="FBO Academy" className="h-10 w-auto object-contain" />
+            <span>FBO Academy</span>
+          </div>
           {/* Close Button */}
           <button onClick={() => setIsMobileMenuOpen(false)} className="lg:hidden text-emerald-300 hover:text-white">
             <XMarkIcon />
@@ -529,15 +527,9 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
                {/* Show Breadcrumbs on non-dashboard pages, Greeting on dashboard */}
                {isDashboard ? (
                    // New Typography: Dosis font, larger size for friendly greeting
-                   <div className="flex items-center gap-3">
-                        <span className="font-dosis font-semibold text-2xl text-white tracking-tight">
-                            Hi, {currentUser.name.split(' ')[0]}
-                        </span>
-                        <div className="flex items-center gap-1.5 px-3 py-1 bg-emerald-800/50 border border-emerald-700/50 rounded-full text-xs font-bold uppercase tracking-wider text-emerald-300 shadow-sm">
-                            <Award size={14} className="text-yellow-400" />
-                            {currentRankName}
-                        </div>
-                   </div>
+                   <span className="font-dosis font-semibold text-2xl text-white tracking-tight">
+                     Hi, {currentUser.name.split(' ')[0]}
+                   </span>
                ) : (
                    getBreadcrumbs()
                )}
@@ -559,7 +551,7 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
                   
                   <div className="text-left hidden xl:block">
                       <p className="text-sm font-semibold text-slate-100 leading-tight">{currentUser.name}</p>
-                      <p className="text-xs text-emerald-400 font-medium uppercase tracking-wide">{currentUser.role}</p>
+                      <p className="text-[10px] text-emerald-400 font-medium uppercase tracking-wide">{currentUser.role}</p>
                   </div>
                   
                   <ChevronDown size={14} className={`text-slate-400 transition-transform ${isProfileMenuOpen ? 'rotate-180' : ''} group-hover:text-slate-200 ml-1`} />
@@ -621,7 +613,10 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
 
         {/* Mobile Header */}
         <header className="lg:hidden bg-white border-b border-slate-200 p-4 flex justify-between items-center z-10 shadow-sm dark:bg-slate-900 dark:border-slate-800 shrink-0">
-           <Logo className="text-emerald-900 dark:text-emerald-400" />
+           <div className="flex items-center gap-2 font-bold text-lg text-emerald-900 font-heading dark:text-emerald-400">
+             <img src="https://upload.wikimedia.org/wikipedia/en/thumb/8/8f/Forever_Living_Products_logo.svg/300px-Forever_Living_Products_logo.svg.png" alt="FBO Academy" className="h-8 w-auto object-contain" />
+             <span>FBO Academy</span>
+           </div>
            <button onClick={() => setIsMobileMenuOpen(true)} className="text-slate-600 p-2 rounded-lg hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800">
              <Bars3Icon />
            </button>

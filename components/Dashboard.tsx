@@ -1,55 +1,16 @@
 
 import React, { useState, useEffect } from 'react';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, PieChart, Pie, Legend } from 'recharts';
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { Link, useNavigate } from 'react-router-dom';
 import { Student, UserRole, Course, CourseTrack, CourseStatus } from '../types';
-import { Edit, ExternalLink, Plus, ChevronLeft, ChevronRight, User, Users } from 'lucide-react';
+import { Edit, ExternalLink, Plus, ChevronLeft, ChevronRight, User, Users, TrendingUp, Calendar, MessageCircle, ShoppingBag, Globe, Bell, ArrowUpRight } from 'lucide-react';
 import { RANKS } from '../constants';
 
-// --- Child Components & Icons (Defined First) ---
+// --- Icons (Defined Before Usage) ---
 
-const StatCard: React.FC<{ title: string; value: string; icon: React.ReactNode; trend: string }> = ({ title, value, icon, trend }) => (
-  <div className="bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-slate-100 flex items-center gap-5 hover:shadow-md transition-shadow dark:bg-slate-800 dark:border-slate-700 h-full relative">
-    <div className="p-4 bg-emerald-50 text-emerald-600 rounded-2xl shrink-0 dark:bg-emerald-900/30 dark:text-emerald-400">
-      {icon}
-    </div>
-    <div>
-      <p className="text-sm font-medium text-slate-500 uppercase tracking-wide dark:text-slate-400">{title}</p>
-      <h3 className="text-3xl font-bold text-slate-800 font-heading mt-1 dark:text-slate-100">{value}</h3>
-      <p className="text-xs text-emerald-600 font-bold mt-1.5 flex items-center gap-1 dark:text-emerald-400">
-        <span className="text-lg">↗</span> {trend}
-      </p>
-    </div>
-  </div>
-);
-
-const UserGroupIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
-    <path strokeLinecap="round" strokeLinejoin="round" d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m.94 3.198l.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0112 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 016 18.719m12 0a5.971 5.971 0 00-.941-3.197m0 0A5.995 5.995 0 0012 12.75a5.995 5.995 0 00-5.058 2.772m0 0a3 3 0 00-4.681 2.72 8.986 8.986 0 003.74.477m.94-3.197a5.971 5.971 0 00-.94 3.197M15 6.75a3 3 0 11-6 0 3 3 0 016 0zm6 3a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0zm-13.5 0a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z" />
-  </svg>
-);
-
-const ChartBarIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
-    <path strokeLinecap="round" strokeLinejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z" />
-  </svg>
-);
-
-const AcademicCapIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-8 h-8">
-    <path strokeLinecap="round" strokeLinejoin="round" d="M4.26 10.147a60.436 60.436 0 00-.491 6.347A48.627 48.627 0 0112 20.904a48.627 48.627 0 018.232-4.41 60.46 60.46 0 00-.491-6.347m-15.482 0a50.57 50.57 0 00-2.658-.813A59.905 59.905 0 0112 3.493a59.902 59.902 0 0110.499 5.221 69.17 69.17 0 00-2.66.812M12 14.952V16.95M7 10.05h.008v.008H7v-.008zm5.374 9.332l-.223.55a.51.51 0 01-.902 0l-.223-.55a.51.51 0 01.948 0z" />
-  </svg>
-);
-
-const CurrencyDollarIcon = () => (
+const AwardIcon = () => (
     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
-        <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-    </svg>
-  );
-
-const MagnifyingGlassIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
-        <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
+        <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 18.75h-9m9 0a3 3 0 013 3h-15a3 3 0 013-3m9 0v-3.375c0-.621-.503-1.125-1.125-1.125h-.871M7.5 18.75v-3.375c0-.621.504-1.125 1.125-1.125h.872m5.007 0H9.497m5.007 0a7.454 7.454 0 01-.982-3.172M9.497 14.25a7.454 7.454 0 00.981-3.172M5.25 4.236c-.982.143-1.954.317-2.916.52A6.003 6.003 0 007.73 9.728M5.25 4.236V4.5c0 2.108.961 3.99 2.48 5.228M5.25 4.236V2.721C7.456 2.41 9.71 2.25 12 2.25c2.291 0 4.545.16 6.75.47v1.516M7.73 9.728a6.726 6.726 0 002.748 1.35m8.272-6.842V4.5c0 2.108-.962 3.99-2.48 5.228m2.48-5.492a46.32 46.32 0 012.916.52 6.003 6.003 0 01-5.395 4.972m0 0a6.726 6.726 0 01-2.749 1.35m0 0a6.772 6.772 0 01-3.044 0" />
     </svg>
 );
 
@@ -70,6 +31,30 @@ const ClipboardIcon = () => (
     <path strokeLinecap="round" strokeLinejoin="round" d="M15.666 3.888A2.25 2.25 0 0013.5 2.25h-3c-1.03 0-1.9.693-2.166 1.638m7.332 0c.055.194.084.4.084.612v0a.75.75 0 01-.75.75H9a.75.75 0 01-.75-.75v0c0-.212.03-.418.084-.612m7.332 0c.646.049 1.288.564 1.509 1.192.613 1.753.613 3.655 0 5.408-.22.727-1.033 1.109-1.724 1.109H8.438c-.69 0-1.504-.382-1.724-1.109-.613-1.753-.613-3.655 0-5.408.22-.628.863-1.143 1.509-1.192M6.75 21a2.25 2.25 0 01-2.25-2.25V6.75c0-1.012.668-1.875 1.586-2.155.127.427.34.821.619 1.165A3.725 3.725 0 006.75 9.75h10.5a3.725 3.725 0 002.795-4.24.75.75 0 011.5 0 5.25 5.25 0 01-3.545 4.99H6.75A.75.75 0 006 11.25v7.5a.75.75 0 00.75.75h9.75a.75.75 0 00.75-.75v-2.25m0 0h2.25m-2.25 0H18" />
   </svg>
 );
+
+const StatCard: React.FC<{ title: string; value: string; icon: React.ReactNode; trend: string; color?: string }> = ({ title, value, icon, trend, color = "emerald" }) => {
+  const colorClasses: Record<string, string> = {
+      emerald: "bg-emerald-50 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400",
+      blue: "bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400",
+      purple: "bg-purple-50 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400",
+      orange: "bg-orange-50 text-orange-600 dark:bg-orange-900/30 dark:text-orange-400",
+  };
+
+  return (
+    <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex items-center gap-5 hover:shadow-md transition-shadow dark:bg-slate-800 dark:border-slate-700 h-full relative min-w-[260px]">
+        <div className={`p-4 rounded-2xl shrink-0 ${colorClasses[color] || colorClasses.emerald}`}>
+        {icon}
+        </div>
+        <div>
+        <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">{title}</p>
+        <h3 className="text-2xl font-bold text-slate-800 font-heading mt-1 dark:text-slate-100">{value}</h3>
+        <p className="text-xs text-slate-500 font-medium mt-1 flex items-center gap-1 dark:text-slate-400">
+            {trend}
+        </p>
+        </div>
+    </div>
+  );
+};
 
 interface DashboardProps {
   students: Student[];
@@ -96,49 +81,29 @@ const Dashboard: React.FC<DashboardProps> = ({ students, currentUser, courses, o
     visibleStudents = students.filter(s => s.sponsorId === currentUser.handle);
   }
 
-  const averageProgress = visibleStudents.length > 0 
-    ? Math.round(visibleStudents.reduce((acc, s) => acc + (s.progress || 0), 0) / visibleStudents.length) 
-    : 0;
+  // --- Calculations for Widgets ---
 
-  const chartData = visibleStudents.map(s => ({
-    name: s.name ? s.name.split(' ')[0] : 'Unknown', 
-    progress: s.progress || 0,
-    cc: s.caseCredits || 0
-  }));
-
-  const safeCourses = courses || [];
-  const allModules = safeCourses.flatMap(c => c.modules || []);
-  const totalModulesCount = allModules.length;
-  const completedCount = currentUser.completedModules ? currentUser.completedModules.length : 0;
-  const remainingCount = Math.max(0, totalModulesCount - completedCount);
-  const calculatedProgress = totalModulesCount > 0 ? Math.round((completedCount / totalModulesCount) * 100) : 0;
-
-  const pieData = [
-    { name: 'Completed', value: completedCount },
-    { name: 'Remaining', value: remainingCount },
-  ];
-  const PIE_COLORS = ['#059669', '#f1f5f9'];
-
-  const formatTime = (seconds: number) => {
-    const hours = Math.floor(seconds / 3600);
-    const minutes = Math.floor((seconds % 3600) / 60);
-    if(hours > 0) return `${hours}h ${minutes}m`;
-    return `${minutes}m`;
+  // Rank Info
+  const rankProgress = currentUser.rankProgress || {
+      currentRankId: 'NOVUS',
+      currentCycleCC: 0,
+      targetCC: 2,
+      cycleStartDate: new Date().toISOString(),
+      history: []
   };
-
-  const recommendedCourses = safeCourses.filter(course => {
-      if (!course.modules) return false;
-      if (course.status !== CourseStatus.PUBLISHED && !isAdmin) return false;
-      const userCompletedModules = currentUser.completedModules || [];
-      const isCompleted = course.modules.every(m => userCompletedModules.includes(m.id));
-      if (isCompleted) return false;
-      if (isStudent) return [CourseTrack.BASICS, CourseTrack.PRODUCT, CourseTrack.RANK].includes(course.track);
-      return [CourseTrack.BUSINESS, CourseTrack.SALES, CourseTrack.LEADERSHIP].includes(course.track);
-  }).slice(0, 2);
-
+  const currentRankName = RANKS[rankProgress.currentRankId]?.name || 'Distributor';
+  const nextRankDef = RANKS[rankProgress.currentRankId]?.nextRankId ? RANKS[RANKS[rankProgress.currentRankId].nextRankId!] : null;
+  const ccNeeded = nextRankDef ? Math.max(0, rankProgress.targetCC - rankProgress.currentCycleCC).toFixed(2) : '0';
+  
+  // Team Activity
+  const activeDownlines = visibleStudents.filter(s => (s.caseCredits > 0 || s.progress > 0) && s.id !== currentUser.id).length;
+  
+  // Courses Data
+  const safeCourses = courses || [];
+  const completedCount = currentUser.completedModules ? currentUser.completedModules.length : 0;
+  const newCourses = safeCourses.filter(c => c.status === CourseStatus.PUBLISHED && !currentUser.enrolledCourses.includes(c.id)).slice(0, 2);
   const authoredCourses = safeCourses.filter(c => c.authorHandle === currentUser.handle);
   const pendingCourses = safeCourses.filter(c => c.status === CourseStatus.UNDER_REVIEW);
-  const allPrivateCourses = safeCourses.filter(c => c.settings?.teamOnly === true);
 
   const inviteLink = `${window.location.origin}${window.location.pathname}#/join?sponsor=${currentUser.handle.replace('@','')}`;
   
@@ -147,92 +112,90 @@ const Dashboard: React.FC<DashboardProps> = ({ students, currentUser, courses, o
     alert('Invite link copied to clipboard!');
   };
 
-  // Rank Calculation Logic for the Dashboard Card
-  const rankProgress = currentUser.rankProgress || {
-      currentRankId: 'NOVUS',
-      currentCycleCC: 0,
-      targetCC: 2,
-      cycleStartDate: new Date().toISOString(),
-      history: []
-  };
-  const currentRankDef = RANKS[rankProgress.currentRankId];
-  const nextRankDef = currentRankDef?.nextRankId ? RANKS[currentRankDef.nextRankId] : null;
-  const ccProgressPercent = nextRankDef ? Math.min(100, (rankProgress.currentCycleCC / rankProgress.targetCC) * 100) : 100;
+  // Mock Data for Performance Graph (Simulating monthly CC)
+  const performanceData = [
+    { name: 'May', cc: Math.max(0, (currentUser.caseCredits * 0.2)) },
+    { name: 'Jun', cc: Math.max(0, (currentUser.caseCredits * 0.3)) },
+    { name: 'Jul', cc: Math.max(0, (currentUser.caseCredits * 0.5)) },
+    { name: 'Aug', cc: Math.max(0, (currentUser.caseCredits * 0.6)) },
+    { name: 'Sep', cc: Math.max(0, (currentUser.caseCredits * 0.8)) },
+    { name: 'Oct', cc: currentUser.caseCredits },
+  ];
 
-  // Calculate Cycle Month Range (e.g., Oct - Nov)
-  const cycleDate = new Date(rankProgress.cycleStartDate);
-  const month1 = cycleDate.toLocaleString('default', { month: 'short' });
-  // Add 1 month to get the end of the 2-month cycle
-  const nextMonthDate = new Date(cycleDate);
-  nextMonthDate.setMonth(nextMonthDate.getMonth() + 1);
-  const month2 = nextMonthDate.toLocaleString('default', { month: 'short' });
-
-  // Mentor Logic
-  const mySponsor = students.find(s => s.handle === currentUser.sponsorId);
-
-  // Stats Data
+  // Stats for the Carousel
   const stats = [
-    !isStudent && {
-        id: 'users',
-        title: isAdmin ? "Total Users" : "Team Members",
-        value: visibleStudents.length.toString(),
-        icon: <UserGroupIcon />,
-        trend: isAdmin ? "+12% growth" : "Active & Growing"
+    {
+        id: 'rank',
+        title: "Current Rank",
+        value: currentRankName,
+        icon: <AwardIcon />,
+        trend: "Keep pushing!",
+        color: 'purple'
     },
     {
-        id: 'completion',
-        title: isStudent ? "My Completion" : "Avg. Team Completion",
-        value: isStudent ? `${calculatedProgress}%` : `${averageProgress}%`,
-        icon: <ChartBarIcon />,
-        trend: "Based on assigned courses"
+        id: 'monthly_cc',
+        title: "CC This Month",
+        value: `${rankProgress.currentCycleCC.toFixed(2)}`,
+        icon: <TrendingUp size={24} />,
+        trend: "+0.5 this week",
+        color: 'emerald'
     },
     {
-        id: 'cc',
-        title: isStudent ? "My Total CC" : "Total Team CC",
-        value: isStudent ? (currentUser.caseCredits || 0).toFixed(2) : visibleStudents.reduce((acc,s) => acc + (s.caseCredits || 0), 0).toFixed(1),
-        icon: <CurrencyDollarIcon />,
-        trend: "Lifetime Case Credits"
+        id: 'cc_needed',
+        title: "CC To Rank Up",
+        value: nextRankDef ? ccNeeded : "Max Rank",
+        icon: <ArrowUpRight size={24} />,
+        trend: nextRankDef ? `Target: ${rankProgress.targetCC}` : "You made it!",
+        color: 'orange'
+    },
+    (!isStudent) && {
+        id: 'team_active',
+        title: "Active Team",
+        value: activeDownlines.toString(),
+        icon: <Users size={24} />,
+        trend: "Active this month",
+        color: 'blue'
     }
-  ].filter(Boolean) as { id: string, title: string, value: string, icon: React.ReactNode, trend: string }[];
+  ].filter(Boolean) as { id: string, title: string, value: string, icon: React.ReactNode, trend: string, color?: string }[];
 
   // Carousel State
   const [currentStatIndex, setCurrentStatIndex] = useState(0);
 
-  useEffect(() => {
-    const timer = setInterval(() => {
-        setCurrentStatIndex((prev) => (prev + 1) % stats.length);
-    }, 5000);
-    return () => clearInterval(timer);
-  }, [stats.length]);
-
+  // Manual Navigation for Slider
   const nextStat = () => {
       setCurrentStatIndex((prev) => (prev + 1) % stats.length);
   };
-
   const prevStat = () => {
       setCurrentStatIndex((prev) => (prev - 1 + stats.length) % stats.length);
   };
 
+  // Date Logic for Timeline
+  const currentDate = new Date();
+  const prevMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1);
+  const nextMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1);
+  const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
   return (
-    <div className="space-y-8 animate-fade-in">
-      <header>
-        <h1 className="text-2xl md:text-3xl font-bold text-emerald-950 font-heading dark:text-emerald-400">
-            👋 Hi, {currentUser.name?.split(' ')[0]}!
-        </h1>
-        <p className="text-emerald-700 mt-2 text-sm md:text-base dark:text-emerald-300">
-            {isAdmin 
-                ? "Platform-wide analytics and control center." 
-                : isSponsor 
-                ? `Tracking ${visibleStudents.length} members in your downline.` 
-                : "Here is your progress overview for today."
-            }
-        </p>
+    <div className="space-y-8 animate-fade-in pb-12">
+      <header className="flex justify-between items-end">
+        <div>
+            <h1 className="text-2xl md:text-3xl font-bold text-emerald-950 font-heading dark:text-emerald-400">
+                Dashboard
+            </h1>
+            <p className="text-emerald-700 mt-2 text-sm md:text-base dark:text-emerald-300">
+                Here's your daily business snapshot.
+            </p>
+        </div>
+        <div className="text-right hidden md:block">
+            <p className="text-xs text-slate-400 font-bold uppercase tracking-wider">Current Cycle</p>
+            <p className="text-slate-700 font-bold dark:text-slate-300">{monthNames[prevMonth.getMonth()]} - {monthNames[currentDate.getMonth()]}</p>
+        </div>
       </header>
 
-      {/* Stats Section */}
+      {/* Stats Slider / Grid */}
       <div className="mb-4">
         {/* Desktop Grid */}
-        <div className="hidden lg:grid grid-cols-3 gap-6">
+        <div className="hidden lg:grid grid-cols-4 gap-6">
             {stats.map((stat) => (
                 <StatCard 
                     key={stat.id}
@@ -240,11 +203,12 @@ const Dashboard: React.FC<DashboardProps> = ({ students, currentUser, courses, o
                     value={stat.value}
                     icon={stat.icon}
                     trend={stat.trend}
+                    color={stat.color}
                 />
             ))}
         </div>
 
-        {/* Mobile/Tablet Slider */}
+        {/* Mobile Slider */}
         <div className="lg:hidden relative group">
             <div className="overflow-hidden rounded-2xl">
                 <div 
@@ -252,12 +216,13 @@ const Dashboard: React.FC<DashboardProps> = ({ students, currentUser, courses, o
                     style={{ transform: `translateX(-${currentStatIndex * 100}%)` }}
                 >
                     {stats.map((stat) => (
-                        <div key={stat.id} className="min-w-full">
+                        <div key={stat.id} className="min-w-full px-1">
                             <StatCard 
                                 title={stat.title}
                                 value={stat.value}
                                 icon={stat.icon}
                                 trend={stat.trend}
+                                color={stat.color}
                             />
                         </div>
                     ))}
@@ -267,13 +232,13 @@ const Dashboard: React.FC<DashboardProps> = ({ students, currentUser, courses, o
             {/* Arrows */}
             <button 
                 onClick={prevStat}
-                className="absolute left-2 top-1/2 -translate-y-1/2 p-2 rounded-full bg-white/40 dark:bg-black/30 backdrop-blur-md border border-white/20 shadow-sm text-slate-700 dark:text-slate-200 hover:bg-white/60 dark:hover:bg-black/50 transition-all z-10"
+                className="absolute left-2 top-1/2 -translate-y-1/2 p-2 rounded-full bg-white/60 dark:bg-black/40 backdrop-blur-md border border-white/20 shadow-sm text-slate-700 dark:text-slate-200 hover:bg-white dark:hover:bg-black/60 transition-all z-10"
             >
                 <ChevronLeft size={20} />
             </button>
             <button 
                 onClick={nextStat}
-                className="absolute right-2 top-1/2 -translate-y-1/2 p-2 rounded-full bg-white/40 dark:bg-black/30 backdrop-blur-md border border-white/20 shadow-sm text-slate-700 dark:text-slate-200 hover:bg-white/60 dark:hover:bg-black/50 transition-all z-10"
+                className="absolute right-2 top-1/2 -translate-y-1/2 p-2 rounded-full bg-white/60 dark:bg-black/40 backdrop-blur-md border border-white/20 shadow-sm text-slate-700 dark:text-slate-200 hover:bg-white dark:hover:bg-black/60 transition-all z-10"
             >
                 <ChevronRight size={20} />
             </button>
@@ -291,290 +256,237 @@ const Dashboard: React.FC<DashboardProps> = ({ students, currentUser, courses, o
         </div>
       </div>
 
-      {/* Main Grid Layout */}
+      {/* Main Content Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
           
-          {/* Left Column: Charts & Course List */}
+          {/* Left Column (2/3 width) */}
           <div className="lg:col-span-2 space-y-8 min-w-0">
             
-            {/* Creator Studio (For Sponsors/Admins) */}
+            {/* 3-Month Timeline Tracker */}
+            <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 dark:bg-slate-800 dark:border-slate-700">
+                <div className="flex justify-between items-center mb-6">
+                    <h3 className="font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
+                        <Calendar size={18} className="text-emerald-500" />
+                        3-Month Activity Tracker
+                    </h3>
+                    <span className="text-xs font-medium text-slate-400">Rank Accumulation Period</span>
+                </div>
+                
+                <div className="relative pt-4 pb-2">
+                    {/* Progress Bar Background */}
+                    <div className="absolute top-1/2 left-0 w-full h-1 bg-slate-100 -translate-y-1/2 rounded-full dark:bg-slate-700"></div>
+                    {/* Active Progress */}
+                    <div className="absolute top-1/2 left-0 w-1/2 h-1 bg-emerald-500 -translate-y-1/2 rounded-full shadow-[0_0_10px_rgba(16,185,129,0.4)]"></div>
+
+                    <div className="relative flex justify-between">
+                        {/* Month 1 (Past) */}
+                        <div className="flex flex-col items-center gap-3">
+                            <div className="w-8 h-8 rounded-full bg-emerald-100 border-2 border-emerald-500 flex items-center justify-center text-emerald-700 font-bold text-xs z-10 dark:bg-emerald-900 dark:text-emerald-300">
+                                ✓
+                            </div>
+                            <div className="text-center">
+                                <p className="text-xs font-bold text-slate-600 dark:text-slate-300">{monthNames[prevMonth.getMonth()]}</p>
+                                <p className="text-[10px] text-slate-400">Closed</p>
+                            </div>
+                        </div>
+
+                        {/* Month 2 (Current) */}
+                        <div className="flex flex-col items-center gap-3">
+                            <div className="w-10 h-10 rounded-full bg-emerald-600 border-4 border-white shadow-lg flex items-center justify-center text-white font-bold text-sm z-10 dark:border-slate-800 relative">
+                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-20"></span>
+                                Now
+                            </div>
+                            <div className="text-center">
+                                <p className="text-xs font-bold text-emerald-600 dark:text-emerald-400">{monthNames[currentDate.getMonth()]}</p>
+                                <p className="text-[10px] text-emerald-600 font-medium dark:text-emerald-500">Active Cycle</p>
+                            </div>
+                        </div>
+
+                        {/* Month 3 (Future) */}
+                        <div className="flex flex-col items-center gap-3">
+                            <div className="w-8 h-8 rounded-full bg-white border-2 border-slate-200 flex items-center justify-center text-slate-400 font-bold text-xs z-10 dark:bg-slate-800 dark:border-slate-600">
+                                3
+                            </div>
+                            <div className="text-center">
+                                <p className="text-xs font-bold text-slate-400 dark:text-slate-500">{monthNames[nextMonth.getMonth()]}</p>
+                                <p className="text-[10px] text-slate-400">Projected</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* Monthly Performance Graph */}
+            <div className="bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-slate-100 dark:bg-slate-800 dark:border-slate-700">
+                <div className="flex justify-between items-center mb-6">
+                    <h2 className="text-lg font-bold text-slate-800 dark:text-slate-100">Monthly CC Growth</h2>
+                    <select className="bg-slate-50 border border-slate-200 text-xs rounded-lg px-2 py-1 outline-none dark:bg-slate-700 dark:border-slate-600 dark:text-slate-300">
+                        <option>Last 6 Months</option>
+                        <option>This Year</option>
+                    </select>
+                </div>
+                <div className="h-64 w-full min-w-0">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <AreaChart data={performanceData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                      <defs>
+                        <linearGradient id="colorCc" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="#10b981" stopOpacity={0.2}/>
+                          <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
+                        </linearGradient>
+                      </defs>
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                      <XAxis dataKey="name" axisLine={false} tickLine={false} dy={10} tick={{fill: '#94a3b8', fontSize: 12}} />
+                      <YAxis axisLine={false} tickLine={false} tick={{fill: '#94a3b8', fontSize: 12}} />
+                      <Tooltip 
+                        contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)', padding: '12px', backgroundColor: '#fff' }}
+                        cursor={{ stroke: '#10b981', strokeWidth: 1, strokeDasharray: '4 4' }}
+                      />
+                      <Area type="monotone" dataKey="cc" stroke="#10b981" strokeWidth={3} fillOpacity={1} fill="url(#colorCc)" />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                </div>
+            </div>
+
+            {/* Quick Actions Grid */}
+            <div>
+                <h2 className="text-lg font-bold text-slate-800 mb-4 dark:text-slate-100">Quick Actions</h2>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <Link to="/chat" className="bg-white p-4 rounded-xl border border-slate-100 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all flex flex-col items-center gap-3 text-center dark:bg-slate-800 dark:border-slate-700">
+                        <div className="w-10 h-10 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center dark:bg-blue-900/30 dark:text-blue-400"><MessageCircle size={20} /></div>
+                        <span className="text-sm font-bold text-slate-700 dark:text-slate-300">Team Chat</span>
+                    </Link>
+                    <Link to="/sales-builder" className="bg-white p-4 rounded-xl border border-slate-100 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all flex flex-col items-center gap-3 text-center dark:bg-slate-800 dark:border-slate-700">
+                        <div className="w-10 h-10 bg-purple-50 text-purple-600 rounded-full flex items-center justify-center dark:bg-purple-900/30 dark:text-purple-400"><ShoppingBag size={20} /></div>
+                        <span className="text-sm font-bold text-slate-700 dark:text-slate-300">Sales Page</span>
+                    </Link>
+                    <Link to="/community" className="bg-white p-4 rounded-xl border border-slate-100 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all flex flex-col items-center gap-3 text-center dark:bg-slate-800 dark:border-slate-700">
+                        <div className="w-10 h-10 bg-orange-50 text-orange-600 rounded-full flex items-center justify-center dark:bg-orange-900/30 dark:text-orange-400"><Globe size={20} /></div>
+                        <span className="text-sm font-bold text-slate-700 dark:text-slate-300">Community</span>
+                    </Link>
+                    <Link to="/sales" className="bg-white p-4 rounded-xl border border-slate-100 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all flex flex-col items-center gap-3 text-center dark:bg-slate-800 dark:border-slate-700">
+                        <div className="w-10 h-10 bg-emerald-50 text-emerald-600 rounded-full flex items-center justify-center dark:bg-emerald-900/30 dark:text-emerald-400"><Plus size={20} /></div>
+                        <span className="text-sm font-bold text-slate-700 dark:text-slate-300">Log Sale</span>
+                    </Link>
+                </div>
+            </div>
+
+            {/* Course Recommendations */}
+            {newCourses.length > 0 && (
+                <div className="bg-gradient-to-r from-indigo-900 to-slate-900 rounded-2xl p-6 text-white relative overflow-hidden shadow-lg">
+                    <div className="relative z-10 flex justify-between items-center mb-4">
+                        <h3 className="font-bold text-lg flex items-center gap-2"><Bell size={18} className="text-yellow-400" /> New Courses Available</h3>
+                        <Link to="/training/global" className="text-xs bg-white/10 hover:bg-white/20 px-3 py-1.5 rounded-lg transition-colors">View All</Link>
+                    </div>
+                    <div className="space-y-3 relative z-10">
+                        {newCourses.map(c => (
+                            <Link key={c.id} to={`/training/preview/${c.id}`} className="block bg-white/10 hover:bg-white/20 p-3 rounded-xl transition-colors border border-white/5">
+                                <div className="flex items-center gap-3">
+                                    <img src={c.thumbnailUrl} className="w-12 h-12 rounded-lg object-cover" alt="" />
+                                    <div>
+                                        <p className="font-bold text-sm">{c.title}</p>
+                                        <p className="text-xs text-indigo-200">{c.modules.length} Modules • {c.level}</p>
+                                    </div>
+                                </div>
+                            </Link>
+                        ))}
+                    </div>
+                    {/* Background decoration */}
+                    <div className="absolute -bottom-10 -right-10 w-40 h-40 bg-indigo-500/30 rounded-full blur-3xl"></div>
+                </div>
+            )}
+
+            {/* Creator Studio (Admin Only) - Preserved */}
             {!isStudent && (
-              <div className="bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-slate-100 dark:bg-slate-800 dark:border-slate-700">
-                  <div className="flex justify-between items-center mb-6">
-                      <h2 className="text-lg md:text-xl font-bold text-slate-800 font-heading dark:text-slate-100">
-                          Creator Studio
-                      </h2>
-                      <div className="flex gap-2">
-                          <Link to="/sales-builder" className="bg-slate-100 text-slate-600 px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-slate-200 transition-colors flex items-center gap-1 dark:bg-slate-700 dark:text-slate-300 dark:hover:bg-slate-600">
-                              <Plus size={14} /> Page
-                          </Link>
-                          <Link to="/builder/new" className="bg-emerald-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-emerald-700 transition-colors flex items-center gap-1">
-                              <Plus size={14} /> Course
-                          </Link>
-                      </div>
+              <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 dark:bg-slate-800 dark:border-slate-700">
+                  <div className="flex justify-between items-center mb-4">
+                      <h2 className="text-lg font-bold text-slate-800 dark:text-slate-100">Creator Studio</h2>
+                      <Link to="/builder/new" className="bg-emerald-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-emerald-700 transition-colors flex items-center gap-1">
+                          <Plus size={14} /> Course
+                      </Link>
                   </div>
-
-                  <div className="space-y-4">
-                      {/* My Courses Section */}
-                      {authoredCourses.length > 0 ? (
-                          <div className="space-y-3">
-                              <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest">Your Courses</h3>
-                              {authoredCourses.map(course => (
-                                  <div key={course.id} className="flex items-center justify-between p-3 bg-slate-50 rounded-xl border border-slate-100 dark:bg-slate-900/50 dark:border-slate-700">
-                                      <div className="flex items-center gap-3">
-                                          <div className="w-10 h-10 rounded-lg bg-slate-200 overflow-hidden shrink-0 dark:bg-slate-700">
-                                              <img src={course.thumbnailUrl} className="w-full h-full object-cover" alt="" />
-                                          </div>
-                                          <div>
-                                              <p className="font-bold text-slate-800 text-sm dark:text-slate-200">{course.title}</p>
-                                              <p className="text-xs text-slate-500 flex gap-2 dark:text-slate-400">
-                                                  <span>{course.modules.length} Modules</span>
-                                                  <span>•</span>
-                                                  <span className={`${course.status === CourseStatus.PUBLISHED ? 'text-green-600' : 'text-orange-500'}`}>{course.status}</span>
-                                              </p>
-                                          </div>
-                                      </div>
-                                      <div className="flex gap-2">
-                                          <Link to={`/builder/${course.id}`} className="p-2 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors dark:text-slate-400 dark:hover:bg-slate-800" title="Edit Course">
-                                              <Edit size={16} />
-                                          </Link>
-                                          <Link to={`/training/preview/${course.id}`} className="p-2 text-slate-500 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors dark:text-slate-400 dark:hover:bg-slate-800" title="View Page">
-                                              <ExternalLink size={16} />
-                                          </Link>
-                                      </div>
-                                  </div>
-                              ))}
-                          </div>
-                      ) : (
-                          <div className="text-center py-6 border-2 border-dashed border-slate-200 rounded-xl dark:border-slate-700">
-                              <p className="text-sm text-slate-400 mb-2">You haven't created any courses yet.</p>
-                              <Link to="/builder/new" className="text-emerald-600 font-bold text-sm hover:underline">Create your first course</Link>
-                          </div>
-                      )}
-
-                      {/* Sales Page Section */}
-                      <div className="space-y-3 pt-2">
-                          <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest">Your Sales Pages</h3>
-                          <div className="flex items-center justify-between p-3 bg-slate-50 rounded-xl border border-slate-100 dark:bg-slate-900/50 dark:border-slate-700">
+                  <div className="space-y-3">
+                      {authoredCourses.slice(0, 3).map(course => (
+                          <div key={course.id} className="flex items-center justify-between p-3 bg-slate-50 rounded-xl border border-slate-100 dark:bg-slate-900/50 dark:border-slate-700">
                               <div className="flex items-center gap-3">
-                                  <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center text-blue-600 font-bold text-xs shrink-0 dark:bg-blue-900/30 dark:text-blue-400">
-                                      SP
+                                  <div className="w-8 h-8 rounded-lg bg-slate-200 overflow-hidden shrink-0 dark:bg-slate-700">
+                                      <img src={course.thumbnailUrl} className="w-full h-full object-cover" alt="" />
                                   </div>
                                   <div>
-                                      <p className="font-bold text-slate-800 text-sm dark:text-slate-200">My Sales Page (Draft)</p>
-                                      <p className="text-xs text-slate-500 dark:text-slate-400">Active Draft • Last edited recently</p>
+                                      <p className="font-bold text-slate-800 text-xs dark:text-slate-200">{course.title}</p>
+                                      <p className="text-[10px] text-slate-500">{course.status}</p>
                                   </div>
                               </div>
-                              <Link to="/sales-builder" className="p-2 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors dark:text-slate-400 dark:hover:bg-slate-800" title="Edit Page">
-                                  <Edit size={16} />
-                              </Link>
+                              <Link to={`/builder/${course.id}`} className="text-slate-400 hover:text-emerald-600"><Edit size={14} /></Link>
                           </div>
-                      </div>
+                      ))}
+                      {authoredCourses.length === 0 && <p className="text-xs text-slate-400 italic">No courses created yet.</p>}
                   </div>
               </div>
             )}
-
-            {/* Progress Chart */}
-            <div className="bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-slate-100 dark:bg-slate-800 dark:border-slate-700">
-                <div className="flex justify-between items-center mb-8">
-                    <h2 className="text-lg md:text-xl font-bold text-slate-800 font-heading dark:text-slate-100">
-                        {isStudent ? 'Your Progress' : 'Team Leaderboard'}
-                    </h2>
-                </div>
-                <div className="h-64 md:h-80 w-full min-w-0">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                      <XAxis dataKey="name" axisLine={false} tickLine={false} dy={10} tick={{fill: '#64748b', fontSize: 12}} />
-                      <YAxis axisLine={false} tickLine={false} tick={{fill: '#64748b', fontSize: 12}} />
-                      <Tooltip 
-                        cursor={{fill: '#f8fafc'}}
-                        contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)', padding: '12px' }}
-                      />
-                      <Bar dataKey="progress" radius={[6, 6, 0, 0]} barSize={40}>
-                        {chartData.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={entry.progress > 80 ? '#059669' : '#10b981'} />
-                        ))}
-                      </Bar>
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
-            </div>
-
-            {/* Pending Reviews */}
-            {isAdmin && pendingCourses.length > 0 && (
-                <div className="bg-orange-50 p-6 md:p-8 rounded-2xl border border-orange-100 dark:bg-orange-900/30 dark:border-orange-800">
-                    <div className="flex justify-between items-center mb-4">
-                        <h2 className="text-lg md:text-xl font-bold text-orange-900 font-heading dark:text-orange-200">Pending Course Reviews</h2>
-                        <span className="bg-orange-200 text-orange-800 px-2 py-1 rounded-full text-xs font-bold dark:bg-orange-800 dark:text-orange-200">{pendingCourses.length}</span>
-                    </div>
-                    <div className="space-y-3">
-                        {pendingCourses.map(course => (
-                            <div key={course.id} className="bg-white p-4 rounded-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-sm border border-orange-100 dark:bg-slate-800 dark:border-slate-700">
-                                <div>
-                                    <h3 className="font-bold text-slate-800 dark:text-slate-100">{course.title}</h3>
-                                    <div className="flex gap-3 text-xs text-slate-500 mt-1 dark:text-slate-400">
-                                        <span>By: {course.authorHandle}</span>
-                                        <span>•</span>
-                                        <span>{course.modules.length} Modules</span>
-                                    </div>
-                                </div>
-                                <div className="flex gap-2 w-full sm:w-auto">
-                                    <Link 
-                                        to={`/course-review/${course.id}`}
-                                        className="flex-1 sm:flex-none text-center text-xs font-bold text-emerald-700 bg-emerald-50 px-4 py-2 rounded-lg hover:bg-emerald-100 transition-colors border border-emerald-200 dark:bg-emerald-900/50 dark:text-emerald-300 dark:border-emerald-800 dark:hover:bg-emerald-800/50"
-                                    >
-                                        Review Content
-                                    </Link>
-                                    <button 
-                                        onClick={() => onReviewCourse?.(course.id, CourseStatus.PUBLISHED)}
-                                        className="text-xs font-bold text-white bg-emerald-600 px-4 py-2 rounded-lg hover:bg-emerald-700"
-                                    >
-                                        Quick Approve
-                                    </button>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            )}
-
-            {/* Recommended Courses List */}
-            <div className="bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-slate-100 dark:bg-slate-800 dark:border-slate-700">
-                <h2 className="text-lg md:text-xl font-bold text-emerald-950 mb-6 font-heading dark:text-emerald-400">Recommended for You</h2>
-                {recommendedCourses.length > 0 ? (
-                    <div className="space-y-4">
-                    {recommendedCourses.map(course => {
-                        const totalCourseModules = course.modules?.length || 0;
-                        const userCompletedModules = currentUser.completedModules || [];
-                        const completedInCourse = course.modules?.filter(m => userCompletedModules.includes(m.id)).length || 0;
-                        const courseProgress = totalCourseModules > 0 ? Math.round((completedInCourse / totalCourseModules) * 100) : 0;
-
-                        const firstModuleId = course.modules?.[0]?.id || 'unknown';
-                        const firstChapterId = course.modules?.[0]?.chapters?.[0]?.id || 'unknown';
-
-                        return (
-                        <div key={course.id} className="border border-slate-100 rounded-2xl p-5 hover:bg-slate-50 transition-all flex flex-col sm:flex-row sm:items-center gap-5 dark:border-slate-700 dark:hover:bg-slate-700/50">
-                            <div className="w-full sm:w-24 h-32 sm:h-20 rounded-xl bg-slate-200 overflow-hidden flex-shrink-0 shadow-sm dark:bg-slate-700">
-                                <img src={course.thumbnailUrl} alt={course.title} className="w-full h-full object-cover" />
-                            </div>
-                            
-                            <div className="flex-1 min-w-0">
-                                <div className="flex flex-wrap items-center gap-2 mb-2">
-                                    <span className="text-[10px] px-2 py-0.5 bg-emerald-50 text-emerald-600 rounded-md font-bold tracking-wide uppercase dark:bg-emerald-900/50 dark:text-emerald-400">{course.track}</span>
-                                </div>
-                                <h3 className="font-bold text-slate-800 truncate text-base md:text-lg mb-2 dark:text-slate-100">{course.title}</h3>
-                                
-                                <div className="flex items-center gap-3">
-                                    <div className="flex-1 h-2 bg-slate-100 rounded-full overflow-hidden dark:bg-slate-700">
-                                        <div className="h-full bg-emerald-500 transition-all duration-500" style={{ width: `${courseProgress}%` }}></div>
-                                    </div>
-                                    <span className="text-xs font-bold text-emerald-700 w-8 text-right dark:text-emerald-400">{courseProgress}%</span>
-                                </div>
-                                <p className="text-[11px] text-slate-400 mt-1.5 font-medium dark:text-slate-500">{completedInCourse} of {totalCourseModules} modules completed</p>
-                            </div>
-
-                            <Link 
-                                to={`/classroom/${course.id}/${firstModuleId}/${firstChapterId}`}
-                                className="w-full sm:w-auto bg-slate-900 text-white text-sm font-bold py-3 px-6 rounded-xl hover:bg-slate-800 transition-colors text-center whitespace-nowrap shadow-md shadow-slate-200 dark:bg-emerald-600 dark:hover:bg-emerald-700 dark:shadow-none"
-                            >
-                                {courseProgress === 0 ? 'Start Learning' : 'Continue'}
-                            </Link>
-                        </div>
-                        );
-                    })}
-                    </div>
-                ) : (
-                    <div className="text-center py-12 bg-slate-50 rounded-xl border border-dashed border-slate-200 dark:bg-slate-800/50 dark:border-slate-700">
-                        <p className="text-slate-500 font-medium dark:text-slate-400">You're all caught up!</p>
-                        <p className="text-sm text-slate-400 mt-1 dark:text-slate-500">Check back later for new content.</p>
-                    </div>
-                )}
-            </div>
           </div>
 
-          {/* Right Column: Widgets */}
+          {/* Right Column (1/3 width) - Widgets */}
           <div className="space-y-6 min-w-0">
             
-            {/* Quick User Search Widget (Super Admin Only) */}
-            {isSuperAdmin && (
-                <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 md:p-8 dark:bg-slate-800 dark:border-slate-700">
-                    <div className="flex items-center gap-3 mb-4 text-emerald-800 dark:text-emerald-400">
-                        <div className="bg-emerald-100 p-2 rounded-lg dark:bg-emerald-900/50"><MagnifyingGlassIcon /></div>
-                        <h3 className="font-bold text-lg font-heading">Quick User Lookup</h3>
+            {/* Enrollment Widget */}
+            {!isStudent && (
+                <div className="bg-gradient-to-br from-emerald-600 to-teal-700 rounded-2xl shadow-lg shadow-emerald-600/20 p-6 text-white relative overflow-hidden group">
+                    <div className="relative z-10">
+                        <div className="flex items-center justify-between mb-4">
+                            <h2 className="text-lg font-bold">Grow Team</h2>
+                            <div className="bg-white/20 p-2 rounded-lg backdrop-blur-sm"><ShareIcon /></div>
+                        </div>
+                        <p className="text-emerald-50 text-xs mb-4 opacity-90">Share your invite link to build your downline.</p>
+                        
+                        <div className="bg-black/20 rounded-xl p-1 text-xs font-mono text-white w-full border border-white/10 pl-3 flex items-center justify-between">
+                            <span className="truncate mr-2">{inviteLink}</span>
+                            <button onClick={copyToClipboard} className="bg-white text-emerald-700 p-1.5 rounded-lg hover:bg-emerald-50"><ClipboardIcon /></button>
+                        </div>
                     </div>
-                    <div className="flex gap-2">
-                        <Link 
-                            to="/students" 
-                            className="w-full bg-slate-800 hover:bg-slate-900 text-white font-medium py-3 px-4 rounded-xl transition-colors text-center text-sm flex items-center justify-center gap-2 shadow-md shadow-slate-200 dark:bg-emerald-600 dark:hover:bg-emerald-700 dark:shadow-none"
-                        >
-                            <MagnifyingGlassIcon />
-                            Search Database
-                        </Link>
+                    <div className="absolute -right-6 -bottom-6 text-white/10 pointer-events-none">
+                        <Users size={120} />
                     </div>
                 </div>
             )}
 
-            {/* Engagement Overview (Pie Chart) */}
-            <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-8 relative overflow-hidden dark:bg-slate-800 dark:border-slate-700">
-                <div className="flex justify-between items-center mb-6 relative z-10">
-                    <h2 className="text-lg font-bold text-emerald-950 font-heading dark:text-emerald-400">Engagement</h2>
-                    <span className="text-[10px] font-bold px-2 py-1 bg-slate-50 text-slate-400 rounded-md border border-slate-100 uppercase tracking-wide dark:bg-slate-700 dark:border-slate-600 dark:text-slate-300">Overview</span>
+            {/* Top Performing Team (For Sponsors) */}
+            {!isStudent && visibleStudents.length > 1 && (
+                <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 dark:bg-slate-800 dark:border-slate-700">
+                    <div className="flex justify-between items-center mb-4">
+                        <h3 className="font-bold text-slate-800 dark:text-white">Top Performers</h3>
+                        <Link to="/students" className="text-xs text-emerald-600 font-bold hover:underline dark:text-emerald-400">View All</Link>
+                    </div>
+                    <div className="space-y-4">
+                        {visibleStudents
+                            .filter(s => s.id !== currentUser.id)
+                            .sort((a,b) => b.caseCredits - a.caseCredits)
+                            .slice(0, 5)
+                            .map((s, i) => (
+                                <div key={s.id} className="flex items-center justify-between">
+                                    <div className="flex items-center gap-3">
+                                        <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${i === 0 ? 'bg-yellow-100 text-yellow-700' : i === 1 ? 'bg-slate-200 text-slate-600' : i === 2 ? 'bg-orange-100 text-orange-700' : 'bg-slate-50 text-slate-400'}`}>
+                                            {i + 1}
+                                        </div>
+                                        <div>
+                                            <p className="text-sm font-bold text-slate-700 dark:text-slate-200">{s.name.split(' ')[0]}</p>
+                                            <p className="text-[10px] text-slate-400">{s.role}</p>
+                                        </div>
+                                    </div>
+                                    <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400">{s.caseCredits.toFixed(1)} CC</span>
+                                </div>
+                            ))
+                        }
+                    </div>
                 </div>
-                
-                <div className="h-64 w-full relative z-10 min-w-0">
-                   <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                      <Pie
-                        data={pieData}
-                        cx="50%"
-                        cy="50%"
-                        innerRadius={60}
-                        outerRadius={80}
-                        paddingAngle={5}
-                        dataKey="value"
-                        stroke="none"
-                        cornerRadius={6}
-                      >
-                        {pieData.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />
-                        ))}
-                      </Pie>
-                      <Tooltip 
-                         contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)', padding: '8px 12px' }}
-                      />
-                      <Legend 
-                        verticalAlign="bottom" 
-                        height={36} 
-                        iconSize={8} 
-                        iconType="circle"
-                        wrapperStyle={{ paddingTop: '10px', fontSize: '12px', fontFamily: 'Jost, sans-serif' }}
-                      />
-                    </PieChart>
-                  </ResponsiveContainer>
-                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none pb-10">
-                     <div className="text-center">
-                        <span className="block text-4xl font-bold text-emerald-800 font-heading tracking-tight dark:text-emerald-400">{calculatedProgress}%</span>
-                        <span className="text-[10px] text-slate-400 uppercase tracking-widest font-bold dark:text-slate-500">Done</span>
-                     </div>
-                  </div>
-                </div>
-                
-                <div className="mt-2 pt-4 border-t border-slate-50 text-center relative z-10 dark:border-slate-700">
-                    <p className="text-sm text-slate-500 dark:text-slate-400">
-                        You've completed <span className="font-bold text-emerald-700 dark:text-emerald-400">{completedCount}</span> out of <span className="font-bold text-slate-700 dark:text-slate-300">{totalModulesCount}</span> modules.
-                    </p>
-                </div>
-                <div className="absolute -top-10 -right-10 w-32 h-32 bg-emerald-50 rounded-full blur-3xl opacity-50 z-0 dark:bg-emerald-900/20"></div>
-            </div>
+            )}
 
             {/* AI Tutor Stats */}
-            <div className="bg-gradient-to-br from-emerald-900 to-teal-900 rounded-2xl shadow-lg shadow-emerald-900/20 p-8 text-white relative overflow-hidden">
+            <div className="bg-slate-900 rounded-2xl shadow-lg p-6 text-white relative overflow-hidden">
                  <div className="relative z-10">
                    <div className="flex justify-between items-start mb-6">
                        <div>
                             <h3 className="font-bold text-lg font-heading">AI Tutor Stats</h3>
-                            <p className="text-emerald-200 text-xs mt-1 font-medium">Weekly Activity</p>
+                            <p className="text-slate-400 text-xs mt-1">Weekly Activity</p>
                        </div>
                        <div className="bg-white/10 p-2 rounded-lg backdrop-blur-sm">
                            <SparklesIcon />
@@ -583,116 +495,28 @@ const Dashboard: React.FC<DashboardProps> = ({ students, currentUser, courses, o
                    
                    <div className="space-y-4">
                      <div className="flex justify-between items-center text-sm border-b border-white/10 pb-3">
-                        <span className="text-emerald-100 font-medium">Questions Asked</span>
+                        <span className="text-slate-300 font-medium">Questions Asked</span>
                         <span className="font-bold text-xl">{currentUser.learningStats?.questionsAsked || 0}</span>
                      </div>
-                     <div className="flex justify-between items-center text-sm border-b border-white/10 pb-3">
-                        <span className="text-emerald-100 font-medium">Total Time</span>
-                        <span className="font-bold text-xl">{formatTime(currentUser.learningStats?.totalTimeSpent || 0)}</span>
-                     </div>
                      <div className="flex justify-between items-center text-sm pt-1">
-                        <span className="text-emerald-100 font-medium">Learning Streak</span>
+                        <span className="text-slate-300 font-medium">Learning Streak</span>
                         <span className="font-bold text-yellow-400 flex items-center gap-1">{currentUser.learningStats?.learningStreak || 0} Days <span className="text-lg">🔥</span></span>
                      </div>
                    </div>
                  </div>
-                 
-                 <div className="absolute -bottom-10 -left-10 w-40 h-40 bg-teal-500/20 rounded-full blur-3xl"></div>
             </div>
 
-            {/* Enrollment Widget */}
-            {!isStudent && (
-                <div className="bg-gradient-to-br from-emerald-600 to-teal-700 rounded-2xl shadow-lg shadow-emerald-600/20 p-8 text-white relative overflow-hidden group h-auto">
-                    <div className="relative z-10 flex flex-col justify-between gap-8">
-                        <div>
-                            <div className="flex items-center justify-between">
-                                <h2 className="text-xl font-bold mb-2 font-heading">Grow Your Team</h2>
-                                <ShareIcon />
-                            </div>
-                            <p className="text-emerald-50 text-sm leading-relaxed opacity-90">Share your personalized link to automatically attribute new FBOs to your downline.</p>
-                        </div>
-                        
-                        <div className="bg-white/10 rounded-2xl backdrop-blur-md border border-white/20 p-5">
-                            <div className="text-[10px] text-emerald-100 uppercase font-bold tracking-widest mb-2">Your Invite Link</div>
-                            <div className="flex gap-2 items-center bg-black/20 rounded-xl p-1 text-sm font-mono text-white w-full border border-white/10 pl-3">
-                                <span className="truncate w-full tracking-wide text-xs">{inviteLink}</span>
-                                <button 
-                                    onClick={copyToClipboard}
-                                    className="bg-white text-emerald-700 p-2 rounded-lg hover:bg-emerald-50 transition-colors flex-shrink-0"
-                                    title="Copy Link"
-                                >
-                                    <ClipboardIcon />
-                                </button>
-                            </div>
-                            <Link to="/join" className="block w-full text-emerald-100 text-center py-2 mt-2 text-xs hover:text-white underline">
-                                Preview Form
-                            </Link>
-                        </div>
-                    </div>
-                    <div className="absolute -right-8 -bottom-8 text-white/10 group-hover:scale-110 transition-transform duration-700 pointer-events-none rotate-12">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-56 h-56">
-                            <path d="M11.644 1.59a.75.75 0 01.712 0l9.75 5.25a.75.75 0 010 1.32l-9.75 5.25a.75.75 0 01-.712 0l-9.75-5.25a.75.75 0 010-1.32l9.75-5.25z" />
-                            <path d="M3.265 10.602l7.668 4.129a2.25 2.25 0 002.134 0l7.668-4.13 1.37.739a.75.75 0 010 1.32l-9.75 5.25a.75.75 0 01-.71 0l-9.75-5.25a.75.75 0 010-1.32l1.37-.738z" />
-                            <path d="M10.933 19.231l-7.668-4.13-1.37.738a.75.75 0 000 1.32l9.75 5.25c.221.12.489.12.71 0l9.75-5.25a.75.75 0 000-1.32l-1.37-.738-7.668 4.13a2.25 2.25 0 01-2.134 0z" />
-                        </svg>
-                    </div>
-                </div>
-            )}
-            
-             {/* UPDATED: Student Next Rank Steps */}
-            {isStudent && nextRankDef && (
-                <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-8 flex flex-col justify-center items-center text-center h-auto relative overflow-hidden dark:bg-slate-800 dark:border-slate-700">
-                    <div className="w-20 h-20 bg-emerald-50 rounded-full flex items-center justify-center text-emerald-600 mb-5 relative z-10 dark:bg-emerald-900/30 dark:text-emerald-400">
-                        <AcademicCapIcon />
-                    </div>
-                    <div className="relative z-10">
-                        <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500">Current Rank Cycle</span>
-                        <h3 className="text-xl font-bold text-slate-800 font-heading dark:text-slate-100 mt-1">Goal: {nextRankDef.name}</h3>
-                        <p className="text-xs text-slate-400 font-mono mt-1 mb-3 bg-slate-50 dark:bg-slate-900/50 inline-block px-2 py-1 rounded">
-                            {month1} - {month2}
-                        </p>
-                        <p className="text-slate-500 mb-6 text-sm leading-relaxed dark:text-slate-400">
-                            Accumulate {rankProgress.targetCC} CC in this cycle to advance.
-                        </p>
-                        <div className="w-full bg-slate-100 h-4 rounded-full overflow-hidden dark:bg-slate-700">
-                            <div className="bg-gradient-to-r from-emerald-500 to-teal-500 h-full transition-all duration-1000" style={{width: `${ccProgressPercent}%`}}></div>
-                        </div>
-                        <div className="mt-3 text-sm font-bold text-emerald-700 dark:text-emerald-400">
-                            {rankProgress.currentCycleCC.toFixed(2)} / {rankProgress.targetCC} CC
-                        </div>
-                    </div>
-                    
-                    {/* Bg Decor */}
-                    <div className="absolute top-0 left-0 w-full h-2 bg-emerald-500"></div>
-                </div>
-            )}
-            
-            {/* Show Congratulations if no next rank */}
-            {isStudent && !nextRankDef && (
-                 <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-8 flex flex-col justify-center items-center text-center h-auto dark:bg-slate-800 dark:border-slate-700">
-                    <div className="w-20 h-20 bg-yellow-50 rounded-full flex items-center justify-center text-yellow-600 mb-5 dark:bg-yellow-900/30 dark:text-yellow-400">
-                        <AcademicCapIcon />
-                    </div>
-                    <h3 className="text-xl font-bold text-slate-800 font-heading dark:text-slate-100">Top Rank Achieved!</h3>
-                    <p className="text-slate-500 mt-2 text-sm dark:text-slate-400">You have reached the pinnacle of the marketing plan.</p>
-                 </div>
-            )}
-
-            {/* Mentor Access Card */}
-            {isStudent && mySponsor && (
+            {/* Mentor Access Card (Student View) */}
+            {isStudent && (
                 <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 dark:bg-slate-800 dark:border-slate-700">
                     <h3 className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-4">Your Team Leader</h3>
                     <div className="flex items-center gap-4">
                         <div className="w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center text-emerald-800 font-bold dark:bg-emerald-900 dark:text-emerald-200">
-                            {mySponsor.avatarUrl ? (
-                                <img src={mySponsor.avatarUrl} alt={mySponsor.name} className="w-full h-full object-cover rounded-full" />
-                            ) : (
-                                <User />
-                            )}
+                            <User />
                         </div>
                         <div>
-                            <p className="font-bold text-slate-800 dark:text-slate-100">{mySponsor.name}</p>
-                            <p className="text-xs text-slate-500 dark:text-slate-400">{mySponsor.email}</p>
+                            <p className="font-bold text-slate-800 dark:text-slate-100">My Sponsor</p>
+                            <p className="text-xs text-slate-500 dark:text-slate-400">{currentUser.sponsorId}</p>
                         </div>
                     </div>
                     <Link 
@@ -703,6 +527,7 @@ const Dashboard: React.FC<DashboardProps> = ({ students, currentUser, courses, o
                     </Link>
                 </div>
             )}
+
           </div>
       </div>
     </div>

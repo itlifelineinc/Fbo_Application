@@ -348,7 +348,7 @@ const CourseLandingPage: React.FC<CourseLandingPageProps> = ({ courses, currentU
                       </p>
                       <p className="text-xs opacity-80 leading-relaxed">
                           {isTeamMember 
-                            ? "This training is exclusive to the FBO Growth Academy. Since you are in the creator's team, you have full access for free." 
+                            ? "This training is exclusive to Nexu. Since you are in the creator's team, you have full access for free." 
                             : isGlobalFree 
                             ? "This course is made available for free to the global community."
                             : "Invest in your growth. Purchase this course to unlock all modules and materials."}

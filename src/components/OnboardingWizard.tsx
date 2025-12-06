@@ -1,9 +1,10 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { Student, QuizResult, UserRole } from '../types';
 import { generateOnboardingPlan } from '../services/geminiService';
 import { Loader2, Sparkles } from 'lucide-react';
+import { Logo } from './Logo';
 
 interface OnboardingWizardProps {
   onEnroll: (student: Student) => void;
@@ -150,15 +151,11 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onEnroll, existingS
           
           {/* Step 0: Landing */}
           {step === 0 && (
-            <div className="text-center space-y-6 animate-fade-in">
-              <img 
-                src="https://upload.wikimedia.org/wikipedia/en/thumb/8/8f/Forever_Living_Products_logo.svg/300px-Forever_Living_Products_logo.svg.png" 
-                alt="Forever Living" 
-                className="h-20 mx-auto mb-6 object-contain"
-              />
+            <div className="text-center space-y-6 animate-fade-in flex flex-col items-center">
+              <Logo className="text-4xl mb-4" iconClassName="w-16 h-16" />
               <h1 className="text-4xl font-bold text-emerald-950 font-heading">Start Your Forever Journey</h1>
               <p className="text-lg text-slate-600">
-                Welcome to the FBO Growth Academy. Let's personalize your path to success.
+                Welcome to Nexu. Let's personalize your path to success.
               </p>
               
               {verifiedSponsor && (
@@ -264,7 +261,7 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onEnroll, existingS
               </div>
 
               <div className="flex justify-between pt-8">
-                 <button onClick={prevStep} className="text-slate-400 hover:text-slate-600 font-medium px-4 py-2">Back</button>
+                 <button onClick={prevStep} className="text-slate-400 font-bold px-4">Back</button>
                  <button 
                     onClick={handleVerifySponsor}
                     disabled={!sponsorHandle.trim()}

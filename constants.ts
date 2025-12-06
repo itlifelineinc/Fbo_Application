@@ -1,5 +1,44 @@
 
-import { Course, Student, UserRole, Message, CourseTrack, CommunityPost, Cohort, CourseLevel, CourseStatus } from './types';
+import { Course, Student, UserRole, Message, CourseTrack, CommunityPost, Cohort, CourseLevel, CourseStatus, RankDefinition } from './types';
+
+// --- RANK RULES (FLP) ---
+export const RANKS: Record<string, RankDefinition> = {
+  'NOVUS': {
+    id: 'NOVUS',
+    name: 'Distributor (Novus)',
+    targetCC: 2,
+    monthsAllowed: 2,
+    nextRankId: 'AS_SUP'
+  },
+  'AS_SUP': {
+    id: 'AS_SUP',
+    name: 'Assistant Supervisor',
+    targetCC: 25,
+    monthsAllowed: 2,
+    nextRankId: 'SUP'
+  },
+  'SUP': {
+    id: 'SUP',
+    name: 'Supervisor',
+    targetCC: 75,
+    monthsAllowed: 2,
+    nextRankId: 'AS_MGR'
+  },
+  'AS_MGR': {
+    id: 'AS_MGR',
+    name: 'Assistant Manager',
+    targetCC: 120,
+    monthsAllowed: 2,
+    nextRankId: 'MGR'
+  },
+  'MGR': {
+    id: 'MGR',
+    name: 'Manager',
+    targetCC: 0, // Top rank
+    monthsAllowed: 0,
+    nextRankId: null
+  }
+};
 
 export const INITIAL_STUDENTS: Student[] = [
   {
@@ -15,6 +54,13 @@ export const INITIAL_STUDENTS: Student[] = [
     completedChapters: [],
     enrolledCourses: ['c1'],
     caseCredits: 100, 
+    rankProgress: {
+        currentRankId: 'MGR',
+        currentCycleCC: 0,
+        targetCC: 0,
+        cycleStartDate: '2023-01-01',
+        history: []
+    },
     sponsorId: '',
     learningStats: { totalTimeSpent: 0, questionsAsked: 0, learningStreak: 0, lastLoginDate: '' }
   },
@@ -48,6 +94,13 @@ export const INITIAL_STUDENTS: Student[] = [
     enrolledCourses: ['c1'],
     sponsorId: '@forever_system',
     caseCredits: 4.5, 
+    rankProgress: {
+        currentRankId: 'AS_SUP', // Has passed 2CC
+        currentCycleCC: 2.5, // Working towards Supervisor (25CC)
+        targetCC: 25,
+        cycleStartDate: '2023-10-15',
+        history: [{ rankId: 'NOVUS', dateAchieved: '2023-10-15', totalCCAtTime: 2 }]
+    },
     quizResults: [
       { question: 'Primary Goal', answer: 'Financial Freedom' },
       { question: 'Availability', answer: '10+ Hours/Week' }
@@ -69,6 +122,13 @@ export const INITIAL_STUDENTS: Student[] = [
     enrolledCourses: ['c1'],
     sponsorId: '@alice_success',
     caseCredits: 0.5, 
+    rankProgress: {
+        currentRankId: 'NOVUS', // Working on 2CC
+        currentCycleCC: 0.5, 
+        targetCC: 2,
+        cycleStartDate: '2023-10-20',
+        history: []
+    },
     quizResults: [
       { question: 'Primary Goal', answer: 'Extra Income' },
       { question: 'Availability', answer: '5-10 Hours/Week' }

@@ -3,7 +3,8 @@ import React, { useState, useEffect } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, PieChart, Pie, Legend } from 'recharts';
 import { Link, useNavigate } from 'react-router-dom';
 import { Student, UserRole, Course, CourseTrack, CourseStatus } from '../types';
-import { Edit, ExternalLink, Plus, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Edit, ExternalLink, Plus, ChevronLeft, ChevronRight, User, Users } from 'lucide-react';
+import { RANKS } from '../constants';
 
 // --- Child Components & Icons (Defined First) ---
 
@@ -80,7 +81,6 @@ interface DashboardProps {
 // --- Main Component ---
 
 const Dashboard: React.FC<DashboardProps> = ({ students, currentUser, courses, onReviewCourse }) => {
-  // Guard clause against null user
   if (!currentUser) return null;
 
   const navigate = useNavigate();
@@ -89,32 +89,26 @@ const Dashboard: React.FC<DashboardProps> = ({ students, currentUser, courses, o
   const isSuperAdmin = currentUser.role === UserRole.SUPER_ADMIN;
   const isAdmin = currentUser.role === UserRole.ADMIN || isSuperAdmin;
 
-  // Filter Logic based on Role
   let visibleStudents = students || []; 
   if (isStudent) {
-    visibleStudents = [currentUser]; // Can only see self
+    visibleStudents = [currentUser];
   } else if (isSponsor) {
-    visibleStudents = students.filter(s => s.sponsorId === currentUser.handle); // Downline
+    visibleStudents = students.filter(s => s.sponsorId === currentUser.handle);
   }
-  // Admin sees all (default)
 
   const averageProgress = visibleStudents.length > 0 
     ? Math.round(visibleStudents.reduce((acc, s) => acc + (s.progress || 0), 0) / visibleStudents.length) 
     : 0;
 
-  // Chart Data for Team Leaderboard
   const chartData = visibleStudents.map(s => ({
     name: s.name ? s.name.split(' ')[0] : 'Unknown', 
     progress: s.progress || 0,
     cc: s.caseCredits || 0
   }));
 
-  // Personal Progress Data (Pie Chart)
-  // Safely handle missing courses or modules array
   const safeCourses = courses || [];
   const allModules = safeCourses.flatMap(c => c.modules || []);
   const totalModulesCount = allModules.length;
-  // Safely access completedModules with fallback
   const completedCount = currentUser.completedModules ? currentUser.completedModules.length : 0;
   const remainingCount = Math.max(0, totalModulesCount - completedCount);
   const calculatedProgress = totalModulesCount > 0 ? Math.round((completedCount / totalModulesCount) * 100) : 0;
@@ -125,7 +119,6 @@ const Dashboard: React.FC<DashboardProps> = ({ students, currentUser, courses, o
   ];
   const PIE_COLORS = ['#059669', '#f1f5f9'];
 
-  // Format Stats
   const formatTime = (seconds: number) => {
     const hours = Math.floor(seconds / 3600);
     const minutes = Math.floor((seconds % 3600) / 60);
@@ -133,38 +126,49 @@ const Dashboard: React.FC<DashboardProps> = ({ students, currentUser, courses, o
     return `${minutes}m`;
   };
 
-  // Recommended Courses Logic
   const recommendedCourses = safeCourses.filter(course => {
       if (!course.modules) return false;
-      
-      // Only show Published or Under Review (for admins)
       if (course.status !== CourseStatus.PUBLISHED && !isAdmin) return false;
-      
-      // Safely check completion using optional chaining and array default
       const userCompletedModules = currentUser.completedModules || [];
       const isCompleted = course.modules.every(m => userCompletedModules.includes(m.id));
       if (isCompleted) return false;
-      
       if (isStudent) return [CourseTrack.BASICS, CourseTrack.PRODUCT, CourseTrack.RANK].includes(course.track);
       return [CourseTrack.BUSINESS, CourseTrack.SALES, CourseTrack.LEADERSHIP].includes(course.track);
   }).slice(0, 2);
 
-  // Creator Logic: Courses authored by current user
   const authoredCourses = safeCourses.filter(c => c.authorHandle === currentUser.handle);
-
-  // Pending Courses Logic (For Admins)
   const pendingCourses = safeCourses.filter(c => c.status === CourseStatus.UNDER_REVIEW);
-
-  // All Private Courses Logic (For Super Admin)
   const allPrivateCourses = safeCourses.filter(c => c.settings?.teamOnly === true);
 
-  // Invite Link
   const inviteLink = `${window.location.origin}${window.location.pathname}#/join?sponsor=${currentUser.handle.replace('@','')}`;
   
   const copyToClipboard = () => {
     navigator.clipboard.writeText(inviteLink);
     alert('Invite link copied to clipboard!');
   };
+
+  // Rank Calculation Logic for the Dashboard Card
+  const rankProgress = currentUser.rankProgress || {
+      currentRankId: 'NOVUS',
+      currentCycleCC: 0,
+      targetCC: 2,
+      cycleStartDate: new Date().toISOString(),
+      history: []
+  };
+  const currentRankDef = RANKS[rankProgress.currentRankId];
+  const nextRankDef = currentRankDef?.nextRankId ? RANKS[currentRankDef.nextRankId] : null;
+  const ccProgressPercent = nextRankDef ? Math.min(100, (rankProgress.currentCycleCC / rankProgress.targetCC) * 100) : 100;
+
+  // Calculate Cycle Month Range (e.g., Oct - Nov)
+  const cycleDate = new Date(rankProgress.cycleStartDate);
+  const month1 = cycleDate.toLocaleString('default', { month: 'short' });
+  // Add 1 month to get the end of the 2-month cycle
+  const nextMonthDate = new Date(cycleDate);
+  nextMonthDate.setMonth(nextMonthDate.getMonth() + 1);
+  const month2 = nextMonthDate.toLocaleString('default', { month: 'short' });
+
+  // Mentor Logic
+  const mySponsor = students.find(s => s.handle === currentUser.sponsorId);
 
   // Stats Data
   const stats = [
@@ -184,17 +188,16 @@ const Dashboard: React.FC<DashboardProps> = ({ students, currentUser, courses, o
     },
     {
         id: 'cc',
-        title: isStudent ? "My CC" : "Total Team CC",
-        value: isStudent ? currentUser.caseCredits?.toString() : visibleStudents.reduce((acc,s) => acc + (s.caseCredits || 0), 0).toFixed(1),
+        title: isStudent ? "My Total CC" : "Total Team CC",
+        value: isStudent ? (currentUser.caseCredits || 0).toFixed(2) : visibleStudents.reduce((acc,s) => acc + (s.caseCredits || 0), 0).toFixed(1),
         icon: <CurrencyDollarIcon />,
-        trend: "Case Credits"
+        trend: "Lifetime Case Credits"
     }
   ].filter(Boolean) as { id: string, title: string, value: string, icon: React.ReactNode, trend: string }[];
 
   // Carousel State
   const [currentStatIndex, setCurrentStatIndex] = useState(0);
 
-  // Auto-slide effect for mobile/tablet carousel
   useEffect(() => {
     const timer = setInterval(() => {
         setCurrentStatIndex((prev) => (prev + 1) % stats.length);
@@ -228,7 +231,7 @@ const Dashboard: React.FC<DashboardProps> = ({ students, currentUser, courses, o
 
       {/* Stats Section */}
       <div className="mb-4">
-        {/* Desktop Grid (Visible only on lg and up) */}
+        {/* Desktop Grid */}
         <div className="hidden lg:grid grid-cols-3 gap-6">
             {stats.map((stat) => (
                 <StatCard 
@@ -241,7 +244,7 @@ const Dashboard: React.FC<DashboardProps> = ({ students, currentUser, courses, o
             ))}
         </div>
 
-        {/* Mobile/Tablet Slider (Visible on < lg) */}
+        {/* Mobile/Tablet Slider */}
         <div className="lg:hidden relative group">
             <div className="overflow-hidden rounded-2xl">
                 <div 
@@ -261,7 +264,7 @@ const Dashboard: React.FC<DashboardProps> = ({ students, currentUser, courses, o
                 </div>
             </div>
             
-            {/* Navigation Arrows (Semi-transparent Glass Overlay) */}
+            {/* Arrows */}
             <button 
                 onClick={prevStat}
                 className="absolute left-2 top-1/2 -translate-y-1/2 p-2 rounded-full bg-white/40 dark:bg-black/30 backdrop-blur-md border border-white/20 shadow-sm text-slate-700 dark:text-slate-200 hover:bg-white/60 dark:hover:bg-black/50 transition-all z-10"
@@ -275,7 +278,7 @@ const Dashboard: React.FC<DashboardProps> = ({ students, currentUser, courses, o
                 <ChevronRight size={20} />
             </button>
 
-            {/* Pagination Dots */}
+            {/* Dots */}
             <div className="flex justify-center gap-2 mt-4">
                 {stats.map((_, idx) => (
                     <button 
@@ -349,7 +352,7 @@ const Dashboard: React.FC<DashboardProps> = ({ students, currentUser, courses, o
                           </div>
                       )}
 
-                      {/* Sales Page Section (Mocked for single draft) */}
+                      {/* Sales Page Section */}
                       <div className="space-y-3 pt-2">
                           <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest">Your Sales Pages</h3>
                           <div className="flex items-center justify-between p-3 bg-slate-50 rounded-xl border border-slate-100 dark:bg-slate-900/50 dark:border-slate-700">
@@ -371,14 +374,13 @@ const Dashboard: React.FC<DashboardProps> = ({ students, currentUser, courses, o
               </div>
             )}
 
-            {/* Progress Chart (Team or Personal) */}
+            {/* Progress Chart */}
             <div className="bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-slate-100 dark:bg-slate-800 dark:border-slate-700">
                 <div className="flex justify-between items-center mb-8">
                     <h2 className="text-lg md:text-xl font-bold text-slate-800 font-heading dark:text-slate-100">
                         {isStudent ? 'Your Progress' : 'Team Leaderboard'}
                     </h2>
                 </div>
-                {/* Added min-w-0 to container to fix Recharts responsive issues */}
                 <div className="h-64 md:h-80 w-full min-w-0">
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
@@ -399,7 +401,7 @@ const Dashboard: React.FC<DashboardProps> = ({ students, currentUser, courses, o
                 </div>
             </div>
 
-            {/* Pending Reviews (Admin Only) */}
+            {/* Pending Reviews */}
             {isAdmin && pendingCourses.length > 0 && (
                 <div className="bg-orange-50 p-6 md:p-8 rounded-2xl border border-orange-100 dark:bg-orange-900/30 dark:border-orange-800">
                     <div className="flex justify-between items-center mb-4">
@@ -437,45 +439,6 @@ const Dashboard: React.FC<DashboardProps> = ({ students, currentUser, courses, o
                 </div>
             )}
 
-            {/* Private Course Registry (Super Admin Only) */}
-            {isSuperAdmin && (
-                <div className="bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-slate-100 dark:bg-slate-800 dark:border-slate-700">
-                    <h2 className="text-lg md:text-xl font-bold text-slate-800 mb-6 font-heading dark:text-slate-100 flex items-center gap-2">
-                        <span>🔒</span> Private Course Registry
-                    </h2>
-                    {allPrivateCourses.length > 0 ? (
-                        <div className="overflow-x-auto">
-                            <table className="w-full text-sm text-left">
-                                <thead className="bg-slate-50 text-slate-500 font-bold uppercase text-xs dark:bg-slate-700 dark:text-slate-400">
-                                    <tr>
-                                        <th className="px-4 py-3 rounded-l-lg">Course Title</th>
-                                        <th className="px-4 py-3">Creator</th>
-                                        <th className="px-4 py-3">Modules</th>
-                                        <th className="px-4 py-3 rounded-r-lg">Action</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-slate-100 dark:divide-slate-700">
-                                    {allPrivateCourses.map(course => (
-                                        <tr key={course.id} className="hover:bg-slate-50 dark:hover:bg-slate-700/50">
-                                            <td className="px-4 py-3 font-medium text-slate-800 dark:text-slate-200">{course.title}</td>
-                                            <td className="px-4 py-3 text-slate-500 dark:text-slate-400">{course.authorHandle}</td>
-                                            <td className="px-4 py-3 text-slate-500 dark:text-slate-400">{course.modules.length}</td>
-                                            <td className="px-4 py-3">
-                                                <Link to={`/courses`} className="text-emerald-600 hover:underline dark:text-emerald-400 font-medium text-xs">
-                                                    Inspect
-                                                </Link>
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
-                    ) : (
-                        <p className="text-slate-400 text-sm italic">No private courses created yet.</p>
-                    )}
-                </div>
-            )}
-
             {/* Recommended Courses List */}
             <div className="bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-slate-100 dark:bg-slate-800 dark:border-slate-700">
                 <h2 className="text-lg md:text-xl font-bold text-emerald-950 mb-6 font-heading dark:text-emerald-400">Recommended for You</h2>
@@ -487,7 +450,6 @@ const Dashboard: React.FC<DashboardProps> = ({ students, currentUser, courses, o
                         const completedInCourse = course.modules?.filter(m => userCompletedModules.includes(m.id)).length || 0;
                         const courseProgress = totalCourseModules > 0 ? Math.round((completedInCourse / totalCourseModules) * 100) : 0;
 
-                        // Safely get first module and chapter for link
                         const firstModuleId = course.modules?.[0]?.id || 'unknown';
                         const firstChapterId = course.modules?.[0]?.chapters?.[0]?.id || 'unknown';
 
@@ -560,7 +522,6 @@ const Dashboard: React.FC<DashboardProps> = ({ students, currentUser, courses, o
                     <span className="text-[10px] font-bold px-2 py-1 bg-slate-50 text-slate-400 rounded-md border border-slate-100 uppercase tracking-wide dark:bg-slate-700 dark:border-slate-600 dark:text-slate-300">Overview</span>
                 </div>
                 
-                {/* Fixed: Added min-w-0 to parent to prevent Recharts sizing issue */}
                 <div className="h-64 w-full relative z-10 min-w-0">
                    <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
@@ -678,23 +639,68 @@ const Dashboard: React.FC<DashboardProps> = ({ students, currentUser, courses, o
                 </div>
             )}
             
-             {/* Student Next Steps */}
-            {isStudent && (
+             {/* UPDATED: Student Next Rank Steps */}
+            {isStudent && nextRankDef && (
                 <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-8 flex flex-col justify-center items-center text-center h-auto relative overflow-hidden dark:bg-slate-800 dark:border-slate-700">
                     <div className="w-20 h-20 bg-emerald-50 rounded-full flex items-center justify-center text-emerald-600 mb-5 relative z-10 dark:bg-emerald-900/30 dark:text-emerald-400">
                         <AcademicCapIcon />
                     </div>
-                    <h3 className="text-xl font-bold text-slate-800 font-heading relative z-10 dark:text-slate-100">Your Next Goal: 2CC</h3>
-                    <p className="text-slate-500 mt-3 mb-6 text-sm leading-relaxed relative z-10 dark:text-slate-400">
-                        Complete your training and accumulate 2 Case Credits to become a Sponsor and build your own team.
-                    </p>
-                    <div className="w-full bg-slate-100 h-4 rounded-full overflow-hidden relative z-10 dark:bg-slate-700">
-                        <div className="bg-gradient-to-r from-emerald-500 to-teal-500 h-full transition-all duration-1000" style={{width: `${(currentUser.caseCredits / 2) * 100}%`}}></div>
+                    <div className="relative z-10">
+                        <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500">Current Rank Cycle</span>
+                        <h3 className="text-xl font-bold text-slate-800 font-heading dark:text-slate-100 mt-1">Goal: {nextRankDef.name}</h3>
+                        <p className="text-xs text-slate-400 font-mono mt-1 mb-3 bg-slate-50 dark:bg-slate-900/50 inline-block px-2 py-1 rounded">
+                            {month1} - {month2}
+                        </p>
+                        <p className="text-slate-500 mb-6 text-sm leading-relaxed dark:text-slate-400">
+                            Accumulate {rankProgress.targetCC} CC in this cycle to advance.
+                        </p>
+                        <div className="w-full bg-slate-100 h-4 rounded-full overflow-hidden dark:bg-slate-700">
+                            <div className="bg-gradient-to-r from-emerald-500 to-teal-500 h-full transition-all duration-1000" style={{width: `${ccProgressPercent}%`}}></div>
+                        </div>
+                        <div className="mt-3 text-sm font-bold text-emerald-700 dark:text-emerald-400">
+                            {rankProgress.currentCycleCC.toFixed(2)} / {rankProgress.targetCC} CC
+                        </div>
                     </div>
-                    <div className="mt-3 text-sm font-bold text-emerald-700 relative z-10 dark:text-emerald-400">{currentUser.caseCredits} / 2.0 CC</div>
                     
                     {/* Bg Decor */}
                     <div className="absolute top-0 left-0 w-full h-2 bg-emerald-500"></div>
+                </div>
+            )}
+            
+            {/* Show Congratulations if no next rank */}
+            {isStudent && !nextRankDef && (
+                 <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-8 flex flex-col justify-center items-center text-center h-auto dark:bg-slate-800 dark:border-slate-700">
+                    <div className="w-20 h-20 bg-yellow-50 rounded-full flex items-center justify-center text-yellow-600 mb-5 dark:bg-yellow-900/30 dark:text-yellow-400">
+                        <AcademicCapIcon />
+                    </div>
+                    <h3 className="text-xl font-bold text-slate-800 font-heading dark:text-slate-100">Top Rank Achieved!</h3>
+                    <p className="text-slate-500 mt-2 text-sm dark:text-slate-400">You have reached the pinnacle of the marketing plan.</p>
+                 </div>
+            )}
+
+            {/* Mentor Access Card */}
+            {isStudent && mySponsor && (
+                <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 dark:bg-slate-800 dark:border-slate-700">
+                    <h3 className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-4">Your Team Leader</h3>
+                    <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center text-emerald-800 font-bold dark:bg-emerald-900 dark:text-emerald-200">
+                            {mySponsor.avatarUrl ? (
+                                <img src={mySponsor.avatarUrl} alt={mySponsor.name} className="w-full h-full object-cover rounded-full" />
+                            ) : (
+                                <User />
+                            )}
+                        </div>
+                        <div>
+                            <p className="font-bold text-slate-800 dark:text-slate-100">{mySponsor.name}</p>
+                            <p className="text-xs text-slate-500 dark:text-slate-400">{mySponsor.email}</p>
+                        </div>
+                    </div>
+                    <Link 
+                        to="/chat" 
+                        className="mt-4 w-full bg-slate-50 hover:bg-slate-100 text-slate-600 font-medium py-2 rounded-xl transition-colors flex items-center justify-center gap-2 text-sm dark:bg-slate-700 dark:text-slate-300 dark:hover:bg-slate-600"
+                    >
+                        Message Sponsor
+                    </Link>
                 </div>
             )}
           </div>

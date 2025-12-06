@@ -11,7 +11,20 @@ interface OnboardingWizardProps {
   existingStudents: Student[];
 }
 
-const COUNTRIES = ['USA', 'UK', 'Ghana', 'Nigeria', 'South Africa', 'Kenya', 'UAE', 'India', 'Canada', 'Australia'];
+const COUNTRY_CONFIG: Record<string, { code: string, len: number, placeholder: string }> = {
+  'USA': { code: '+1', len: 10, placeholder: '202 555 0123' },
+  'UK': { code: '+44', len: 10, placeholder: '7700 900077' },
+  'Ghana': { code: '+233', len: 9, placeholder: '54 123 4567' },
+  'Nigeria': { code: '+234', len: 10, placeholder: '803 123 4567' },
+  'South Africa': { code: '+27', len: 9, placeholder: '72 123 4567' },
+  'Kenya': { code: '+254', len: 9, placeholder: '712 123 456' },
+  'UAE': { code: '+971', len: 9, placeholder: '50 123 4567' },
+  'India': { code: '+91', len: 10, placeholder: '98123 12345' },
+  'Canada': { code: '+1', len: 10, placeholder: '416 555 0123' },
+  'Australia': { code: '+61', len: 9, placeholder: '412 345 678' }
+};
+
+const COUNTRIES = Object.keys(COUNTRY_CONFIG);
 
 const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onEnroll, existingStudents }) => {
   const navigate = useNavigate();
@@ -29,7 +42,7 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onEnroll, existingS
   // 1. Account
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
-  const [phone, setPhone] = useState('');
+  const [localPhone, setLocalPhone] = useState(''); // Store only local digits
   const [country, setCountry] = useState('Ghana');
   const [foreverId, setForeverId] = useState('');
   const [password, setPassword] = useState('');
@@ -47,10 +60,14 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onEnroll, existingS
 
   // 3. Profile
   const [avatarUrl, setAvatarUrl] = useState('');
-  const [whatsappNumber, setWhatsappNumber] = useState('');
+  
+  // WhatsApp State (Smart handling)
+  const [whatsappCountry, setWhatsappCountry] = useState(country);
+  const [localWhatsapp, setLocalWhatsapp] = useState('');
+  
   const [bio, setBio] = useState('');
   const [customHandle, setCustomHandle] = useState('');
-  const [handleStatus, setHandleStatus] = useState<'IDLE' | 'CHECKING' | 'AVAILABLE' | 'TAKEN'>('IDLE');
+  const [handleStatus, setHandleStatus] = useState<'IDLE' | 'CHECKING' | 'AVAILABLE' | 'TAKEN' | 'INVALID'>('IDLE');
 
   // 4. Sponsor
   const [sponsorMethod, setSponsorMethod] = useState<'ID' | 'QR'>('ID');
@@ -68,6 +85,11 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onEnroll, existingS
 
   // --- Effects ---
 
+  // Sync WhatsApp country default when Step 1 country changes
+  useEffect(() => {
+      setWhatsappCountry(country);
+  }, [country]);
+
   // Auto-fill sponsor from URL
   useEffect(() => {
     const searchParams = new URLSearchParams(location.search);
@@ -79,9 +101,12 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onEnroll, existingS
 
   // Handle Logic
   useEffect(() => {
-      if (customHandle.length > 2) {
+      // Validate length: 3-30 chars
+      if (customHandle.length >= 3 && customHandle.length <= 30) {
           const timeout = setTimeout(() => checkHandleAvailability(customHandle), 500);
           return () => clearTimeout(timeout);
+      } else if (customHandle.length > 0) {
+          setHandleStatus('INVALID');
       } else {
           setHandleStatus('IDLE');
       }
@@ -99,7 +124,8 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onEnroll, existingS
   };
 
   const handleHandleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-      const val = e.target.value.replace(/[^a-zA-Z0-9_]/g, '').toLowerCase();
+      // YouTube style: Alphanumeric, underscores, hyphens, periods. No spaces.
+      const val = e.target.value.replace(/[^a-zA-Z0-9_.-]/g, '').toLowerCase();
       setCustomHandle(val);
   };
 
@@ -112,9 +138,31 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onEnroll, existingS
       }
   };
 
+  // Phone Input Logic
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+      let val = e.target.value.replace(/\D/g, ''); // Remove non-digits
+      
+      // Automatically remove leading zero for international format standard
+      if (val.startsWith('0')) {
+          val = val.substring(1);
+      }
+      setLocalPhone(val);
+  };
+
+  // WhatsApp Input Logic
+  const handleWhatsappChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+      let val = e.target.value.replace(/\D/g, ''); // Remove non-digits
+      if (val.startsWith('0')) {
+          val = val.substring(1);
+      }
+      setLocalWhatsapp(val);
+  };
+
   // OTP Logic
   const handleOtpChange = (index: number, val: string) => {
+      if (!/^\d*$/.test(val)) return; // Restrict to numbers only
       if (val.length > 1) return;
+      
       const newOtp = [...otp];
       newOtp[index] = val;
       setOtp(newOtp);
@@ -164,6 +212,8 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onEnroll, existingS
     if (!name || !email || !password || !customHandle || handleStatus !== 'AVAILABLE') return;
 
     const formattedHandle = customHandle.startsWith('@') ? customHandle : `@${customHandle}`;
+    const fullPhone = `${COUNTRY_CONFIG[country].code}${localPhone}`;
+    const fullWhatsapp = localWhatsapp ? `${COUNTRY_CONFIG[whatsappCountry].code}${localWhatsapp}` : '';
 
     const newStudent: Student = {
       id: Date.now().toString(),
@@ -172,10 +222,10 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onEnroll, existingS
       role: selectedRole,
       name,
       email,
-      phoneNumber: phone,
+      phoneNumber: fullPhone,
       country,
       foreverId,
-      whatsappNumber,
+      whatsappNumber: fullWhatsapp,
       bio,
       avatarUrl,
       enrolledDate: new Date().toISOString().split('T')[0],
@@ -225,7 +275,17 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onEnroll, existingS
         isValid = false;
     }
 
-    // 3. Forever ID Validation
+    // 3. Phone Validation
+    const config = COUNTRY_CONFIG[country];
+    if (!localPhone) {
+        newErrors.phone = 'Phone number is required.';
+        isValid = false;
+    } else if (localPhone.length !== config.len) {
+        newErrors.phone = `Invalid length for ${country}. Expected ${config.len} digits (excluding leading 0).`;
+        isValid = false;
+    }
+
+    // 4. Forever ID Validation
     const fboRegex = /^\d{12}$/;
     
     // Logic: Optional for Students/Admins (if new), but Compulsory for Sponsors
@@ -246,7 +306,7 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onEnroll, existingS
         }
     }
 
-    // 4. Admin Code Validation
+    // 5. Admin Code Validation
     if (selectedRole === UserRole.ADMIN) {
         if (!adminCode.trim()) {
             newErrors.adminCode = 'Admin Code is required.';
@@ -257,7 +317,7 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onEnroll, existingS
         }
     }
 
-    // 5. Password Validation
+    // 6. Password Validation
     if (!password) {
         newErrors.password = 'Password is required.';
         isValid = false;
@@ -284,6 +344,9 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onEnroll, existingS
   // Steps Nav
   const nextStep = () => setStep(s => s + 1);
   const prevStep = () => setStep(s => Math.max(0, s - 1));
+
+  const currentCountryConfig = COUNTRY_CONFIG[country] || COUNTRY_CONFIG['Ghana'];
+  const whatsappCountryConfig = COUNTRY_CONFIG[whatsappCountry] || COUNTRY_CONFIG['Ghana'];
 
   return (
     <div className="fixed inset-0 flex flex-col items-center justify-center p-0 md:p-6 lg:p-8 overflow-hidden bg-slate-950">
@@ -464,14 +527,24 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onEnroll, existingS
                         error={errors.email}
                     />
                     
-                    <InputGroup 
-                        label="Phone Number" 
-                        value={phone} 
-                        onChange={setPhone} 
-                        type="tel" 
-                        placeholder="+233 55 123 4567" 
-                        icon={<Smartphone size={16} />} 
-                    />
+                    {/* Phone Number Input with Auto Country Code */}
+                    <div className="flex flex-col gap-1.5">
+                        <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wide ml-1 dark:text-slate-400">Phone Number (SMS Verification)</label>
+                        <div className="relative flex items-center">
+                            <div className="absolute left-3 top-3.5 text-slate-400"><Smartphone size={16} /></div>
+                            <div className="absolute left-10 top-3 text-sm font-bold text-slate-500 bg-slate-200 px-2 py-0.5 rounded dark:bg-slate-700 dark:text-slate-300">
+                                {currentCountryConfig.code}
+                            </div>
+                            <input 
+                                type="tel"
+                                value={localPhone}
+                                onChange={handlePhoneChange}
+                                placeholder={currentCountryConfig.placeholder}
+                                className={`w-full pl-24 p-3 bg-slate-50 border rounded-xl outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all text-sm text-slate-900 dark:bg-slate-800 dark:border-slate-700 dark:text-white dark:focus:ring-emerald-900/30 ${errors.phone ? 'border-red-500 bg-red-50 dark:bg-red-900/10' : 'border-slate-200'}`}
+                            />
+                        </div>
+                        {errors.phone && <span className="text-xs text-red-500 font-medium ml-1">{errors.phone}</span>}
+                    </div>
                     
                     <InputGroup 
                         label={`Forever ID${selectedRole === UserRole.SPONSOR ? ' *' : ' (Optional)'}`} 
@@ -549,7 +622,9 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onEnroll, existingS
             <div className="space-y-8 animate-fade-in text-center max-w-xs mx-auto py-8">
                 <div>
                     <h2 className="text-xl md:text-2xl font-bold text-slate-900 font-heading dark:text-white">Verify Phone</h2>
-                    <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Code sent to <strong>{phone || email}</strong></p>
+                    <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+                        Code sent to <strong>{COUNTRY_CONFIG[country].code} {localPhone}</strong>
+                    </p>
                 </div>
 
                 <div className="flex gap-3 justify-center">
@@ -561,7 +636,7 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onEnroll, existingS
                             maxLength={1}
                             value={digit}
                             onChange={(e) => handleOtpChange(idx, e.target.value)}
-                            className="w-12 h-14 text-center text-2xl font-bold border-2 border-slate-200 rounded-xl focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 outline-none transition-all text-slate-900 dark:bg-slate-800 dark:border-slate-700 dark:text-white dark:focus:ring-emerald-900/30"
+                            className="w-12 h-14 text-center text-2xl font-bold border-2 border-slate-200 rounded-xl focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 outline-none transition-all bg-white text-slate-900 dark:bg-slate-800 dark:border-slate-700 dark:text-white dark:focus:ring-emerald-900/30"
                         />
                     ))}
                 </div>
@@ -615,7 +690,7 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onEnroll, existingS
                                 onChange={handleHandleChange}
                                 className={`w-full pl-8 pr-10 p-3 bg-slate-50 border rounded-xl outline-none focus:ring-1 transition-all font-mono text-sm text-slate-900 dark:bg-slate-800 dark:text-white ${
                                     handleStatus === 'AVAILABLE' ? 'border-emerald-500 focus:border-emerald-500 focus:ring-emerald-500' :
-                                    handleStatus === 'TAKEN' ? 'border-red-500 focus:border-red-500 focus:ring-red-200' :
+                                    (handleStatus === 'TAKEN' || handleStatus === 'INVALID') ? 'border-red-500 focus:border-red-500 focus:ring-red-200' :
                                     'border-slate-200 focus:border-blue-500 dark:border-slate-700'
                                 }`}
                                 placeholder="username"
@@ -623,22 +698,47 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onEnroll, existingS
                             <div className="absolute right-3 top-3.5">
                                 {handleStatus === 'CHECKING' && <Loader2 className="animate-spin text-slate-400" size={16} />}
                                 {handleStatus === 'AVAILABLE' && <CheckCircle className="text-emerald-500" size={16} />}
-                                {handleStatus === 'TAKEN' && <XCircle className="text-red-500" size={16} />}
+                                {(handleStatus === 'TAKEN' || handleStatus === 'INVALID') && <XCircle className="text-red-500" size={16} />}
                             </div>
                         </div>
                         {handleStatus === 'TAKEN' && <p className="text-xs text-red-500 mt-1">Handle taken.</p>}
+                        {handleStatus === 'INVALID' && <p className="text-xs text-red-500 mt-1">Invalid handle (3-30 chars, alphanumeric, ., -, _).</p>}
                     </div>
 
-                    <InputGroup label="WhatsApp Number" value={whatsappNumber} onChange={setWhatsappNumber} placeholder="+233..." icon={<Smartphone size={16} />} />
-                    
+                    {/* WhatsApp Input with Auto Country Code */}
                     <div className="flex flex-col gap-1.5">
+                        <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wide ml-1 dark:text-slate-400">WhatsApp Number</label>
+                        <div className="relative flex items-center">
+                            <div className="absolute left-0 top-0 bottom-0 flex items-center pl-3">
+                                <select 
+                                    value={whatsappCountry} 
+                                    onChange={(e) => setWhatsappCountry(e.target.value)}
+                                    className="h-full bg-transparent border-none text-xs font-bold text-slate-500 focus:ring-0 outline-none pr-6 cursor-pointer dark:text-slate-300 appearance-none py-3"
+                                >
+                                    {COUNTRIES.map(c => <option key={c} value={c}>{COUNTRY_CONFIG[c].code}</option>)}
+                                </select>
+                                <ChevronDownIcon className="absolute right-1 top-4 w-3 h-3 text-slate-400 pointer-events-none" />
+                            </div>
+                            <input 
+                                type="tel"
+                                value={localWhatsapp}
+                                onChange={handleWhatsappChange}
+                                placeholder={whatsappCountryConfig.placeholder}
+                                className="w-full pl-20 p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all text-sm text-slate-900 dark:bg-slate-800 dark:border-slate-700 dark:text-white dark:focus:ring-emerald-900/30"
+                            />
+                        </div>
+                    </div>
+                    
+                    <div className="flex flex-col gap-1.5 relative">
                         <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wide dark:text-slate-400">Short Bio</label>
                         <textarea 
                             value={bio}
                             onChange={(e) => setBio(e.target.value)}
+                            maxLength={100}
                             className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 h-20 resize-none text-sm text-slate-900 dark:bg-slate-800 dark:border-slate-700 dark:text-white"
                             placeholder="I help people achieve financial freedom..."
                         />
+                        <span className="absolute bottom-2 right-2 text-[10px] text-slate-400 dark:text-slate-500">{bio.length}/100</span>
                     </div>
                 </div>
 
@@ -874,6 +974,12 @@ const QuizQuestion: React.FC<{ question: string; options: string[]; selected?: s
             ))}
         </div>
     </div>
+);
+
+const ChevronDownIcon = ({ className }: { className?: string }) => (
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className={className || "w-4 h-4"}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+    </svg>
 );
 
 export default OnboardingWizard;

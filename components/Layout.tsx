@@ -113,14 +113,6 @@ function ChevronDownIcon({ className }: { className?: string }) {
   );
 }
 
-function ArrowRightOnRectangleIcon() {
-  return (
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
-        <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75" />
-    </svg>
-  );
-}
-
 function XMarkIcon() {
   return (
     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
@@ -427,8 +419,9 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
     navItems.push({ to: '/builder', icon: <SparklesIcon />, label: 'Builder', active: isActive('/builder') });
   }
 
+  // Use dynamic viewport height for mobile
   return (
-    <div className="flex h-screen bg-slate-50 dark:bg-slate-950 overflow-hidden transition-colors duration-300">
+    <div className="flex h-screen bg-slate-50 dark:bg-slate-950 overflow-hidden transition-colors duration-300 supports-[height:100dvh]:h-[100dvh]">
       <style>{`
         /* Global Scrollbar Hiding for Mobile-First Feel */
         ::-webkit-scrollbar {
@@ -455,6 +448,7 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
             label="Dashboard" 
             active={isActive('/dashboard')} 
           />
+          {/* ... (rest of sidebar items) ... */}
           <NavItem 
             to="/chat" 
             icon={<ChatBubbleOvalLeftIcon />} 
@@ -560,7 +554,7 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
       </aside>
 
       {/* Main Content - Adjusted for Builders */}
-      <div className="flex-1 flex flex-col h-screen overflow-hidden dark:bg-slate-950 relative">
+      <div className="flex-1 flex flex-col h-full overflow-hidden dark:bg-slate-950 relative">
         
         {/* Desktop Navbar */}
         <header ref={navbarRef} className={headerClass}>

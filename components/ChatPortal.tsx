@@ -240,8 +240,8 @@ const ChatPortal: React.FC<ChatPortalProps> = ({ currentUser, students, messages
         </div>
       </div>
 
-      {/* Chat Area */}
-      <div className={`flex-1 flex flex-col relative ${!activeChatHandle && !isBroadcastMode ? 'hidden md:flex' : 'flex'}`}>
+      {/* Chat Area - Added min-h-0 to ensure flex shrinking works correctly */}
+      <div className={`flex-1 flex flex-col relative min-h-0 ${!activeChatHandle && !isBroadcastMode ? 'hidden md:flex' : 'flex'}`}>
         
         {/* Chat Background Layer */}
         <div className="absolute inset-0 z-0 bg-[#efeae2] dark:bg-[#0b141a]">
@@ -255,18 +255,18 @@ const ChatPortal: React.FC<ChatPortalProps> = ({ currentUser, students, messages
             ></div>
         </div>
 
-        {/* Content Container */}
-        <div className="relative z-10 flex flex-col h-full overflow-hidden">
+        {/* Content Container - Added max-h-full to prevent expansion beyond parent */}
+        <div className="relative z-10 flex flex-col h-full max-h-full overflow-hidden">
             
             {/* Broadcast Mode UI */}
             {isBroadcastMode ? (
-                <div className="flex-1 flex flex-col p-4 bg-[#f0f2f5] dark:bg-[#0b141a]">
-                    <div className="flex items-center gap-2 mb-6">
+                <div className="flex-1 flex flex-col p-4 bg-[#f0f2f5] dark:bg-[#0b141a] overflow-hidden">
+                    <div className="flex items-center gap-2 mb-6 shrink-0">
                         <button onClick={() => setIsBroadcastMode(false)} className="md:hidden text-slate-500 dark:text-[#aebac1]"><ChevronLeftIcon /></button>
                         <h2 className="text-xl font-bold text-slate-800 dark:text-[#e9edef]">New Broadcast</h2>
                     </div>
                     
-                    <div className="bg-white p-4 rounded-xl shadow-sm mb-4 flex-1 overflow-y-auto dark:bg-[#202c33] dark:shadow-none">
+                    <div className="bg-white p-4 rounded-xl shadow-sm mb-4 flex-1 overflow-y-auto min-h-0 dark:bg-[#202c33] dark:shadow-none">
                         <div className="flex justify-between items-center mb-4">
                             <h3 className="font-bold text-sm text-slate-700 dark:text-e9edef">Recipients ({selectedBroadcastUsers.length})</h3>
                             <button onClick={selectAllBroadcast} className="text-xs text-[#00a884] font-bold hover:underline">
@@ -291,7 +291,7 @@ const ChatPortal: React.FC<ChatPortalProps> = ({ currentUser, students, messages
                         </div>
                     </div>
 
-                    <div className="bg-white p-4 rounded-xl shadow-sm dark:bg-[#202c33]">
+                    <div className="bg-white p-4 rounded-xl shadow-sm shrink-0 dark:bg-[#202c33]">
                         <textarea 
                             value={newMessage} 
                             onChange={(e) => setNewMessage(e.target.value)}
@@ -311,7 +311,7 @@ const ChatPortal: React.FC<ChatPortalProps> = ({ currentUser, students, messages
                 </div>
             ) : activeChatHandle ? (
                 <>
-                    {/* Active Chat Header - STATIC */}
+                    {/* Active Chat Header - STATIC (shrink-0) */}
                     <div className="bg-[#f0f2f5] px-4 py-2.5 flex items-center gap-4 border-b border-slate-200 shadow-sm shrink-0 z-20 dark:bg-[#202c33] dark:border-[#202c33]">
                         <button onClick={() => setActiveChatHandle(null)} className="md:hidden text-slate-500 hover:text-[#00a884] dark:text-[#aebac1]">
                             <ChevronLeftIcon />
@@ -342,7 +342,7 @@ const ChatPortal: React.FC<ChatPortalProps> = ({ currentUser, students, messages
                         </div>
                     </div>
 
-                    {/* Messages List - SCROLLABLE INTERNAL AREA */}
+                    {/* Messages List - SCROLLABLE INTERNAL AREA (flex-1 min-h-0) */}
                     <div 
                         ref={messageContainerRef}
                         className="flex-1 overflow-y-auto p-4 space-y-1 scroll-smooth min-h-0"
@@ -387,7 +387,7 @@ const ChatPortal: React.FC<ChatPortalProps> = ({ currentUser, students, messages
                         })}
                     </div>
 
-                    {/* Input Bar - STATIC */}
+                    {/* Input Bar - STATIC (shrink-0) */}
                     <div className="bg-[#f0f2f5] px-2 py-2 flex items-end gap-2 border-t border-slate-200 shrink-0 z-20 dark:bg-[#202c33] dark:border-[#202c33]">
                         <div className="flex-1 bg-white rounded-2xl border border-white flex items-end dark:bg-[#2a3942] dark:border-[#2a3942] pl-4 pr-2 py-2">
                             <textarea 

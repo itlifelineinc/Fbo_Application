@@ -12,33 +12,28 @@ interface ChatPortalProps {
 
 // --- WhatsApp Style Icons ---
 
-const SingleTick = ({ className }: { className?: string }) => (
-    <svg viewBox="0 0 16 15" width="16" height="15" className={className}>
+const TickIcon = ({ className }: { className?: string }) => (
+    <svg viewBox="0 0 16 15" width="11" height="11" className={className}>
         <path fill="currentColor" d="M15.01 3.316l-.478-.372a.365.365 0 0 0-.51.063L4.566 14.302l-2.592-2.716a.366.366 0 0 0-.51-.028l-.494.44a.365.365 0 0 0-.024.53l3.352 3.512c.137.143.37.146.51.008L15.074 3.826a.365.365 0 0 0-.063-.51z"/>
-    </svg>
-);
-
-const DoubleTick = ({ className }: { className?: string }) => (
-    <svg viewBox="0 0 16 15" width="16" height="15" className={className}>
-        <path fill="currentColor" d="M15.01 3.316l-.478-.372a.365.365 0 0 0-.51.063L4.566 14.302l-2.592-2.716a.366.366 0 0 0-.51-.028l-.494.44a.365.365 0 0 0-.024.53l3.352 3.512c.137.143.37.146.51.008L15.074 3.826a.365.365 0 0 0-.063-.51z"/>
-        <path fill="currentColor" d="M10.99 1.73l-.478-.372a.365.365 0 0 0-.51.063L5.875 10.63l-.36-.453a.365.365 0 0 0-.535.03l-.42.493a.365.365 0 0 0 .03.535l1.09 1.373c.137.143.37.146.51.008l4.86-8.38a.365.365 0 0 0-.063-.51z"/>
     </svg>
 );
 
 // Helper Component for Checkmarks
 const MessageStatusIcon: React.FC<{ status: MessageStatus, isRead: boolean }> = ({ status, isRead }) => {
-    // 1. Blue Double Tick: Read
-    if (isRead || status === 'READ') {
-        return <DoubleTick className="text-[#53bdeb] w-[15px] h-[11px]" />;
-    }
-    
-    // 2. Gray Double Tick: Delivered (Online but not read)
-    if (status === 'DELIVERED') {
-        return <DoubleTick className="text-[#8696a0] dark:text-[#8696a0] w-[15px] h-[11px]" />;
+    const colorClass = (isRead || status === 'READ') ? "text-[#53bdeb]" : "text-[#8696a0] dark:text-[#8696a0]";
+
+    // Double Tick (Read or Delivered) - Side by Side, No Overlap
+    if (isRead || status === 'READ' || status === 'DELIVERED') {
+        return (
+            <div className="flex items-center">
+                <TickIcon className={colorClass} />
+                <TickIcon className={colorClass} />
+            </div>
+        );
     }
 
-    // 3. Gray Single Tick: Sent (Server received, user offline)
-    return <SingleTick className="text-[#8696a0] dark:text-[#8696a0] w-[15px] h-[11px]" />;
+    // Single Tick (Sent)
+    return <TickIcon className={colorClass} />;
 };
 
 const ChatPortal: React.FC<ChatPortalProps> = ({ currentUser, students, messages, onSendMessage, onMarkAsRead }) => {
@@ -316,9 +311,9 @@ const ChatPortal: React.FC<ChatPortalProps> = ({ currentUser, students, messages
                                                 <span className="break-words whitespace-pre-wrap">
                                                     {msg.text}
                                                     {/* Float Spacer: Reserves width at the end of the text line for timestamp. 
-                                                        Width is set to ~70px to accommodate time + ticks. 
+                                                        Width set to 74px to accommodate time + wider double tick area. 
                                                         If text ends near the right edge, this forces a wrap. */}
-                                                    <span className="inline-block w-[70px] h-[15px] align-bottom select-none opacity-0"></span>
+                                                    <span className="inline-block w-[74px] h-[15px] align-bottom select-none opacity-0"></span>
                                                 </span>
 
                                                 {/* Absolute Positioned Timestamp & Status */}

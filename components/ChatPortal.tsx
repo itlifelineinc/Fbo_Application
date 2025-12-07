@@ -1,6 +1,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { Student, Message, UserRole, MessageStatus } from '../types';
+import { MoreVertical, Trash2 } from 'lucide-react';
 
 interface ChatPortalProps {
   currentUser: Student;
@@ -8,6 +9,7 @@ interface ChatPortalProps {
   messages: Message[];
   onSendMessage: (message: Message) => void;
   onMarkAsRead?: (senderHandle: string) => void;
+  onClearChat?: (handle: string) => void;
 }
 
 // --- WhatsApp Style Icons ---
@@ -22,9 +24,6 @@ const TickIcon = ({ className }: { className?: string }) => (
 const MessageStatusIcon: React.FC<{ status: MessageStatus, isRead: boolean }> = ({ status, isRead }) => {
     const colorClass = (isRead || status === 'READ') ? "text-[#53bdeb]" : "text-[#8696a0] dark:text-[#8696a0]";
 
-    // Use a fixed width container (w-[22px]) aligned to the end.
-    // This ensures the container takes up the space of a double tick even if only one is shown,
-    // preventing the timestamp (to the left) from jumping when status changes.
     return (
         <div className="flex items-center justify-end w-[22px]">
             {(isRead || status === 'READ' || status === 'DELIVERED') ? (
@@ -39,15 +38,18 @@ const MessageStatusIcon: React.FC<{ status: MessageStatus, isRead: boolean }> = 
     );
 };
 
-const ChatPortal: React.FC<ChatPortalProps> = ({ currentUser, students, messages, onSendMessage, onMarkAsRead }) => {
+const ChatPortal: React.FC<ChatPortalProps> = ({ currentUser, students, messages, onSendMessage, onMarkAsRead, onClearChat }) => {
   // State
   const [activeChatHandle, setActiveChatHandle] = useState<string | null>(null);
   const [newMessage, setNewMessage] = useState('');
   const [isBroadcastMode, setIsBroadcastMode] = useState(false);
   const [selectedBroadcastUsers, setSelectedBroadcastUsers] = useState<string[]>([]);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
   
   // Refs
   const messageContainerRef = useRef<HTMLDivElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
 
   // Helper: Get Group ID
   const myGroupId = `GROUP_${currentUser.role === UserRole.SPONSOR ? currentUser.handle : currentUser.sponsorId}`;
@@ -90,11 +92,9 @@ const ChatPortal: React.FC<ChatPortalProps> = ({ currentUser, students, messages
     );
   }).sort((a,b) => a.timestamp - b.timestamp);
 
-  // Auto-scroll logic: Scroll the container directly instead of using scrollIntoView on an element.
-  // This prevents the browser from scrolling the main window/body to bring the element into view, which causes the header to be hidden.
+  // Auto-scroll logic
   useEffect(() => {
     if (messageContainerRef.current) {
-        // Use a small timeout to ensure DOM render is complete
         setTimeout(() => {
             if (messageContainerRef.current) {
                 messageContainerRef.current.scrollTop = messageContainerRef.current.scrollHeight;
@@ -103,10 +103,9 @@ const ChatPortal: React.FC<ChatPortalProps> = ({ currentUser, students, messages
     }
   }, [activeMessages, activeChatHandle]);
 
-  // Mark as Read when chat is open and messages change
+  // Mark as Read
   useEffect(() => {
       if (activeChatHandle && onMarkAsRead) {
-          // If we are looking at a chat, mark incoming messages as read
           const hasUnread = activeMessages.some(m => m.senderHandle === activeChatHandle && !m.isRead);
           if (hasUnread) {
               onMarkAsRead(activeChatHandle);
@@ -114,12 +113,30 @@ const ChatPortal: React.FC<ChatPortalProps> = ({ currentUser, students, messages
       }
   }, [activeChatHandle, activeMessages, onMarkAsRead]);
 
+  // Click outside menu
+  useEffect(() => {
+      const handleClickOutside = (event: MouseEvent) => {
+          if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+              setIsMenuOpen(false);
+          }
+      };
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  // Textarea Auto-Resize
+  useEffect(() => {
+      if (textareaRef.current) {
+          textareaRef.current.style.height = 'auto'; // Reset
+          textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 120)}px`; // Grow up to 120px
+      }
+  }, [newMessage]);
+
   // Handlers
   const handleSend = () => {
     if (!newMessage.trim()) return;
 
     if (isBroadcastMode) {
-        // Send to multiple recipients
         selectedBroadcastUsers.forEach(handle => {
             onSendMessage({
                 id: `msg_${Date.now()}_${Math.random()}`,
@@ -136,7 +153,6 @@ const ChatPortal: React.FC<ChatPortalProps> = ({ currentUser, students, messages
         setSelectedBroadcastUsers([]);
         alert("Broadcast sent successfully!");
     } else if (activeChatHandle) {
-        // Normal Send
         onSendMessage({
             id: `msg_${Date.now()}`,
             senderHandle: currentUser.handle,
@@ -148,6 +164,17 @@ const ChatPortal: React.FC<ChatPortalProps> = ({ currentUser, students, messages
         });
     }
     setNewMessage('');
+    // Reset height after send
+    if (textareaRef.current) {
+        textareaRef.current.style.height = 'auto';
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+          e.preventDefault();
+          handleSend();
+      }
   };
 
   const toggleBroadcastUser = (handle: string) => {
@@ -194,7 +221,7 @@ const ChatPortal: React.FC<ChatPortalProps> = ({ currentUser, students, messages
                 return (
                     <div 
                         key={chat.handle}
-                        onClick={() => { setActiveChatHandle(chat.handle); setIsBroadcastMode(false); }}
+                        onClick={() => { setActiveChatHandle(chat.handle); setIsBroadcastMode(false); setIsMenuOpen(false); }}
                         className={`px-4 py-3 cursor-pointer hover:bg-[#f5f6f6] transition-colors flex items-center gap-3 border-b border-slate-100 dark:border-slate-800 dark:hover:bg-[#202c33] ${activeChatHandle === chat.handle ? 'bg-[#f0f2f5] dark:bg-[#2a3942]' : ''}`}
                     >
                         <div className="w-12 h-12 rounded-full bg-slate-200 flex items-center justify-center font-bold text-lg overflow-hidden shrink-0 dark:bg-[#374045] dark:text-[#e9edef]">
@@ -216,7 +243,7 @@ const ChatPortal: React.FC<ChatPortalProps> = ({ currentUser, students, messages
       {/* Chat Area */}
       <div className={`flex-1 flex flex-col relative ${!activeChatHandle && !isBroadcastMode ? 'hidden md:flex' : 'flex'}`}>
         
-        {/* Chat Background Layer - WhatsApp Beige with Doodle Pattern */}
+        {/* Chat Background Layer */}
         <div className="absolute inset-0 z-0 bg-[#efeae2] dark:bg-[#0b141a]">
             {/* Pattern Overlay */}
             <div 
@@ -228,7 +255,7 @@ const ChatPortal: React.FC<ChatPortalProps> = ({ currentUser, students, messages
             ></div>
         </div>
 
-        {/* Content Container (Above Background) */}
+        {/* Content Container */}
         <div className="relative z-10 flex flex-col h-full overflow-hidden">
             
             {/* Broadcast Mode UI */}
@@ -298,12 +325,27 @@ const ChatPortal: React.FC<ChatPortalProps> = ({ currentUser, students, messages
                             </h3>
                             <p className="text-xs text-slate-500 dark:text-[#8696a0] truncate">{activeChatHandle.startsWith('GROUP_') ? `${myDownline.length + 1} members` : 'Online'}</p>
                         </div>
+                        <div className="relative" ref={menuRef}>
+                            <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="p-2 text-slate-500 hover:bg-slate-200 rounded-full transition-colors dark:text-[#aebac1] dark:hover:bg-[#374045]">
+                                <MoreVertical size={20} />
+                            </button>
+                            {isMenuOpen && (
+                                <div className="absolute right-0 top-10 bg-white shadow-xl rounded-lg py-2 w-40 z-30 border border-slate-100 dark:bg-[#233138] dark:border-[#202c33]">
+                                    <button 
+                                        onClick={() => { if(onClearChat) onClearChat(activeChatHandle); setIsMenuOpen(false); }}
+                                        className="w-full text-left px-4 py-2.5 text-sm text-red-600 hover:bg-slate-50 flex items-center gap-2 dark:hover:bg-[#111b21] dark:text-red-400"
+                                    >
+                                        <Trash2 size={16} /> Clear Chat
+                                    </button>
+                                </div>
+                            )}
+                        </div>
                     </div>
 
-                    {/* Messages List - Fixed Scroll Area */}
+                    {/* Messages List - Fixed Scroll Area with flex-1 and min-h-0 to allow shrinking when input grows */}
                     <div 
                         ref={messageContainerRef}
-                        className="flex-1 overflow-y-auto p-4 space-y-1 scroll-smooth"
+                        className="flex-1 overflow-y-auto p-4 space-y-1 scroll-smooth min-h-0"
                     >
                         {activeMessages.map((msg) => {
                             const isMe = msg.senderHandle === currentUser.handle;
@@ -329,9 +371,6 @@ const ChatPortal: React.FC<ChatPortalProps> = ({ currentUser, students, messages
                                             <div className="relative">
                                                 <span className="break-words whitespace-pre-wrap">
                                                     {msg.text}
-                                                    {/* Float Spacer: Reserves width at the end of the text line for timestamp. 
-                                                        Width set to 76px to accommodate time + wider fixed icon container. 
-                                                        If text ends near the right edge, this forces a wrap. */}
                                                     <span className="inline-block w-[76px] h-[15px] align-bottom select-none opacity-0"></span>
                                                 </span>
 
@@ -349,19 +388,23 @@ const ChatPortal: React.FC<ChatPortalProps> = ({ currentUser, students, messages
                     </div>
 
                     {/* Input Bar */}
-                    <div className="bg-[#f0f2f5] px-4 py-3 flex items-center gap-2 border-t border-slate-200 shrink-0 z-20 dark:bg-[#202c33] dark:border-[#202c33]">
-                        <input 
-                            type="text" 
-                            value={newMessage}
-                            onChange={(e) => setNewMessage(e.target.value)}
-                            onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-                            placeholder="Type a message"
-                            className="flex-1 py-3 px-4 rounded-lg border-none focus:ring-0 text-slate-800 bg-white dark:bg-[#2a3942] dark:text-[#e9edef] dark:placeholder-[#8696a0]"
-                        />
+                    <div className="bg-[#f0f2f5] px-2 py-2 flex items-end gap-2 border-t border-slate-200 shrink-0 z-20 dark:bg-[#202c33] dark:border-[#202c33]">
+                        <div className="flex-1 bg-white rounded-2xl border border-white flex items-end dark:bg-[#2a3942] dark:border-[#2a3942] pl-4 pr-2 py-2">
+                            <textarea 
+                                ref={textareaRef}
+                                rows={1}
+                                value={newMessage}
+                                onChange={(e) => setNewMessage(e.target.value)}
+                                onKeyDown={handleKeyDown}
+                                placeholder="Type a message"
+                                className="w-full border-none focus:ring-0 text-slate-800 bg-transparent resize-none overflow-hidden max-h-[120px] dark:text-[#e9edef] dark:placeholder-[#8696a0] p-0 leading-relaxed text-[15px]"
+                                style={{ minHeight: '24px' }}
+                            />
+                        </div>
                         <button 
                             onClick={handleSend}
                             disabled={!newMessage.trim()}
-                            className="p-3 bg-[#00a884] text-white rounded-full hover:bg-[#008f6f] disabled:opacity-60 transition-colors shadow-sm"
+                            className="p-3 mb-1 bg-[#00a884] text-white rounded-full hover:bg-[#008f6f] disabled:opacity-60 transition-colors shadow-sm flex items-center justify-center"
                         >
                             <PaperAirplaneIcon />
                         </button>
@@ -370,7 +413,6 @@ const ChatPortal: React.FC<ChatPortalProps> = ({ currentUser, students, messages
             ) : (
                 <div className="flex-1 flex flex-col items-center justify-center text-slate-400 p-8 text-center bg-[#f0f2f5] border-b-[6px] border-[#25d366] dark:bg-[#222e35] dark:border-[#00a884] dark:text-[#8696a0]">
                     <div className="w-64 h-64 opacity-60 mb-8 dark:opacity-40">
-                         {/* Abstract illustration placeholder or just icon */}
                          <ChatBubbleLeftRightIcon /> 
                     </div>
                     <h3 className="text-3xl font-light text-[#41525d] mb-4 dark:text-[#e9edef]">WhatsApp Web Clone</h3>

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { HashRouter, Routes, Route, Navigate, Link, useNavigate } from 'react-router-dom';
 import Layout from './components/Layout';
@@ -288,6 +289,18 @@ const App: React.FC = () => {
     setMessages(prev => [...prev, { ...newMessage, status: 'SENT' }]);
   };
 
+  // --- New Clear Chat Handler ---
+  const handleClearChat = (contactHandle: string) => {
+      if (!currentUser) return;
+      if (window.confirm("Clear this chat? Messages will be removed for you.")) {
+          setMessages(prev => prev.filter(m => 
+              !((m.senderHandle === currentUser.handle && m.recipientHandle === contactHandle) || 
+                (m.senderHandle === contactHandle && m.recipientHandle === currentUser.handle) ||
+                (contactHandle.startsWith('GROUP_') && m.recipientHandle === contactHandle))
+          ));
+      }
+  };
+
   const handleMarkAsRead = (senderHandle: string) => {
       if (!currentUser) return;
       setMessages(prev => prev.map(m => {
@@ -440,6 +453,7 @@ const App: React.FC = () => {
                     messages={messages} 
                     onSendMessage={handleSendMessage} 
                     onMarkAsRead={handleMarkAsRead}
+                    onClearChat={handleClearChat}
                 />
             </ProtectedRoute>
         } />

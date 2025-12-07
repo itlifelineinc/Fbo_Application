@@ -2,8 +2,23 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Course, Module, Chapter, CourseTrack, CourseLevel, CourseStatus, ContentBlock, BlockType, CourseTestimonial, Student } from '../types';
-import { Eye, X, PlayCircle, FileText, HelpCircle, ChevronDown, ChevronRight, CheckCircle, Menu, BookOpen, Clock, Plus, Trash2, ArrowUp, ArrowDown, LayoutTemplate, Type, Image as ImageIcon, List, Quote, AlertCircle, ArrowLeft, ShoppingBag, Users, Sparkles, Save, Search, Check, Wand2, Loader2, MessageSquare, Settings, Rocket, BarChart, Edit, Maximize2, MoreHorizontal, Eraser } from 'lucide-react';
+import { Eye, X, PlayCircle, FileText, HelpCircle, ChevronDown, ChevronRight, CheckCircle, Menu, BookOpen, Clock, Plus, Trash2, ArrowUp, ArrowDown, LayoutTemplate, Type, Image as ImageIcon, List, Quote, AlertCircle, ArrowLeft, ShoppingBag, Users, Sparkles, Save, Search, Check, Wand2, Loader2, MessageSquare, Settings, Rocket, BarChart, Edit, Maximize2, MoreHorizontal, Eraser, AlertTriangle } from 'lucide-react';
 import { generateModuleContent } from '../services/geminiService';
+
+// --- HELPER COMPONENTS (Defined Top-Level to avoid Reference Errors) ---
+
+const ToolbarBtn: React.FC<{ icon: any, label: string, onClick: () => void }> = ({ icon: Icon, label, onClick }) => (
+    <button onClick={onClick} className="flex flex-col items-center gap-1 px-3 py-2 rounded-xl text-slate-500 hover:bg-slate-100 hover:text-emerald-700 transition-colors group dark:text-slate-400 dark:hover:bg-slate-700 dark:hover:text-emerald-400">
+        <Icon size={20} className="group-hover:scale-110 transition-transform" />
+        <span className="text-[10px] font-bold">{label}</span>
+    </button>
+);
+
+const ArrowLeftIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-5 h-5 text-slate-400 group-hover:text-slate-600 dark:text-slate-500 dark:group-hover:text-slate-300">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
+    </svg>
+);
 
 interface CourseBuilderProps {
   currentUserHandle: string;
@@ -262,9 +277,10 @@ const CourseBuilder: React.FC<CourseBuilderProps> = ({ currentUserHandle, course
   const [isGeneratingAI, setIsGeneratingAI] = useState(false);
   const stepsContainerRef = useRef<HTMLDivElement>(null);
 
-  // New States for Analytics Modals
+  // New States for Analytics Modals & Clear Confirmation
   const [showAllCoursesModal, setShowAllCoursesModal] = useState(false);
   const [showAllFeedbackModal, setShowAllFeedbackModal] = useState(false);
+  const [showClearModal, setShowClearModal] = useState(false);
 
   // New Testimonial State
   const [newTestimonial, setNewTestimonial] = useState<CourseTestimonial>({ id: '', name: '', role: '', quote: '' });
@@ -442,35 +458,39 @@ const CourseBuilder: React.FC<CourseBuilderProps> = ({ currentUserHandle, course
     }
   };
 
-  // --- CLEAR FIELDS HANDLER ---
-  const handleClearCurrentStep = () => {
-    if (!window.confirm("Are you sure you want to clear all fields in this section? This cannot be undone.")) return;
+  // --- CLEAR FIELDS HANDLERS ---
+  const handleClearClick = () => {
+      setShowClearModal(true);
+  };
 
+  const handleConfirmClear = () => {
     if (step === 1) {
         setCourse(prev => ({
             ...prev,
             title: '',
             subtitle: '',
-            track: CourseTrack.BASICS, // Reset to default enum
+            track: CourseTrack.BASICS, 
             level: CourseLevel.BEGINNER,
             thumbnailUrl: ''
         }));
     } else if (step === 2) {
         setCourse(prev => ({ ...prev, modules: [] }));
     } else if (step === 3) {
+        // Reset settings to default
+        const empty = getEmptyCourse(currentUserHandle);
         setCourse(prev => ({
             ...prev,
             description: '',
             learningOutcomes: [],
             targetAudience: [],
             testimonials: [],
-            settings: getEmptyCourse(currentUserHandle).settings // Reset settings to default
+            settings: empty.settings
         }));
         setNewTestimonial({ id: '', name: '', role: '', quote: '' });
         setTempOutcome('');
         setTempAudience('');
     }
-    // Step 4 and 5 ignored as per request
+    setShowClearModal(false);
   };
 
   // --- RENDERERS ---
@@ -993,7 +1013,7 @@ const CourseBuilder: React.FC<CourseBuilderProps> = ({ currentUserHandle, course
             {/* Clear Button - Steps 1, 2, 3 */}
             {[1, 2, 3].includes(step) && (
                 <button 
-                    onClick={handleClearCurrentStep} 
+                    onClick={handleClearClick} 
                     className="flex items-center gap-2 bg-white text-slate-500 px-3 py-2 md:px-4 md:py-3 rounded-xl text-xs md:text-sm font-bold border border-slate-200 hover:bg-red-50 hover:text-red-600 hover:border-red-200 transition-all shadow-sm dark:bg-slate-800 dark:border-slate-700 dark:text-slate-400 dark:hover:text-red-400"
                     title="Clear Fields"
                 >
@@ -1121,16 +1141,43 @@ const CourseBuilder: React.FC<CourseBuilderProps> = ({ currentUserHandle, course
           </div>
       )}
 
+      {/* 3. Clear Confirmation Modal */}
+      {showClearModal && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-md p-4 animate-fade-in" onClick={() => setShowClearModal(false)}>
+              <div className="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-6 dark:bg-slate-900 dark:border dark:border-slate-700 scale-100 transform transition-all" onClick={e => e.stopPropagation()}>
+                  <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-red-100 dark:bg-red-900/30 mb-4">
+                      <AlertTriangle className="h-6 w-6 text-red-600 dark:text-red-400" />
+                  </div>
+                  <div className="text-center">
+                      <h3 className="text-lg font-bold text-slate-900 dark:text-white">Clear this section?</h3>
+                      <div className="mt-2">
+                          <p className="text-sm text-slate-500 dark:text-slate-400">
+                              Are you sure you want to clear all fields in this step? This action cannot be undone.
+                          </p>
+                      </div>
+                  </div>
+                  <div className="mt-6 flex flex-col sm:flex-row gap-3">
+                      <button
+                          type="button"
+                          className="w-full inline-flex justify-center rounded-xl border border-transparent bg-red-600 px-4 py-2.5 text-base font-medium text-white shadow-sm hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 sm:text-sm"
+                          onClick={handleConfirmClear}
+                      >
+                          Yes, Clear All
+                      </button>
+                      <button
+                          type="button"
+                          className="w-full inline-flex justify-center rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-base font-medium text-slate-700 shadow-sm hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-offset-2 sm:text-sm dark:bg-slate-800 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-700"
+                          onClick={() => setShowClearModal(false)}
+                      >
+                          Cancel
+                      </button>
+                  </div>
+              </div>
+          </div>
+      )}
+
     </div>
   );
 };
-
-const ToolbarBtn: React.FC<{ icon: any, label: string, onClick: () => void }> = ({ icon: Icon, label, onClick }) => (
-    <button onClick={onClick} className="flex flex-col items-center gap-1 px-3 py-2 rounded-xl text-slate-500 hover:bg-slate-100 hover:text-emerald-700 transition-colors group dark:text-slate-400 dark:hover:bg-slate-700 dark:hover:text-emerald-400"><Icon size={20} className="group-hover:scale-110 transition-transform" /><span className="text-[10px] font-bold">{label}</span></button>
-);
-
-const ArrowLeftIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-5 h-5 text-slate-400 group-hover:text-slate-600 dark:text-slate-500 dark:group-hover:text-slate-300"><path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" /></svg>
-);
 
 export default CourseBuilder;

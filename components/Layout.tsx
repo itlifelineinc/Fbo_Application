@@ -144,6 +144,11 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
   const profileMenuRef = useRef<HTMLDivElement>(null);
   const profileBtnRef = useRef<HTMLButtonElement>(null);
 
+  // Mobile Profile Menu State
+  const [isMobileProfileMenuOpen, setIsMobileProfileMenuOpen] = useState(false);
+  const mobileProfileMenuRef = useRef<HTMLDivElement>(null);
+  const mobileProfileBtnRef = useRef<HTMLButtonElement>(null);
+
   // Mobile Dock State
   const [isDockExpanded, setIsDockExpanded] = useState(false);
   const dockRef = useRef<HTMLDivElement>(null);
@@ -204,20 +209,32 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
   // Click outside handler for Profile Menu
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
+      // Desktop
       if (
         isProfileMenuOpen && 
         profileMenuRef.current && 
         !profileMenuRef.current.contains(event.target as Node) &&
-        profileBtnRef.current &&
+        profileBtnRef.current && 
         !profileBtnRef.current.contains(event.target as Node)
       ) {
         setIsProfileMenuOpen(false);
+      }
+
+      // Mobile
+      if (
+        isMobileProfileMenuOpen && 
+        mobileProfileMenuRef.current && 
+        !mobileProfileMenuRef.current.contains(event.target as Node) &&
+        mobileProfileBtnRef.current && 
+        !mobileProfileBtnRef.current.contains(event.target as Node)
+      ) {
+        setIsMobileProfileMenuOpen(false);
       }
     };
 
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [isProfileMenuOpen]);
+  }, [isProfileMenuOpen, isMobileProfileMenuOpen]);
 
   // Navbar auto-hide logic: Only apply for builder pages now. Standard pages get static header.
   const shouldHeaderBeStatic = isDashboard || !isBuilder;
@@ -794,6 +811,71 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
                   </span>
                )}
              </button>
+
+             {/* Mobile Profile Menu */}
+             <div className="relative">
+                <button
+                    ref={mobileProfileBtnRef}
+                    onClick={() => setIsMobileProfileMenuOpen(!isMobileProfileMenuOpen)}
+                    className="w-9 h-9 rounded-full bg-slate-200 overflow-hidden border border-slate-300 focus:outline-none dark:border-slate-700"
+                >
+                    {currentUser.avatarUrl ? (
+                        <img src={currentUser.avatarUrl} alt={currentUser.name} className="w-full h-full object-cover" />
+                    ) : (
+                        <div className="w-full h-full bg-emerald-100 flex items-center justify-center text-emerald-800 font-bold text-xs">
+                            {currentUser.name.charAt(0)}
+                        </div>
+                    )}
+                </button>
+
+                {isMobileProfileMenuOpen && (
+                    <div
+                        ref={mobileProfileMenuRef}
+                        className="absolute right-0 top-12 mt-2 w-56 bg-white/95 backdrop-blur-xl rounded-2xl shadow-xl border border-slate-100 py-2 z-50 animate-fade-in dark:bg-slate-900/95 dark:border-slate-700"
+                    >
+                        <div className="px-4 py-3 border-b border-slate-100 dark:border-slate-700">
+                            <p className="text-sm font-bold text-slate-800 dark:text-white">Signed in as</p>
+                            <p className="text-xs text-slate-500 truncate dark:text-slate-400 mt-0.5">{currentUser.email}</p>
+                        </div>
+                        
+                        <div className="py-2">
+                            <div 
+                                onClick={(e) => { 
+                                    e.stopPropagation(); 
+                                    onToggleTheme();
+                                }}
+                                className="w-full text-left px-4 py-2.5 text-sm text-slate-600 hover:bg-slate-50 flex items-center justify-between cursor-pointer transition-colors group dark:text-slate-300 dark:hover:bg-slate-800"
+                            >
+                                <div className="flex items-center gap-3">
+                                    {theme === 'light' ? <Sun size={16} /> : <Moon size={16} />}
+                                    <span>Dark Mode</span>
+                                </div>
+                                <div className={`w-9 h-5 rounded-full p-0.5 transition-colors duration-300 ${theme === 'dark' ? 'bg-emerald-500' : 'bg-slate-300 group-hover:bg-slate-400'}`}>
+                                    <div className={`w-4 h-4 bg-white rounded-full shadow-sm transform transition-transform duration-300 ${theme === 'dark' ? 'translate-x-4' : 'translate-x-0'}`} />
+                                </div>
+                            </div>
+                            <Link 
+                                to={`/students/${currentUser.id}`}
+                                onClick={() => setIsMobileProfileMenuOpen(false)}
+                                className="w-full text-left px-4 py-2.5 text-sm text-slate-600 hover:bg-slate-50 flex items-center gap-3 transition-colors dark:text-slate-300 dark:hover:bg-slate-800"
+                            >
+                                <Settings size={16} />
+                                <span>Settings</span>
+                            </Link>
+                        </div>
+
+                        <div className="border-t border-slate-100 pt-2 dark:border-slate-700">
+                            <button 
+                                onClick={onLogout}
+                                className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2 transition-colors dark:hover:bg-red-900/20"
+                            >
+                                <LogOut size={16} />
+                                <span>Sign Out</span>
+                            </button>
+                        </div>
+                    </div>
+                )}
+             </div>
            </div>
         </header>
         

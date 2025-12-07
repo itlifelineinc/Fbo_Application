@@ -2,7 +2,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Course, Module, Chapter, CourseTrack, CourseLevel, CourseStatus, ContentBlock, BlockType, CourseTestimonial, Student } from '../types';
-import { Eye, X, PlayCircle, FileText, HelpCircle, ChevronDown, ChevronRight, CheckCircle, Menu, BookOpen, Clock, Plus, Trash2, ArrowUp, ArrowDown, LayoutTemplate, Type, Image as ImageIcon, List, Quote, AlertCircle, ArrowLeft, ShoppingBag, Users, Sparkles, Save, Search, Check, Wand2, Loader2, MessageSquare, Settings, Rocket, BarChart, Edit } from 'lucide-react';
+import { Eye, X, PlayCircle, FileText, HelpCircle, ChevronDown, ChevronRight, CheckCircle, Menu, BookOpen, Clock, Plus, Trash2, ArrowUp, ArrowDown, LayoutTemplate, Type, Image as ImageIcon, List, Quote, AlertCircle, ArrowLeft, ShoppingBag, Users, Sparkles, Save, Search, Check, Wand2, Loader2, MessageSquare, Settings, Rocket, BarChart, Edit, Maximize2, MoreHorizontal } from 'lucide-react';
 import { generateModuleContent } from '../services/geminiService';
 
 interface CourseBuilderProps {
@@ -261,6 +261,10 @@ const CourseBuilder: React.FC<CourseBuilderProps> = ({ currentUserHandle, course
   const [isTemplateMode, setIsTemplateMode] = useState(false);
   const [isGeneratingAI, setIsGeneratingAI] = useState(false);
   const stepsContainerRef = useRef<HTMLDivElement>(null);
+
+  // New States for Analytics Modals
+  const [showAllCoursesModal, setShowAllCoursesModal] = useState(false);
+  const [showAllFeedbackModal, setShowAllFeedbackModal] = useState(false);
 
   // New Testimonial State
   const [newTestimonial, setNewTestimonial] = useState<CourseTestimonial>({ id: '', name: '', role: '', quote: '' });
@@ -714,14 +718,29 @@ const CourseBuilder: React.FC<CourseBuilderProps> = ({ currentUserHandle, course
     // Earnings
     const earnings = totalStudents * (course.settings.price || 0);
 
+    // Filter courses owned by this user for the modal list
+    const myPublishedCourses = courses.filter(c => c.authorHandle === currentUserHandle);
+
     return (
-        <div className="space-y-8 animate-fade-in">
+        <div className="space-y-8 animate-fade-in relative">
             <div className="flex justify-between items-center">
                 <h2 className="text-lg md:text-xl font-bold text-slate-900 font-heading dark:text-slate-100">Course Performance</h2>
             </div>
 
             {/* Published Course Summary & Edit */}
-            <div className="bg-white rounded-3xl p-6 shadow-sm border border-slate-200 dark:bg-slate-800 dark:border-slate-700 flex flex-col md:flex-row gap-6 items-start md:items-center group">
+            <div className="bg-white rounded-3xl p-6 shadow-sm border border-slate-200 dark:bg-slate-800 dark:border-slate-700 flex flex-col md:flex-row gap-6 items-start md:items-center group relative">
+                
+                {/* Expand Icon - Visible on Hover (Desktop) or Always (Mobile) if multiple courses exist */}
+                {myPublishedCourses.length > 1 && (
+                    <button 
+                        onClick={() => setShowAllCoursesModal(true)}
+                        className="absolute top-4 right-4 p-2 bg-slate-100 rounded-full text-slate-500 hover:bg-emerald-100 hover:text-emerald-600 transition-all opacity-100 md:opacity-0 md:group-hover:opacity-100 shadow-sm z-10 dark:bg-slate-700 dark:text-slate-300 dark:hover:bg-emerald-900/50"
+                        title="View All Courses"
+                    >
+                        <Maximize2 size={18} />
+                    </button>
+                )}
+
                 <div className="w-full md:w-32 h-32 md:h-24 rounded-2xl overflow-hidden bg-slate-100 shrink-0 relative border border-slate-100 dark:border-slate-600 dark:bg-slate-700">
                     {course.thumbnailUrl ? (
                         <img src={course.thumbnailUrl} alt={course.title} className="w-full h-full object-cover" />
@@ -737,7 +756,7 @@ const CourseBuilder: React.FC<CourseBuilderProps> = ({ currentUserHandle, course
                         </span>
                         <span className="text-xs text-slate-400">• Last Updated: {new Date(course.updatedAt).toLocaleDateString()}</span>
                     </div>
-                    <h3 className="text-xl font-bold text-slate-900 dark:text-white leading-tight">{course.title}</h3>
+                    <h3 className="text-xl font-bold text-slate-900 dark:text-white leading-tight">{course.title || "Untitled Course"}</h3>
                     <p className="text-sm text-slate-500 dark:text-slate-400 line-clamp-1">{course.subtitle || 'No subtitle provided.'}</p>
                 </div>
 
@@ -781,7 +800,18 @@ const CourseBuilder: React.FC<CourseBuilderProps> = ({ currentUserHandle, course
             </div>
 
             {/* Feedback / Testimonials */}
-            <div className={CARD_CLASS}>
+            <div className={`${CARD_CLASS} relative group`}>
+                {/* Feedback Expansion Button */}
+                {(course.testimonials?.length || 0) > 2 && (
+                    <button 
+                        onClick={() => setShowAllFeedbackModal(true)}
+                        className="absolute top-4 right-4 p-2 bg-slate-100 rounded-full text-slate-500 hover:bg-blue-100 hover:text-blue-600 transition-all opacity-100 md:opacity-0 md:group-hover:opacity-100 shadow-sm z-10 dark:bg-slate-700 dark:text-slate-300 dark:hover:bg-blue-900/50"
+                        title="View All Feedback"
+                    >
+                        <Maximize2 size={18} />
+                    </button>
+                )}
+
                 <div className="flex justify-between items-center mb-6">
                     <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100">Student Feedback</h3>
                     <span className="text-xs text-slate-400">Collected from course reviews</span>
@@ -789,7 +819,7 @@ const CourseBuilder: React.FC<CourseBuilderProps> = ({ currentUserHandle, course
                 
                 <div className="space-y-4">
                     {course.testimonials && course.testimonials.length > 0 ? (
-                        course.testimonials.map((t) => (
+                        course.testimonials.slice(0, 2).map((t) => (
                             <div key={t.id} className="p-4 bg-slate-50 rounded-xl border border-slate-100 dark:bg-slate-700/30 dark:border-slate-700">
                                 <div className="flex justify-between items-start mb-2">
                                     <div className="flex items-center gap-2">
@@ -814,8 +844,86 @@ const CourseBuilder: React.FC<CourseBuilderProps> = ({ currentUserHandle, course
                             <p>No feedback received yet.</p>
                         </div>
                     )}
+                    {course.testimonials && course.testimonials.length > 2 && (
+                        <button 
+                            onClick={() => setShowAllFeedbackModal(true)}
+                            className="w-full py-2 text-xs font-bold text-slate-500 hover:text-slate-800 transition-colors bg-slate-50 rounded-lg dark:bg-slate-700/50 dark:text-slate-400 dark:hover:text-slate-200"
+                        >
+                            View All ({course.testimonials.length})
+                        </button>
+                    )}
                 </div>
             </div>
+
+            {/* --- MODALS --- */}
+            
+            {/* 1. All Courses Modal */}
+            {showAllCoursesModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-fade-in" onClick={() => setShowAllCoursesModal(false)}>
+                    <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md max-h-[80vh] flex flex-col overflow-hidden dark:bg-slate-900 dark:border dark:border-slate-700" onClick={e => e.stopPropagation()}>
+                        <div className="p-5 border-b border-slate-100 flex justify-between items-center bg-slate-50 dark:bg-slate-800 dark:border-slate-700">
+                            <h3 className="font-bold text-slate-800 dark:text-white">Your Courses</h3>
+                            <button onClick={() => setShowAllCoursesModal(false)} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+                                <X size={20} />
+                            </button>
+                        </div>
+                        <div className="flex-1 overflow-y-auto p-4 space-y-3 no-scrollbar">
+                            {myPublishedCourses.map(c => (
+                                <div 
+                                    key={c.id} 
+                                    onClick={() => { setCourse(c); setShowAllCoursesModal(false); }}
+                                    className={`p-3 rounded-xl border flex items-center gap-3 cursor-pointer transition-all hover:bg-slate-50 dark:hover:bg-slate-800 ${c.id === course.id ? 'border-emerald-500 ring-1 ring-emerald-500 bg-emerald-50 dark:bg-emerald-900/20' : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900'}`}
+                                >
+                                    <div className="w-12 h-12 rounded-lg bg-slate-200 overflow-hidden shrink-0 dark:bg-slate-700">
+                                        {c.thumbnailUrl ? <img src={c.thumbnailUrl} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-slate-400"><ImageIcon size={16}/></div>}
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        <h4 className="font-bold text-sm text-slate-900 truncate dark:text-white">{c.title}</h4>
+                                        <p className="text-xs text-slate-500 dark:text-slate-400">{c.status}</p>
+                                    </div>
+                                    {c.id === course.id && <CheckCircle size={16} className="text-emerald-500" />}
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* 2. All Feedback Modal */}
+            {showAllFeedbackModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-fade-in" onClick={() => setShowAllFeedbackModal(false)}>
+                    <div className="bg-white rounded-3xl shadow-2xl w-full max-w-lg max-h-[80vh] flex flex-col overflow-hidden dark:bg-slate-900 dark:border dark:border-slate-700" onClick={e => e.stopPropagation()}>
+                        <div className="p-5 border-b border-slate-100 flex justify-between items-center bg-slate-50 dark:bg-slate-800 dark:border-slate-700">
+                            <h3 className="font-bold text-slate-800 dark:text-white">All Testimonials</h3>
+                            <button onClick={() => setShowAllFeedbackModal(false)} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+                                <X size={20} />
+                            </button>
+                        </div>
+                        <div className="flex-1 overflow-y-auto p-4 space-y-4 no-scrollbar">
+                            {course.testimonials?.map(t => (
+                                <div key={t.id} className="p-4 bg-slate-50 rounded-xl border border-slate-100 dark:bg-slate-800 dark:border-slate-700">
+                                    <div className="flex justify-between items-start mb-2">
+                                        <div className="flex items-center gap-2">
+                                            <div className="w-8 h-8 rounded-full bg-white border border-slate-200 flex items-center justify-center text-xs font-bold text-slate-500 dark:bg-slate-900 dark:border-slate-600 dark:text-slate-300">
+                                                {t.name.charAt(0)}
+                                            </div>
+                                            <div>
+                                                <p className="text-sm font-bold text-slate-800 dark:text-white">{t.name}</p>
+                                                <p className="text-[10px] text-slate-400 uppercase">{t.role}</p>
+                                            </div>
+                                        </div>
+                                        <div className="flex text-yellow-400 text-xs gap-0.5">
+                                            {[1,2,3,4,5].map(i => <Save key={i} size={12} fill="currentColor" className="text-yellow-400"/>)}
+                                        </div>
+                                    </div>
+                                    <p className="text-sm text-slate-600 italic dark:text-slate-300">"{t.quote}"</p>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            )}
+
         </div>
     );
   };

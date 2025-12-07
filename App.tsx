@@ -301,6 +301,23 @@ const App: React.FC = () => {
       }
   };
 
+  // --- Single Message Delete Handler ---
+  const handleDeleteMessage = (messageId: string, type: 'me' | 'everyone') => {
+      setMessages(prev => {
+          if (type === 'me') {
+              // Remove locally
+              return prev.filter(m => m.id !== messageId);
+          } else {
+              // Tombstone for everyone
+              return prev.map(m => 
+                  m.id === messageId 
+                  ? { ...m, text: '🚫 This message was deleted', isSystem: true } 
+                  : m
+              );
+          }
+      });
+  };
+
   const handleMarkAsRead = (senderHandle: string) => {
       if (!currentUser) return;
       setMessages(prev => prev.map(m => {
@@ -454,6 +471,7 @@ const App: React.FC = () => {
                     onSendMessage={handleSendMessage} 
                     onMarkAsRead={handleMarkAsRead}
                     onClearChat={handleClearChat}
+                    onDeleteMessage={handleDeleteMessage}
                 />
             </ProtectedRoute>
         } />

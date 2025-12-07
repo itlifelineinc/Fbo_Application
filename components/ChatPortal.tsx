@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { Student, Message, UserRole, MessageStatus } from '../types';
-import { MoreVertical, Trash2 } from 'lucide-react';
+import { MoreVertical, Trash2, ChevronDown, Reply, Copy, ArrowRight, X } from 'lucide-react';
 
 interface ChatPortalProps {
   currentUser: Student;
@@ -10,6 +10,7 @@ interface ChatPortalProps {
   onSendMessage: (message: Message) => void;
   onMarkAsRead?: (senderHandle: string) => void;
   onClearChat?: (handle: string) => void;
+  onDeleteMessage?: (messageId: string, type: 'me' | 'everyone') => void;
 }
 
 // --- WhatsApp Style Icons ---
@@ -38,7 +39,7 @@ const MessageStatusIcon: React.FC<{ status: MessageStatus, isRead: boolean }> = 
     );
 };
 
-const ChatPortal: React.FC<ChatPortalProps> = ({ currentUser, students, messages, onSendMessage, onMarkAsRead, onClearChat }) => {
+const ChatPortal: React.FC<ChatPortalProps> = ({ currentUser, students, messages, onSendMessage, onMarkAsRead, onClearChat, onDeleteMessage }) => {
   // State
   const [activeChatHandle, setActiveChatHandle] = useState<string | null>(null);
   const [newMessage, setNewMessage] = useState('');
@@ -46,6 +47,13 @@ const ChatPortal: React.FC<ChatPortalProps> = ({ currentUser, students, messages
   const [selectedBroadcastUsers, setSelectedBroadcastUsers] = useState<string[]>([]);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   
+  // Message Menu State
+  const [hoveredMessageId, setHoveredMessageId] = useState<string | null>(null);
+  const [messageMenuId, setMessageMenuId] = useState<string | null>(null);
+  const [menuPosition, setMenuPosition] = useState<'up' | 'down'>('down');
+  const [replyToMessage, setReplyToMessage] = useState<Message | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<Message | null>(null);
+
   // Refs
   const messageContainerRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -119,10 +127,14 @@ const ChatPortal: React.FC<ChatPortalProps> = ({ currentUser, students, messages
           if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
               setIsMenuOpen(false);
           }
+          // Also close message specific menu
+          if (messageMenuId && !(event.target as Element).closest('.message-menu-trigger')) {
+              setMessageMenuId(null);
+          }
       };
       document.addEventListener('mousedown', handleClickOutside);
       return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
+  }, [messageMenuId]);
 
   // Textarea Auto-Resize
   useEffect(() => {
@@ -132,10 +144,44 @@ const ChatPortal: React.FC<ChatPortalProps> = ({ currentUser, students, messages
       }
   }, [newMessage]);
 
+  // Message Actions
+  const handleReply = (msg: Message) => {
+      setReplyToMessage(msg);
+      setMessageMenuId(null);
+      if (textareaRef.current) textareaRef.current.focus();
+  };
+
+  const handleCopy = (text: string) => {
+      navigator.clipboard.writeText(text);
+      setMessageMenuId(null);
+  };
+
+  const handleForward = (text: string) => {
+      setNewMessage(text);
+      setMessageMenuId(null);
+      if (textareaRef.current) textareaRef.current.focus();
+  };
+
+  const handleDeleteRequest = (msg: Message) => {
+      setDeleteTarget(msg);
+      setMessageMenuId(null);
+  };
+
+  const confirmDelete = (type: 'me' | 'everyone') => {
+      if (onDeleteMessage && deleteTarget) {
+          onDeleteMessage(deleteTarget.id, type);
+      }
+      setDeleteTarget(null);
+  };
+
   // Handlers
   const handleSend = () => {
     if (!newMessage.trim()) return;
 
+    // Optional: Prepend reply context to message text if simple text-based reply is desired
+    // For now, just sending standard message, assuming Reply UI is visual-only in this implementation
+    // or handled by backend logic linking. 
+    
     if (isBroadcastMode) {
         selectedBroadcastUsers.forEach(handle => {
             onSendMessage({
@@ -164,6 +210,7 @@ const ChatPortal: React.FC<ChatPortalProps> = ({ currentUser, students, messages
         });
     }
     setNewMessage('');
+    setReplyToMessage(null);
     // Reset height after send
     if (textareaRef.current) {
         textareaRef.current.style.height = 'auto';
@@ -193,12 +240,56 @@ const ChatPortal: React.FC<ChatPortalProps> = ({ currentUser, students, messages
       }
   };
 
+  const toggleMessageMenu = (e: React.MouseEvent, msgId: string) => {
+      e.stopPropagation();
+      
+      // Calculate position logic
+      const trigger = e.currentTarget as HTMLElement;
+      const rect = trigger.getBoundingClientRect();
+      const screenHeight = window.innerHeight;
+      
+      // If lower half of screen, open upwards
+      setMenuPosition(rect.top > screenHeight / 2 ? 'up' : 'down');
+      
+      setMessageMenuId(prev => prev === msgId ? null : msgId);
+  };
+
   return (
     <div 
         className="h-full flex flex-col md:flex-row bg-white md:rounded-2xl md:shadow-sm md:border border-slate-100 overflow-hidden animate-fade-in dark:bg-[#111b21] dark:border-slate-800"
         style={{ fontFamily: 'Segoe UI, "Helvetica Neue", Helvetica, Arial, sans-serif' }}
     >
-      
+      {/* --- Delete Modal --- */}
+      {deleteTarget && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 backdrop-blur-sm animate-fade-in">
+              <div className="bg-white rounded-lg shadow-xl p-6 max-w-sm w-full mx-4 dark:bg-[#3b4a54] dark:text-[#e9edef]">
+                  <h3 className="font-bold text-lg mb-2">Delete message?</h3>
+                  <div className="flex flex-col gap-2 mt-4">
+                      {deleteTarget.senderHandle === currentUser.handle && (
+                          <button 
+                            onClick={() => confirmDelete('everyone')}
+                            className="text-left px-4 py-3 hover:bg-slate-100 dark:hover:bg-[#111b21] rounded text-emerald-600 dark:text-emerald-400 font-medium"
+                          >
+                              Delete for everyone
+                          </button>
+                      )}
+                      <button 
+                        onClick={() => confirmDelete('me')}
+                        className="text-left px-4 py-3 hover:bg-slate-100 dark:hover:bg-[#111b21] rounded text-emerald-600 dark:text-emerald-400 font-medium"
+                      >
+                          Delete for me
+                      </button>
+                      <button 
+                        onClick={() => setDeleteTarget(null)}
+                        className="text-left px-4 py-3 hover:bg-slate-100 dark:hover:bg-[#111b21] rounded border border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300 mt-2 text-center"
+                      >
+                          Cancel
+                      </button>
+                  </div>
+              </div>
+          </div>
+      )}
+
       {/* Sidebar List */}
       <div className={`w-full md:w-96 bg-white border-r border-slate-200 flex flex-col ${activeChatHandle && !isBroadcastMode ? 'hidden md:flex' : 'flex'} dark:bg-[#111b21] dark:border-slate-800`}>
         <div className="p-4 bg-[#f0f2f5] border-b border-slate-200 dark:bg-[#202c33] dark:border-[#202c33] flex justify-between items-center h-16 shrink-0">
@@ -350,7 +441,12 @@ const ChatPortal: React.FC<ChatPortalProps> = ({ currentUser, students, messages
                         {activeMessages.map((msg) => {
                             const isMe = msg.senderHandle === currentUser.handle;
                             return (
-                                <div key={msg.id} className={`flex ${isMe ? 'justify-end' : 'justify-start'} mb-1`}>
+                                <div 
+                                    key={msg.id} 
+                                    className={`flex ${isMe ? 'justify-end' : 'justify-start'} mb-1 group relative`}
+                                    onMouseEnter={() => setHoveredMessageId(msg.id)}
+                                    onMouseLeave={() => setHoveredMessageId(null)}
+                                >
                                     <div 
                                         className={`
                                             relative rounded-lg shadow-sm max-w-[85%] md:max-w-[65%] text-sm leading-relaxed
@@ -360,7 +456,37 @@ const ChatPortal: React.FC<ChatPortalProps> = ({ currentUser, students, messages
                                             }
                                         `}
                                     >
-                                        <div className="px-2 pt-1.5 pb-1">
+                                        {/* Dropdown Chevron */}
+                                        {(hoveredMessageId === msg.id || messageMenuId === msg.id) && !msg.isSystem && (
+                                            <div className="absolute top-0 right-0 z-20">
+                                                <button 
+                                                    onClick={(e) => toggleMessageMenu(e, msg.id)}
+                                                    className="message-menu-trigger p-1 bg-gradient-to-l from-black/20 to-transparent rounded-bl-lg hover:bg-black/10 transition-colors text-slate-600 dark:text-slate-300"
+                                                >
+                                                    <ChevronDown size={16} />
+                                                </button>
+                                                
+                                                {/* Actual Menu */}
+                                                {messageMenuId === msg.id && (
+                                                    <div className={`absolute right-0 ${menuPosition === 'up' ? 'bottom-full mb-1' : 'top-full mt-1'} bg-white dark:bg-[#233138] shadow-xl rounded-lg py-2 w-40 z-50 border border-slate-100 dark:border-[#202c33]`}>
+                                                        <button onClick={() => handleReply(msg)} className="w-full text-left px-4 py-2.5 text-sm hover:bg-slate-50 dark:hover:bg-[#111b21] flex items-center gap-3">
+                                                            <Reply size={16} /> Reply
+                                                        </button>
+                                                        <button onClick={() => handleCopy(msg.text)} className="w-full text-left px-4 py-2.5 text-sm hover:bg-slate-50 dark:hover:bg-[#111b21] flex items-center gap-3">
+                                                            <Copy size={16} /> Copy
+                                                        </button>
+                                                        <button onClick={() => handleForward(msg.text)} className="w-full text-left px-4 py-2.5 text-sm hover:bg-slate-50 dark:hover:bg-[#111b21] flex items-center gap-3">
+                                                            <ArrowRight size={16} /> Forward
+                                                        </button>
+                                                        <button onClick={() => handleDeleteRequest(msg)} className="w-full text-left px-4 py-2.5 text-sm hover:bg-slate-50 dark:hover:bg-[#111b21] flex items-center gap-3 text-red-600 dark:text-red-400">
+                                                            <Trash2 size={16} /> Delete
+                                                        </button>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        )}
+
+                                        <div className="px-2 pt-1.5 pb-1 pr-7">
                                             {/* Group Sender Name */}
                                             {activeChatHandle.startsWith('GROUP_') && !isMe && (
                                                 <p className={`text-xs font-bold mb-1 ${['text-orange-500', 'text-pink-500', 'text-purple-500', 'text-blue-500'][msg.senderHandle.length % 4]}`}>
@@ -369,15 +495,15 @@ const ChatPortal: React.FC<ChatPortalProps> = ({ currentUser, students, messages
                                             )}
                                             
                                             <div className="relative">
-                                                <span className="break-words whitespace-pre-wrap">
+                                                <span className={`break-words whitespace-pre-wrap ${msg.isSystem ? 'italic text-slate-500 text-xs flex items-center gap-1' : ''}`}>
                                                     {msg.text}
                                                     <span className="inline-block w-[76px] h-[15px] align-bottom select-none opacity-0"></span>
                                                 </span>
 
                                                 {/* Absolute Positioned Timestamp & Status */}
-                                                <span className={`absolute bottom-[-1px] right-0 flex items-center gap-1 text-[11px] leading-none whitespace-nowrap ${isMe ? 'text-[#54656f] dark:text-[#aebac1]' : 'text-[#54656f] dark:text-[#aebac1]'}`}>
+                                                <span className={`absolute bottom-[-1px] right-[-20px] flex items-center gap-1 text-[11px] leading-none whitespace-nowrap ${isMe ? 'text-[#54656f] dark:text-[#aebac1]' : 'text-[#54656f] dark:text-[#aebac1]'}`}>
                                                     <span>{new Date(msg.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', hour12: true}).toLowerCase()}</span>
-                                                    {isMe && <MessageStatusIcon status={msg.status || 'SENT'} isRead={msg.isRead} />}
+                                                    {isMe && !msg.isSystem && <MessageStatusIcon status={msg.status || 'SENT'} isRead={msg.isRead} />}
                                                 </span>
                                             </div>
                                         </div>
@@ -388,26 +514,41 @@ const ChatPortal: React.FC<ChatPortalProps> = ({ currentUser, students, messages
                     </div>
 
                     {/* Input Bar - STATIC (shrink-0) */}
-                    <div className="bg-[#f0f2f5] px-2 py-2 flex items-end gap-2 border-t border-slate-200 shrink-0 z-20 dark:bg-[#202c33] dark:border-[#202c33]">
-                        <div className="flex-1 bg-white rounded-2xl border border-white flex items-end dark:bg-[#2a3942] dark:border-[#2a3942] pl-4 pr-2 py-2">
-                            <textarea 
-                                ref={textareaRef}
-                                rows={1}
-                                value={newMessage}
-                                onChange={(e) => setNewMessage(e.target.value)}
-                                onKeyDown={handleKeyDown}
-                                placeholder="Type a message"
-                                className="w-full border-none focus:ring-0 text-slate-800 bg-transparent resize-none overflow-hidden max-h-[120px] dark:text-[#e9edef] dark:placeholder-[#8696a0] p-0 leading-relaxed text-[15px]"
-                                style={{ minHeight: '24px' }}
-                            />
+                    <div className="bg-[#f0f2f5] px-2 py-2 flex flex-col border-t border-slate-200 shrink-0 z-20 dark:bg-[#202c33] dark:border-[#202c33]">
+                        {/* Reply Banner */}
+                        {replyToMessage && (
+                            <div className="bg-white dark:bg-[#1f2c33] border-l-4 border-emerald-500 rounded-t-lg p-2 mb-1 flex justify-between items-center shadow-sm mx-1">
+                                <div className="flex-1 min-w-0">
+                                    <p className="text-xs font-bold text-emerald-600 dark:text-emerald-400">Replying to {replyToMessage.senderHandle === currentUser.handle ? 'You' : replyToMessage.senderHandle}</p>
+                                    <p className="text-xs text-slate-500 dark:text-slate-400 truncate">{replyToMessage.text}</p>
+                                </div>
+                                <button onClick={() => setReplyToMessage(null)} className="p-1 text-slate-400 hover:text-slate-600">
+                                    <X size={16} />
+                                </button>
+                            </div>
+                        )}
+
+                        <div className="flex items-end gap-2">
+                            <div className="flex-1 bg-white rounded-2xl border border-white flex items-end dark:bg-[#2a3942] dark:border-[#2a3942] pl-4 pr-2 py-2">
+                                <textarea 
+                                    ref={textareaRef}
+                                    rows={1}
+                                    value={newMessage}
+                                    onChange={(e) => setNewMessage(e.target.value)}
+                                    onKeyDown={handleKeyDown}
+                                    placeholder="Type a message"
+                                    className="w-full border-none focus:ring-0 text-slate-800 bg-transparent resize-none overflow-hidden max-h-[120px] dark:text-[#e9edef] dark:placeholder-[#8696a0] p-0 leading-relaxed text-[15px]"
+                                    style={{ minHeight: '24px' }}
+                                />
+                            </div>
+                            <button 
+                                onClick={handleSend}
+                                disabled={!newMessage.trim()}
+                                className="p-3 mb-1 bg-[#00a884] text-white rounded-full hover:bg-[#008f6f] disabled:opacity-60 transition-colors shadow-sm flex items-center justify-center"
+                            >
+                                <PaperAirplaneIcon />
+                            </button>
                         </div>
-                        <button 
-                            onClick={handleSend}
-                            disabled={!newMessage.trim()}
-                            className="p-3 mb-1 bg-[#00a884] text-white rounded-full hover:bg-[#008f6f] disabled:opacity-60 transition-colors shadow-sm flex items-center justify-center"
-                        >
-                            <PaperAirplaneIcon />
-                        </button>
                     </div>
                 </>
             ) : (

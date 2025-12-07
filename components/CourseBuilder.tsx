@@ -1,14 +1,15 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Course, Module, Chapter, CourseTrack, CourseLevel, CourseStatus, ContentBlock, BlockType, CourseTestimonial } from '../types';
-import { Eye, X, PlayCircle, FileText, HelpCircle, ChevronDown, ChevronRight, CheckCircle, Menu, BookOpen, Clock, Plus, Trash2, ArrowUp, ArrowDown, LayoutTemplate, Type, Image as ImageIcon, List, Quote, AlertCircle, ArrowLeft, ShoppingBag, Users, Sparkles, Save, Search, Check, Wand2, Loader2, MessageSquare, Settings, Rocket } from 'lucide-react';
+import { Course, Module, Chapter, CourseTrack, CourseLevel, CourseStatus, ContentBlock, BlockType, CourseTestimonial, Student } from '../types';
+import { Eye, X, PlayCircle, FileText, HelpCircle, ChevronDown, ChevronRight, CheckCircle, Menu, BookOpen, Clock, Plus, Trash2, ArrowUp, ArrowDown, LayoutTemplate, Type, Image as ImageIcon, List, Quote, AlertCircle, ArrowLeft, ShoppingBag, Users, Sparkles, Save, Search, Check, Wand2, Loader2, MessageSquare, Settings, Rocket, BarChart } from 'lucide-react';
 import { generateModuleContent } from '../services/geminiService';
 
 interface CourseBuilderProps {
   currentUserHandle: string;
   courses: Course[];
   onSubmitCourse: (course: Course) => void;
+  students: Student[];
 }
 
 // Initial State Helper
@@ -247,11 +248,11 @@ const CoursePreview: React.FC<{ course: Course; onClose: () => void }> = ({ cour
 };
 
 
-const CourseBuilder: React.FC<CourseBuilderProps> = ({ currentUserHandle, courses, onSubmitCourse }) => {
+const CourseBuilder: React.FC<CourseBuilderProps> = ({ currentUserHandle, courses, onSubmitCourse, students }) => {
   const navigate = useNavigate();
   const { courseId } = useParams(); // Get ID from URL for editing
   
-  const [step, setStep] = useState<1 | 2 | 3 | 4>(1); 
+  const [step, setStep] = useState<1 | 2 | 3 | 4 | 5>(1); 
   const [course, setCourse] = useState<Course>(getEmptyCourse(currentUserHandle));
   const [editingChapter, setEditingChapter] = useState<{moduleId: string, chapterId: string} | null>(null);
   const [currentBlocks, setCurrentBlocks] = useState<ContentBlock[]>([]);
@@ -272,7 +273,8 @@ const CourseBuilder: React.FC<CourseBuilderProps> = ({ currentUserHandle, course
     { id: 1, label: 'Info', fullLabel: 'Basic Info', icon: FileText },
     { id: 2, label: 'Curriculum', fullLabel: 'Curriculum', icon: BookOpen },
     { id: 3, label: 'Settings', fullLabel: 'Settings', icon: Settings },
-    { id: 4, label: 'Launch', fullLabel: 'Review & Launch', icon: Rocket }
+    { id: 4, label: 'Launch', fullLabel: 'Review & Launch', icon: Rocket },
+    { id: 5, label: 'Analytics', fullLabel: 'Course Analytics', icon: BarChart }
   ];
 
   // --- LOAD EXISTING COURSE LOGIC ---
@@ -424,7 +426,7 @@ const CourseBuilder: React.FC<CourseBuilderProps> = ({ currentUserHandle, course
   // --- INTERNAL BACK NAVIGATION ---
   const handleBack = () => {
     if (step > 1) {
-        setStep(prev => (prev - 1) as 1 | 2 | 3 | 4);
+        setStep(prev => (prev - 1) as 1 | 2 | 3 | 4 | 5);
     } else {
         navigate(-1);
     }
@@ -679,6 +681,111 @@ const CourseBuilder: React.FC<CourseBuilderProps> = ({ currentUserHandle, course
     </div>
   );
 
+  const renderStep4_Analytics = () => {
+    // Analytics Logic
+    const enrolledStudents = students.filter(s => s.enrolledCourses?.includes(course.id));
+    const totalStudents = enrolledStudents.length;
+
+    // Completion Calculation
+    const totalChapters = course.modules.reduce((acc, m) => acc + m.chapters.length, 0);
+    const courseChapterIds = course.modules.flatMap(m => m.chapters.map(c => c.id));
+    
+    const completions = enrolledStudents.filter(s => {
+        // Count how many chapters of THIS course they finished
+        const studentCompletedCount = s.completedChapters.filter(id => courseChapterIds.includes(id)).length;
+        // Simple Logic: If they finished all chapters available in the course
+        return totalChapters > 0 && studentCompletedCount >= totalChapters;
+    }).length;
+
+    const completionRate = totalStudents > 0 ? Math.round((completions / totalStudents) * 100) : 0;
+    
+    let completionLabel = "Low";
+    let completionColor = "text-red-600 bg-red-50 dark:text-red-400 dark:bg-red-900/30";
+    if (completionRate > 70) {
+        completionLabel = "High";
+        completionColor = "text-emerald-600 bg-emerald-50 dark:text-emerald-400 dark:bg-emerald-900/30";
+    } else if (completionRate > 30) {
+        completionLabel = "Medium";
+        completionColor = "text-yellow-600 bg-yellow-50 dark:text-yellow-400 dark:bg-yellow-900/30";
+    }
+
+    // Earnings
+    const earnings = totalStudents * (course.settings.price || 0);
+
+    return (
+        <div className="space-y-8 animate-fade-in">
+            <h2 className="text-lg md:text-xl font-bold text-slate-900 font-heading dark:text-slate-100">Course Performance</h2>
+            
+            {/* Stats Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className={CARD_CLASS.replace('p-8', 'p-6 flex flex-col items-center text-center')}>
+                    <div className="w-12 h-12 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center mb-4 dark:bg-blue-900/30 dark:text-blue-400">
+                        <Users size={24} />
+                    </div>
+                    <span className="text-3xl font-bold text-slate-800 dark:text-white">{totalStudents}</span>
+                    <span className="text-xs font-bold text-slate-400 uppercase tracking-wider mt-1">Total Students</span>
+                </div>
+
+                <div className={CARD_CLASS.replace('p-8', 'p-6 flex flex-col items-center text-center')}>
+                    <div className={`w-12 h-12 rounded-full flex items-center justify-center mb-4 ${completionColor.replace('text-', 'bg-').replace('bg-', 'text-')}`}>
+                        <CheckCircle size={24} />
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <span className="text-3xl font-bold text-slate-800 dark:text-white">{completionRate}%</span>
+                        <span className={`text-xs px-2 py-1 rounded-full font-bold ${completionColor}`}>{completionLabel}</span>
+                    </div>
+                    <span className="text-xs font-bold text-slate-400 uppercase tracking-wider mt-1">Completion Rate</span>
+                </div>
+
+                <div className={CARD_CLASS.replace('p-8', 'p-6 flex flex-col items-center text-center')}>
+                    <div className="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-full flex items-center justify-center mb-4 dark:bg-emerald-900/30 dark:text-emerald-400">
+                        <ShoppingBag size={24} />
+                    </div>
+                    <span className="text-3xl font-bold text-slate-800 dark:text-white">${earnings.toLocaleString()}</span>
+                    <span className="text-xs font-bold text-slate-400 uppercase tracking-wider mt-1">Total Earnings</span>
+                </div>
+            </div>
+
+            {/* Feedback / Testimonials */}
+            <div className={CARD_CLASS}>
+                <div className="flex justify-between items-center mb-6">
+                    <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100">Student Feedback</h3>
+                    <span className="text-xs text-slate-400">Collected from course reviews</span>
+                </div>
+                
+                <div className="space-y-4">
+                    {course.testimonials && course.testimonials.length > 0 ? (
+                        course.testimonials.map((t) => (
+                            <div key={t.id} className="p-4 bg-slate-50 rounded-xl border border-slate-100 dark:bg-slate-700/30 dark:border-slate-700">
+                                <div className="flex justify-between items-start mb-2">
+                                    <div className="flex items-center gap-2">
+                                        <div className="w-8 h-8 rounded-full bg-white border border-slate-200 flex items-center justify-center text-xs font-bold text-slate-500 dark:bg-slate-800 dark:border-slate-600 dark:text-slate-300">
+                                            {t.name.charAt(0)}
+                                        </div>
+                                        <div>
+                                            <p className="text-sm font-bold text-slate-800 dark:text-slate-200">{t.name}</p>
+                                            <p className="text-[10px] text-slate-400 uppercase">{t.role}</p>
+                                        </div>
+                                    </div>
+                                    <div className="flex text-yellow-400 text-xs gap-0.5">
+                                        {[1,2,3,4,5].map(i => <Save key={i} size={12} fill="currentColor" className="text-yellow-400"/>)}
+                                    </div>
+                                </div>
+                                <p className="text-sm text-slate-600 italic dark:text-slate-300">"{t.quote}"</p>
+                            </div>
+                        ))
+                    ) : (
+                        <div className="text-center py-10 text-slate-400">
+                            <MessageSquare size={32} className="mx-auto mb-2 opacity-50" />
+                            <p>No feedback received yet.</p>
+                        </div>
+                    )}
+                </div>
+            </div>
+        </div>
+    );
+  };
+
   const renderChapterEditor = () => {
     if (!editingChapter) return null;
     const activeModule = course.modules.find(m => m.id === editingChapter.moduleId);
@@ -746,8 +853,35 @@ const CourseBuilder: React.FC<CourseBuilderProps> = ({ currentUserHandle, course
       
       {/* Modern Header */}
       <div className="flex items-center justify-between mb-6 md:mb-10 shrink-0">
-         <div className="flex items-center gap-3 md:gap-6"><button onClick={handleBack} className="group flex items-center justify-center w-12 h-12 rounded-full bg-white border border-slate-200 shadow-sm hover:shadow-md hover:border-slate-300 transition-all dark:bg-slate-800 dark:border-slate-700 dark:hover:border-slate-600"><ArrowLeftIcon /></button><div><h1 className="text-lg md:text-3xl font-bold text-slate-900 font-heading tracking-tight dark:text-white">Course Builder</h1><p className="text-sm text-slate-500 font-medium mt-1 dark:text-slate-400 hidden sm:block">{courseId !== 'new' ? 'Editing' : 'Crafting'}: <span className="text-emerald-600 dark:text-emerald-400">{course.title || 'Untitled Course'}</span></p></div></div>
-         <div className="flex gap-3"><button onClick={() => setIsPreviewMode(true)} className="flex items-center gap-2 bg-white text-slate-700 px-3 py-2 md:px-6 md:py-3 rounded-xl text-xs md:text-sm font-bold border border-slate-200 hover:bg-slate-50 hover:border-slate-300 transition-all shadow-sm dark:bg-slate-800 dark:border-slate-700 dark:text-white dark:hover:bg-slate-700"><Eye size={18} /> <span className="hidden sm:inline">Preview</span></button>{step === 4 && (<button onClick={handleSubmit} className="flex items-center gap-2 bg-emerald-600 text-white px-4 py-2 md:px-8 md:py-3 rounded-xl text-xs md:text-sm font-bold hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-200 dark:shadow-none"><Sparkles size={18} /> {courseId === 'new' ? 'Publish' : 'Update'}</button>)}</div>
+         <div className="flex items-center gap-3 md:gap-6">
+            <button onClick={handleBack} className="group flex items-center justify-center w-12 h-12 rounded-full bg-white border border-slate-200 shadow-sm hover:shadow-md hover:border-slate-300 transition-all dark:bg-slate-800 dark:border-slate-700 dark:hover:border-slate-600">
+                <ArrowLeftIcon />
+            </button>
+            <div>
+                {/* Conditional Title: Analytics on Step 5, Course Builder otherwise */}
+                <h1 className="text-lg md:text-3xl font-bold text-slate-900 font-heading tracking-tight dark:text-white">
+                    {step === 5 ? 'Analytics' : 'Course Builder'}
+                </h1>
+                {/* Hide editing subtext on Analytics page to keep it clean */}
+                {step !== 5 && (
+                    <p className="text-sm text-slate-500 font-medium mt-1 dark:text-slate-400 hidden sm:block">{courseId !== 'new' ? 'Editing' : 'Crafting'}: <span className="text-emerald-600 dark:text-emerald-400">{course.title || 'Untitled Course'}</span></p>
+                )}
+            </div>
+         </div>
+         <div className="flex gap-3">
+            {/* Hide Preview on Analytics step */}
+            {step !== 5 && (
+                <button onClick={() => setIsPreviewMode(true)} className="flex items-center gap-2 bg-white text-slate-700 px-3 py-2 md:px-6 md:py-3 rounded-xl text-xs md:text-sm font-bold border border-slate-200 hover:bg-slate-50 hover:border-slate-300 transition-all shadow-sm dark:bg-slate-800 dark:border-slate-700 dark:text-white dark:hover:bg-slate-700">
+                    <Eye size={18} /> <span className="hidden sm:inline">Preview</span>
+                </button>
+            )}
+            {/* Show Publish/Update on Step 4 (Launch) instead of 5 */}
+            {step === 4 && (
+                <button onClick={handleSubmit} className="flex items-center gap-2 bg-emerald-600 text-white px-4 py-2 md:px-8 md:py-3 rounded-xl text-xs md:text-sm font-bold hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-200 dark:shadow-none">
+                    <Sparkles size={18} /> {courseId === 'new' ? 'Publish' : 'Update'}
+                </button>
+            )}
+         </div>
       </div>
 
       {renderChapterEditor()}
@@ -760,9 +894,12 @@ const CourseBuilder: React.FC<CourseBuilderProps> = ({ currentUserHandle, course
             {step === 1 && renderStep1_Info()}
             {step === 2 && renderStep2_Curriculum()}
             {step === 3 && renderStep3_Settings()}
+            {/* Step 4 is now Launch */}
             {step === 4 && (
               <div className="space-y-8 text-center py-12"><div className={CARD_CLASS}><div className="max-w-2xl mx-auto"><h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-3 font-heading">Ready to Launch?</h2><p className="text-slate-500 dark:text-slate-400 text-lg mb-10">Choose visibility for your course.</p><div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10"><button onClick={() => setPublishTarget('TEAM')} className={`p-4 md:p-8 rounded-3xl border-2 transition-all flex flex-col items-center text-center gap-4 ${publishTarget === 'TEAM' ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20' : 'border-slate-100 hover:border-emerald-200 bg-white dark:bg-slate-800 dark:border-slate-700 dark:hover:border-slate-600'}`}><div className={`w-16 h-16 rounded-full flex items-center justify-center text-3xl shadow-sm ${publishTarget === 'TEAM' ? 'bg-emerald-200 text-emerald-800' : 'bg-slate-100 text-slate-500 dark:bg-slate-700'}`}>👥</div><div><h3 className="font-bold text-lg text-slate-800 dark:text-white">Team Training</h3><p className="text-sm text-slate-500 mt-2 dark:text-slate-400 leading-relaxed">Visible only to your downline.</p></div></button><button onClick={() => setPublishTarget('GLOBAL')} className={`p-4 md:p-8 rounded-3xl border-2 transition-all flex flex-col items-center text-center gap-4 ${publishTarget === 'GLOBAL' ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20' : 'border-slate-100 hover:border-blue-200 bg-white dark:bg-slate-800 dark:border-slate-700 dark:hover:border-slate-600'}`}><div className={`w-16 h-16 rounded-full flex items-center justify-center text-3xl shadow-sm ${publishTarget === 'GLOBAL' ? 'bg-blue-200 text-blue-800' : 'bg-slate-100 text-slate-500 dark:bg-slate-700'}`}>🌍</div><div><h3 className="font-bold text-lg text-slate-800 dark:text-white">Global Library</h3><p className="text-sm text-slate-500 mt-2 dark:text-slate-400 leading-relaxed">Public to all FBOs (Review required).</p></div></button></div><div className="flex flex-col items-center gap-4"><div className="flex gap-8 text-sm text-slate-500 font-medium dark:text-slate-400"><span>{course.modules.length} Modules</span><span className="w-px h-4 bg-slate-300 dark:bg-slate-700"></span><span>{course.track}</span></div><button onClick={handleSubmit} className={`w-full max-w-sm py-3 md:py-4 rounded-xl font-bold text-lg shadow-xl hover:scale-105 transition-all text-white ${publishTarget === 'GLOBAL' ? 'bg-blue-600 hover:bg-blue-700 shadow-blue-200' : 'bg-emerald-600 hover:bg-emerald-700 shadow-emerald-200'}`}>{publishTarget === 'GLOBAL' ? (courseId === 'new' ? 'Submit for Review' : 'Update & Submit') : (courseId === 'new' ? 'Publish Now' : 'Update Course')}</button></div></div></div></div>
             )}
+            {/* Step 5 is now Analytics */}
+            {step === 5 && renderStep4_Analytics()}
         </div>
 
         {/* Floating Bottom Navigation (Replaces Sidebar & Mobile Nav) */}

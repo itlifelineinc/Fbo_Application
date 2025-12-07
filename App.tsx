@@ -193,7 +193,14 @@ const App: React.FC = () => {
 
   // 2. Data Management
   const handleSubmitCourse = (newCourse: Course) => {
-      setCourses(prev => [...prev, newCourse]);
+      // Check if course exists to update, else add
+      setCourses(prev => {
+          const exists = prev.find(c => c.id === newCourse.id);
+          if (exists) {
+              return prev.map(c => c.id === newCourse.id ? newCourse : c);
+          }
+          return [...prev, newCourse];
+      });
   };
 
   const handleReviewCourse = (courseId: string, status: CourseStatus) => {
@@ -524,13 +531,16 @@ const App: React.FC = () => {
             </ProtectedRoute>
         } />
         
-        <Route path="/builder" element={
+        {/* Course Builder Route - Handles New and Edit */}
+        <Route path="/builder" element={<Navigate to="/builder/new" replace />} />
+        <Route path="/builder/:courseId" element={
              <ProtectedRoute currentUser={currentUser} onLogout={handleLogout} theme={theme} onToggleTheme={toggleTheme} courses={courses} notifications={notifications}>
                 {(currentUser?.role === UserRole.ADMIN || currentUser?.role === UserRole.SUPER_ADMIN || currentUser?.role === UserRole.SPONSOR) ? (
                     <CourseBuilder 
                         currentUserHandle={currentUser!.handle} 
                         courses={courses}
-                        onSubmitCourse={handleSubmitCourse} 
+                        onSubmitCourse={handleSubmitCourse}
+                        students={students} 
                     />
                 ) : <Navigate to="/dashboard" />}
              </ProtectedRoute>

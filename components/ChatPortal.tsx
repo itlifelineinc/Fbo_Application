@@ -17,8 +17,8 @@ const MessageStatusIcon: React.FC<{ status: MessageStatus, isRead: boolean }> = 
     if (isRead || status === 'READ') {
         return (
             <div className="flex -space-x-1">
-                <CheckIcon className="text-blue-500 w-3 h-3" />
-                <CheckIcon className="text-blue-500 w-3 h-3" />
+                <CheckIcon className="text-[#53bdeb] w-3 h-3 md:w-3.5 md:h-3.5" />
+                <CheckIcon className="text-[#53bdeb] w-3 h-3 md:w-3.5 md:h-3.5" />
             </div>
         );
     }
@@ -26,14 +26,14 @@ const MessageStatusIcon: React.FC<{ status: MessageStatus, isRead: boolean }> = 
     if (status === 'DELIVERED') {
         return (
             <div className="flex -space-x-1">
-                <CheckIcon className="text-slate-400 w-3 h-3" />
-                <CheckIcon className="text-slate-400 w-3 h-3" />
+                <CheckIcon className="text-slate-400 dark:text-slate-300 w-3 h-3 md:w-3.5 md:h-3.5" />
+                <CheckIcon className="text-slate-400 dark:text-slate-300 w-3 h-3 md:w-3.5 md:h-3.5" />
             </div>
         );
     }
 
     // Default 'SENT'
-    return <CheckIcon className="text-slate-400 w-3 h-3" />;
+    return <CheckIcon className="text-slate-400 dark:text-slate-300 w-3 h-3 md:w-3.5 md:h-3.5" />;
 };
 
 const ChatPortal: React.FC<ChatPortalProps> = ({ currentUser, students, messages, onSendMessage, onMarkAsRead }) => {
@@ -154,44 +154,42 @@ const ChatPortal: React.FC<ChatPortalProps> = ({ currentUser, students, messages
   };
 
   return (
-    <div className="h-[calc(100vh-8rem)] flex flex-col md:flex-row bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden animate-fade-in dark:bg-slate-800 dark:border-slate-700">
+    <div className="h-[calc(100vh-8rem)] flex flex-col md:flex-row bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden animate-fade-in dark:bg-[#111b21] dark:border-slate-800">
       
       {/* Sidebar List */}
-      <div className={`w-full md:w-80 bg-slate-50 border-r border-slate-100 flex flex-col ${activeChatHandle && !isBroadcastMode ? 'hidden md:flex' : 'flex'} dark:bg-slate-900 dark:border-slate-700`}>
-        <div className="p-4 border-b border-slate-200 bg-white dark:bg-slate-800 dark:border-slate-700">
-            <h2 className="font-bold text-lg text-emerald-900 font-heading dark:text-emerald-400">Messages</h2>
+      <div className={`w-full md:w-96 bg-white border-r border-slate-200 flex flex-col ${activeChatHandle && !isBroadcastMode ? 'hidden md:flex' : 'flex'} dark:bg-[#111b21] dark:border-slate-800`}>
+        <div className="p-4 bg-[#f0f2f5] border-b border-slate-200 dark:bg-[#202c33] dark:border-[#202c33] flex justify-between items-center h-16">
+            <h2 className="font-bold text-lg text-slate-700 font-heading dark:text-[#e9edef]">Chats</h2>
             {currentUser.role === UserRole.SPONSOR && (
                 <button 
                     onClick={() => { setIsBroadcastMode(true); setActiveChatHandle(null); }}
-                    className="mt-3 w-full bg-emerald-100 text-emerald-700 text-sm font-bold py-2 rounded-lg hover:bg-emerald-200 transition-colors flex items-center justify-center gap-2 dark:bg-emerald-900/30 dark:text-emerald-300 dark:hover:bg-emerald-800/50"
+                    className="text-slate-500 hover:bg-slate-200 p-2 rounded-full transition-colors dark:text-[#aebac1] dark:hover:bg-[#374045]"
+                    title="New Broadcast"
                 >
                     <SpeakerWaveIcon />
-                    New Broadcast
                 </button>
             )}
         </div>
         
         <div className="flex-1 overflow-y-auto">
             {chatListItems.map(chat => {
-                // Determine if there are unread messages for this chat to bold it
-                // Logic: messages where recipient is ME and sender is CHAT_HANDLE and isRead is false
                 const hasUnread = messages.some(m => m.recipientHandle === currentUser.handle && m.senderHandle === chat.handle && !m.isRead);
 
                 return (
                     <div 
                         key={chat.handle}
                         onClick={() => { setActiveChatHandle(chat.handle); setIsBroadcastMode(false); }}
-                        className={`p-4 border-b border-slate-100 cursor-pointer hover:bg-white transition-colors flex items-center gap-3 dark:border-slate-800 dark:hover:bg-slate-800 ${activeChatHandle === chat.handle ? 'bg-white border-l-4 border-l-emerald-500 dark:bg-slate-800' : ''}`}
+                        className={`px-4 py-3 cursor-pointer hover:bg-[#f5f6f6] transition-colors flex items-center gap-3 border-b border-slate-100 dark:border-slate-800 dark:hover:bg-[#202c33] ${activeChatHandle === chat.handle ? 'bg-[#f0f2f5] dark:bg-[#2a3942]' : ''}`}
                     >
-                        <div className="w-10 h-10 rounded-full bg-emerald-200 text-emerald-800 flex items-center justify-center font-bold text-sm overflow-hidden dark:bg-emerald-900 dark:text-emerald-300">
+                        <div className="w-12 h-12 rounded-full bg-slate-200 flex items-center justify-center font-bold text-lg overflow-hidden shrink-0 dark:bg-[#374045] dark:text-[#e9edef]">
                             {chat.avatar.length > 2 ? <img src={chat.avatar} className="w-full h-full object-cover" alt={chat.name}/> : chat.avatar}
                         </div>
                         <div className="flex-1 min-w-0">
-                            <div className="flex justify-between items-baseline">
-                                <h3 className={`truncate text-sm dark:text-slate-200 ${hasUnread ? 'font-bold text-slate-900' : 'font-semibold text-slate-800'}`}>{chat.name}</h3>
-                                {hasUnread && <div className="w-2 h-2 bg-emerald-500 rounded-full"></div>}
+                            <div className="flex justify-between items-center mb-0.5">
+                                <h3 className={`truncate text-base dark:text-[#e9edef] ${hasUnread ? 'font-bold text-slate-900' : 'font-normal text-slate-800'}`}>{chat.name}</h3>
+                                {hasUnread && <div className="w-2.5 h-2.5 bg-[#25d366] rounded-full"></div>}
                             </div>
-                            <p className={`text-xs truncate dark:text-slate-400 ${hasUnread ? 'font-bold text-slate-800' : 'text-slate-500'}`}>{chat.lastMsg}</p>
+                            <p className={`text-sm truncate dark:text-[#8696a0] ${hasUnread ? 'font-semibold text-slate-800' : 'text-slate-500'}`}>{chat.lastMsg}</p>
                         </div>
                     </div>
                 );
@@ -200,140 +198,173 @@ const ChatPortal: React.FC<ChatPortalProps> = ({ currentUser, students, messages
       </div>
 
       {/* Chat Area */}
-      <div className={`flex-1 flex flex-col bg-slate-50/50 ${!activeChatHandle && !isBroadcastMode ? 'hidden md:flex' : 'flex'} dark:bg-slate-800/50`}>
+      <div className={`flex-1 flex flex-col relative ${!activeChatHandle && !isBroadcastMode ? 'hidden md:flex' : 'flex'}`}>
         
-        {/* Broadcast Header/Mode */}
-        {isBroadcastMode ? (
-            <div className="flex-1 flex flex-col p-6">
-                <div className="flex items-center gap-2 mb-6">
-                    <button onClick={() => setIsBroadcastMode(false)} className="md:hidden text-slate-500 dark:text-slate-400"><ChevronLeftIcon /></button>
-                    <h2 className="text-xl font-bold text-emerald-900 font-heading dark:text-emerald-400">Send Broadcast Message</h2>
-                </div>
-                
-                <div className="bg-white p-4 rounded-xl border border-slate-200 flex-1 overflow-y-auto mb-4 dark:bg-slate-800 dark:border-slate-700">
-                    <div className="flex justify-between items-center mb-4">
-                        <h3 className="font-bold text-sm text-slate-700 dark:text-slate-300">Select Recipients ({selectedBroadcastUsers.length})</h3>
-                        <button onClick={selectAllBroadcast} className="text-xs text-emerald-600 font-bold hover:underline dark:text-emerald-400">
-                            {selectedBroadcastUsers.length === myDownline.length ? 'Deselect All' : 'Select All'}
-                        </button>
-                    </div>
-                    <div className="space-y-2">
-                        {myDownline.map(student => (
-                            <label key={student.handle} className="flex items-center gap-3 p-3 rounded-lg hover:bg-slate-50 cursor-pointer border border-transparent hover:border-slate-100 dark:hover:bg-slate-700/50 dark:hover:border-slate-700">
-                                <input 
-                                    type="checkbox" 
-                                    checked={selectedBroadcastUsers.includes(student.handle)}
-                                    onChange={() => toggleBroadcastUser(student.handle)}
-                                    className="w-5 h-5 text-emerald-600 rounded focus:ring-emerald-500 border-gray-300" 
-                                />
-                                <div className="w-8 h-8 rounded-full bg-emerald-100 text-emerald-800 flex items-center justify-center text-xs font-bold dark:bg-emerald-900 dark:text-emerald-300">
-                                    {student.name.charAt(0)}
-                                </div>
-                                <span className="font-medium text-slate-700 dark:text-slate-200">{student.name}</span>
-                            </label>
-                        ))}
-                    </div>
-                </div>
+        {/* Chat Background Layer - WhatsApp Beige with Doodle Pattern */}
+        <div className="absolute inset-0 z-0 bg-[#efeae2] dark:bg-[#0b141a]">
+            {/* Pattern Overlay */}
+            <div 
+                className="absolute inset-0 opacity-[0.4] dark:opacity-[0.06] pointer-events-none" 
+                style={{ 
+                    backgroundImage: 'url("https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png")', 
+                    backgroundSize: '412px' 
+                }}
+            ></div>
+        </div>
 
-                <div className="bg-white p-4 rounded-xl border border-slate-200 dark:bg-slate-800 dark:border-slate-700">
-                    <textarea 
-                        value={newMessage} 
-                        onChange={(e) => setNewMessage(e.target.value)}
-                        placeholder="Type your broadcast message here..."
-                        className="w-full p-3 border border-slate-200 rounded-lg focus:outline-none focus:border-emerald-500 h-24 resize-none bg-white text-slate-900 dark:bg-slate-900 dark:text-white dark:border-slate-600"
-                    />
-                    <div className="flex justify-end mt-2">
-                        <button 
-                            onClick={handleSend}
-                            disabled={selectedBroadcastUsers.length === 0 || !newMessage.trim()}
-                            className="bg-emerald-600 text-white px-6 py-2 rounded-lg font-bold hover:bg-emerald-700 disabled:opacity-50 transition-all flex items-center gap-2"
-                        >
-                            <PaperAirplaneIcon />
-                            Send Broadcast
-                        </button>
+        {/* Content Container (Above Background) */}
+        <div className="relative z-10 flex flex-col h-full">
+            
+            {/* Broadcast Mode UI */}
+            {isBroadcastMode ? (
+                <div className="flex-1 flex flex-col p-4 bg-[#f0f2f5] dark:bg-[#0b141a]">
+                    <div className="flex items-center gap-2 mb-6">
+                        <button onClick={() => setIsBroadcastMode(false)} className="md:hidden text-slate-500 dark:text-[#aebac1]"><ChevronLeftIcon /></button>
+                        <h2 className="text-xl font-bold text-slate-800 font-heading dark:text-[#e9edef]">New Broadcast</h2>
                     </div>
-                </div>
-            </div>
-        ) : activeChatHandle ? (
-            <>
-                {/* Active Chat Header */}
-                <div className="bg-white p-4 border-b border-slate-200 flex items-center gap-3 shadow-sm dark:bg-slate-800 dark:border-slate-700">
-                    <button onClick={() => setActiveChatHandle(null)} className="md:hidden text-slate-500 hover:text-emerald-600 dark:text-slate-400 dark:hover:text-emerald-400">
-                        <ChevronLeftIcon />
-                    </button>
-                    <div className="w-8 h-8 rounded-full bg-emerald-600 text-white flex items-center justify-center font-bold">
-                        {chatListItems.find(c => c.handle === activeChatHandle)?.avatar.toString().charAt(0) === 'h' ? 'img' : chatListItems.find(c => c.handle === activeChatHandle)?.avatar}
+                    
+                    <div className="bg-white p-4 rounded-xl shadow-sm mb-4 flex-1 overflow-y-auto dark:bg-[#202c33] dark:shadow-none">
+                        <div className="flex justify-between items-center mb-4">
+                            <h3 className="font-bold text-sm text-slate-700 dark:text-[#e9edef]">Recipients ({selectedBroadcastUsers.length})</h3>
+                            <button onClick={selectAllBroadcast} className="text-xs text-[#00a884] font-bold hover:underline">
+                                {selectedBroadcastUsers.length === myDownline.length ? 'Deselect All' : 'Select All'}
+                            </button>
+                        </div>
+                        <div className="space-y-2">
+                            {myDownline.map(student => (
+                                <label key={student.handle} className="flex items-center gap-3 p-3 rounded-lg hover:bg-slate-50 cursor-pointer border border-transparent hover:border-slate-100 dark:hover:bg-[#111b21] dark:hover:border-[#202c33]">
+                                    <input 
+                                        type="checkbox" 
+                                        checked={selectedBroadcastUsers.includes(student.handle)}
+                                        onChange={() => toggleBroadcastUser(student.handle)}
+                                        className="w-5 h-5 text-[#00a884] rounded focus:ring-[#00a884] border-gray-300" 
+                                    />
+                                    <div className="w-10 h-10 rounded-full bg-slate-200 flex items-center justify-center text-sm font-bold dark:bg-[#374045] dark:text-[#e9edef]">
+                                        {student.name.charAt(0)}
+                                    </div>
+                                    <span className="font-medium text-slate-700 dark:text-[#e9edef]">{student.name}</span>
+                                </label>
+                            ))}
+                        </div>
                     </div>
-                    <div>
-                        <h3 className="font-bold text-slate-800 text-sm md:text-base dark:text-slate-100">
-                            {chatListItems.find(c => c.handle === activeChatHandle)?.name}
-                        </h3>
-                        <p className="text-xs text-slate-500 dark:text-slate-400">{activeChatHandle.startsWith('GROUP_') ? `${myDownline.length + 1} members` : activeChatHandle}</p>
-                    </div>
-                </div>
 
-                {/* Messages */}
-                <div className="flex-1 overflow-y-auto p-4 space-y-4">
-                    {activeMessages.map((msg) => {
-                        const isMe = msg.senderHandle === currentUser.handle;
-                        return (
-                            <div key={msg.id} className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
-                                <div className={`max-w-[80%] md:max-w-[60%] ${isMe ? 'bg-emerald-600 text-white rounded-br-none' : 'bg-white border border-slate-200 text-slate-800 rounded-bl-none dark:bg-slate-700 dark:text-slate-200 dark:border-slate-600'} p-3 rounded-2xl shadow-sm`}>
-                                    {activeChatHandle.startsWith('GROUP_') && !isMe && (
-                                        <p className="text-[10px] font-bold mb-1 opacity-70">{msg.senderHandle}</p>
-                                    )}
-                                    <p className="text-sm whitespace-pre-wrap leading-relaxed">{msg.text}</p>
-                                    <div className={`flex items-center justify-end gap-1 mt-1`}>
-                                        <span className={`text-[10px] ${isMe ? 'text-emerald-200' : 'text-slate-400 dark:text-slate-500'}`}>
-                                            {new Date(msg.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
-                                        </span>
-                                        {/* Show checkmarks only for my messages */}
-                                        {isMe && <MessageStatusIcon status={msg.status || 'SENT'} isRead={msg.isRead} />}
+                    <div className="bg-white p-4 rounded-xl shadow-sm dark:bg-[#202c33]">
+                        <textarea 
+                            value={newMessage} 
+                            onChange={(e) => setNewMessage(e.target.value)}
+                            placeholder="Type a broadcast message..."
+                            className="w-full p-3 border-none focus:ring-0 resize-none h-24 text-slate-800 dark:bg-[#202c33] dark:text-[#e9edef] dark:placeholder-[#8696a0]"
+                        />
+                        <div className="flex justify-end mt-2">
+                            <button 
+                                onClick={handleSend}
+                                disabled={selectedBroadcastUsers.length === 0 || !newMessage.trim()}
+                                className="bg-[#00a884] text-white px-6 py-2 rounded-full font-bold hover:bg-[#008f6f] disabled:opacity-60 transition-all flex items-center gap-2 shadow-sm"
+                            >
+                                Send Broadcast <PaperAirplaneIcon />
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            ) : activeChatHandle ? (
+                <>
+                    {/* Active Chat Header */}
+                    <div className="bg-[#f0f2f5] px-4 py-2.5 flex items-center gap-4 border-b border-slate-200 shadow-sm shrink-0 dark:bg-[#202c33] dark:border-[#202c33]">
+                        <button onClick={() => setActiveChatHandle(null)} className="md:hidden text-slate-500 hover:text-[#00a884] dark:text-[#aebac1]">
+                            <ChevronLeftIcon />
+                        </button>
+                        <div className="w-10 h-10 rounded-full bg-slate-300 flex items-center justify-center font-bold overflow-hidden dark:bg-[#6a7175] dark:text-[#cfd7da]">
+                            {chatListItems.find(c => c.handle === activeChatHandle)?.avatar.toString().charAt(0) === 'h' ? <img src={chatListItems.find(c => c.handle === activeChatHandle)?.avatar} className="w-full h-full object-cover"/> : chatListItems.find(c => c.handle === activeChatHandle)?.avatar}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                            <h3 className="font-semibold text-slate-800 text-base dark:text-[#e9edef] truncate">
+                                {chatListItems.find(c => c.handle === activeChatHandle)?.name}
+                            </h3>
+                            <p className="text-xs text-slate-500 dark:text-[#8696a0] truncate">{activeChatHandle.startsWith('GROUP_') ? `${myDownline.length + 1} members` : 'Online'}</p>
+                        </div>
+                    </div>
+
+                    {/* Messages List */}
+                    <div className="flex-1 overflow-y-auto p-4 space-y-1">
+                        {activeMessages.map((msg) => {
+                            const isMe = msg.senderHandle === currentUser.handle;
+                            return (
+                                <div key={msg.id} className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
+                                    <div 
+                                        className={`
+                                            relative px-3 py-1.5 rounded-lg shadow-sm max-w-[85%] md:max-w-[65%] text-sm leading-relaxed
+                                            ${isMe 
+                                                ? 'bg-[#d9fdd3] text-[#111b21] rounded-tr-none dark:bg-[#005c4b] dark:text-[#e9edef]' 
+                                                : 'bg-white text-[#111b21] rounded-tl-none dark:bg-[#202c33] dark:text-[#e9edef]'
+                                            }
+                                        `}
+                                    >
+                                        {/* Group Sender Name */}
+                                        {activeChatHandle.startsWith('GROUP_') && !isMe && (
+                                            <p className={`text-[10px] font-bold mb-0.5 ${['text-orange-500', 'text-pink-500', 'text-purple-500', 'text-blue-500'][msg.senderHandle.length % 4]}`}>
+                                                {msg.senderHandle}
+                                            </p>
+                                        )}
+                                        
+                                        {/* Message Content with spacer for time */}
+                                        <div className="mr-1 inline-block align-top break-words" style={{ minWidth: '40px' }}>
+                                            {msg.text}
+                                            {/* Invisible spacer to prevent text overlap with absolute time */}
+                                            <span className="inline-block w-14 h-3"></span> 
+                                        </div>
+
+                                        {/* Timestamp & Status */}
+                                        <div className={`absolute bottom-1 right-2 flex items-center gap-1 text-[10px] ${isMe ? 'text-[#54656f] dark:text-[#8696a0]' : 'text-[#54656f] dark:text-[#8696a0]'}`}>
+                                            <span>{new Date(msg.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+                                            {isMe && <MessageStatusIcon status={msg.status || 'SENT'} isRead={msg.isRead} />}
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                        );
-                    })}
-                    <div ref={chatEndRef} />
-                </div>
+                            );
+                        })}
+                        <div ref={chatEndRef} />
+                    </div>
 
-                {/* Input */}
-                <div className="p-4 bg-white border-t border-slate-200 dark:bg-slate-800 dark:border-slate-700">
-                    <div className="flex gap-2">
+                    {/* Input Bar */}
+                    <div className="bg-[#f0f2f5] px-4 py-3 flex items-center gap-2 dark:bg-[#202c33]">
                         <input 
                             type="text" 
                             value={newMessage}
                             onChange={(e) => setNewMessage(e.target.value)}
                             onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-                            placeholder="Type a message..."
-                            className="flex-1 border border-slate-200 rounded-full px-4 py-3 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 bg-white text-slate-900 dark:bg-slate-900 dark:text-white dark:border-slate-600"
+                            placeholder="Type a message"
+                            className="flex-1 py-3 px-4 rounded-lg border-none focus:ring-0 text-slate-800 bg-white dark:bg-[#2a3942] dark:text-[#e9edef] dark:placeholder-[#8696a0]"
                         />
                         <button 
                             onClick={handleSend}
                             disabled={!newMessage.trim()}
-                            className="bg-emerald-600 text-white p-3 rounded-full hover:bg-emerald-700 disabled:opacity-50 transition-colors shadow-md"
+                            className="p-3 bg-[#00a884] text-white rounded-full hover:bg-[#008f6f] disabled:opacity-60 transition-colors shadow-sm"
                         >
                             <PaperAirplaneIcon />
                         </button>
                     </div>
+                </>
+            ) : (
+                <div className="flex-1 flex flex-col items-center justify-center text-slate-400 p-8 text-center bg-[#f0f2f5] border-b-[6px] border-[#25d366] dark:bg-[#222e35] dark:border-[#00a884] dark:text-[#8696a0]">
+                    <div className="w-64 h-64 opacity-60 mb-8 dark:opacity-40">
+                         {/* Abstract illustration placeholder or just icon */}
+                         <ChatBubbleLeftRightIcon /> 
+                    </div>
+                    <h3 className="text-3xl font-light text-[#41525d] mb-4 dark:text-[#e9edef]">WhatsApp Web Clone</h3>
+                    <p className="max-w-md text-sm leading-6">Send and receive messages without keeping your phone online.<br/>Use WhatsApp on up to 4 linked devices and 1 phone.</p>
+                    <div className="mt-8 flex items-center gap-2 text-xs text-[#8696a0]">
+                        <LockIcon /> End-to-end encrypted
+                    </div>
                 </div>
-            </>
-        ) : (
-            <div className="flex-1 flex flex-col items-center justify-center text-slate-400 p-8 text-center dark:text-slate-500">
-                <div className="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center mb-4 dark:bg-slate-700">
-                    <ChatBubbleLeftRightIcon />
-                </div>
-                <h3 className="text-lg font-bold text-slate-600 mb-2 dark:text-slate-300">Team Communication</h3>
-                <p className="max-w-xs">Select a conversation from the left or start a broadcast to message your team.</p>
-            </div>
-        )}
+            )}
+        </div>
       </div>
     </div>
   );
 };
 
 const PaperAirplaneIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5 transform -rotate-45 translate-x-0.5 -translate-y-0.5">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5 transform translate-x-0.5 -translate-y-0.5">
         <path d="M3.478 2.405a.75.75 0 00-.926.94l2.432 7.905H13.5a.75.75 0 010 1.5H4.984l-2.432 7.905a.75.75 0 00.926.94 60.519 60.519 0 0018.445-8.986.75.75 0 000-1.218A60.517 60.517 0 003.478 2.405z" />
     </svg>
 );
@@ -345,8 +376,13 @@ const ChevronLeftIcon = () => (
 );
 
 const CheckIcon = ({ className }: { className?: string }) => (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className={className || "w-3 h-3"}>
-        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 11" fill="none" className={className || "w-3 h-3"}>
+        <path d="M10.5 1L15.5 6L10.5 11" stroke="currentColor" strokeWidth="1.5"/>
+        <path d="M5.5 1L10.5 6L5.5 11" stroke="currentColor" strokeWidth="1.5"/>
+        <path d="M0.5 1L5.5 6L0.5 11" stroke="currentColor" strokeWidth="1.5"/>
+        {/* Simplified double check look */}
+        <path d="M1.5 5.5L4.5 9.5L10.5 1.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+        <path d="M7 9.5L14.5 1.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
     </svg>
 );
 
@@ -356,8 +392,14 @@ const SpeakerWaveIcon = () => (
     </svg>
 );
 
+const LockIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-3 h-3">
+        <path fillRule="evenodd" d="M12 1.5a5.25 5.25 0 00-5.25 5.25v3a3 3 0 00-3 3v6.75a3 3 0 003 3h10.5a3 3 0 003-3v-6.75a3 3 0 00-3-3v-3c0-2.9-2.35-5.25-5.25-5.25zm3.75 8.25v-3a3.75 3.75 0 10-7.5 0v3h7.5z" clipRule="evenodd" />
+    </svg>
+);
+
 const ChatBubbleLeftRightIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-10 h-10">
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={0.5} stroke="currentColor" className="w-full h-full">
         <path strokeLinecap="round" strokeLinejoin="round" d="M20.25 8.511c.884.284 1.5 1.128 1.5 2.097v4.286c0 1.136-.847 2.1-1.98 2.193-.34.027-.68.052-1.02.072v3.091l-3-3c-1.354 0-2.694-.055-4.02-.163a2.115 2.115 0 01-.825-.242m9.345-8.334a2.126 2.126 0 00-.476-.095 48.64 48.64 0 00-8.048 0c-1.131.094-1.976 1.057-1.976 2.192v4.286c0 .837.46 1.58 1.155 1.951m9.345-8.334V6.637c0-1.621-1.152-3.026-2.76-3.235A48.455 48.455 0 0011.25 3c-2.115 0-4.198.137-6.24.402-1.608.209-2.76 1.614-2.76 3.235v6.226c0 1.621 1.152 3.026 2.76 3.235.577.075 1.157.14 1.74.194V21l4.155-4.155" />
     </svg>
 );

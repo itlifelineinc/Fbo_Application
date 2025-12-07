@@ -17,8 +17,8 @@ const MessageStatusIcon: React.FC<{ status: MessageStatus, isRead: boolean }> = 
     if (isRead || status === 'READ') {
         return (
             <div className="flex -space-x-1">
-                <CheckIcon className="text-[#53bdeb] w-3 h-3 md:w-3.5 md:h-3.5" />
-                <CheckIcon className="text-[#53bdeb] w-3 h-3 md:w-3.5 md:h-3.5" />
+                <CheckIcon className="text-[#53bdeb] w-[15px] h-[15px]" />
+                <CheckIcon className="text-[#53bdeb] w-[15px] h-[15px]" />
             </div>
         );
     }
@@ -26,14 +26,14 @@ const MessageStatusIcon: React.FC<{ status: MessageStatus, isRead: boolean }> = 
     if (status === 'DELIVERED') {
         return (
             <div className="flex -space-x-1">
-                <CheckIcon className="text-slate-400 dark:text-slate-300 w-3 h-3 md:w-3.5 md:h-3.5" />
-                <CheckIcon className="text-slate-400 dark:text-slate-300 w-3 h-3 md:w-3.5 md:h-3.5" />
+                <CheckIcon className="text-slate-400 dark:text-slate-300 w-[15px] h-[15px]" />
+                <CheckIcon className="text-slate-400 dark:text-slate-300 w-[15px] h-[15px]" />
             </div>
         );
     }
 
     // Default 'SENT'
-    return <CheckIcon className="text-slate-400 dark:text-slate-300 w-3 h-3 md:w-3.5 md:h-3.5" />;
+    return <CheckIcon className="text-slate-400 dark:text-slate-300 w-[15px] h-[15px]" />;
 };
 
 const ChatPortal: React.FC<ChatPortalProps> = ({ currentUser, students, messages, onSendMessage, onMarkAsRead }) => {
@@ -289,35 +289,37 @@ const ChatPortal: React.FC<ChatPortalProps> = ({ currentUser, students, messages
                         {activeMessages.map((msg) => {
                             const isMe = msg.senderHandle === currentUser.handle;
                             return (
-                                <div key={msg.id} className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
+                                <div key={msg.id} className={`flex ${isMe ? 'justify-end' : 'justify-start'} mb-1`}>
                                     <div 
                                         className={`
-                                            relative px-2 py-1 shadow-sm max-w-[85%] md:max-w-[65%] text-sm leading-relaxed rounded-lg
+                                            relative rounded-lg shadow-sm max-w-[85%] md:max-w-[65%] text-sm leading-relaxed
                                             ${isMe 
                                                 ? 'bg-[#d9fdd3] text-[#111b21] rounded-tr-none dark:bg-[#005c4b] dark:text-[#e9edef]' 
                                                 : 'bg-white text-[#111b21] rounded-tl-none dark:bg-[#202c33] dark:text-[#e9edef]'
                                             }
                                         `}
                                     >
-                                        {/* Group Sender Name */}
-                                        {activeChatHandle.startsWith('GROUP_') && !isMe && (
-                                            <p className={`text-[10px] font-bold mb-0.5 px-1 ${['text-orange-500', 'text-pink-500', 'text-purple-500', 'text-blue-500'][msg.senderHandle.length % 4]}`}>
-                                                {msg.senderHandle}
-                                            </p>
-                                        )}
-                                        
-                                        <div className="relative pl-1">
-                                            <span className="break-words">
-                                                {msg.text}
-                                                {/* Spacer: Forces a line break if text is near the end, providing space for absolute timestamp */}
-                                                <span className="inline-block w-16 h-0">&nbsp;</span> 
-                                            </span>
+                                        <div className="px-2 pt-1.5 pb-1">
+                                            {/* Group Sender Name */}
+                                            {activeChatHandle.startsWith('GROUP_') && !isMe && (
+                                                <p className={`text-xs font-bold mb-1 ${['text-orange-500', 'text-pink-500', 'text-purple-500', 'text-blue-500'][msg.senderHandle.length % 4]}`}>
+                                                    {msg.senderHandle}
+                                                </p>
+                                            )}
+                                            
+                                            <div className="relative">
+                                                <span className="break-words whitespace-pre-wrap">
+                                                    {msg.text}
+                                                    {/* Spacer: Transparent inline-block to reserve space on the last line for the floating timestamp */}
+                                                    <span className="inline-block w-[72px] h-3 align-middle opacity-0 select-none">.</span>
+                                                </span>
 
-                                            {/* Timestamp & Status */}
-                                            <span className={`absolute bottom-0 right-0 flex items-center gap-1 text-[10px] leading-none mb-0.5 ${isMe ? 'text-[#54656f] dark:text-[#aebac1]' : 'text-[#54656f] dark:text-[#aebac1]'}`}>
-                                                <span>{new Date(msg.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
-                                                {isMe && <MessageStatusIcon status={msg.status || 'SENT'} isRead={msg.isRead} />}
-                                            </span>
+                                                {/* Timestamp & Status: Absolute bottom-right within the relative container */}
+                                                <span className={`absolute bottom-[-4px] right-0 flex items-center gap-1 text-[11px] leading-none ${isMe ? 'text-[#54656f] dark:text-[#aebac1]' : 'text-[#54656f] dark:text-[#aebac1]'}`}>
+                                                    <span>{new Date(msg.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', hour12: true}).toLowerCase()}</span>
+                                                    {isMe && <MessageStatusIcon status={msg.status || 'SENT'} isRead={msg.isRead} />}
+                                                </span>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>

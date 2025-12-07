@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { HashRouter, Routes, Route, Navigate, Link, useNavigate } from 'react-router-dom';
 import Layout from './components/Layout';
@@ -401,7 +400,7 @@ const App: React.FC = () => {
             subtitle: m.text,
             timestamp: m.timestamp,
             isRead: m.isRead,
-            type: 'MESSAGE',
+            type: 'MESSAGE' as const,
             link: '/chat',
             avatarUrl: sender?.avatarUrl
         };

@@ -22,12 +22,12 @@ const TickIcon = ({ className }: { className?: string }) => (
 const MessageStatusIcon: React.FC<{ status: MessageStatus, isRead: boolean }> = ({ status, isRead }) => {
     const colorClass = (isRead || status === 'READ') ? "text-[#53bdeb]" : "text-[#8696a0] dark:text-[#8696a0]";
 
-    // Double Tick (Read or Delivered) - Side by Side, No Overlap
+    // Double Tick (Read or Delivered) - Side by Side with negative margin to reduce gap
     if (isRead || status === 'READ' || status === 'DELIVERED') {
         return (
             <div className="flex items-center">
                 <TickIcon className={colorClass} />
-                <TickIcon className={colorClass} />
+                <TickIcon className={`${colorClass} -ml-[3px]`} />
             </div>
         );
     }
@@ -311,13 +311,13 @@ const ChatPortal: React.FC<ChatPortalProps> = ({ currentUser, students, messages
                                                 <span className="break-words whitespace-pre-wrap">
                                                     {msg.text}
                                                     {/* Float Spacer: Reserves width at the end of the text line for timestamp. 
-                                                        Width set to 74px to accommodate time + wider double tick area. 
+                                                        Width set to 72px to accommodate time + wider double tick area. 
                                                         If text ends near the right edge, this forces a wrap. */}
-                                                    <span className="inline-block w-[74px] h-[15px] align-bottom select-none opacity-0"></span>
+                                                    <span className="inline-block w-[72px] h-[15px] align-bottom select-none opacity-0"></span>
                                                 </span>
 
                                                 {/* Absolute Positioned Timestamp & Status */}
-                                                <span className={`absolute bottom-[-3px] right-0 flex items-center gap-1 text-[10px] leading-none whitespace-nowrap ${isMe ? 'text-[#54656f] dark:text-[#aebac1]' : 'text-[#54656f] dark:text-[#aebac1]'}`}>
+                                                <span className={`absolute bottom-[-3px] right-0 flex items-center gap-1 text-[11px] leading-none whitespace-nowrap ${isMe ? 'text-[#54656f] dark:text-[#aebac1]' : 'text-[#54656f] dark:text-[#aebac1]'}`}>
                                                     <span>{new Date(msg.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', hour12: true}).toLowerCase()}</span>
                                                     {isMe && <MessageStatusIcon status={msg.status || 'SENT'} isRead={msg.isRead} />}
                                                 </span>
@@ -355,8 +355,8 @@ const ChatPortal: React.FC<ChatPortalProps> = ({ currentUser, students, messages
                          {/* Abstract illustration placeholder or just icon */}
                          <ChatBubbleLeftRightIcon /> 
                     </div>
-                    <h3 className="text-3xl font-light text-[#41525d] mb-4 dark:text-[#e9edef]">Chat With Others In the Business</h3>
-                    <p className="max-w-md text-sm leading-6">Send and receive messages from People In the Business .<br/>Use WhatsApp on up to 4 linked devices and 1 phone.</p>
+                    <h3 className="text-3xl font-light text-[#41525d] mb-4 dark:text-[#e9edef]">WhatsApp Web Clone</h3>
+                    <p className="max-w-md text-sm leading-6">Send and receive messages without keeping your phone online.<br/>Use WhatsApp on up to 4 linked devices and 1 phone.</p>
                     <div className="mt-8 flex items-center gap-2 text-xs text-[#8696a0]">
                         <LockIcon /> End-to-end encrypted
                     </div>

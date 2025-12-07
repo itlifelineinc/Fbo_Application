@@ -45,7 +45,9 @@ const ChatPortal: React.FC<ChatPortalProps> = ({ currentUser, students, messages
   const [newMessage, setNewMessage] = useState('');
   const [isBroadcastMode, setIsBroadcastMode] = useState(false);
   const [selectedBroadcastUsers, setSelectedBroadcastUsers] = useState<string[]>([]);
-  const chatEndRef = useRef<HTMLDivElement>(null);
+  
+  // Refs
+  const messageContainerRef = useRef<HTMLDivElement>(null);
 
   // Helper: Get Group ID
   const myGroupId = `GROUP_${currentUser.role === UserRole.SPONSOR ? currentUser.handle : currentUser.sponsorId}`;
@@ -88,9 +90,17 @@ const ChatPortal: React.FC<ChatPortalProps> = ({ currentUser, students, messages
     );
   }).sort((a,b) => a.timestamp - b.timestamp);
 
-  // Auto-scroll
+  // Auto-scroll logic: Scroll the container directly instead of using scrollIntoView on an element.
+  // This prevents the browser from scrolling the main window/body to bring the element into view, which causes the header to be hidden.
   useEffect(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    if (messageContainerRef.current) {
+        // Use a small timeout to ensure DOM render is complete
+        setTimeout(() => {
+            if (messageContainerRef.current) {
+                messageContainerRef.current.scrollTop = messageContainerRef.current.scrollHeight;
+            }
+        }, 50);
+    }
   }, [activeMessages, activeChatHandle]);
 
   // Mark as Read when chat is open and messages change
@@ -158,7 +168,7 @@ const ChatPortal: React.FC<ChatPortalProps> = ({ currentUser, students, messages
 
   return (
     <div 
-        className="h-[calc(100vh-8rem)] flex flex-col md:flex-row bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden animate-fade-in dark:bg-[#111b21] dark:border-slate-800"
+        className="h-[75vh] md:h-[calc(100vh-8rem)] flex flex-col md:flex-row bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden animate-fade-in dark:bg-[#111b21] dark:border-slate-800"
         style={{ fontFamily: 'Segoe UI, "Helvetica Neue", Helvetica, Arial, sans-serif' }}
     >
       
@@ -219,7 +229,7 @@ const ChatPortal: React.FC<ChatPortalProps> = ({ currentUser, students, messages
         </div>
 
         {/* Content Container (Above Background) */}
-        <div className="relative z-10 flex flex-col h-full">
+        <div className="relative z-10 flex flex-col h-full overflow-hidden">
             
             {/* Broadcast Mode UI */}
             {isBroadcastMode ? (
@@ -275,7 +285,7 @@ const ChatPortal: React.FC<ChatPortalProps> = ({ currentUser, students, messages
             ) : activeChatHandle ? (
                 <>
                     {/* Active Chat Header */}
-                    <div className="bg-[#f0f2f5] px-4 py-2.5 flex items-center gap-4 border-b border-slate-200 shadow-sm shrink-0 dark:bg-[#202c33] dark:border-[#202c33]">
+                    <div className="bg-[#f0f2f5] px-4 py-2.5 flex items-center gap-4 border-b border-slate-200 shadow-sm shrink-0 z-20 dark:bg-[#202c33] dark:border-[#202c33]">
                         <button onClick={() => setActiveChatHandle(null)} className="md:hidden text-slate-500 hover:text-[#00a884] dark:text-[#aebac1]">
                             <ChevronLeftIcon />
                         </button>
@@ -290,8 +300,11 @@ const ChatPortal: React.FC<ChatPortalProps> = ({ currentUser, students, messages
                         </div>
                     </div>
 
-                    {/* Messages List */}
-                    <div className="flex-1 overflow-y-auto p-4 space-y-1">
+                    {/* Messages List - Fixed Scroll Area */}
+                    <div 
+                        ref={messageContainerRef}
+                        className="flex-1 overflow-y-auto p-4 space-y-1 scroll-smooth"
+                    >
                         {activeMessages.map((msg) => {
                             const isMe = msg.senderHandle === currentUser.handle;
                             return (
@@ -333,11 +346,10 @@ const ChatPortal: React.FC<ChatPortalProps> = ({ currentUser, students, messages
                                 </div>
                             );
                         })}
-                        <div ref={chatEndRef} />
                     </div>
 
                     {/* Input Bar */}
-                    <div className="bg-[#f0f2f5] px-4 py-3 flex items-center gap-2 dark:bg-[#202c33]">
+                    <div className="bg-[#f0f2f5] px-4 py-3 flex items-center gap-2 border-t border-slate-200 shrink-0 z-20 dark:bg-[#202c33] dark:border-[#202c33]">
                         <input 
                             type="text" 
                             value={newMessage}

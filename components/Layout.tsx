@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Student, UserRole, Course, AppNotification } from '../types';
@@ -19,7 +18,7 @@ interface LayoutProps {
 // Icons
 function HomeIcon() {
   return (
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
       <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" />
     </svg>
   );
@@ -27,7 +26,7 @@ function HomeIcon() {
 
 function BookOpenIcon() {
   return (
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
       <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" />
     </svg>
   );
@@ -35,7 +34,7 @@ function BookOpenIcon() {
 
 function GlobeEducationIcon() {
   return (
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
       <path strokeLinecap="round" strokeLinejoin="round" d="M12 21a9.004 9.004 0 008.716-6.747M12 21a9.004 9.004 0 01-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S12 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S12 3 12 3m0 0a8.997 8.997 0 017.843 4.582M12 3a8.997 8.997 0 00-7.843 4.582m15.686 0A11.953 11.953 0 0112 10.5c-2.998 0-5.74-1.1-7.843-2.918m15.686 0A8.959 8.959 0 0121 12c0 .778-.099 1.533-.284 2.253m0 0A17.919 17.919 0 0112 16.5c-3.162 0-6.133-.815-8.716-2.247m0 0A9.015 9.015 0 013 12c0-1.605.42-3.113 1.157-4.418" />
     </svg>
   );
@@ -43,7 +42,7 @@ function GlobeEducationIcon() {
 
 function UserGroupIcon() {
   return (
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
       <path strokeLinecap="round" strokeLinejoin="round" d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m.94 3.198l.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0112 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 016 18.719m12 0a5.971 5.971 0 00-.941-3.197m0 0A5.995 5.995 0 0012 12.75a5.995 5.995 0 00-5.058 2.772m0 0a3 3 0 00-4.681 2.72 8.986 8.986 0 003.74.477m.94-3.197a5.971 5.971 0 00-.94 3.197M15 6.75a3 3 0 11-6 0 3 3 0 016 0zm6 3a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0zm-13.5 0a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z" />
     </svg>
   );
@@ -51,7 +50,7 @@ function UserGroupIcon() {
 
 function UsersIcon() {
   return (
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
       <path strokeLinecap="round" strokeLinejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" />
     </svg>
   );
@@ -59,7 +58,7 @@ function UsersIcon() {
 
 function ChatBubbleOvalLeftIcon() {
   return (
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
         <path strokeLinecap="round" strokeLinejoin="round" d="M7.5 8.25h9m-9 3H12m-9.75 1.51c0 1.6 1.123 2.994 2.707 3.227 1.129.166 2.27.293 3.423.379.35.026.67.21.865.501L12 21l2.755-4.133a1.14 1.14 0 01.865-.501 48.172 48.172 0 003.423-.379c1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0012 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018z" />
     </svg>
   );
@@ -67,7 +66,7 @@ function ChatBubbleOvalLeftIcon() {
 
 function CurrencyDollarIcon() {
   return (
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
         <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
     </svg>
   );
@@ -83,7 +82,7 @@ function ClipboardDocumentListIcon() {
 
 function RocketLaunchIcon() {
   return (
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
         <path strokeLinecap="round" strokeLinejoin="round" d="M15.59 14.37a6 6 0 01-5.84 7.38v-4.8m5.84-2.58a14.98 14.98 0 006.16-12.12A14.98 14.98 0 009.631 8.41m5.96 5.96a14.926 14.926 0 01-5.841 2.58m-.119-8.54a6 6 0 00-7.381 5.84h4.8m2.581-5.84a14.927 14.927 0 00-2.58 5.84m2.699 2.7c-.103.021-.207.041-.311.06a15.09 15.09 0 01-2.448-2.448 14.9 14.9 0 01.06-.312m-2.24 2.39a4.493 4.493 0 00-1.757 4.306 4.493 4.493 0 004.306-1.758M16.5 9a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0z" />
     </svg>
   );
@@ -91,7 +90,7 @@ function RocketLaunchIcon() {
 
 function SparklesIcon() {
   return (
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
       <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.456-2.456L14.25 6l1.035-.259a3.375 3.375 0 002.456-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 00-2.456 2.456zM16.894 20.567L16.5 21.75l-.394-1.183a2.25 2.25 0 00-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 001.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 00-1.423 1.423z" />
     </svg>
   );
@@ -99,24 +98,8 @@ function SparklesIcon() {
 
 function GlobeAltIcon() {
   return (
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
         <path strokeLinecap="round" strokeLinejoin="round" d="M12 21a9.004 9.004 0 008.716-6.747M12 21a9.004 9.004 0 01-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S12 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S12 3 12 3m0 0a8.997 8.997 0 017.843 4.582M12 3a8.997 8.997 0 00-7.843 4.582m15.686 0A11.953 11.953 0 0112 10.5c-2.998 0-5.74-1.1-7.843-2.918m15.686 0A8.959 8.959 0 0121 12c0 .778-.099 1.533-.284 2.253m0 0A17.919 17.919 0 0112 16.5c-3.162 0-6.133-.815-8.716-2.247m0 0A9.015 9.015 0 013 12c0-1.605.42-3.113 1.157-4.418" />
-    </svg>
-  );
-}
-
-function Bars3Icon() {
-  return (
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
-      <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
-    </svg>
-  );
-}
-
-function XMarkIcon() {
-  return (
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
-      <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
     </svg>
   );
 }
@@ -137,9 +120,16 @@ function ArrowRightOnRectangleIcon() {
   );
 }
 
+function XMarkIcon() {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
+      <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+    </svg>
+  );
+}
+
 const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme, onToggleTheme, courses, notifications }) => {
   const location = useLocation();
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isSalesMenuOpen, setIsSalesMenuOpen] = useState(false);
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const [isNotificationMenuOpen, setIsNotificationMenuOpen] = useState(false);
@@ -152,6 +142,10 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
   // Refs for Click Outside Logic
   const profileMenuRef = useRef<HTMLDivElement>(null);
   const profileBtnRef = useRef<HTMLButtonElement>(null);
+
+  // Mobile Dock State
+  const [isDockExpanded, setIsDockExpanded] = useState(false);
+  const dockRef = useRef<HTMLDivElement>(null);
 
   const isActive = (path: string) => location.pathname === path;
   const isDashboard = location.pathname === '/dashboard';
@@ -241,6 +235,17 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, [isNavbarOpen, shouldHeaderBeStatic]);
+
+  // Click outside to collapse dock
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dockRef.current && !dockRef.current.contains(event.target as Node)) {
+        setIsDockExpanded(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   // Role Checks
   const isStudent = currentUser.role === UserRole.STUDENT;
@@ -356,6 +361,39 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
 
   const unreadCount = notifications.filter(n => !n.isRead).length;
 
+  // Build Mobile Nav Items
+  interface NavItemConfig {
+    to: string;
+    icon: React.ReactNode;
+    label: string;
+    active: boolean;
+  }
+
+  const navItems: NavItemConfig[] = [
+    { to: '/dashboard', icon: <HomeIcon />, label: 'Home', active: isActive('/dashboard') },
+    { to: '/chat', icon: <ChatBubbleOvalLeftIcon />, label: 'Chat', active: isActive('/chat') },
+    { to: '/courses', icon: <BookOpenIcon />, label: 'Classroom', active: isActive('/courses') },
+    { to: '/training/global', icon: <GlobeEducationIcon />, label: 'Global', active: isActive('/training/global') },
+  ];
+
+  if (hasTeamAccess) {
+    navItems.push({ to: '/training/team', icon: <UserGroupIcon />, label: 'Team', active: isActive('/training/team') });
+  }
+
+  // Flattened Sales Menu for Mobile Dock
+  navItems.push({ to: '/sales', icon: <CurrencyDollarIcon />, label: 'Sales Log', active: isActive('/sales') });
+  navItems.push({ to: '/sales-builder', icon: <RocketLaunchIcon />, label: 'Pages', active: isActive('/sales-builder') });
+
+  navItems.push({ to: '/community', icon: <GlobeAltIcon />, label: 'Community', active: isActive('/community') });
+
+  if (!isStudent) {
+    navItems.push({ to: '/students', icon: <UsersIcon />, label: isAdminOrSuper ? 'Students' : 'My Team', active: isActive('/students') });
+  }
+
+  if (canBuildCourses) {
+    navItems.push({ to: '/builder', icon: <SparklesIcon />, label: 'Builder', active: isActive('/builder') });
+  }
+
   return (
     <div className="flex h-screen bg-slate-50 dark:bg-slate-950 overflow-hidden transition-colors duration-300">
       <style>{`
@@ -368,50 +406,12 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
         }
       `}</style>
       
-      {/* Mobile Overlay */}
-      {isMobileMenuOpen && (
-        <div 
-          className="fixed inset-0 bg-black/50 z-50 lg:hidden backdrop-blur-sm transition-opacity"
-          onClick={() => setIsMobileMenuOpen(false)}
-        />
-      )}
-
-      {/* Sidebar - Responsive */}
+      {/* Sidebar - Desktop Only */}
       <aside 
-        className={`
-          fixed inset-y-0 left-0 z-50 w-64 bg-emerald-900 text-white flex flex-col shadow-xl 
-          transform transition-transform duration-300 ease-in-out dark:bg-emerald-950
-          lg:static lg:translate-x-0
-          ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}
-        `}
+        className="hidden lg:flex w-64 bg-emerald-900 text-white flex-col shadow-xl dark:bg-emerald-950"
       >
         <div className="p-6 border-b border-emerald-800 flex justify-between items-center dark:border-emerald-900">
           <Logo className="w-8 h-8" textClassName="text-xl font-bold text-white" />
-          {/* Close Button */}
-          <button onClick={() => setIsMobileMenuOpen(false)} className="lg:hidden text-emerald-300 hover:text-white">
-            <XMarkIcon />
-          </button>
-        </div>
-
-        {/* Clickable User Profile Section (Mobile Only) */}
-        <div className="px-6 py-4 bg-emerald-800/30 dark:bg-emerald-900/30 lg:hidden">
-           <Link 
-             to={`/students/${currentUser.id}`}
-             onClick={() => setIsMobileMenuOpen(false)}
-             className="flex items-center gap-3 bg-emerald-800/50 p-3 rounded-lg border border-emerald-800 hover:bg-emerald-700/50 hover:border-emerald-600 transition-all cursor-pointer group dark:border-emerald-700 dark:bg-emerald-800/30"
-           >
-             <div className="w-8 h-8 rounded-full bg-emerald-100 text-emerald-800 flex items-center justify-center font-bold text-xs flex-shrink-0 font-heading overflow-hidden group-hover:scale-105 transition-transform">
-                {currentUser.avatarUrl ? (
-                    <img src={currentUser.avatarUrl} alt={currentUser.name} className="w-full h-full object-cover" />
-                ) : (
-                    currentUser.name.charAt(0)
-                )}
-             </div>
-             <div className="overflow-hidden">
-                <p className="text-xs font-medium truncate text-emerald-100 group-hover:text-white transition-colors">{currentUser.name}</p>
-                <p className="text-[10px] text-emerald-300 font-mono truncate group-hover:text-emerald-200 transition-colors">{currentUser.handle}</p>
-             </div>
-          </Link>
         </div>
 
         <nav className="flex-1 py-6 px-3 space-y-1 overflow-y-auto no-scrollbar">
@@ -420,14 +420,12 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
             icon={<HomeIcon />} 
             label="Dashboard" 
             active={isActive('/dashboard')} 
-            onClick={() => setIsMobileMenuOpen(false)}
           />
           <NavItem 
             to="/chat" 
             icon={<ChatBubbleOvalLeftIcon />} 
             label="Team Chat" 
             active={isActive('/chat')} 
-            onClick={() => setIsMobileMenuOpen(false)}
           />
           
           <div className="my-2 border-t border-emerald-800 dark:border-emerald-900 mx-4 opacity-50"></div>
@@ -439,7 +437,6 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
             icon={<BookOpenIcon />} 
             label="My Classroom" 
             active={isActive('/courses') || location.pathname.startsWith('/classroom')} 
-            onClick={() => setIsMobileMenuOpen(false)}
           />
           
           <NavItem 
@@ -447,7 +444,6 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
             icon={<GlobeEducationIcon />} 
             label="Global Training" 
             active={isActive('/training/global')} 
-            onClick={() => setIsMobileMenuOpen(false)}
           />
 
           {hasTeamAccess && (
@@ -456,7 +452,6 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
               icon={<UserGroupIcon />} 
               label="Team Training" 
               active={isActive('/training/team')} 
-              onClick={() => setIsMobileMenuOpen(false)}
             />
           )}
 
@@ -488,7 +483,6 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
                   icon={<ClipboardDocumentListIcon />} 
                   label="Sales Log" 
                   active={isActive('/sales')} 
-                  onClick={() => setIsMobileMenuOpen(false)}
                   className="py-2 text-sm"
                 />
                 <NavItem 
@@ -496,7 +490,6 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
                   icon={<RocketLaunchIcon />} 
                   label="Sales Pages" 
                   active={isActive('/sales-builder')} 
-                  onClick={() => setIsMobileMenuOpen(false)}
                   className="py-2 text-sm"
                 />
               </div>
@@ -508,7 +501,6 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
             icon={<GlobeAltIcon />} 
             label="Community" 
             active={isActive('/community')} 
-            onClick={() => setIsMobileMenuOpen(false)}
           />
           
           {/* Hide Students List from Students */}
@@ -518,7 +510,6 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
                icon={<UsersIcon />} 
                label={isAdminOrSuper ? "All Students" : "My Team"} 
                active={isActive('/students')} 
-               onClick={() => setIsMobileMenuOpen(false)}
              />
           )}
           
@@ -529,21 +520,9 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
                icon={<SparklesIcon />} 
                label="Course Builder" 
                active={isActive('/builder')} 
-               onClick={() => setIsMobileMenuOpen(false)}
              />
           )}
         </nav>
-
-        {/* Sidebar Logout: Only show on Mobile */}
-        <div className="p-4 border-t border-emerald-800 dark:border-emerald-900 lg:hidden">
-          <button 
-            onClick={onLogout}
-            className="flex items-center gap-3 px-4 py-3 rounded-lg w-full text-emerald-300 hover:bg-emerald-800/50 hover:text-white transition-colors"
-          >
-            <ArrowRightOnRectangleIcon />
-            <span className="font-medium">Sign Out</span>
-          </button>
-        </div>
       </aside>
 
       {/* Main Content - Adjusted for Builders */}
@@ -627,7 +606,7 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
                                     </p>
                                   </div>
                                   {!notification.isRead && (
-                                    <div className="w-2 h-2 rounded-full bg-emerald-500 mt-1.5 flex-shrink-0"></div>
+                                    <div className="w-2 h-2 rounded-full bg-emerald-50 mt-1.5 flex-shrink-0"></div>
                                   )}
                                 </div>
                               </Link>
@@ -732,13 +711,13 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
              </button>
         )}
 
-        {/* Mobile Header */}
+        {/* Mobile Header - Reduced, No Hamburger */}
         <header className="lg:hidden bg-white border-b border-slate-200 p-4 flex justify-between items-center z-10 shadow-sm dark:bg-slate-900 dark:border-slate-800 shrink-0">
            <Logo className="w-8 h-8" textClassName="text-xl font-bold text-emerald-900 dark:text-emerald-400" />
            <div className="flex items-center gap-4">
              {/* Mobile Bell */}
              <button 
-                onClick={() => { setIsNotificationMenuOpen(!isNotificationMenuOpen); setIsMobileMenuOpen(false); }}
+                onClick={() => { setIsNotificationMenuOpen(!isNotificationMenuOpen); }}
                 className="relative text-slate-600 dark:text-slate-300"
              >
                <Bell size={24} />
@@ -747,9 +726,6 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
                     {unreadCount}
                   </span>
                )}
-             </button>
-             <button onClick={() => setIsMobileMenuOpen(true)} className="text-slate-600 p-2 rounded-lg hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800">
-               <Bars3Icon />
              </button>
            </div>
         </header>
@@ -810,12 +786,57 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
           </main>
         ) : (
           // Standard Layout with Padding
-          <main className="flex-1 overflow-auto scroll-smooth dark:bg-slate-950">
+          // Added extra padding bottom for mobile to account for the Dock
+          <main className="flex-1 overflow-auto scroll-smooth dark:bg-slate-950 pb-32 lg:pb-0">
             <div className="max-w-7xl mx-auto p-4 md:p-8">
               {children}
             </div>
           </main>
         )}
+
+        {/* --- MOBILE DOCK NAVIGATION --- */}
+        {/* Only visible on small screens */}
+        <div ref={dockRef} className={`lg:hidden fixed left-1/2 -translate-x-1/2 z-50 transition-all duration-500 ease-out ${isDockExpanded ? 'bottom-6 w-[92%] max-w-md' : 'bottom-4 w-auto'}`}>
+            <div 
+                onClick={() => !isDockExpanded && setIsDockExpanded(true)}
+                className={`
+                    bg-white/80 dark:bg-slate-900/80 backdrop-blur-2xl border border-white/20 shadow-2xl 
+                    flex items-center transition-all duration-500 overflow-hidden ring-1 ring-black/5 dark:ring-white/10
+                    ${isDockExpanded ? 'rounded-3xl px-4 py-4 h-auto gap-4 overflow-x-auto no-scrollbar justify-start' : 'rounded-full h-3 px-3 gap-2 cursor-pointer hover:scale-110 justify-center min-w-[100px]'}
+                `}
+            >
+                {/* When Expanded: Show Full Icons */}
+                {isDockExpanded ? (
+                    navItems.map((item, idx) => (
+                        <Link 
+                            key={idx} 
+                            to={item.to}
+                            onClick={() => setIsDockExpanded(false)}
+                            className="flex flex-col items-center gap-1.5 min-w-[4.5rem] group"
+                        >
+                            <div className={`
+                                w-14 h-14 rounded-2xl flex items-center justify-center transition-transform duration-300 group-hover:scale-110 group-active:scale-95 shadow-sm border border-black/5 dark:border-white/5
+                                ${item.active 
+                                    ? 'bg-emerald-500 text-white shadow-emerald-500/30' 
+                                    : 'bg-slate-50 dark:bg-slate-800 text-slate-500 dark:text-slate-400'}
+                            `}>
+                                {item.icon}
+                            </div>
+                            <span className={`text-[10px] font-bold truncate w-full text-center transition-colors ${item.active ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-500 dark:text-slate-500'}`}>{item.label}</span>
+                        </Link>
+                    ))
+                ) : (
+                    /* When Collapsed: Show Dots */
+                    navItems.map((item, idx) => (
+                        <div 
+                            key={idx} 
+                            className={`rounded-full transition-all duration-300 shadow-sm ${item.active ? 'w-2 h-2 bg-emerald-500 shadow-emerald-500/50' : 'w-1.5 h-1.5 bg-slate-400/40 dark:bg-slate-600'}`} 
+                        />
+                    ))
+                )}
+            </div>
+        </div>
+
       </div>
     </div>
   );

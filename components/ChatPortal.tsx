@@ -10,30 +10,35 @@ interface ChatPortalProps {
   onMarkAsRead?: (senderHandle: string) => void;
 }
 
+// --- WhatsApp Style Icons ---
+
+const SingleTick = ({ className }: { className?: string }) => (
+    <svg viewBox="0 0 16 15" width="16" height="15" className={className}>
+        <path fill="currentColor" d="M15.01 3.316l-.478-.372a.365.365 0 0 0-.51.063L4.566 14.302l-2.592-2.716a.366.366 0 0 0-.51-.028l-.494.44a.365.365 0 0 0-.024.53l3.352 3.512c.137.143.37.146.51.008L15.074 3.826a.365.365 0 0 0-.063-.51z"/>
+    </svg>
+);
+
+const DoubleTick = ({ className }: { className?: string }) => (
+    <svg viewBox="0 0 16 15" width="16" height="15" className={className}>
+        <path fill="currentColor" d="M15.01 3.316l-.478-.372a.365.365 0 0 0-.51.063L4.566 14.302l-2.592-2.716a.366.366 0 0 0-.51-.028l-.494.44a.365.365 0 0 0-.024.53l3.352 3.512c.137.143.37.146.51.008L15.074 3.826a.365.365 0 0 0-.063-.51z"/>
+        <path fill="currentColor" d="M10.99 1.73l-.478-.372a.365.365 0 0 0-.51.063L5.875 10.63l-.36-.453a.365.365 0 0 0-.535.03l-.42.493a.365.365 0 0 0 .03.535l1.09 1.373c.137.143.37.146.51.008l4.86-8.38a.365.365 0 0 0-.063-.51z"/>
+    </svg>
+);
+
 // Helper Component for Checkmarks
 const MessageStatusIcon: React.FC<{ status: MessageStatus, isRead: boolean }> = ({ status, isRead }) => {
-    // Priority: isRead (Blue Double) > status='READ' (Blue Double) > status='DELIVERED' (Gray Double) > status='SENT' (Gray Single)
-    
+    // 1. Blue Double Tick: Read
     if (isRead || status === 'READ') {
-        return (
-            <div className="flex -space-x-1">
-                <CheckIcon className="text-[#53bdeb] w-[15px] h-[15px]" />
-                <CheckIcon className="text-[#53bdeb] w-[15px] h-[15px]" />
-            </div>
-        );
+        return <DoubleTick className="text-[#53bdeb] w-[15px] h-[11px]" />;
     }
     
+    // 2. Gray Double Tick: Delivered (Online but not read)
     if (status === 'DELIVERED') {
-        return (
-            <div className="flex -space-x-1">
-                <CheckIcon className="text-slate-400 dark:text-slate-300 w-[15px] h-[15px]" />
-                <CheckIcon className="text-slate-400 dark:text-slate-300 w-[15px] h-[15px]" />
-            </div>
-        );
+        return <DoubleTick className="text-[#8696a0] dark:text-[#8696a0] w-[15px] h-[11px]" />;
     }
 
-    // Default 'SENT'
-    return <CheckIcon className="text-slate-400 dark:text-slate-300 w-[15px] h-[15px]" />;
+    // 3. Gray Single Tick: Sent (Server received, user offline)
+    return <SingleTick className="text-[#8696a0] dark:text-[#8696a0] w-[15px] h-[11px]" />;
 };
 
 const ChatPortal: React.FC<ChatPortalProps> = ({ currentUser, students, messages, onSendMessage, onMarkAsRead }) => {
@@ -310,12 +315,14 @@ const ChatPortal: React.FC<ChatPortalProps> = ({ currentUser, students, messages
                                             <div className="relative">
                                                 <span className="break-words whitespace-pre-wrap">
                                                     {msg.text}
-                                                    {/* Spacer: Transparent inline-block to reserve space on the last line for the floating timestamp */}
-                                                    <span className="inline-block w-[72px] h-3 align-middle opacity-0 select-none">.</span>
+                                                    {/* Float Spacer: Reserves width at the end of the text line for timestamp. 
+                                                        Width is set to ~70px to accommodate time + ticks. 
+                                                        If text ends near the right edge, this forces a wrap. */}
+                                                    <span className="inline-block w-[70px] h-[15px] align-bottom select-none opacity-0"></span>
                                                 </span>
 
-                                                {/* Timestamp & Status: Absolute bottom-right within the relative container */}
-                                                <span className={`absolute bottom-[-4px] right-0 flex items-center gap-1 text-[11px] leading-none ${isMe ? 'text-[#54656f] dark:text-[#aebac1]' : 'text-[#54656f] dark:text-[#aebac1]'}`}>
+                                                {/* Absolute Positioned Timestamp & Status */}
+                                                <span className={`absolute bottom-[-3px] right-0 flex items-center gap-1 text-[11px] leading-none whitespace-nowrap ${isMe ? 'text-[#54656f] dark:text-[#aebac1]' : 'text-[#54656f] dark:text-[#aebac1]'}`}>
                                                     <span>{new Date(msg.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', hour12: true}).toLowerCase()}</span>
                                                     {isMe && <MessageStatusIcon status={msg.status || 'SENT'} isRead={msg.isRead} />}
                                                 </span>
@@ -375,17 +382,6 @@ const PaperAirplaneIcon = () => (
 const ChevronLeftIcon = () => (
     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
         <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
-    </svg>
-);
-
-const CheckIcon = ({ className }: { className?: string }) => (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 11" fill="none" className={className || "w-3 h-3"}>
-        <path d="M10.5 1L15.5 6L10.5 11" stroke="currentColor" strokeWidth="1.5"/>
-        <path d="M5.5 1L10.5 6L5.5 11" stroke="currentColor" strokeWidth="1.5"/>
-        <path d="M0.5 1L5.5 6L0.5 11" stroke="currentColor" strokeWidth="1.5"/>
-        {/* Simplified double check look */}
-        <path d="M1.5 5.5L4.5 9.5L10.5 1.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-        <path d="M7 9.5L14.5 1.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
     </svg>
 );
 

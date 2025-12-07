@@ -2,7 +2,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Course, Module, Chapter, CourseTrack, CourseLevel, CourseStatus, ContentBlock, BlockType, CourseTestimonial, Student } from '../types';
-import { Eye, X, PlayCircle, FileText, HelpCircle, ChevronDown, ChevronRight, CheckCircle, Menu, BookOpen, Clock, Plus, Trash2, ArrowUp, ArrowDown, LayoutTemplate, Type, Image as ImageIcon, List, Quote, AlertCircle, ArrowLeft, ShoppingBag, Users, Sparkles, Save, Search, Check, Wand2, Loader2, MessageSquare, Settings, Rocket, BarChart } from 'lucide-react';
+import { Eye, X, PlayCircle, FileText, HelpCircle, ChevronDown, ChevronRight, CheckCircle, Menu, BookOpen, Clock, Plus, Trash2, ArrowUp, ArrowDown, LayoutTemplate, Type, Image as ImageIcon, List, Quote, AlertCircle, ArrowLeft, ShoppingBag, Users, Sparkles, Save, Search, Check, Wand2, Loader2, MessageSquare, Settings, Rocket, BarChart, Edit } from 'lucide-react';
 import { generateModuleContent } from '../services/geminiService';
 
 interface CourseBuilderProps {
@@ -169,7 +169,7 @@ const MediaInput: React.FC<{
     <div className="space-y-2 w-full">
       {label && (
           <div className="flex justify-between items-center mb-1">
-            <label className={LABEL_CLASS}>{label}</label>
+            <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider dark:text-slate-500">{label}</label>
             <div className="flex bg-slate-100 rounded-lg p-0.5 dark:bg-slate-700">
             <button onClick={() => setMode('LINK')} className={`px-2 py-0.5 text-[10px] font-bold rounded-md transition-all ${mode === 'LINK' ? 'bg-white shadow-sm text-slate-800 dark:bg-slate-600 dark:text-white' : 'text-slate-400 hover:text-slate-600'}`}>Link</button>
             <button onClick={() => setMode('UPLOAD')} className={`px-2 py-0.5 text-[10px] font-bold rounded-md transition-all ${mode === 'UPLOAD' ? 'bg-white shadow-sm text-slate-800 dark:bg-slate-600 dark:text-white' : 'text-slate-400 hover:text-slate-600'}`}>Upload</button>
@@ -562,118 +562,120 @@ const CourseBuilder: React.FC<CourseBuilderProps> = ({ currentUserHandle, course
       </div>
 
       {/* Landing Page Content - New Section */}
-      <div className={CARD_CLASS}>
-          <h2 className="text-lg md:text-xl font-bold text-slate-900 border-b border-slate-100 pb-6 mb-6 font-heading dark:text-slate-100 dark:border-slate-700">Landing Page Content</h2>
-          
-          <div className="space-y-8">
-              {/* About the Course (Moved from Step 1) */}
-              <div>
-                  <div className="flex justify-between items-center mb-1">
-                      <label className={LABEL_CLASS}>About this Course</label>
-                      <span className={`text-xs font-bold ${course.description.length > 700 ? 'text-red-500' : 'text-slate-400'}`}>{course.description.length}/700</span>
-                  </div>
-                  <textarea
-                      value={course.description}
-                      onChange={e => updateCourseInfo('description', e.target.value.slice(0, 700))}
-                      className={`${INPUT_CLASS} h-32 resize-none`}
-                      placeholder="Detailed overview for the landing page..."
-                  />
-              </div>
-
-              {/* Learning Outcomes */}
-              <div>
-                  <label className={LABEL_CLASS}>What students will learn</label>
-                  <div className="flex gap-2 mb-2">
-                      <input 
-                        type="text" 
-                        value={tempOutcome}
-                        onChange={(e) => setTempOutcome(e.target.value)}
-                        placeholder="e.g. Master the 4CC active habit" 
-                        className={INPUT_CLASS} 
-                        onKeyDown={(e) => { if(e.key === 'Enter') handleAddOutcome(); }}
+      <div className="flex-1 overflow-y-auto no-scrollbar pb-32">
+          {/* About the Course (Moved from Step 1) */}
+          <div className={CARD_CLASS}>
+              <h2 className="text-lg md:text-xl font-bold text-slate-900 border-b border-slate-100 pb-6 mb-6 font-heading dark:text-slate-100 dark:border-slate-700">Landing Page Content</h2>
+              
+              <div className="space-y-8">
+                  <div>
+                      <div className="flex justify-between items-center mb-1">
+                          <label className={LABEL_CLASS}>About this Course</label>
+                          <span className={`text-xs font-bold ${course.description.length > 700 ? 'text-red-500' : 'text-slate-400'}`}>{course.description.length}/700</span>
+                      </div>
+                      <textarea
+                          value={course.description}
+                          onChange={e => updateCourseInfo('description', e.target.value.slice(0, 700))}
+                          className={`${INPUT_CLASS} h-32 resize-none`}
+                          placeholder="Detailed overview for the landing page..."
                       />
-                      <button onClick={handleAddOutcome} className="bg-slate-900 text-white p-3 rounded-xl hover:bg-slate-800 transition-colors shadow-md dark:bg-emerald-600 dark:hover:bg-emerald-700">
-                          <Plus size={24} />
-                      </button>
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                      {course.learningOutcomes.map((item, idx) => (
-                          <div key={idx} className="bg-emerald-50 text-emerald-700 px-3 py-1 rounded-lg text-sm flex items-center gap-2 border border-emerald-100 dark:bg-emerald-900/30 dark:text-emerald-400 dark:border-emerald-800">
-                              {item} <button onClick={() => removeListString('learningOutcomes', idx)}><X size={12}/></button>
-                          </div>
-                      ))}
-                  </div>
-              </div>
-
-              {/* Target Audience */}
-              <div>
-                  <label className={LABEL_CLASS}>Who is this course for?</label>
-                  <div className="flex gap-2 mb-2">
-                      <input 
-                        type="text" 
-                        value={tempAudience}
-                        onChange={(e) => setTempAudience(e.target.value)}
-                        placeholder="e.g. New Supervisors" 
-                        className={INPUT_CLASS} 
-                        onKeyDown={(e) => { if(e.key === 'Enter') handleAddAudience(); }}
-                      />
-                      <button onClick={handleAddAudience} className="bg-slate-900 text-white p-3 rounded-xl hover:bg-slate-800 transition-colors shadow-md dark:bg-emerald-600 dark:hover:bg-emerald-700">
-                          <Plus size={24} />
-                      </button>
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                      {course.targetAudience.map((item, idx) => (
-                          <div key={idx} className="bg-blue-50 text-blue-700 px-3 py-1 rounded-lg text-sm flex items-center gap-2 border border-blue-100 dark:bg-blue-900/30 dark:text-blue-400 dark:border-blue-800">
-                              {item} <button onClick={() => removeListString('targetAudience', idx)}><X size={12}/></button>
-                          </div>
-                      ))}
-                  </div>
-              </div>
-
-              {/* Testimonials Editor */}
-              <div className="border-t border-slate-100 pt-6 dark:border-slate-700">
-                  <label className={LABEL_CLASS}>Student Testimonials</label>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4 items-end bg-slate-50 p-4 rounded-2xl dark:bg-slate-900">
-                      <div>
-                          <label className="text-[10px] uppercase font-bold text-slate-400 mb-1 block">Name</label>
-                          <input 
-                            type="text" 
-                            className="w-full text-sm p-2 rounded border border-slate-200 outline-none focus:border-emerald-500 bg-white dark:bg-slate-950 dark:border-slate-700 dark:text-white"
-                            value={newTestimonial.name}
-                            onChange={(e) => setNewTestimonial({...newTestimonial, name: e.target.value})}
-                          />
-                      </div>
-                      <div>
-                          <label className="text-[10px] uppercase font-bold text-slate-400 mb-1 block">Role/Title</label>
-                          <input 
-                            type="text" 
-                            className="w-full text-sm p-2 rounded border border-slate-200 outline-none focus:border-emerald-500 bg-white dark:bg-slate-950 dark:border-slate-700 dark:text-white"
-                            value={newTestimonial.role}
-                            onChange={(e) => setNewTestimonial({...newTestimonial, role: e.target.value})}
-                          />
-                      </div>
-                      <div>
-                          <label className="text-[10px] uppercase font-bold text-slate-400 mb-1 block">Quote</label>
-                          <input 
-                            type="text" 
-                            className="w-full text-sm p-2 rounded border border-slate-200 outline-none focus:border-emerald-500 bg-white dark:bg-slate-950 dark:border-slate-700 dark:text-white"
-                            value={newTestimonial.quote}
-                            onChange={(e) => setNewTestimonial({...newTestimonial, quote: e.target.value})}
-                          />
-                      </div>
-                      <button onClick={addTestimonial} className="bg-slate-800 text-white p-2 rounded-lg text-xs font-bold md:col-span-3 hover:bg-slate-700 transition-colors dark:bg-emerald-600 dark:hover:bg-emerald-700">Add Testimonial</button>
                   </div>
 
-                  <div className="space-y-2">
-                      {course.testimonials?.map((t) => (
-                          <div key={t.id} className="flex items-center justify-between p-3 border border-slate-200 rounded-xl bg-white shadow-sm dark:bg-slate-800 dark:border-slate-700">
-                              <div>
-                                  <p className="font-bold text-sm text-slate-800 dark:text-white">{t.name} <span className="text-slate-400 font-normal text-xs">| {t.role}</span></p>
-                                  <p className="text-xs text-slate-500 italic dark:text-slate-400">"{t.quote}"</p>
+                  {/* Learning Outcomes */}
+                  <div>
+                      <label className={LABEL_CLASS}>What students will learn</label>
+                      <div className="flex gap-2 mb-2">
+                          <input 
+                            type="text" 
+                            value={tempOutcome}
+                            onChange={(e) => setTempOutcome(e.target.value)}
+                            placeholder="e.g. Master the 4CC active habit" 
+                            className={INPUT_CLASS} 
+                            onKeyDown={(e) => { if(e.key === 'Enter') handleAddOutcome(); }}
+                          />
+                          <button onClick={handleAddOutcome} className="bg-slate-900 text-white p-3 rounded-xl hover:bg-slate-800 transition-colors shadow-md dark:bg-emerald-600 dark:hover:bg-emerald-700">
+                              <Plus size={24} />
+                          </button>
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                          {course.learningOutcomes.map((item, idx) => (
+                              <div key={idx} className="bg-emerald-50 text-emerald-700 px-3 py-1 rounded-lg text-sm flex items-center gap-2 border border-emerald-100 dark:bg-emerald-900/30 dark:text-emerald-400 dark:border-emerald-800">
+                                  {item} <button onClick={() => removeListString('learningOutcomes', idx)}><X size={12}/></button>
                               </div>
-                              <button onClick={() => removeTestimonial(t.id)} className="text-red-400 hover:text-red-600 p-2"><Trash2 size={16}/></button>
+                          ))}
+                      </div>
+                  </div>
+
+                  {/* Target Audience */}
+                  <div>
+                      <label className={LABEL_CLASS}>Who is this course for?</label>
+                      <div className="flex gap-2 mb-2">
+                          <input 
+                            type="text" 
+                            value={tempAudience}
+                            onChange={(e) => setTempAudience(e.target.value)}
+                            placeholder="e.g. New Supervisors" 
+                            className={INPUT_CLASS} 
+                            onKeyDown={(e) => { if(e.key === 'Enter') handleAddAudience(); }}
+                          />
+                          <button onClick={handleAddAudience} className="bg-slate-900 text-white p-3 rounded-xl hover:bg-slate-800 transition-colors shadow-md dark:bg-emerald-600 dark:hover:bg-emerald-700">
+                              <Plus size={24} />
+                          </button>
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                          {course.targetAudience.map((item, idx) => (
+                              <div key={idx} className="bg-blue-50 text-blue-700 px-3 py-1 rounded-lg text-sm flex items-center gap-2 border border-blue-100 dark:bg-blue-900/30 dark:text-blue-400 dark:border-blue-800">
+                                  {item} <button onClick={() => removeListString('targetAudience', idx)}><X size={12}/></button>
+                              </div>
+                          ))}
+                      </div>
+                  </div>
+
+                  {/* Testimonials Editor */}
+                  <div className="border-t border-slate-100 pt-6 dark:border-slate-700">
+                      <label className={LABEL_CLASS}>Student Testimonials</label>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4 items-end bg-slate-50 p-4 rounded-2xl dark:bg-slate-900">
+                          <div>
+                              <label className="text-[10px] uppercase font-bold text-slate-400 mb-1 block">Name</label>
+                              <input 
+                                type="text" 
+                                className="w-full text-sm p-2 rounded border border-slate-200 outline-none focus:border-emerald-500 bg-white dark:bg-slate-950 dark:border-slate-700 dark:text-white"
+                                value={newTestimonial.name}
+                                onChange={(e) => setNewTestimonial({...newTestimonial, name: e.target.value})}
+                              />
                           </div>
-                      ))}
+                          <div>
+                              <label className="text-[10px] uppercase font-bold text-slate-400 mb-1 block">Role/Title</label>
+                              <input 
+                                type="text" 
+                                className="w-full text-sm p-2 rounded border border-slate-200 outline-none focus:border-emerald-500 bg-white dark:bg-slate-950 dark:border-slate-700 dark:text-white"
+                                value={newTestimonial.role}
+                                onChange={(e) => setNewTestimonial({...newTestimonial, role: e.target.value})}
+                              />
+                          </div>
+                          <div>
+                              <label className="text-[10px] uppercase font-bold text-slate-400 mb-1 block">Quote</label>
+                              <input 
+                                type="text" 
+                                className="w-full text-sm p-2 rounded border border-slate-200 outline-none focus:border-emerald-500 bg-white dark:bg-slate-950 dark:border-slate-700 dark:text-white"
+                                value={newTestimonial.quote}
+                                onChange={(e) => setNewTestimonial({...newTestimonial, quote: e.target.value})}
+                              />
+                          </div>
+                          <button onClick={addTestimonial} className="bg-slate-800 text-white p-2 rounded-lg text-xs font-bold md:col-span-3 hover:bg-slate-700 transition-colors dark:bg-emerald-600 dark:hover:bg-emerald-700">Add Testimonial</button>
+                      </div>
+
+                      <div className="space-y-2">
+                          {course.testimonials?.map((t) => (
+                              <div key={t.id} className="flex items-center justify-between p-3 border border-slate-200 rounded-xl bg-white shadow-sm dark:bg-slate-800 dark:border-slate-700">
+                                  <div>
+                                      <p className="font-bold text-sm text-slate-800 dark:text-white">{t.name} <span className="text-slate-400 font-normal text-xs">| {t.role}</span></p>
+                                      <p className="text-xs text-slate-500 italic dark:text-slate-400">"{t.quote}"</p>
+                                  </div>
+                                  <button onClick={() => removeTestimonial(t.id)} className="text-red-400 hover:text-red-600 p-2"><Trash2 size={16}/></button>
+                              </div>
+                          ))}
+                      </div>
                   </div>
               </div>
           </div>
@@ -681,7 +683,7 @@ const CourseBuilder: React.FC<CourseBuilderProps> = ({ currentUserHandle, course
     </div>
   );
 
-  const renderStep4_Analytics = () => {
+  const renderStep5_Analytics = () => {
     // Analytics Logic
     const enrolledStudents = students.filter(s => s.enrolledCourses?.includes(course.id));
     const totalStudents = enrolledStudents.length;
@@ -714,7 +716,39 @@ const CourseBuilder: React.FC<CourseBuilderProps> = ({ currentUserHandle, course
 
     return (
         <div className="space-y-8 animate-fade-in">
-            <h2 className="text-lg md:text-xl font-bold text-slate-900 font-heading dark:text-slate-100">Course Performance</h2>
+            <div className="flex justify-between items-center">
+                <h2 className="text-lg md:text-xl font-bold text-slate-900 font-heading dark:text-slate-100">Course Performance</h2>
+            </div>
+
+            {/* Published Course Summary & Edit */}
+            <div className="bg-white rounded-3xl p-6 shadow-sm border border-slate-200 dark:bg-slate-800 dark:border-slate-700 flex flex-col md:flex-row gap-6 items-start md:items-center group">
+                <div className="w-full md:w-32 h-32 md:h-24 rounded-2xl overflow-hidden bg-slate-100 shrink-0 relative border border-slate-100 dark:border-slate-600 dark:bg-slate-700">
+                    {course.thumbnailUrl ? (
+                        <img src={course.thumbnailUrl} alt={course.title} className="w-full h-full object-cover" />
+                    ) : (
+                        <div className="w-full h-full flex items-center justify-center text-slate-400"><ImageIcon size={24}/></div>
+                    )}
+                </div>
+                
+                <div className="flex-1 space-y-1">
+                    <div className="flex items-center gap-2 mb-1">
+                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider border ${course.status === CourseStatus.PUBLISHED ? 'bg-emerald-50 text-emerald-700 border-emerald-100 dark:bg-emerald-900/30 dark:text-emerald-400 dark:border-emerald-800' : 'bg-slate-50 text-slate-600 border-slate-200'}`}>
+                            {course.status}
+                        </span>
+                        <span className="text-xs text-slate-400">• Last Updated: {new Date(course.updatedAt).toLocaleDateString()}</span>
+                    </div>
+                    <h3 className="text-xl font-bold text-slate-900 dark:text-white leading-tight">{course.title}</h3>
+                    <p className="text-sm text-slate-500 dark:text-slate-400 line-clamp-1">{course.subtitle || 'No subtitle provided.'}</p>
+                </div>
+
+                <button 
+                    onClick={() => setStep(1)}
+                    className="flex items-center gap-2 bg-indigo-50 text-indigo-600 px-5 py-3 rounded-xl font-bold text-sm hover:bg-indigo-100 transition-colors shadow-sm dark:bg-indigo-900/30 dark:text-indigo-300 dark:hover:bg-indigo-900/50"
+                >
+                    <Edit size={16} />
+                    <span>Edit Course</span>
+                </button>
+            </div>
             
             {/* Stats Grid */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -899,7 +933,7 @@ const CourseBuilder: React.FC<CourseBuilderProps> = ({ currentUserHandle, course
               <div className="space-y-8 text-center py-12"><div className={CARD_CLASS}><div className="max-w-2xl mx-auto"><h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-3 font-heading">Ready to Launch?</h2><p className="text-slate-500 dark:text-slate-400 text-lg mb-10">Choose visibility for your course.</p><div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10"><button onClick={() => setPublishTarget('TEAM')} className={`p-4 md:p-8 rounded-3xl border-2 transition-all flex flex-col items-center text-center gap-4 ${publishTarget === 'TEAM' ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20' : 'border-slate-100 hover:border-emerald-200 bg-white dark:bg-slate-800 dark:border-slate-700 dark:hover:border-slate-600'}`}><div className={`w-16 h-16 rounded-full flex items-center justify-center text-3xl shadow-sm ${publishTarget === 'TEAM' ? 'bg-emerald-200 text-emerald-800' : 'bg-slate-100 text-slate-500 dark:bg-slate-700'}`}>👥</div><div><h3 className="font-bold text-lg text-slate-800 dark:text-white">Team Training</h3><p className="text-sm text-slate-500 mt-2 dark:text-slate-400 leading-relaxed">Visible only to your downline.</p></div></button><button onClick={() => setPublishTarget('GLOBAL')} className={`p-4 md:p-8 rounded-3xl border-2 transition-all flex flex-col items-center text-center gap-4 ${publishTarget === 'GLOBAL' ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20' : 'border-slate-100 hover:border-blue-200 bg-white dark:bg-slate-800 dark:border-slate-700 dark:hover:border-slate-600'}`}><div className={`w-16 h-16 rounded-full flex items-center justify-center text-3xl shadow-sm ${publishTarget === 'GLOBAL' ? 'bg-blue-200 text-blue-800' : 'bg-slate-100 text-slate-500 dark:bg-slate-700'}`}>🌍</div><div><h3 className="font-bold text-lg text-slate-800 dark:text-white">Global Library</h3><p className="text-sm text-slate-500 mt-2 dark:text-slate-400 leading-relaxed">Public to all FBOs (Review required).</p></div></button></div><div className="flex flex-col items-center gap-4"><div className="flex gap-8 text-sm text-slate-500 font-medium dark:text-slate-400"><span>{course.modules.length} Modules</span><span className="w-px h-4 bg-slate-300 dark:bg-slate-700"></span><span>{course.track}</span></div><button onClick={handleSubmit} className={`w-full max-w-sm py-3 md:py-4 rounded-xl font-bold text-lg shadow-xl hover:scale-105 transition-all text-white ${publishTarget === 'GLOBAL' ? 'bg-blue-600 hover:bg-blue-700 shadow-blue-200' : 'bg-emerald-600 hover:bg-emerald-700 shadow-emerald-200'}`}>{publishTarget === 'GLOBAL' ? (courseId === 'new' ? 'Submit for Review' : 'Update & Submit') : (courseId === 'new' ? 'Publish Now' : 'Update Course')}</button></div></div></div></div>
             )}
             {/* Step 5 is now Analytics */}
-            {step === 5 && renderStep4_Analytics()}
+            {step === 5 && renderStep5_Analytics()}
         </div>
 
         {/* Floating Bottom Navigation (Replaces Sidebar & Mobile Nav) */}

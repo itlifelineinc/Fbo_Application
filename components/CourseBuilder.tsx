@@ -273,8 +273,11 @@ const CourseBuilder: React.FC<CourseBuilderProps> = ({ currentUserHandle, course
   const [tempOutcome, setTempOutcome] = useState('');
   const [tempAudience, setTempAudience] = useState('');
 
-  // Filter courses owned by this user for the modal list (Moved to top level)
-  const myPublishedCourses = courses.filter(c => c.authorHandle === currentUserHandle);
+  // Filter courses owned by this user
+  // Sort by updatedAt descending so most recent is first
+  const myPublishedCourses = courses
+    .filter(c => c.authorHandle === currentUserHandle && c.status === CourseStatus.PUBLISHED)
+    .sort((a, b) => b.updatedAt - a.updatedAt);
 
   const BUILDER_STEPS = [
     { id: 1, label: 'Info', fullLabel: 'Basic Info', icon: FileText },
@@ -691,13 +694,19 @@ const CourseBuilder: React.FC<CourseBuilderProps> = ({ currentUserHandle, course
   );
 
   const renderStep5_Analytics = () => {
-    // Analytics Logic
-    const enrolledStudents = students.filter(s => s.enrolledCourses?.includes(course.id));
+    // Determine which course to display stats for:
+    // If the current course is a DRAFT, but we have published courses, default to the most recent PUBLISHED course.
+    // Otherwise, show stats for the current course (which might be the draft or the specific one we are editing).
+    const isDraft = course.status === CourseStatus.DRAFT;
+    const displayCourse = (isDraft && myPublishedCourses.length > 0) ? myPublishedCourses[0] : course;
+
+    // Analytics Logic based on displayCourse
+    const enrolledStudents = students.filter(s => s.enrolledCourses?.includes(displayCourse.id));
     const totalStudents = enrolledStudents.length;
 
     // Completion Calculation
-    const totalChapters = course.modules.reduce((acc, m) => acc + m.chapters.length, 0);
-    const courseChapterIds = course.modules.flatMap(m => m.chapters.map(c => c.id));
+    const totalChapters = displayCourse.modules.reduce((acc, m) => acc + m.chapters.length, 0);
+    const courseChapterIds = displayCourse.modules.flatMap(m => m.chapters.map(c => c.id));
     
     const completions = enrolledStudents.filter(s => {
         // Count how many chapters of THIS course they finished
@@ -719,12 +728,15 @@ const CourseBuilder: React.FC<CourseBuilderProps> = ({ currentUserHandle, course
     }
 
     // Earnings
-    const earnings = totalStudents * (course.settings.price || 0);
+    const earnings = totalStudents * (displayCourse.settings.price || 0);
 
     return (
         <div className="space-y-8 animate-fade-in relative">
             <div className="flex justify-between items-center">
                 <h2 className="text-lg md:text-xl font-bold text-slate-900 font-heading dark:text-slate-100">Course Performance</h2>
+                {isDraft && myPublishedCourses.length > 0 && (
+                    <span className="text-xs text-slate-500 italic">Showing stats for your latest live course</span>
+                )}
             </div>
 
             {/* Published Course Summary & Edit */}
@@ -742,8 +754,8 @@ const CourseBuilder: React.FC<CourseBuilderProps> = ({ currentUserHandle, course
                 )}
 
                 <div className="w-full md:w-32 h-32 md:h-24 rounded-2xl overflow-hidden bg-slate-100 shrink-0 relative border border-slate-100 dark:border-slate-600 dark:bg-slate-700">
-                    {course.thumbnailUrl ? (
-                        <img src={course.thumbnailUrl} alt={course.title} className="w-full h-full object-cover" />
+                    {displayCourse.thumbnailUrl ? (
+                        <img src={displayCourse.thumbnailUrl} alt={displayCourse.title} className="w-full h-full object-cover" />
                     ) : (
                         <div className="w-full h-full flex items-center justify-center text-slate-400"><ImageIcon size={24}/></div>
                     )}
@@ -751,17 +763,23 @@ const CourseBuilder: React.FC<CourseBuilderProps> = ({ currentUserHandle, course
                 
                 <div className="flex-1 space-y-1">
                     <div className="flex items-center gap-2 mb-1">
-                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider border ${course.status === CourseStatus.PUBLISHED ? 'bg-emerald-50 text-emerald-700 border-emerald-100 dark:bg-emerald-900/30 dark:text-emerald-400 dark:border-emerald-800' : 'bg-slate-50 text-slate-600 border-slate-200'}`}>
-                            {course.status}
+                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider border ${displayCourse.status === CourseStatus.PUBLISHED ? 'bg-emerald-50 text-emerald-700 border-emerald-100 dark:bg-emerald-900/30 dark:text-emerald-400 dark:border-emerald-800' : 'bg-slate-50 text-slate-600 border-slate-200'}`}>
+                            {displayCourse.status}
                         </span>
-                        <span className="text-xs text-slate-400">• Last Updated: {new Date(course.updatedAt).toLocaleDateString()}</span>
+                        <span className="text-xs text-slate-400">• Last Updated: {new Date(displayCourse.updatedAt).toLocaleDateString()}</span>
                     </div>
-                    <h3 className="text-xl font-bold text-slate-900 dark:text-white leading-tight">{course.title || "Untitled Course"}</h3>
-                    <p className="text-sm text-slate-500 dark:text-slate-400 line-clamp-1">{course.subtitle || 'No subtitle provided.'}</p>
+                    <h3 className="text-xl font-bold text-slate-900 dark:text-white leading-tight">{displayCourse.title || "Untitled Course"}</h3>
+                    <p className="text-sm text-slate-500 dark:text-slate-400 line-clamp-1">{displayCourse.subtitle || 'No subtitle provided.'}</p>
                 </div>
 
                 <button 
-                    onClick={() => setStep(1)}
+                    onClick={() => {
+                        // If we are viewing a different course (e.g. recent published vs current draft), switch context to edit THAT course.
+                        if (displayCourse.id !== course.id) {
+                            setCourse(displayCourse);
+                        }
+                        setStep(1);
+                    }}
                     className="flex items-center gap-2 bg-indigo-50 text-indigo-600 px-5 py-3 rounded-xl font-bold text-sm hover:bg-indigo-100 transition-colors shadow-sm dark:bg-indigo-900/30 dark:text-indigo-300 dark:hover:bg-indigo-900/50"
                 >
                     <Edit size={16} />
@@ -802,7 +820,7 @@ const CourseBuilder: React.FC<CourseBuilderProps> = ({ currentUserHandle, course
             {/* Feedback / Testimonials */}
             <div className={`${CARD_CLASS} relative group`}>
                 {/* Feedback Expansion Button */}
-                {(course.testimonials?.length || 0) > 2 && (
+                {(displayCourse.testimonials?.length || 0) > 2 && (
                     <button 
                         onClick={() => setShowAllFeedbackModal(true)}
                         className="absolute top-4 right-4 p-2 bg-slate-100 rounded-full text-slate-500 hover:bg-blue-100 hover:text-blue-600 transition-all opacity-100 md:opacity-0 md:group-hover:opacity-100 shadow-sm z-10 dark:bg-slate-700 dark:text-slate-300 dark:hover:bg-blue-900/50"
@@ -818,8 +836,8 @@ const CourseBuilder: React.FC<CourseBuilderProps> = ({ currentUserHandle, course
                 </div>
                 
                 <div className="space-y-4">
-                    {course.testimonials && course.testimonials.length > 0 ? (
-                        course.testimonials.slice(0, 2).map((t) => (
+                    {displayCourse.testimonials && displayCourse.testimonials.length > 0 ? (
+                        displayCourse.testimonials.slice(0, 2).map((t) => (
                             <div key={t.id} className="p-4 bg-slate-50 rounded-xl border border-slate-100 dark:bg-slate-700/30 dark:border-slate-700">
                                 <div className="flex justify-between items-start mb-2">
                                     <div className="flex items-center gap-2">
@@ -844,12 +862,12 @@ const CourseBuilder: React.FC<CourseBuilderProps> = ({ currentUserHandle, course
                             <p>No feedback received yet.</p>
                         </div>
                     )}
-                    {course.testimonials && course.testimonials.length > 2 && (
+                    {displayCourse.testimonials && displayCourse.testimonials.length > 2 && (
                         <button 
                             onClick={() => setShowAllFeedbackModal(true)}
                             className="w-full py-2 text-xs font-bold text-slate-500 hover:text-slate-800 transition-colors bg-slate-50 rounded-lg dark:bg-slate-700/50 dark:text-slate-400 dark:hover:text-slate-200"
                         >
-                            View All ({course.testimonials.length})
+                            View All ({displayCourse.testimonials.length})
                         </button>
                     )}
                 </div>
@@ -1001,7 +1019,7 @@ const CourseBuilder: React.FC<CourseBuilderProps> = ({ currentUserHandle, course
       
       {/* 1. All Courses Modal */}
       {showAllCoursesModal && (
-          <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 backdrop-blur-md p-4 animate-fade-in" onClick={() => setShowAllCoursesModal(false)}>
+          <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-md p-4 animate-fade-in" onClick={() => setShowAllCoursesModal(false)}>
               <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md max-h-[80vh] flex flex-col overflow-hidden dark:bg-slate-900 dark:border dark:border-slate-700 scale-100" onClick={e => e.stopPropagation()}>
                   <div className="p-5 border-b border-slate-100 flex justify-between items-center bg-slate-50 dark:bg-slate-800 dark:border-slate-700">
                       <h3 className="font-bold text-slate-800 dark:text-white">Your Courses</h3>
@@ -1033,7 +1051,7 @@ const CourseBuilder: React.FC<CourseBuilderProps> = ({ currentUserHandle, course
 
       {/* 2. All Feedback Modal */}
       {showAllFeedbackModal && (
-          <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 backdrop-blur-md p-4 animate-fade-in" onClick={() => setShowAllFeedbackModal(false)}>
+          <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-md p-4 animate-fade-in" onClick={() => setShowAllFeedbackModal(false)}>
               <div className="bg-white rounded-3xl shadow-2xl w-full max-w-lg max-h-[80vh] flex flex-col overflow-hidden dark:bg-slate-900 dark:border dark:border-slate-700 scale-100" onClick={e => e.stopPropagation()}>
                   <div className="p-5 border-b border-slate-100 flex justify-between items-center bg-slate-50 dark:bg-slate-800 dark:border-slate-700">
                       <h3 className="font-bold text-slate-800 dark:text-white">All Testimonials</h3>

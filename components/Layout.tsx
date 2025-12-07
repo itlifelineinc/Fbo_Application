@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Student, UserRole, Course, AppNotification } from '../types';
-import { LogOut, Settings, Moon, Sun, ChevronDown, Award, Bell } from 'lucide-react';
+import { LogOut, Settings, Moon, Sun, ChevronDown, Award, Bell, LayoutTemplate, Minimize2, X, GripHorizontal } from 'lucide-react';
 import { RANKS } from '../constants';
 import { Logo } from './Logo';
 
@@ -132,6 +132,14 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
   const navbarRef = useRef<HTMLElement>(null);
   const navTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  // Mobile Nav Mode State
+  const [mobileNavMode, setMobileNavMode] = useState<'dock' | 'bubble'>('dock');
+  const [bubblePos, setBubblePos] = useState({ x: 20, y: 0 }); // Y set in effect
+  const [isBubbleOpen, setIsBubbleOpen] = useState(false);
+  const dragRef = useRef<HTMLDivElement>(null);
+  const isDraggingRef = useRef(false);
+  const dragOffsetRef = useRef({ x: 0, y: 0 });
+
   // Refs for Click Outside Logic
   const profileMenuRef = useRef<HTMLDivElement>(null);
   const profileBtnRef = useRef<HTMLButtonElement>(null);
@@ -147,6 +155,11 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
   const isActive = (path: string) => location.pathname === path;
   const isDashboard = location.pathname === '/dashboard';
   const isChatPage = location.pathname === '/chat';
+
+  // Set initial bubble position safely
+  useEffect(() => {
+      setBubblePos({ x: window.innerWidth - 80, y: window.innerHeight - 150 });
+  }, []);
 
   // Determine current Rank Name for Display
   const currentRankName = currentUser.rankProgress ? RANKS[currentUser.rankProgress.currentRankId]?.name : 'FBO';
@@ -272,6 +285,42 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  // --- Bubble Drag Logic ---
+  const handleBubbleTouchStart = (e: React.TouchEvent | React.MouseEvent) => {
+      isDraggingRef.current = false;
+      const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
+      const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
+      
+      if (dragRef.current) {
+          const rect = dragRef.current.getBoundingClientRect();
+          dragOffsetRef.current = { x: clientX - rect.left, y: clientY - rect.top };
+      }
+  };
+
+  const handleBubbleTouchMove = (e: React.TouchEvent | React.MouseEvent) => {
+      isDraggingRef.current = true;
+      // Prevent default to stop page scrolling while dragging (if needed)
+      // e.preventDefault(); 
+      const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
+      const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
+      
+      let newX = clientX - dragOffsetRef.current.x;
+      let newY = clientY - dragOffsetRef.current.y;
+
+      // Boundaries
+      newX = Math.max(0, Math.min(window.innerWidth - 60, newX));
+      newY = Math.max(0, Math.min(window.innerHeight - 60, newY));
+
+      setBubblePos({ x: newX, y: newY });
+  };
+
+  const handleBubbleTouchEnd = () => {
+      if (!isDraggingRef.current) {
+          setIsBubbleOpen(true);
+      }
+      isDraggingRef.current = false;
+  };
+
   // Role Checks
   const isStudent = currentUser.role === UserRole.STUDENT;
   const isAdminOrSuper = currentUser.role === UserRole.ADMIN || currentUser.role === UserRole.SUPER_ADMIN;
@@ -289,16 +338,14 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
 
   // Breadcrumb Generation
   const getBreadcrumbs = () => {
+    // ... (keeping existing breadcrumb logic) ...
     const path = location.pathname;
-    
-    // 1. Classroom Route (Deepest Level)
     const classroomMatch = path.match(/^\/classroom\/([^/]+)\/([^/]+)\/([^/]+)/);
     if (classroomMatch) {
         const [_, cId, mId, lId] = classroomMatch;
         const course = courses.find(c => c.id === cId);
         const module = course?.modules.find(m => m.id === mId);
         const chapter = module?.chapters.find(c => c.id === lId);
-        
         return (
             <div className="flex items-center gap-2 text-sm text-slate-300">
                 <Link to="/dashboard" className="hover:text-white transition-colors">Home</Link>
@@ -313,8 +360,6 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
             </div>
         );
     }
-
-    // 2. Course Overview Route
     const courseMatch = path.match(/^\/training\/course\/([^/]+)/);
     if (courseMatch) {
         const [_, cId] = courseMatch;
@@ -329,8 +374,6 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
             </div>
         );
     }
-
-    // 3. Fallback Map
     const BREADCRUMB_MAP: Record<string, string[]> = {
       '/sales-builder': ['Sales', 'Sales Pages'],
       '/sales': ['Sales', 'Sales Log'],
@@ -342,7 +385,6 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
       '/students': ['Team', 'Members'],
       '/builder': ['Admin', 'Course Builder'],
     };
-
     if (BREADCRUMB_MAP[location.pathname]) {
        return (
          <div className="flex items-center gap-2 text-sm text-slate-300">
@@ -358,8 +400,6 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
          </div>
        );
     }
-
-    // Fallback to URL segments
     const pathSegments = location.pathname.split('/').filter(p => p);
     return (
         <div className="flex items-center gap-2 text-sm text-slate-300 capitalize">
@@ -368,7 +408,6 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
                 const isLast = index === pathSegments.length - 1;
                 const displayName = (segment.length > 8 && /\d/.test(segment)) ? 'Details' : segment.replace(/-/g, ' ');
                 const to = `/${pathSegments.slice(0, index + 1).join('/')}`;
-
                 return (
                     <React.Fragment key={to}>
                         <span className="text-slate-500">/</span>
@@ -419,7 +458,6 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
     navItems.push({ to: '/builder', icon: <SparklesIcon />, label: 'Builder', active: isActive('/builder') });
   }
 
-  // Use dynamic viewport height for mobile
   return (
     <div className="flex h-screen bg-slate-50 dark:bg-slate-950 overflow-hidden transition-colors duration-300 supports-[height:100dvh]:h-[100dvh]">
       <style>{`
@@ -448,7 +486,6 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
             label="Dashboard" 
             active={isActive('/dashboard')} 
           />
-          {/* ... (rest of sidebar items) ... */}
           <NavItem 
             to="/chat" 
             icon={<ChatBubbleOvalLeftIcon />} 
@@ -595,6 +632,7 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
                     <>
                       <div className="fixed inset-0 z-10" onClick={() => setIsNotificationMenuOpen(false)}></div>
                       <div className="absolute right-0 mt-3 w-80 bg-white dark:bg-slate-900 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-700 py-2 z-20 animate-fade-in overflow-hidden">
+                        {/* ... existing notification list ... */}
                         <div className="px-4 py-3 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center">
                           <h3 className="font-bold text-sm text-slate-800 dark:text-white">Notifications</h3>
                           {unreadCount > 0 && (
@@ -683,6 +721,7 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
                     ref={profileMenuRef}
                     className="absolute right-0 top-12 mt-3 w-60 bg-white/95 backdrop-blur-xl rounded-2xl shadow-xl border border-slate-100 py-2 z-20 animate-fade-in dark:bg-slate-900/95 dark:border-slate-700"
                   >
+                        {/* ... existing profile menu ... */}
                         <div className="px-4 py-3 border-b border-slate-100 dark:border-slate-700">
                             <p className="text-sm font-bold text-slate-800 dark:text-white">Signed in as</p>
                             <p className="text-xs text-slate-500 truncate dark:text-slate-400 mt-0.5">{currentUser.email}</p>
@@ -824,48 +863,124 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
           </main>
         )}
 
-        {/* --- MOBILE DOCK NAVIGATION --- */}
+        {/* --- MOBILE NAVIGATION SYSTEM (Dual Mode) --- */}
         {/* Only visible on small screens */}
-        <div ref={dockRef} className={`lg:hidden fixed left-1/2 -translate-x-1/2 z-50 transition-all duration-500 ease-out ${isDockExpanded ? 'bottom-6 w-[92%] max-w-md' : 'bottom-4 w-auto'}`}>
-            <div 
-                onClick={() => !isDockExpanded && setIsDockExpanded(true)}
-                className={`
-                    bg-white/80 dark:bg-slate-900/80 backdrop-blur-2xl border border-white/20 shadow-2xl 
-                    flex items-center transition-all duration-500 overflow-hidden ring-1 ring-black/5 dark:ring-white/10
-                    ${isDockExpanded ? 'rounded-3xl px-4 py-4 h-auto gap-4 overflow-x-auto no-scrollbar justify-start' : 'rounded-full h-3 px-3 gap-2 cursor-pointer hover:scale-110 justify-center min-w-[100px]'}
-                `}
-            >
-                {/* When Expanded: Show Full Icons */}
-                {isDockExpanded ? (
-                    navItems.map((item, idx) => (
-                        <Link 
-                            key={idx} 
-                            to={item.to}
-                            onClick={() => setIsDockExpanded(false)}
-                            className="flex flex-col items-center gap-1.5 min-w-[4.5rem] group"
-                        >
-                            <div className={`
-                                w-14 h-14 rounded-2xl flex items-center justify-center transition-transform duration-300 group-hover:scale-110 group-active:scale-95 shadow-sm border border-black/5 dark:border-white/5
-                                ${item.active 
-                                    ? 'bg-emerald-500 text-white shadow-emerald-500/30' 
-                                    : 'bg-slate-50 dark:bg-slate-800 text-slate-500 dark:text-slate-400'}
-                            `}>
-                                {item.icon}
-                            </div>
-                            <span className={`text-[10px] font-bold truncate w-full text-center transition-colors ${item.active ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-500 dark:text-slate-500'}`}>{item.label}</span>
-                        </Link>
-                    ))
-                ) : (
-                    /* When Collapsed: Show Dots */
-                    navItems.map((item, idx) => (
-                        <div 
-                            key={idx} 
-                            className={`rounded-full transition-all duration-300 shadow-sm ${item.active ? 'w-2 h-2 bg-emerald-500 shadow-emerald-500/50' : 'w-1.5 h-1.5 bg-slate-400/40 dark:bg-slate-600'}`} 
-                        />
-                    ))
-                )}
+        
+        {mobileNavMode === 'dock' ? (
+            /* MODE 1: Standard Dock */
+            <div ref={dockRef} className={`lg:hidden fixed left-1/2 -translate-x-1/2 z-50 transition-all duration-500 ease-out ${isDockExpanded ? 'bottom-6 w-[92%] max-w-md' : 'bottom-4 w-auto'}`}>
+                <div 
+                    onClick={() => !isDockExpanded && setIsDockExpanded(true)}
+                    className={`
+                        bg-white/80 dark:bg-slate-900/80 backdrop-blur-2xl border border-white/20 shadow-2xl 
+                        flex items-center transition-all duration-500 overflow-hidden ring-1 ring-black/5 dark:ring-white/10
+                        ${isDockExpanded ? 'rounded-3xl px-4 py-4 h-auto gap-4 overflow-x-auto no-scrollbar justify-start' : 'rounded-full h-3 px-3 gap-2 cursor-pointer hover:scale-110 justify-center min-w-[100px]'}
+                    `}
+                >
+                    {/* When Expanded: Show Full Icons */}
+                    {isDockExpanded ? (
+                        <>
+                            {navItems.map((item, idx) => (
+                                <Link 
+                                    key={idx} 
+                                    to={item.to}
+                                    onClick={() => setIsDockExpanded(false)}
+                                    className="flex flex-col items-center gap-1.5 min-w-[4.5rem] group"
+                                >
+                                    <div className={`
+                                        w-14 h-14 rounded-2xl flex items-center justify-center transition-transform duration-300 group-hover:scale-110 group-active:scale-95 shadow-sm border border-black/5 dark:border-white/5
+                                        ${item.active 
+                                            ? 'bg-emerald-500 text-white shadow-emerald-500/30' 
+                                            : 'bg-slate-50 dark:bg-slate-800 text-slate-500 dark:text-slate-400'}
+                                    `}>
+                                        {item.icon}
+                                    </div>
+                                    <span className={`text-[10px] font-bold truncate w-full text-center transition-colors ${item.active ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-500 dark:text-slate-500'}`}>{item.label}</span>
+                                </Link>
+                            ))}
+                            {/* Switch to Floating Mode Button */}
+                            <button 
+                                onClick={(e) => { e.stopPropagation(); setIsDockExpanded(false); setMobileNavMode('bubble'); }}
+                                className="flex flex-col items-center gap-1.5 min-w-[4.5rem] group"
+                            >
+                                <div className="w-14 h-14 rounded-2xl flex items-center justify-center transition-transform duration-300 group-hover:scale-110 group-active:scale-95 shadow-sm border border-black/5 dark:border-white/5 bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300">
+                                    <LayoutTemplate size={20} />
+                                </div>
+                                <span className="text-[10px] font-bold truncate w-full text-center text-slate-500 dark:text-slate-500">Float</span>
+                            </button>
+                        </>
+                    ) : (
+                        /* When Collapsed: Show Dots */
+                        navItems.map((item, idx) => (
+                            <div 
+                                key={idx} 
+                                className={`rounded-full transition-all duration-300 shadow-sm ${item.active ? 'w-2 h-2 bg-emerald-500 shadow-emerald-500/50' : 'w-1.5 h-1.5 bg-slate-400/40 dark:bg-slate-600'}`} 
+                            />
+                        ))
+                    )}
+                </div>
             </div>
-        </div>
+        ) : (
+            /* MODE 2: Draggable Floating Bubble (AssistiveTouch style) */
+            <>
+                <div 
+                    ref={dragRef}
+                    className="lg:hidden fixed z-50 touch-none cursor-move transition-transform active:scale-95"
+                    style={{ left: bubblePos.x, top: bubblePos.y }}
+                    onTouchStart={handleBubbleTouchStart}
+                    onTouchMove={handleBubbleTouchMove}
+                    onTouchEnd={handleBubbleTouchEnd}
+                    onMouseDown={handleBubbleTouchStart}
+                    onMouseMove={handleBubbleTouchMove}
+                    onMouseUp={handleBubbleTouchEnd}
+                >
+                    <div className="w-14 h-14 rounded-full bg-slate-900/90 dark:bg-white/90 backdrop-blur-md shadow-2xl flex items-center justify-center border border-white/20 dark:border-black/10 text-white dark:text-slate-900">
+                        <GripHorizontal size={24} />
+                    </div>
+                </div>
+
+                {/* Circular Menu Overlay */}
+                {isBubbleOpen && (
+                    <div className="fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm flex items-center justify-center animate-fade-in" onClick={() => setIsBubbleOpen(false)}>
+                        <div className="relative w-80 h-80 rounded-full bg-slate-900/90 dark:bg-slate-800/90 backdrop-blur-xl border border-white/10 shadow-2xl flex flex-wrap items-center justify-center p-8 gap-4" onClick={e => e.stopPropagation()}>
+                            <button onClick={() => setIsBubbleOpen(false)} className="absolute top-4 right-4 text-white/50 hover:text-white p-2">
+                                <X size={24} />
+                            </button>
+                            
+                            {navItems.map((item, idx) => (
+                                <Link 
+                                    key={idx} 
+                                    to={item.to}
+                                    onClick={() => setIsBubbleOpen(false)}
+                                    className="flex flex-col items-center gap-1 w-20"
+                                >
+                                    <div className={`
+                                        w-12 h-12 rounded-full flex items-center justify-center transition-transform active:scale-95 shadow-lg
+                                        ${item.active 
+                                            ? 'bg-emerald-500 text-white shadow-emerald-500/30' 
+                                            : 'bg-white/10 text-white/80 hover:bg-white/20'}
+                                    `}>
+                                        {item.icon}
+                                    </div>
+                                    <span className="text-[10px] font-bold text-white/80 text-center truncate w-full">{item.label}</span>
+                                </Link>
+                            ))}
+
+                            {/* Switch Back to Dock Button */}
+                            <button 
+                                onClick={() => { setIsBubbleOpen(false); setMobileNavMode('dock'); }}
+                                className="flex flex-col items-center gap-1 w-20"
+                            >
+                                <div className="w-12 h-12 rounded-full flex items-center justify-center transition-transform active:scale-95 shadow-lg bg-white/10 text-white/80 hover:bg-white/20">
+                                    <Minimize2 size={20} />
+                                </div>
+                                <span className="text-[10px] font-bold text-white/80 text-center">Dock</span>
+                            </button>
+                        </div>
+                    </div>
+                )}
+            </>
+        )}
 
       </div>
     </div>

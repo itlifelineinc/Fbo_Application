@@ -114,7 +114,7 @@ const CourseList: React.FC<{ courses: Course[]; currentUser: Student }> = ({ cou
 const App: React.FC = () => {
   const [courses, setCourses] = useState<Course[]>(INITIAL_COURSES);
   const [students, setStudents] = useState<Student[]>(INITIAL_STUDENTS);
-  const [messages, setMessages] = useState<Message[]>(INITIAL_MESSAGES);
+  const [messages, setMessages] = useState<Message[]>(INITIAL_MESSAGES.map(m => ({...m, status: m.isRead ? 'READ' : 'DELIVERED'}))); // Initialize with status
   const [posts, setPosts] = useState<CommunityPost[]>(INITIAL_POSTS);
   const [cohorts, setCohorts] = useState<Cohort[]>(INITIAL_COHORTS);
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
@@ -130,6 +130,19 @@ const App: React.FC = () => {
       document.documentElement.classList.remove('dark');
     }
   }, [theme]);
+
+  // Simulation: Auto-Deliver "Sent" messages after delay
+  useEffect(() => {
+    const timer = setInterval(() => {
+        setMessages(prevMsgs => prevMsgs.map(m => {
+            if (m.status === 'SENT' && (Date.now() - m.timestamp > 1500)) {
+                return { ...m, status: 'DELIVERED' };
+            }
+            return m;
+        }));
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
 
   const toggleTheme = () => {
     setTheme(prev => prev === 'light' ? 'dark' : 'light');
@@ -272,7 +285,19 @@ const App: React.FC = () => {
   };
 
   const handleSendMessage = (newMessage: Message) => {
-    setMessages(prev => [...prev, newMessage]);
+    // New messages start as SENT
+    setMessages(prev => [...prev, { ...newMessage, status: 'SENT' }]);
+  };
+
+  const handleMarkAsRead = (senderHandle: string) => {
+      if (!currentUser) return;
+      setMessages(prev => prev.map(m => {
+          // If message is FOR me, and FROM the active chat, mark as read
+          if (m.recipientHandle === currentUser.handle && m.senderHandle === senderHandle && !m.isRead) {
+              return { ...m, isRead: true, status: 'READ' };
+          }
+          return m;
+      }));
   };
 
   const handleAddPost = (post: CommunityPost) => {
@@ -415,6 +440,7 @@ const App: React.FC = () => {
                     students={students} 
                     messages={messages} 
                     onSendMessage={handleSendMessage} 
+                    onMarkAsRead={handleMarkAsRead}
                 />
             </ProtectedRoute>
         } />

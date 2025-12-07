@@ -555,7 +555,7 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
                   >
                     <Bell size={20} />
                     {unreadCount > 0 && (
-                      <span className="absolute top-1 right-1 w-4 h-4 bg-red-500 text-white text-[10px] font-bold flex items-center justify-center rounded-full border-2 border-slate-900">
+                      <span className="absolute -top-1 -right-1 min-w-[1.25rem] h-5 px-1 bg-red-500 text-white text-[10px] font-bold flex items-center justify-center rounded-full border-2 border-slate-900 shadow-sm">
                         {unreadCount > 9 ? '9+' : unreadCount}
                       </span>
                     )}
@@ -712,7 +712,7 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
              >
                <Bell size={24} />
                {unreadCount > 0 && (
-                  <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-[10px] font-bold flex items-center justify-center rounded-full border border-white dark:border-slate-900">
+                  <span className="absolute -top-1 -right-1 min-w-[1.25rem] h-5 px-1 bg-red-500 text-white text-[10px] font-bold flex items-center justify-center rounded-full border border-white dark:border-slate-900 shadow-sm">
                     {unreadCount}
                   </span>
                )}

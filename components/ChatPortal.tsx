@@ -1,14 +1,42 @@
+
 import React, { useState, useEffect, useRef } from 'react';
-import { Student, Message, UserRole } from '../types';
+import { Student, Message, UserRole, MessageStatus } from '../types';
 
 interface ChatPortalProps {
   currentUser: Student;
   students: Student[];
   messages: Message[];
   onSendMessage: (message: Message) => void;
+  onMarkAsRead?: (senderHandle: string) => void;
 }
 
-const ChatPortal: React.FC<ChatPortalProps> = ({ currentUser, students, messages, onSendMessage }) => {
+// Helper Component for Checkmarks
+const MessageStatusIcon: React.FC<{ status: MessageStatus, isRead: boolean }> = ({ status, isRead }) => {
+    // Priority: isRead (Blue Double) > status='READ' (Blue Double) > status='DELIVERED' (Gray Double) > status='SENT' (Gray Single)
+    
+    if (isRead || status === 'READ') {
+        return (
+            <div className="flex -space-x-1">
+                <CheckIcon className="text-blue-500 w-3 h-3" />
+                <CheckIcon className="text-blue-500 w-3 h-3" />
+            </div>
+        );
+    }
+    
+    if (status === 'DELIVERED') {
+        return (
+            <div className="flex -space-x-1">
+                <CheckIcon className="text-slate-400 w-3 h-3" />
+                <CheckIcon className="text-slate-400 w-3 h-3" />
+            </div>
+        );
+    }
+
+    // Default 'SENT'
+    return <CheckIcon className="text-slate-400 w-3 h-3" />;
+};
+
+const ChatPortal: React.FC<ChatPortalProps> = ({ currentUser, students, messages, onSendMessage, onMarkAsRead }) => {
   // State
   const [activeChatHandle, setActiveChatHandle] = useState<string | null>(null);
   const [newMessage, setNewMessage] = useState('');
@@ -62,6 +90,17 @@ const ChatPortal: React.FC<ChatPortalProps> = ({ currentUser, students, messages
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [activeMessages, activeChatHandle]);
 
+  // Mark as Read when chat is open and messages change
+  useEffect(() => {
+      if (activeChatHandle && onMarkAsRead) {
+          // If we are looking at a chat, mark incoming messages as read
+          const hasUnread = activeMessages.some(m => m.senderHandle === activeChatHandle && !m.isRead);
+          if (hasUnread) {
+              onMarkAsRead(activeChatHandle);
+          }
+      }
+  }, [activeChatHandle, activeMessages, onMarkAsRead]);
+
   // Handlers
   const handleSend = () => {
     if (!newMessage.trim()) return;
@@ -76,6 +115,7 @@ const ChatPortal: React.FC<ChatPortalProps> = ({ currentUser, students, messages
                 text: `[BROADCAST] ${newMessage}`,
                 timestamp: Date.now(),
                 isRead: false,
+                status: 'SENT',
                 isSystem: true
             });
         });
@@ -90,7 +130,8 @@ const ChatPortal: React.FC<ChatPortalProps> = ({ currentUser, students, messages
             recipientHandle: activeChatHandle,
             text: newMessage,
             timestamp: Date.now(),
-            isRead: false
+            isRead: false,
+            status: 'SENT'
         });
     }
     setNewMessage('');
@@ -131,23 +172,30 @@ const ChatPortal: React.FC<ChatPortalProps> = ({ currentUser, students, messages
         </div>
         
         <div className="flex-1 overflow-y-auto">
-            {chatListItems.map(chat => (
-                <div 
-                    key={chat.handle}
-                    onClick={() => { setActiveChatHandle(chat.handle); setIsBroadcastMode(false); }}
-                    className={`p-4 border-b border-slate-100 cursor-pointer hover:bg-white transition-colors flex items-center gap-3 dark:border-slate-800 dark:hover:bg-slate-800 ${activeChatHandle === chat.handle ? 'bg-white border-l-4 border-l-emerald-500 dark:bg-slate-800' : ''}`}
-                >
-                    <div className="w-10 h-10 rounded-full bg-emerald-200 text-emerald-800 flex items-center justify-center font-bold text-sm overflow-hidden dark:bg-emerald-900 dark:text-emerald-300">
-                        {chat.avatar.length > 2 ? <img src={chat.avatar} className="w-full h-full object-cover" alt={chat.name}/> : chat.avatar}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                        <div className="flex justify-between items-baseline">
-                            <h3 className="font-bold text-slate-800 truncate text-sm dark:text-slate-200">{chat.name}</h3>
+            {chatListItems.map(chat => {
+                // Determine if there are unread messages for this chat to bold it
+                // Logic: messages where recipient is ME and sender is CHAT_HANDLE and isRead is false
+                const hasUnread = messages.some(m => m.recipientHandle === currentUser.handle && m.senderHandle === chat.handle && !m.isRead);
+
+                return (
+                    <div 
+                        key={chat.handle}
+                        onClick={() => { setActiveChatHandle(chat.handle); setIsBroadcastMode(false); }}
+                        className={`p-4 border-b border-slate-100 cursor-pointer hover:bg-white transition-colors flex items-center gap-3 dark:border-slate-800 dark:hover:bg-slate-800 ${activeChatHandle === chat.handle ? 'bg-white border-l-4 border-l-emerald-500 dark:bg-slate-800' : ''}`}
+                    >
+                        <div className="w-10 h-10 rounded-full bg-emerald-200 text-emerald-800 flex items-center justify-center font-bold text-sm overflow-hidden dark:bg-emerald-900 dark:text-emerald-300">
+                            {chat.avatar.length > 2 ? <img src={chat.avatar} className="w-full h-full object-cover" alt={chat.name}/> : chat.avatar}
                         </div>
-                        <p className="text-xs text-slate-500 truncate dark:text-slate-400">{chat.lastMsg}</p>
+                        <div className="flex-1 min-w-0">
+                            <div className="flex justify-between items-baseline">
+                                <h3 className={`truncate text-sm dark:text-slate-200 ${hasUnread ? 'font-bold text-slate-900' : 'font-semibold text-slate-800'}`}>{chat.name}</h3>
+                                {hasUnread && <div className="w-2 h-2 bg-emerald-500 rounded-full"></div>}
+                            </div>
+                            <p className={`text-xs truncate dark:text-slate-400 ${hasUnread ? 'font-bold text-slate-800' : 'text-slate-500'}`}>{chat.lastMsg}</p>
+                        </div>
                     </div>
-                </div>
-            ))}
+                );
+            })}
         </div>
       </div>
 
@@ -235,9 +283,13 @@ const ChatPortal: React.FC<ChatPortalProps> = ({ currentUser, students, messages
                                         <p className="text-[10px] font-bold mb-1 opacity-70">{msg.senderHandle}</p>
                                     )}
                                     <p className="text-sm whitespace-pre-wrap leading-relaxed">{msg.text}</p>
-                                    <p className={`text-[10px] mt-1 text-right ${isMe ? 'text-emerald-200' : 'text-slate-400 dark:text-slate-500'}`}>
-                                        {new Date(msg.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
-                                    </p>
+                                    <div className={`flex items-center justify-end gap-1 mt-1`}>
+                                        <span className={`text-[10px] ${isMe ? 'text-emerald-200' : 'text-slate-400 dark:text-slate-500'}`}>
+                                            {new Date(msg.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                                        </span>
+                                        {/* Show checkmarks only for my messages */}
+                                        {isMe && <MessageStatusIcon status={msg.status || 'SENT'} isRead={msg.isRead} />}
+                                    </div>
                                 </div>
                             </div>
                         );
@@ -289,6 +341,12 @@ const PaperAirplaneIcon = () => (
 const ChevronLeftIcon = () => (
     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
         <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
+    </svg>
+);
+
+const CheckIcon = ({ className }: { className?: string }) => (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className={className || "w-3 h-3"}>
+        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
     </svg>
 );
 

@@ -149,6 +149,10 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
   const navbarRef = useRef<HTMLElement>(null);
   const navTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  // Refs for Click Outside Logic
+  const profileMenuRef = useRef<HTMLDivElement>(null);
+  const profileBtnRef = useRef<HTMLButtonElement>(null);
+
   const isActive = (path: string) => location.pathname === path;
   const isDashboard = location.pathname === '/dashboard';
 
@@ -164,6 +168,24 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
       setIsSalesMenuOpen(true);
     }
   }, [location.pathname]);
+
+  // Click outside handler for Profile Menu
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        isProfileMenuOpen && 
+        profileMenuRef.current && 
+        !profileMenuRef.current.contains(event.target as Node) &&
+        profileBtnRef.current &&
+        !profileBtnRef.current.contains(event.target as Node)
+      ) {
+        setIsProfileMenuOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [isProfileMenuOpen]);
 
   // Navbar auto-hide logic: Only apply for builder pages now. Standard pages get static header.
   const shouldHeaderBeStatic = isDashboard || !isBuilder;
@@ -628,6 +650,7 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
 
                {/* Updated Pill-Shaped Profile Button with Dark Styles */}
                <button 
+                 ref={profileBtnRef}
                  onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)} 
                  className="group flex items-center gap-3 focus:outline-none pl-1 pr-4 py-1 rounded-full transition-all border border-white/10 bg-white/5 hover:bg-white/10 hover:shadow-sm"
                >
@@ -649,26 +672,35 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
 
                {/* Profile Dropdown */}
                {isProfileMenuOpen && (
-                  <>
-                    <div className="fixed inset-0 z-10" onClick={() => setIsProfileMenuOpen(false)}></div>
-                    <div className="absolute right-0 top-12 mt-3 w-56 bg-white/95 backdrop-blur-xl rounded-2xl shadow-xl border border-slate-100 py-2 z-20 animate-fade-in dark:bg-slate-900/95 dark:border-slate-700">
+                  <div 
+                    ref={profileMenuRef}
+                    className="absolute right-0 top-12 mt-3 w-60 bg-white/95 backdrop-blur-xl rounded-2xl shadow-xl border border-slate-100 py-2 z-20 animate-fade-in dark:bg-slate-900/95 dark:border-slate-700"
+                  >
                         <div className="px-4 py-3 border-b border-slate-100 dark:border-slate-700">
                             <p className="text-sm font-bold text-slate-800 dark:text-white">Signed in as</p>
                             <p className="text-xs text-slate-500 truncate dark:text-slate-400 mt-0.5">{currentUser.email}</p>
                         </div>
                         
                         <div className="py-2">
-                            <button 
-                                onClick={() => { onToggleTheme(); setIsProfileMenuOpen(false); }}
-                                className="w-full text-left px-4 py-2 text-sm text-slate-600 hover:bg-slate-50 flex items-center gap-2 transition-colors dark:text-slate-300 dark:hover:bg-slate-800"
+                            <div 
+                                onClick={(e) => { 
+                                    e.stopPropagation(); 
+                                    onToggleTheme();
+                                }}
+                                className="w-full text-left px-4 py-2.5 text-sm text-slate-600 hover:bg-slate-50 flex items-center justify-between cursor-pointer transition-colors group dark:text-slate-300 dark:hover:bg-slate-800"
                             >
-                                {theme === 'light' ? <Moon size={16} /> : <Sun size={16} />}
-                                <span>{theme === 'light' ? 'Dark Mode' : 'Light Mode'}</span>
-                            </button>
+                                <div className="flex items-center gap-3">
+                                    {theme === 'light' ? <Sun size={16} /> : <Moon size={16} />}
+                                    <span>Dark Mode</span>
+                                </div>
+                                <div className={`w-9 h-5 rounded-full p-0.5 transition-colors duration-300 ${theme === 'dark' ? 'bg-emerald-500' : 'bg-slate-300 group-hover:bg-slate-400'}`}>
+                                    <div className={`w-4 h-4 bg-white rounded-full shadow-sm transform transition-transform duration-300 ${theme === 'dark' ? 'translate-x-4' : 'translate-x-0'}`} />
+                                </div>
+                            </div>
                             <Link 
                                 to={`/students/${currentUser.id}`}
                                 onClick={() => setIsProfileMenuOpen(false)}
-                                className="w-full text-left px-4 py-2 text-sm text-slate-600 hover:bg-slate-50 flex items-center gap-2 transition-colors dark:text-slate-300 dark:hover:bg-slate-800"
+                                className="w-full text-left px-4 py-2.5 text-sm text-slate-600 hover:bg-slate-50 flex items-center gap-3 transition-colors dark:text-slate-300 dark:hover:bg-slate-800"
                             >
                                 <Settings size={16} />
                                 <span>Settings</span>
@@ -685,7 +717,6 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
                             </button>
                         </div>
                     </div>
-                  </>
                )}
             </div>
         </header>

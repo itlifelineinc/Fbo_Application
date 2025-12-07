@@ -157,12 +157,15 @@ const ChatPortal: React.FC<ChatPortalProps> = ({ currentUser, students, messages
   };
 
   return (
-    <div className="h-[calc(100vh-8rem)] flex flex-col md:flex-row bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden animate-fade-in dark:bg-[#111b21] dark:border-slate-800">
+    <div 
+        className="h-[calc(100vh-8rem)] flex flex-col md:flex-row bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden animate-fade-in dark:bg-[#111b21] dark:border-slate-800"
+        style={{ fontFamily: 'Segoe UI, "Helvetica Neue", Helvetica, Arial, sans-serif' }}
+    >
       
       {/* Sidebar List */}
       <div className={`w-full md:w-96 bg-white border-r border-slate-200 flex flex-col ${activeChatHandle && !isBroadcastMode ? 'hidden md:flex' : 'flex'} dark:bg-[#111b21] dark:border-slate-800`}>
         <div className="p-4 bg-[#f0f2f5] border-b border-slate-200 dark:bg-[#202c33] dark:border-[#202c33] flex justify-between items-center h-16">
-            <h2 className="font-bold text-lg text-slate-700 font-heading dark:text-[#e9edef]">Chats</h2>
+            <h2 className="font-bold text-lg text-slate-700 dark:text-[#e9edef]">Chats</h2>
             {currentUser.role === UserRole.SPONSOR && (
                 <button 
                     onClick={() => { setIsBroadcastMode(true); setActiveChatHandle(null); }}
@@ -223,7 +226,7 @@ const ChatPortal: React.FC<ChatPortalProps> = ({ currentUser, students, messages
                 <div className="flex-1 flex flex-col p-4 bg-[#f0f2f5] dark:bg-[#0b141a]">
                     <div className="flex items-center gap-2 mb-6">
                         <button onClick={() => setIsBroadcastMode(false)} className="md:hidden text-slate-500 dark:text-[#aebac1]"><ChevronLeftIcon /></button>
-                        <h2 className="text-xl font-bold text-slate-800 font-heading dark:text-[#e9edef]">New Broadcast</h2>
+                        <h2 className="text-xl font-bold text-slate-800 dark:text-[#e9edef]">New Broadcast</h2>
                     </div>
                     
                     <div className="bg-white p-4 rounded-xl shadow-sm mb-4 flex-1 overflow-y-auto dark:bg-[#202c33] dark:shadow-none">
@@ -320,7 +323,7 @@ const ChatPortal: React.FC<ChatPortalProps> = ({ currentUser, students, messages
                                                 </span>
 
                                                 {/* Absolute Positioned Timestamp & Status */}
-                                                <span className={`absolute bottom-[-3px] right-0 flex items-center gap-1 text-[11px] leading-none whitespace-nowrap ${isMe ? 'text-[#54656f] dark:text-[#aebac1]' : 'text-[#54656f] dark:text-[#aebac1]'}`}>
+                                                <span className={`absolute bottom-[-1px] right-0 flex items-center gap-1 text-[11px] leading-none whitespace-nowrap ${isMe ? 'text-[#54656f] dark:text-[#aebac1]' : 'text-[#54656f] dark:text-[#aebac1]'}`}>
                                                     <span>{new Date(msg.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', hour12: true}).toLowerCase()}</span>
                                                     {isMe && <MessageStatusIcon status={msg.status || 'SENT'} isRead={msg.isRead} />}
                                                 </span>

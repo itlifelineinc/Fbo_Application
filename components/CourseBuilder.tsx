@@ -2,7 +2,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Course, Module, Chapter, CourseTrack, CourseLevel, CourseStatus, ContentBlock, BlockType, CourseTestimonial, Student } from '../types';
-import { Eye, X, PlayCircle, FileText, HelpCircle, ChevronDown, ChevronRight, CheckCircle, Menu, BookOpen, Clock, Plus, Trash2, ArrowUp, ArrowDown, LayoutTemplate, Type, Image as ImageIcon, List, Quote, AlertCircle, ArrowLeft, ShoppingBag, Users, Sparkles, Save, Search, Check, Wand2, Loader2, MessageSquare, Settings, Rocket, BarChart, Edit, Maximize2, MoreHorizontal } from 'lucide-react';
+import { Eye, X, PlayCircle, FileText, HelpCircle, ChevronDown, ChevronRight, CheckCircle, Menu, BookOpen, Clock, Plus, Trash2, ArrowUp, ArrowDown, LayoutTemplate, Type, Image as ImageIcon, List, Quote, AlertCircle, ArrowLeft, ShoppingBag, Users, Sparkles, Save, Search, Check, Wand2, Loader2, MessageSquare, Settings, Rocket, BarChart, Edit, Maximize2, MoreHorizontal, Eraser } from 'lucide-react';
 import { generateModuleContent } from '../services/geminiService';
 
 interface CourseBuilderProps {
@@ -440,6 +440,37 @@ const CourseBuilder: React.FC<CourseBuilderProps> = ({ currentUserHandle, course
     } else {
         navigate(-1);
     }
+  };
+
+  // --- CLEAR FIELDS HANDLER ---
+  const handleClearCurrentStep = () => {
+    if (!window.confirm("Are you sure you want to clear all fields in this section? This cannot be undone.")) return;
+
+    if (step === 1) {
+        setCourse(prev => ({
+            ...prev,
+            title: '',
+            subtitle: '',
+            track: CourseTrack.BASICS, // Reset to default enum
+            level: CourseLevel.BEGINNER,
+            thumbnailUrl: ''
+        }));
+    } else if (step === 2) {
+        setCourse(prev => ({ ...prev, modules: [] }));
+    } else if (step === 3) {
+        setCourse(prev => ({
+            ...prev,
+            description: '',
+            learningOutcomes: [],
+            targetAudience: [],
+            testimonials: [],
+            settings: getEmptyCourse(currentUserHandle).settings // Reset settings to default
+        }));
+        setNewTestimonial({ id: '', name: '', role: '', quote: '' });
+        setTempOutcome('');
+        setTempAudience('');
+    }
+    // Step 4 and 5 ignored as per request
   };
 
   // --- RENDERERS ---
@@ -959,16 +990,22 @@ const CourseBuilder: React.FC<CourseBuilderProps> = ({ currentUserHandle, course
             </div>
          </div>
          <div className="flex gap-3">
-            {/* Hide Preview on Analytics step */}
+            {/* Clear Button - Steps 1, 2, 3 */}
+            {[1, 2, 3].includes(step) && (
+                <button 
+                    onClick={handleClearCurrentStep} 
+                    className="flex items-center gap-2 bg-white text-slate-500 px-3 py-2 md:px-4 md:py-3 rounded-xl text-xs md:text-sm font-bold border border-slate-200 hover:bg-red-50 hover:text-red-600 hover:border-red-200 transition-all shadow-sm dark:bg-slate-800 dark:border-slate-700 dark:text-slate-400 dark:hover:text-red-400"
+                    title="Clear Fields"
+                >
+                    <Eraser size={18} /> 
+                    <span className="hidden md:inline">Clear</span>
+                </button>
+            )}
+
+            {/* Hide Preview on Analytics step (Step 5) */}
             {step !== 5 && (
                 <button onClick={() => setIsPreviewMode(true)} className="flex items-center gap-2 bg-white text-slate-700 px-3 py-2 md:px-6 md:py-3 rounded-xl text-xs md:text-sm font-bold border border-slate-200 hover:bg-slate-50 hover:border-slate-300 transition-all shadow-sm dark:bg-slate-800 dark:border-slate-700 dark:text-white dark:hover:bg-slate-700">
                     <Eye size={18} /> <span className="hidden sm:inline">Preview</span>
-                </button>
-            )}
-            {/* Show Publish/Update on Step 4 (Launch) instead of 5 */}
-            {step === 4 && (
-                <button onClick={handleSubmit} className="flex items-center gap-2 bg-emerald-600 text-white px-4 py-2 md:px-8 md:py-3 rounded-xl text-xs md:text-sm font-bold hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-200 dark:shadow-none">
-                    <Sparkles size={18} /> {courseId === 'new' ? 'Publish' : 'Update'}
                 </button>
             )}
          </div>

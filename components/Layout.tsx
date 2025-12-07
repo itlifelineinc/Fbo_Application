@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Student, UserRole, Course, AppNotification } from '../types';
@@ -397,10 +398,11 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
   return (
     <div className="flex h-screen bg-slate-50 dark:bg-slate-950 overflow-hidden transition-colors duration-300">
       <style>{`
-        .no-scrollbar::-webkit-scrollbar {
+        /* Global Scrollbar Hiding for Mobile-First Feel */
+        ::-webkit-scrollbar {
           display: none;
         }
-        .no-scrollbar {
+        * {
           -ms-overflow-style: none;
           scrollbar-width: none;
         }
@@ -606,7 +608,7 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
                                     </p>
                                   </div>
                                   {!notification.isRead && (
-                                    <div className="w-2 h-2 rounded-full bg-emerald-50 mt-1.5 flex-shrink-0"></div>
+                                    <div className="w-2 h-2 rounded-full bg-emerald-500 mt-1.5 flex-shrink-0"></div>
                                   )}
                                 </div>
                               </Link>
@@ -787,7 +789,7 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
         ) : (
           // Standard Layout with Padding
           // Added extra padding bottom for mobile to account for the Dock
-          <main className="flex-1 overflow-auto scroll-smooth dark:bg-slate-950 pb-32 lg:pb-0">
+          <main className="flex-1 overflow-y-auto scroll-smooth dark:bg-slate-950 pb-32 lg:pb-0">
             <div className="max-w-7xl mx-auto p-4 md:p-8">
               {children}
             </div>

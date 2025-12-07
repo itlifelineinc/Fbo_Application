@@ -292,7 +292,7 @@ const ChatPortal: React.FC<ChatPortalProps> = ({ currentUser, students, messages
                                 <div key={msg.id} className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
                                     <div 
                                         className={`
-                                            relative px-3 py-1.5 rounded-lg shadow-sm max-w-[85%] md:max-w-[65%] text-sm leading-relaxed
+                                            relative px-2 py-1 shadow-sm max-w-[85%] md:max-w-[65%] text-sm leading-relaxed rounded-lg
                                             ${isMe 
                                                 ? 'bg-[#d9fdd3] text-[#111b21] rounded-tr-none dark:bg-[#005c4b] dark:text-[#e9edef]' 
                                                 : 'bg-white text-[#111b21] rounded-tl-none dark:bg-[#202c33] dark:text-[#e9edef]'
@@ -301,22 +301,23 @@ const ChatPortal: React.FC<ChatPortalProps> = ({ currentUser, students, messages
                                     >
                                         {/* Group Sender Name */}
                                         {activeChatHandle.startsWith('GROUP_') && !isMe && (
-                                            <p className={`text-[10px] font-bold mb-0.5 ${['text-orange-500', 'text-pink-500', 'text-purple-500', 'text-blue-500'][msg.senderHandle.length % 4]}`}>
+                                            <p className={`text-[10px] font-bold mb-0.5 px-1 ${['text-orange-500', 'text-pink-500', 'text-purple-500', 'text-blue-500'][msg.senderHandle.length % 4]}`}>
                                                 {msg.senderHandle}
                                             </p>
                                         )}
                                         
-                                        {/* Message Content with spacer for time */}
-                                        <div className="mr-1 inline-block align-top break-words" style={{ minWidth: '40px' }}>
-                                            {msg.text}
-                                            {/* Invisible spacer to prevent text overlap with absolute time */}
-                                            <span className="inline-block w-14 h-3"></span> 
-                                        </div>
+                                        <div className="relative pl-1">
+                                            <span className="break-words">
+                                                {msg.text}
+                                                {/* Spacer: Forces a line break if text is near the end, providing space for absolute timestamp */}
+                                                <span className="inline-block w-16 h-0">&nbsp;</span> 
+                                            </span>
 
-                                        {/* Timestamp & Status */}
-                                        <div className={`absolute bottom-1 right-2 flex items-center gap-1 text-[10px] ${isMe ? 'text-[#54656f] dark:text-[#8696a0]' : 'text-[#54656f] dark:text-[#8696a0]'}`}>
-                                            <span>{new Date(msg.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
-                                            {isMe && <MessageStatusIcon status={msg.status || 'SENT'} isRead={msg.isRead} />}
+                                            {/* Timestamp & Status */}
+                                            <span className={`absolute bottom-0 right-0 flex items-center gap-1 text-[10px] leading-none mb-0.5 ${isMe ? 'text-[#54656f] dark:text-[#aebac1]' : 'text-[#54656f] dark:text-[#aebac1]'}`}>
+                                                <span>{new Date(msg.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+                                                {isMe && <MessageStatusIcon status={msg.status || 'SENT'} isRead={msg.isRead} />}
+                                            </span>
                                         </div>
                                     </div>
                                 </div>

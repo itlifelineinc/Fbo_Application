@@ -348,15 +348,47 @@ const Dashboard: React.FC<DashboardProps> = ({ students, currentUser, courses, o
 
   const aiSuggestions = getAISuggestions();
 
+  // --- Customized Greeting & Subtitle Logic ---
+  const firstName = currentUser.name.split(' ')[0];
+  
+  const getWelcomeSubtitle = () => {
+      if (isAdmin) return "System overview and management dashboard active.";
+      if (isSponsor) return "Your team is growing. Let's keep the momentum going.";
+      if (rankProgress.currentRankId === 'NOVUS') return "Ready to start your journey to financial freedom today?";
+      if (rankProgress.currentRankId === 'AS_SUP' || rankProgress.currentRankId === 'SUP') return "Great progress! Keep pushing towards your next rank goal.";
+      return "Here is your daily business snapshot and progress.";
+  };
+
+  const welcomeSubtitle = getWelcomeSubtitle();
+
   return (
     <div className="space-y-8 animate-fade-in pb-12">
+      <style>{`
+        @keyframes wave {
+            0% { transform: rotate(0.0deg) }
+            10% { transform: rotate(14.0deg) }
+            20% { transform: rotate(-8.0deg) }
+            30% { transform: rotate(14.0deg) }
+            40% { transform: rotate(-4.0deg) }
+            50% { transform: rotate(10.0deg) }
+            60% { transform: rotate(0.0deg) }
+            100% { transform: rotate(0.0deg) }
+        }
+        .animate-wave {
+            animation-name: wave;
+            animation-duration: 2.5s;
+            animation-iteration-count: infinite;
+            transform-origin: 70% 70%;
+            display: inline-block;
+        }
+      `}</style>
       <header className="flex justify-between items-end">
         <div>
-            <h1 className="text-2xl md:text-3xl font-bold text-emerald-950 font-heading dark:text-emerald-400">
-                Dashboard
+            <h1 className="text-2xl md:text-3xl font-bold text-emerald-950 font-heading dark:text-emerald-400 flex items-center gap-2">
+                Hi {firstName} <span className="animate-wave text-2xl md:text-3xl">👋</span>
             </h1>
-            <p className="text-emerald-700 mt-2 text-sm md:text-base dark:text-emerald-300">
-                Here's your daily business snapshot.
+            <p className="text-emerald-700 mt-2 text-sm md:text-base dark:text-emerald-300 max-w-md">
+                {welcomeSubtitle}
             </p>
         </div>
         <div className="text-right hidden md:block">

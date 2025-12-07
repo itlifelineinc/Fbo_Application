@@ -22,18 +22,21 @@ const TickIcon = ({ className }: { className?: string }) => (
 const MessageStatusIcon: React.FC<{ status: MessageStatus, isRead: boolean }> = ({ status, isRead }) => {
     const colorClass = (isRead || status === 'READ') ? "text-[#53bdeb]" : "text-[#8696a0] dark:text-[#8696a0]";
 
-    // Double Tick (Read or Delivered) - Side by Side with negative margin to reduce gap
-    if (isRead || status === 'READ' || status === 'DELIVERED') {
-        return (
-            <div className="flex items-center">
+    // Use a fixed width container (w-[22px]) aligned to the end.
+    // This ensures the container takes up the space of a double tick even if only one is shown,
+    // preventing the timestamp (to the left) from jumping when status changes.
+    return (
+        <div className="flex items-center justify-end w-[22px]">
+            {(isRead || status === 'READ' || status === 'DELIVERED') ? (
+                <div className="flex items-center">
+                    <TickIcon className={colorClass} />
+                    <TickIcon className={`${colorClass} -ml-[1.5px]`} />
+                </div>
+            ) : (
                 <TickIcon className={colorClass} />
-                <TickIcon className={`${colorClass} -ml-[3px]`} />
-            </div>
-        );
-    }
-
-    // Single Tick (Sent)
-    return <TickIcon className={colorClass} />;
+            )}
+        </div>
+    );
 };
 
 const ChatPortal: React.FC<ChatPortalProps> = ({ currentUser, students, messages, onSendMessage, onMarkAsRead }) => {
@@ -311,9 +314,9 @@ const ChatPortal: React.FC<ChatPortalProps> = ({ currentUser, students, messages
                                                 <span className="break-words whitespace-pre-wrap">
                                                     {msg.text}
                                                     {/* Float Spacer: Reserves width at the end of the text line for timestamp. 
-                                                        Width set to 72px to accommodate time + wider double tick area. 
+                                                        Width set to 76px to accommodate time + wider fixed icon container. 
                                                         If text ends near the right edge, this forces a wrap. */}
-                                                    <span className="inline-block w-[72px] h-[15px] align-bottom select-none opacity-0"></span>
+                                                    <span className="inline-block w-[76px] h-[15px] align-bottom select-none opacity-0"></span>
                                                 </span>
 
                                                 {/* Absolute Positioned Timestamp & Status */}

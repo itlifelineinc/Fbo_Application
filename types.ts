@@ -196,6 +196,18 @@ export interface CommunityComment {
     timestamp: number;
 }
 
+// App Notification Type
+export interface AppNotification {
+  id: string;
+  title: string;
+  subtitle: string;
+  timestamp: number;
+  isRead: boolean;
+  type: 'MESSAGE' | 'ALERT' | 'SYSTEM';
+  link: string;
+  avatarUrl?: string;
+}
+
 // Chat & Community types kept for compatibility
 export interface Message { id: string; text: string; senderHandle: string; recipientHandle: string; timestamp: number; isRead: boolean; isSystem?: boolean; }
 export interface CommunityPost { id: string; authorHandle: string; authorName: string; authorRole: UserRole; authorAvatar?: string; content: string; type: string; tags: string[]; likes: number; likedBy: string[]; comments: CommunityComment[]; cohortId?: string; timestamp: number; }

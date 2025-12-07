@@ -1,8 +1,8 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Student, UserRole, Course } from '../types';
-import { LogOut, Settings, Moon, Sun, ChevronDown, Award } from 'lucide-react';
+import { Student, UserRole, Course, AppNotification } from '../types';
+import { LogOut, Settings, Moon, Sun, ChevronDown, Award, Bell } from 'lucide-react';
 import { RANKS } from '../constants';
 import { Logo } from './Logo';
 
@@ -13,6 +13,7 @@ interface LayoutProps {
   theme: 'light' | 'dark';
   onToggleTheme: () => void;
   courses: Course[];
+  notifications: AppNotification[];
 }
 
 // Icons
@@ -136,11 +137,12 @@ function ArrowRightOnRectangleIcon() {
   );
 }
 
-const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme, onToggleTheme, courses }) => {
+const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme, onToggleTheme, courses, notifications }) => {
   const location = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isSalesMenuOpen, setIsSalesMenuOpen] = useState(false);
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
+  const [isNotificationMenuOpen, setIsNotificationMenuOpen] = useState(false);
   
   // Navbar Auto-hide State
   const [isNavbarOpen, setIsNavbarOpen] = useState(false);
@@ -329,6 +331,8 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
         </div>
     );
   };
+
+  const unreadCount = notifications.filter(n => !n.isRead).length;
 
   return (
     <div className="flex h-screen bg-slate-50 dark:bg-slate-950 overflow-hidden transition-colors duration-300">
@@ -542,7 +546,86 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
                )}
             </div>
             
-            <div className="relative">
+            <div className="relative flex items-center gap-4">
+               {/* Notification Bell */}
+               <div className="relative">
+                  <button 
+                    onClick={() => setIsNotificationMenuOpen(!isNotificationMenuOpen)}
+                    className="p-2 rounded-full hover:bg-white/10 transition-colors text-slate-300 hover:text-white focus:outline-none"
+                  >
+                    <Bell size={20} />
+                    {unreadCount > 0 && (
+                      <span className="absolute top-1 right-1 w-4 h-4 bg-red-500 text-white text-[10px] font-bold flex items-center justify-center rounded-full border-2 border-slate-900">
+                        {unreadCount > 9 ? '9+' : unreadCount}
+                      </span>
+                    )}
+                  </button>
+
+                  {/* Notification Dropdown */}
+                  {isNotificationMenuOpen && (
+                    <>
+                      <div className="fixed inset-0 z-10" onClick={() => setIsNotificationMenuOpen(false)}></div>
+                      <div className="absolute right-0 mt-3 w-80 bg-white dark:bg-slate-900 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-700 py-2 z-20 animate-fade-in overflow-hidden">
+                        <div className="px-4 py-3 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center">
+                          <h3 className="font-bold text-sm text-slate-800 dark:text-white">Notifications</h3>
+                          {unreadCount > 0 && (
+                            <span className="text-xs text-emerald-600 dark:text-emerald-400 font-medium">
+                              {unreadCount} new
+                            </span>
+                          )}
+                        </div>
+                        <div className="max-h-80 overflow-y-auto">
+                          {notifications.length > 0 ? (
+                            notifications.map((notification) => (
+                              <Link 
+                                key={notification.id}
+                                to={notification.link}
+                                onClick={() => setIsNotificationMenuOpen(false)}
+                                className={`block px-4 py-3 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors border-b border-slate-50 dark:border-slate-800/50 ${!notification.isRead ? 'bg-emerald-50/30 dark:bg-emerald-900/10' : ''}`}
+                              >
+                                <div className="flex gap-3 items-start">
+                                  <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-700 flex items-center justify-center overflow-hidden flex-shrink-0">
+                                    {notification.avatarUrl ? (
+                                      <img src={notification.avatarUrl} alt="" className="w-full h-full object-cover" />
+                                    ) : (
+                                      <span className="font-bold text-slate-500 dark:text-slate-300 text-xs">
+                                        {notification.title.charAt(0)}
+                                      </span>
+                                    )}
+                                  </div>
+                                  <div className="flex-1 min-w-0">
+                                    <p className="text-sm font-semibold text-slate-800 dark:text-slate-200 truncate">
+                                      {notification.title}
+                                    </p>
+                                    <p className="text-xs text-slate-500 dark:text-slate-400 truncate">
+                                      {notification.subtitle}
+                                    </p>
+                                    <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-1">
+                                      {new Date(notification.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                                    </p>
+                                  </div>
+                                  {!notification.isRead && (
+                                    <div className="w-2 h-2 rounded-full bg-emerald-500 mt-1.5 flex-shrink-0"></div>
+                                  )}
+                                </div>
+                              </Link>
+                            ))
+                          ) : (
+                            <div className="p-8 text-center text-slate-400 text-sm">
+                              No notifications
+                            </div>
+                          )}
+                        </div>
+                        <div className="p-2 border-t border-slate-100 dark:border-slate-800 text-center">
+                          <Link to="/chat" onClick={() => setIsNotificationMenuOpen(false)} className="text-xs font-bold text-emerald-600 hover:text-emerald-700 dark:text-emerald-400">
+                            View All Messages
+                          </Link>
+                        </div>
+                      </div>
+                    </>
+                  )}
+               </div>
+
                {/* Updated Pill-Shaped Profile Button with Dark Styles */}
                <button 
                  onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)} 
@@ -568,7 +651,7 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
                {isProfileMenuOpen && (
                   <>
                     <div className="fixed inset-0 z-10" onClick={() => setIsProfileMenuOpen(false)}></div>
-                    <div className="absolute right-0 mt-3 w-56 bg-white/95 backdrop-blur-xl rounded-2xl shadow-xl border border-slate-100 py-2 z-20 animate-fade-in dark:bg-slate-900/95 dark:border-slate-700">
+                    <div className="absolute right-0 top-12 mt-3 w-56 bg-white/95 backdrop-blur-xl rounded-2xl shadow-xl border border-slate-100 py-2 z-20 animate-fade-in dark:bg-slate-900/95 dark:border-slate-700">
                         <div className="px-4 py-3 border-b border-slate-100 dark:border-slate-700">
                             <p className="text-sm font-bold text-slate-800 dark:text-white">Signed in as</p>
                             <p className="text-xs text-slate-500 truncate dark:text-slate-400 mt-0.5">{currentUser.email}</p>
@@ -621,10 +704,73 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
         {/* Mobile Header */}
         <header className="lg:hidden bg-white border-b border-slate-200 p-4 flex justify-between items-center z-10 shadow-sm dark:bg-slate-900 dark:border-slate-800 shrink-0">
            <Logo className="w-8 h-8" textClassName="text-xl font-bold text-emerald-900 dark:text-emerald-400" />
-           <button onClick={() => setIsMobileMenuOpen(true)} className="text-slate-600 p-2 rounded-lg hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800">
-             <Bars3Icon />
-           </button>
+           <div className="flex items-center gap-4">
+             {/* Mobile Bell */}
+             <button 
+                onClick={() => { setIsNotificationMenuOpen(!isNotificationMenuOpen); setIsMobileMenuOpen(false); }}
+                className="relative text-slate-600 dark:text-slate-300"
+             >
+               <Bell size={24} />
+               {unreadCount > 0 && (
+                  <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-[10px] font-bold flex items-center justify-center rounded-full border border-white dark:border-slate-900">
+                    {unreadCount}
+                  </span>
+               )}
+             </button>
+             <button onClick={() => setIsMobileMenuOpen(true)} className="text-slate-600 p-2 rounded-lg hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800">
+               <Bars3Icon />
+             </button>
+           </div>
         </header>
+        
+        {/* Mobile Notification Dropdown (Full Screen Overlay style if needed, or simple dropdown) */}
+        {isNotificationMenuOpen && (
+            <div className="lg:hidden fixed inset-0 z-50 bg-black/50" onClick={() => setIsNotificationMenuOpen(false)}>
+                <div className="absolute top-16 right-4 left-4 bg-white dark:bg-slate-900 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-700 max-h-[60vh] overflow-hidden flex flex-col" onClick={e => e.stopPropagation()}>
+                    <div className="px-4 py-3 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-white dark:bg-slate-900">
+                        <h3 className="font-bold text-slate-800 dark:text-white">Notifications</h3>
+                        <button onClick={() => setIsNotificationMenuOpen(false)}><XMarkIcon /></button>
+                    </div>
+                    <div className="overflow-y-auto flex-1">
+                        {notifications.length > 0 ? (
+                            notifications.map((notification) => (
+                              <Link 
+                                key={notification.id}
+                                to={notification.link}
+                                onClick={() => setIsNotificationMenuOpen(false)}
+                                className={`block px-4 py-3 border-b border-slate-50 dark:border-slate-800/50 ${!notification.isRead ? 'bg-emerald-50/30 dark:bg-emerald-900/10' : ''}`}
+                              >
+                                <div className="flex gap-3 items-start">
+                                  <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-700 flex items-center justify-center overflow-hidden flex-shrink-0">
+                                    {notification.avatarUrl ? (
+                                      <img src={notification.avatarUrl} alt="" className="w-full h-full object-cover" />
+                                    ) : (
+                                      <span className="font-bold text-slate-500 dark:text-slate-300 text-xs">
+                                        {notification.title.charAt(0)}
+                                      </span>
+                                    )}
+                                  </div>
+                                  <div className="flex-1 min-w-0">
+                                    <p className="text-sm font-semibold text-slate-800 dark:text-slate-200 truncate">
+                                      {notification.title}
+                                    </p>
+                                    <p className="text-xs text-slate-500 dark:text-slate-400 truncate">
+                                      {notification.subtitle}
+                                    </p>
+                                    <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-1">
+                                      {new Date(notification.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                                    </p>
+                                  </div>
+                                </div>
+                              </Link>
+                            ))
+                        ) : (
+                            <div className="p-8 text-center text-slate-400 text-sm">No notifications</div>
+                        )}
+                    </div>
+                </div>
+            </div>
+        )}
 
         {isBuilder ? (
           // Full Screen Mode for Builders (No Padding, Self-Scrolling)

@@ -96,7 +96,7 @@ export const INITIAL_STUDENTS: Student[] = [
     progress: 100,
     completedModules: [],
     completedChapters: [],
-    enrolledCourses: ['c1'],
+    enrolledCourses: ['c1', 'c_demo_social'], // Enrolled for testing analytics
     caseCredits: 100, 
     rankProgress: {
         currentRankId: 'MGR',
@@ -132,15 +132,16 @@ export const INITIAL_STUDENTS: Student[] = [
     name: 'Alice Freeman',
     email: 'alice@example.com',
     enrolledDate: '2023-10-15',
-    progress: 65,
-    completedModules: ['m1'],
-    completedChapters: ['c1-m1-1'],
-    enrolledCourses: ['c1'],
+    progress: 95,
+    // Alice has completed the Demo Course
+    completedModules: ['m1', 'mod_social_1', 'mod_social_2'],
+    completedChapters: ['c1-m1-1', 'chap_s1_1', 'chap_s1_2', 'chap_s1_3', 'chap_s2_1', 'chap_s2_2', 'chap_s2_3'],
+    enrolledCourses: ['c1', 'c_demo_social'],
     sponsorId: '@forever_system',
     caseCredits: 4.5, 
     rankProgress: {
-        currentRankId: 'AS_SUP', // Has passed 2CC
-        currentCycleCC: 2.5, // Working towards Supervisor (25CC)
+        currentRankId: 'AS_SUP', 
+        currentCycleCC: 2.5, 
         targetCC: 25,
         cycleStartDate: '2023-10-15',
         history: [{ rankId: 'NOVUS', dateAchieved: '2023-10-15', totalCCAtTime: 2 }]
@@ -161,13 +162,14 @@ export const INITIAL_STUDENTS: Student[] = [
     email: 'bob@example.com',
     enrolledDate: '2023-10-20',
     progress: 15,
+    // Bob started the Demo Course but only finished 1 chapter
     completedModules: [],
-    completedChapters: [],
-    enrolledCourses: ['c1'],
+    completedChapters: ['chap_s1_1'],
+    enrolledCourses: ['c1', 'c_demo_social'],
     sponsorId: '@alice_success',
     caseCredits: 0.5, 
     rankProgress: {
-        currentRankId: 'NOVUS', // Working on 2CC
+        currentRankId: 'NOVUS',
         currentCycleCC: 0.5, 
         targetCC: 2,
         cycleStartDate: '2023-10-20',
@@ -205,7 +207,8 @@ export const INITIAL_COURSES: Course[] = [
         pointsReward: 500,
         certificateEnabled: true,
         requiresAssessment: true,
-        teamOnly: false
+        teamOnly: false,
+        price: 0
     },
     modules: [
       {
@@ -251,6 +254,120 @@ export const INITIAL_COURSES: Course[] = [
                         id: 'q1',
                         question: 'What does CC stand for?',
                         options: ['Cash Credit', 'Case Credit', 'Company Coin'],
+                        correctAnswer: 1
+                    }
+                ]
+            }
+        ]
+      }
+    ]
+  },
+  // --- NEW DEMO COURSE FOR ANALYTICS TESTING ---
+  {
+    id: 'c_demo_social',
+    title: 'Mastering Social Selling',
+    subtitle: 'Learn how to turn your social media profile into a 24/7 recruiting machine.',
+    description: 'A comprehensive guide designed for FBOs who want to leverage Instagram, TikTok, and Facebook. We cover content strategy, engagement, and direct messaging scripts that convert.',
+    track: CourseTrack.SALES,
+    level: CourseLevel.INTERMEDIATE,
+    targetAudience: ['Supervisors', 'Assistant Managers', 'Active Retailers'],
+    learningOutcomes: ['Create viral content', 'Optimize bio for sales', 'DM Scripts that work'],
+    thumbnailUrl: 'https://images.unsplash.com/photo-1611162617474-5b21e879e113?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+    bannerImageUrl: 'https://images.unsplash.com/photo-1611926653458-09294b3019dc?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80',
+    status: CourseStatus.PUBLISHED,
+    authorHandle: '@forever_system',
+    createdAt: Date.now() - 100000000,
+    updatedAt: Date.now(),
+    testimonials: [
+        { id: 't1', name: 'Alice Freeman', role: 'Manager', quote: 'This course completely changed how I approach Instagram. I got 5 leads in my first week!' },
+        { id: 't2', name: 'John Doe', role: 'Supervisor', quote: 'Simple, practical, and effective. The scripts are gold.' }
+    ],
+    settings: {
+        gamificationEnabled: true,
+        pointsReward: 1000,
+        certificateEnabled: true,
+        requiresAssessment: true,
+        teamOnly: false,
+        price: 99.00 // Price added to test Earnings analytics
+    },
+    modules: [
+      {
+        id: 'mod_social_1',
+        title: 'Module 1: Optimizing Your Profile',
+        summary: 'Your profile is your landing page. Learn how to set it up for success.',
+        order: 1,
+        chapters: [
+          { 
+            id: 'chap_s1_1', 
+            title: 'Lesson 1: The Perfect Bio', 
+            durationMinutes: 15,
+            type: 'TEXT',
+            content: 'Your bio needs to answer three questions: Who are you? What do you do? How can you help me? In this lesson we break down the formula...',
+            blocks: [
+                { id: 'b1', type: 'heading', style: 'h2', content: 'The Bio Formula' },
+                { id: 'b2', type: 'paragraph', content: 'Use this structure: [I help X] + [Achieve Y] + [Without Z]. For example: I help moms earn extra income without sacrificing family time.' },
+                { id: 'b3', type: 'callout', style: 'tip', content: 'Pro Tip: Include a Linktree in your bio.' }
+            ],
+            actionSteps: ['Rewrite your Instagram Bio', 'Add a clear call to action'],
+            isPublished: true
+          },
+          { 
+            id: 'chap_s1_2', 
+            title: 'Lesson 2: Content Pillars', 
+            durationMinutes: 20,
+            type: 'TEXT',
+            content: 'Stop guessing what to post. Define your 3-5 core topics (pillars) and rotate through them.',
+            actionSteps: ['Define your 3 pillars'],
+            isPublished: true
+          },
+          { 
+            id: 'chap_s1_3', 
+            title: 'Lesson 3: Highlights & Stories', 
+            durationMinutes: 10,
+            type: 'TEXT',
+            content: 'Stories are where you sell. Highlights are where you keep the proof. Learn to organize them.',
+            actionSteps: ['Create a "Results" highlight'],
+            isPublished: true
+          }
+        ]
+      },
+      {
+        id: 'mod_social_2',
+        title: 'Module 2: Engagement & Conversion',
+        summary: 'How to turn likes into leads and leads into FBOs.',
+        order: 2,
+        chapters: [
+            {
+                id: 'chap_s2_1',
+                title: 'Lesson 1: The 15-Minute Engagement Routine',
+                durationMinutes: 15,
+                content: 'You do not need to be on your phone all day. Use this 15-minute block strategy.',
+                actionSteps: ['Comment on 5 leader accounts', 'Reply to all stories'],
+                isPublished: true,
+                type: 'TEXT'
+            },
+            {
+                id: 'chap_s2_2',
+                title: 'Lesson 2: Sliding into DMs (Ethically)',
+                durationMinutes: 25,
+                content: 'Cold messaging is dead. Learn "Warm Messaging" instead.',
+                actionSteps: [],
+                isPublished: true,
+                type: 'TEXT'
+            },
+            {
+                id: 'chap_s2_3',
+                title: 'Lesson 3: Closing the Sale',
+                durationMinutes: 30,
+                content: 'Moving the conversation to a call or a checkout link.',
+                actionSteps: [],
+                isPublished: true,
+                type: 'TEXT',
+                quizQuestions: [
+                    {
+                        id: 'q_social_1',
+                        question: 'What is the goal of the first DM?',
+                        options: ['Sell a product', 'Start a conversation', 'Send a link'],
                         correctAnswer: 1
                     }
                 ]

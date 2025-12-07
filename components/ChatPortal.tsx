@@ -195,13 +195,13 @@ const ChatPortal: React.FC<ChatPortalProps> = ({ currentUser, students, messages
 
   return (
     <div 
-        className="h-[75vh] md:h-[calc(100vh-8rem)] flex flex-col md:flex-row bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden animate-fade-in dark:bg-[#111b21] dark:border-slate-800"
+        className="h-full flex flex-col md:flex-row bg-white md:rounded-2xl md:shadow-sm md:border border-slate-100 overflow-hidden animate-fade-in dark:bg-[#111b21] dark:border-slate-800"
         style={{ fontFamily: 'Segoe UI, "Helvetica Neue", Helvetica, Arial, sans-serif' }}
     >
       
       {/* Sidebar List */}
       <div className={`w-full md:w-96 bg-white border-r border-slate-200 flex flex-col ${activeChatHandle && !isBroadcastMode ? 'hidden md:flex' : 'flex'} dark:bg-[#111b21] dark:border-slate-800`}>
-        <div className="p-4 bg-[#f0f2f5] border-b border-slate-200 dark:bg-[#202c33] dark:border-[#202c33] flex justify-between items-center h-16">
+        <div className="p-4 bg-[#f0f2f5] border-b border-slate-200 dark:bg-[#202c33] dark:border-[#202c33] flex justify-between items-center h-16 shrink-0">
             <h2 className="font-bold text-lg text-slate-700 dark:text-[#e9edef]">Chats</h2>
             {currentUser.role === UserRole.SPONSOR && (
                 <button 
@@ -268,7 +268,7 @@ const ChatPortal: React.FC<ChatPortalProps> = ({ currentUser, students, messages
                     
                     <div className="bg-white p-4 rounded-xl shadow-sm mb-4 flex-1 overflow-y-auto dark:bg-[#202c33] dark:shadow-none">
                         <div className="flex justify-between items-center mb-4">
-                            <h3 className="font-bold text-sm text-slate-700 dark:text-[#e9edef]">Recipients ({selectedBroadcastUsers.length})</h3>
+                            <h3 className="font-bold text-sm text-slate-700 dark:text-e9edef">Recipients ({selectedBroadcastUsers.length})</h3>
                             <button onClick={selectAllBroadcast} className="text-xs text-[#00a884] font-bold hover:underline">
                                 {selectedBroadcastUsers.length === myDownline.length ? 'Deselect All' : 'Select All'}
                             </button>
@@ -311,7 +311,7 @@ const ChatPortal: React.FC<ChatPortalProps> = ({ currentUser, students, messages
                 </div>
             ) : activeChatHandle ? (
                 <>
-                    {/* Active Chat Header */}
+                    {/* Active Chat Header - STATIC */}
                     <div className="bg-[#f0f2f5] px-4 py-2.5 flex items-center gap-4 border-b border-slate-200 shadow-sm shrink-0 z-20 dark:bg-[#202c33] dark:border-[#202c33]">
                         <button onClick={() => setActiveChatHandle(null)} className="md:hidden text-slate-500 hover:text-[#00a884] dark:text-[#aebac1]">
                             <ChevronLeftIcon />
@@ -342,7 +342,7 @@ const ChatPortal: React.FC<ChatPortalProps> = ({ currentUser, students, messages
                         </div>
                     </div>
 
-                    {/* Messages List - Fixed Scroll Area with flex-1 and min-h-0 to allow shrinking when input grows */}
+                    {/* Messages List - SCROLLABLE INTERNAL AREA */}
                     <div 
                         ref={messageContainerRef}
                         className="flex-1 overflow-y-auto p-4 space-y-1 scroll-smooth min-h-0"
@@ -387,7 +387,7 @@ const ChatPortal: React.FC<ChatPortalProps> = ({ currentUser, students, messages
                         })}
                     </div>
 
-                    {/* Input Bar */}
+                    {/* Input Bar - STATIC */}
                     <div className="bg-[#f0f2f5] px-2 py-2 flex items-end gap-2 border-t border-slate-200 shrink-0 z-20 dark:bg-[#202c33] dark:border-[#202c33]">
                         <div className="flex-1 bg-white rounded-2xl border border-white flex items-end dark:bg-[#2a3942] dark:border-[#2a3942] pl-4 pr-2 py-2">
                             <textarea 

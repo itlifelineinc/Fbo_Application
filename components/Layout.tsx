@@ -148,8 +148,13 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
   const [isDockExpanded, setIsDockExpanded] = useState(false);
   const dockRef = useRef<HTMLDivElement>(null);
 
+  // Mobile Header Visibility State (for Chat view double-tap)
+  const [showMobileHeader, setShowMobileHeader] = useState(true);
+  const lastTapRef = useRef(0);
+
   const isActive = (path: string) => location.pathname === path;
   const isDashboard = location.pathname === '/dashboard';
+  const isChatPage = location.pathname === '/chat';
 
   // Determine current Rank Name for Display
   const currentRankName = currentUser.rankProgress ? RANKS[currentUser.rankProgress.currentRankId]?.name : 'FBO';
@@ -163,6 +168,33 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
       setIsSalesMenuOpen(true);
     }
   }, [location.pathname]);
+
+  // Handle Double Tap on Mobile to toggle header
+  useEffect(() => {
+    const handleTouchEnd = (e: TouchEvent) => {
+        // Only active on small screens
+        if (window.innerWidth >= 1024) return;
+
+        const now = Date.now();
+        if (now - lastTapRef.current < 300) {
+            // Double tap detected
+            e.preventDefault();
+            setShowMobileHeader(prev => !prev);
+        }
+        lastTapRef.current = now;
+    };
+
+    // Attach to document to catch double taps anywhere on mobile
+    document.addEventListener('touchend', handleTouchEnd);
+    return () => document.removeEventListener('touchend', handleTouchEnd);
+  }, []);
+
+  // Ensure header shows when leaving chat or resizing
+  useEffect(() => {
+      if (!isChatPage) {
+          setShowMobileHeader(true);
+      }
+  }, [isChatPage]);
 
   // Click outside handler for Profile Menu
   useEffect(() => {
@@ -713,8 +745,8 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
              </button>
         )}
 
-        {/* Mobile Header - Reduced, No Hamburger */}
-        <header className="lg:hidden bg-white border-b border-slate-200 p-4 flex justify-between items-center z-10 shadow-sm dark:bg-slate-900 dark:border-slate-800 shrink-0">
+        {/* Mobile Header - With Auto-Hide Logic */}
+        <header className={`lg:hidden bg-white border-b border-slate-200 p-4 flex justify-between items-center z-10 shadow-sm dark:bg-slate-900 dark:border-slate-800 shrink-0 transition-transform duration-300 ease-in-out ${showMobileHeader ? 'translate-y-0' : '-translate-y-full absolute w-full'}`}>
            <Logo className="w-8 h-8" textClassName="text-xl font-bold text-emerald-900 dark:text-emerald-400" />
            <div className="flex items-center gap-4">
              {/* Mobile Bell */}
@@ -732,7 +764,7 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
            </div>
         </header>
         
-        {/* Mobile Notification Dropdown (Full Screen Overlay style if needed, or simple dropdown) */}
+        {/* Mobile Notification Dropdown */}
         {isNotificationMenuOpen && (
             <div className="lg:hidden fixed inset-0 z-50 bg-black/50" onClick={() => setIsNotificationMenuOpen(false)}>
                 <div className="absolute top-16 right-4 left-4 bg-white dark:bg-slate-900 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-700 max-h-[60vh] overflow-hidden flex flex-col" onClick={e => e.stopPropagation()}>
@@ -770,6 +802,9 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
                                       {new Date(notification.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
                                     </p>
                                   </div>
+                                  {!notification.isRead && (
+                                    <div className="w-2 h-2 rounded-full bg-emerald-500 mt-1.5 flex-shrink-0"></div>
+                                  )}
                                 </div>
                               </Link>
                             ))
@@ -782,15 +817,14 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
         )}
 
         {isBuilder ? (
-          // Full Screen Mode for Builders (No Padding, Self-Scrolling)
+          // Full Screen Mode for Builders
           <main className="flex-1 overflow-hidden relative dark:bg-slate-950">
              {children}
           </main>
         ) : (
-          // Standard Layout with Padding
-          // Added extra padding bottom for mobile to account for the Dock
-          <main className="flex-1 overflow-y-auto scroll-smooth dark:bg-slate-950 pb-32 lg:pb-0">
-            <div className="max-w-7xl mx-auto p-4 md:p-8">
+          // Standard Layout - Adjusted for Chat Portal specific requirement
+          <main className={`flex-1 dark:bg-slate-950 transition-all ${isChatPage ? 'overflow-hidden p-0' : 'overflow-y-auto scroll-smooth pb-32 lg:pb-0'}`}>
+            <div className={`${isChatPage ? 'h-full w-full' : 'max-w-7xl mx-auto p-4 md:p-8'}`}>
               {children}
             </div>
           </main>

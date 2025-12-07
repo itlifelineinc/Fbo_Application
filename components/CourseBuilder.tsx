@@ -273,6 +273,9 @@ const CourseBuilder: React.FC<CourseBuilderProps> = ({ currentUserHandle, course
   const [tempOutcome, setTempOutcome] = useState('');
   const [tempAudience, setTempAudience] = useState('');
 
+  // Filter courses owned by this user for the modal list (Moved to top level)
+  const myPublishedCourses = courses.filter(c => c.authorHandle === currentUserHandle);
+
   const BUILDER_STEPS = [
     { id: 1, label: 'Info', fullLabel: 'Basic Info', icon: FileText },
     { id: 2, label: 'Curriculum', fullLabel: 'Curriculum', icon: BookOpen },
@@ -718,9 +721,6 @@ const CourseBuilder: React.FC<CourseBuilderProps> = ({ currentUserHandle, course
     // Earnings
     const earnings = totalStudents * (course.settings.price || 0);
 
-    // Filter courses owned by this user for the modal list
-    const myPublishedCourses = courses.filter(c => c.authorHandle === currentUserHandle);
-
     return (
         <div className="space-y-8 animate-fade-in relative">
             <div className="flex justify-between items-center">
@@ -730,8 +730,8 @@ const CourseBuilder: React.FC<CourseBuilderProps> = ({ currentUserHandle, course
             {/* Published Course Summary & Edit */}
             <div className="bg-white rounded-3xl p-6 shadow-sm border border-slate-200 dark:bg-slate-800 dark:border-slate-700 flex flex-col md:flex-row gap-6 items-start md:items-center group relative">
                 
-                {/* Expand Icon - Visible on Hover (Desktop) or Always (Mobile) if multiple courses exist */}
-                {myPublishedCourses.length > 1 && (
+                {/* Expand Icon - Visible on Hover (Desktop) or Always (Mobile) if user has any published courses */}
+                {myPublishedCourses.length > 0 && (
                     <button 
                         onClick={() => setShowAllCoursesModal(true)}
                         className="absolute top-4 right-4 p-2 bg-slate-100 rounded-full text-slate-500 hover:bg-emerald-100 hover:text-emerald-600 transition-all opacity-100 md:opacity-0 md:group-hover:opacity-100 shadow-sm z-10 dark:bg-slate-700 dark:text-slate-300 dark:hover:bg-emerald-900/50"
@@ -854,76 +854,6 @@ const CourseBuilder: React.FC<CourseBuilderProps> = ({ currentUserHandle, course
                     )}
                 </div>
             </div>
-
-            {/* --- MODALS --- */}
-            
-            {/* 1. All Courses Modal */}
-            {showAllCoursesModal && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-fade-in" onClick={() => setShowAllCoursesModal(false)}>
-                    <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md max-h-[80vh] flex flex-col overflow-hidden dark:bg-slate-900 dark:border dark:border-slate-700" onClick={e => e.stopPropagation()}>
-                        <div className="p-5 border-b border-slate-100 flex justify-between items-center bg-slate-50 dark:bg-slate-800 dark:border-slate-700">
-                            <h3 className="font-bold text-slate-800 dark:text-white">Your Courses</h3>
-                            <button onClick={() => setShowAllCoursesModal(false)} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
-                                <X size={20} />
-                            </button>
-                        </div>
-                        <div className="flex-1 overflow-y-auto p-4 space-y-3 no-scrollbar">
-                            {myPublishedCourses.map(c => (
-                                <div 
-                                    key={c.id} 
-                                    onClick={() => { setCourse(c); setShowAllCoursesModal(false); }}
-                                    className={`p-3 rounded-xl border flex items-center gap-3 cursor-pointer transition-all hover:bg-slate-50 dark:hover:bg-slate-800 ${c.id === course.id ? 'border-emerald-500 ring-1 ring-emerald-500 bg-emerald-50 dark:bg-emerald-900/20' : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900'}`}
-                                >
-                                    <div className="w-12 h-12 rounded-lg bg-slate-200 overflow-hidden shrink-0 dark:bg-slate-700">
-                                        {c.thumbnailUrl ? <img src={c.thumbnailUrl} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-slate-400"><ImageIcon size={16}/></div>}
-                                    </div>
-                                    <div className="flex-1 min-w-0">
-                                        <h4 className="font-bold text-sm text-slate-900 truncate dark:text-white">{c.title}</h4>
-                                        <p className="text-xs text-slate-500 dark:text-slate-400">{c.status}</p>
-                                    </div>
-                                    {c.id === course.id && <CheckCircle size={16} className="text-emerald-500" />}
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {/* 2. All Feedback Modal */}
-            {showAllFeedbackModal && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-fade-in" onClick={() => setShowAllFeedbackModal(false)}>
-                    <div className="bg-white rounded-3xl shadow-2xl w-full max-w-lg max-h-[80vh] flex flex-col overflow-hidden dark:bg-slate-900 dark:border dark:border-slate-700" onClick={e => e.stopPropagation()}>
-                        <div className="p-5 border-b border-slate-100 flex justify-between items-center bg-slate-50 dark:bg-slate-800 dark:border-slate-700">
-                            <h3 className="font-bold text-slate-800 dark:text-white">All Testimonials</h3>
-                            <button onClick={() => setShowAllFeedbackModal(false)} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
-                                <X size={20} />
-                            </button>
-                        </div>
-                        <div className="flex-1 overflow-y-auto p-4 space-y-4 no-scrollbar">
-                            {course.testimonials?.map(t => (
-                                <div key={t.id} className="p-4 bg-slate-50 rounded-xl border border-slate-100 dark:bg-slate-800 dark:border-slate-700">
-                                    <div className="flex justify-between items-start mb-2">
-                                        <div className="flex items-center gap-2">
-                                            <div className="w-8 h-8 rounded-full bg-white border border-slate-200 flex items-center justify-center text-xs font-bold text-slate-500 dark:bg-slate-900 dark:border-slate-600 dark:text-slate-300">
-                                                {t.name.charAt(0)}
-                                            </div>
-                                            <div>
-                                                <p className="text-sm font-bold text-slate-800 dark:text-white">{t.name}</p>
-                                                <p className="text-[10px] text-slate-400 uppercase">{t.role}</p>
-                                            </div>
-                                        </div>
-                                        <div className="flex text-yellow-400 text-xs gap-0.5">
-                                            {[1,2,3,4,5].map(i => <Save key={i} size={12} fill="currentColor" className="text-yellow-400"/>)}
-                                        </div>
-                                    </div>
-                                    <p className="text-sm text-slate-600 italic dark:text-slate-300">"{t.quote}"</p>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                </div>
-            )}
-
         </div>
     );
   };
@@ -1066,6 +996,76 @@ const CourseBuilder: React.FC<CourseBuilderProps> = ({ currentUserHandle, course
         </div>
 
       </div>
+
+      {/* --- MODALS (Placed outside the transformed container to fix backdrop) --- */}
+      
+      {/* 1. All Courses Modal */}
+      {showAllCoursesModal && (
+          <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 backdrop-blur-md p-4 animate-fade-in" onClick={() => setShowAllCoursesModal(false)}>
+              <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md max-h-[80vh] flex flex-col overflow-hidden dark:bg-slate-900 dark:border dark:border-slate-700 scale-100" onClick={e => e.stopPropagation()}>
+                  <div className="p-5 border-b border-slate-100 flex justify-between items-center bg-slate-50 dark:bg-slate-800 dark:border-slate-700">
+                      <h3 className="font-bold text-slate-800 dark:text-white">Your Courses</h3>
+                      <button onClick={() => setShowAllCoursesModal(false)} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+                          <X size={20} />
+                      </button>
+                  </div>
+                  <div className="flex-1 overflow-y-auto p-4 space-y-3 no-scrollbar">
+                      {myPublishedCourses.map(c => (
+                          <div 
+                              key={c.id} 
+                              onClick={() => { setCourse(c); setShowAllCoursesModal(false); }}
+                              className={`p-3 rounded-xl border flex items-center gap-3 cursor-pointer transition-all hover:bg-slate-50 dark:hover:bg-slate-800 ${c.id === course.id ? 'border-emerald-500 ring-1 ring-emerald-500 bg-emerald-50 dark:bg-emerald-900/20' : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900'}`}
+                          >
+                              <div className="w-12 h-12 rounded-lg bg-slate-200 overflow-hidden shrink-0 dark:bg-slate-700">
+                                  {c.thumbnailUrl ? <img src={c.thumbnailUrl} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-slate-400"><ImageIcon size={16}/></div>}
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                  <h4 className="font-bold text-sm text-slate-900 truncate dark:text-white">{c.title}</h4>
+                                  <p className="text-xs text-slate-500 dark:text-slate-400">{c.status}</p>
+                              </div>
+                              {c.id === course.id && <CheckCircle size={16} className="text-emerald-500" />}
+                          </div>
+                      ))}
+                  </div>
+              </div>
+          </div>
+      )}
+
+      {/* 2. All Feedback Modal */}
+      {showAllFeedbackModal && (
+          <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 backdrop-blur-md p-4 animate-fade-in" onClick={() => setShowAllFeedbackModal(false)}>
+              <div className="bg-white rounded-3xl shadow-2xl w-full max-w-lg max-h-[80vh] flex flex-col overflow-hidden dark:bg-slate-900 dark:border dark:border-slate-700 scale-100" onClick={e => e.stopPropagation()}>
+                  <div className="p-5 border-b border-slate-100 flex justify-between items-center bg-slate-50 dark:bg-slate-800 dark:border-slate-700">
+                      <h3 className="font-bold text-slate-800 dark:text-white">All Testimonials</h3>
+                      <button onClick={() => setShowAllFeedbackModal(false)} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+                          <X size={20} />
+                      </button>
+                  </div>
+                  <div className="flex-1 overflow-y-auto p-4 space-y-4 no-scrollbar">
+                      {course.testimonials?.map(t => (
+                          <div key={t.id} className="p-4 bg-slate-50 rounded-xl border border-slate-100 dark:bg-slate-800 dark:border-slate-700">
+                              <div className="flex justify-between items-start mb-2">
+                                  <div className="flex items-center gap-2">
+                                      <div className="w-8 h-8 rounded-full bg-white border border-slate-200 flex items-center justify-center text-xs font-bold text-slate-500 dark:bg-slate-900 dark:border-slate-600 dark:text-slate-300">
+                                          {t.name.charAt(0)}
+                                      </div>
+                                      <div>
+                                          <p className="text-sm font-bold text-slate-800 dark:text-white">{t.name}</p>
+                                          <p className="text-[10px] text-slate-400 uppercase">{t.role}</p>
+                                      </div>
+                                  </div>
+                                  <div className="flex text-yellow-400 text-xs gap-0.5">
+                                      {[1,2,3,4,5].map(i => <Save key={i} size={12} fill="currentColor" className="text-yellow-400"/>)}
+                                  </div>
+                              </div>
+                              <p className="text-sm text-slate-600 italic dark:text-slate-300">"{t.quote}"</p>
+                          </div>
+                      ))}
+                  </div>
+              </div>
+          </div>
+      )}
+
     </div>
   );
 };

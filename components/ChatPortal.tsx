@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { Student, Message, UserRole, MessageStatus } from '../types';
-import { MoreVertical, Trash2, ChevronDown, Reply, Copy, ArrowRight, X } from 'lucide-react';
+import { MoreVertical, Trash2, ChevronDown, Reply, Copy, ArrowRight, X, Search, MessageSquarePlus, Hash, Plus } from 'lucide-react';
 
 interface ChatPortalProps {
   currentUser: Student;
@@ -47,6 +47,10 @@ const ChatPortal: React.FC<ChatPortalProps> = ({ currentUser, students, messages
   const [selectedBroadcastUsers, setSelectedBroadcastUsers] = useState<string[]>([]);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   
+  // Search & Topics State
+  const [searchQuery, setSearchQuery] = useState('');
+  const [extraChannels, setExtraChannels] = useState<{handle: string, name: string, avatar: string, type: 'TOPIC' | 'USER'}[]>([]);
+
   // Message Menu State
   const [hoveredMessageId, setHoveredMessageId] = useState<string | null>(null);
   const [messageMenuId, setMessageMenuId] = useState<string | null>(null);
@@ -66,8 +70,8 @@ const ChatPortal: React.FC<ChatPortalProps> = ({ currentUser, students, messages
   const myDownline = students.filter(s => s.sponsorId === currentUser.handle);
   const mySponsor = students.find(s => s.handle === currentUser.sponsorId);
 
-  // Construct Chat List
-  const chatListItems = [
+  // 1. Construct Base Chat List (Regular Contacts)
+  const baseChatList = [
     {
         handle: myGroupId,
         name: "My Team Channel",
@@ -85,13 +89,33 @@ const ChatPortal: React.FC<ChatPortalProps> = ({ currentUser, students, messages
         name: student.name,
         avatar: student.avatarUrl || student.name.charAt(0),
         lastMsg: messages.filter(m => (m.senderHandle === student.handle && m.recipientHandle === currentUser.handle) || (m.senderHandle === currentUser.handle && m.recipientHandle === student.handle)).pop()?.text || "Start conversation"
+    })),
+    ...extraChannels.map(ch => ({
+        handle: ch.handle,
+        name: ch.name,
+        avatar: ch.avatar,
+        lastMsg: messages.filter(m => (m.senderHandle === ch.handle && m.recipientHandle === currentUser.handle) || (m.senderHandle === currentUser.handle && m.recipientHandle === ch.handle) || (m.recipientHandle === ch.handle)).pop()?.text || "New topic started"
     }))
   ];
+
+  // 2. Filter Chat List based on Search
+  const filteredChatList = baseChatList.filter(c => 
+      c.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+      c.handle.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  // 3. Find Global Users (Directory Search) - Users NOT in the current chat list
+  const existingHandles = new Set(baseChatList.map(c => c.handle));
+  const globalSearchResults = searchQuery.trim() ? students.filter(s => 
+      s.id !== currentUser.id && 
+      !existingHandles.has(s.handle) &&
+      (s.name.toLowerCase().includes(searchQuery.toLowerCase()) || s.handle.toLowerCase().includes(searchQuery.toLowerCase()))
+  ) : [];
 
   // Filter Messages for Active Chat
   const activeMessages = messages.filter(m => {
     if (!activeChatHandle) return false;
-    if (activeChatHandle.startsWith('GROUP_')) {
+    if (activeChatHandle.startsWith('GROUP_') || activeChatHandle.startsWith('TOPIC_')) {
         return m.recipientHandle === activeChatHandle;
     }
     return (
@@ -99,6 +123,13 @@ const ChatPortal: React.FC<ChatPortalProps> = ({ currentUser, students, messages
         (m.senderHandle === activeChatHandle && m.recipientHandle === currentUser.handle)
     );
   }).sort((a,b) => a.timestamp - b.timestamp);
+
+  // Current Active Chat Info (Lookup from all sources)
+  const activeChatInfo = baseChatList.find(c => c.handle === activeChatHandle) || {
+      name: students.find(s => s.handle === activeChatHandle)?.name || activeChatHandle || 'Chat',
+      avatar: students.find(s => s.handle === activeChatHandle)?.avatarUrl || activeChatHandle?.charAt(0) || '?',
+      handle: activeChatHandle
+  };
 
   // Auto-scroll logic
   useEffect(() => {
@@ -121,21 +152,6 @@ const ChatPortal: React.FC<ChatPortalProps> = ({ currentUser, students, messages
       }
   }, [activeChatHandle, activeMessages, onMarkAsRead]);
 
-  // Click outside menu
-  useEffect(() => {
-      const handleClickOutside = (event: MouseEvent) => {
-          if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
-              setIsMenuOpen(false);
-          }
-          // Also close message specific menu
-          if (messageMenuId && !(event.target as Element).closest('.message-menu-trigger')) {
-              setMessageMenuId(null);
-          }
-      };
-      document.addEventListener('mousedown', handleClickOutside);
-      return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [messageMenuId]);
-
   // Textarea Auto-Resize
   useEffect(() => {
       if (textareaRef.current) {
@@ -144,44 +160,10 @@ const ChatPortal: React.FC<ChatPortalProps> = ({ currentUser, students, messages
       }
   }, [newMessage]);
 
-  // Message Actions
-  const handleReply = (msg: Message) => {
-      setReplyToMessage(msg);
-      setMessageMenuId(null);
-      if (textareaRef.current) textareaRef.current.focus();
-  };
-
-  const handleCopy = (text: string) => {
-      navigator.clipboard.writeText(text);
-      setMessageMenuId(null);
-  };
-
-  const handleForward = (text: string) => {
-      setNewMessage(text);
-      setMessageMenuId(null);
-      if (textareaRef.current) textareaRef.current.focus();
-  };
-
-  const handleDeleteRequest = (msg: Message) => {
-      setDeleteTarget(msg);
-      setMessageMenuId(null);
-  };
-
-  const confirmDelete = (type: 'me' | 'everyone') => {
-      if (onDeleteMessage && deleteTarget) {
-          onDeleteMessage(deleteTarget.id, type);
-      }
-      setDeleteTarget(null);
-  };
-
   // Handlers
   const handleSend = () => {
     if (!newMessage.trim()) return;
 
-    // Optional: Prepend reply context to message text if simple text-based reply is desired
-    // For now, just sending standard message, assuming Reply UI is visual-only in this implementation
-    // or handled by backend logic linking. 
-    
     if (isBroadcastMode) {
         selectedBroadcastUsers.forEach(handle => {
             onSendMessage({
@@ -211,7 +193,6 @@ const ChatPortal: React.FC<ChatPortalProps> = ({ currentUser, students, messages
     }
     setNewMessage('');
     setReplyToMessage(null);
-    // Reset height after send
     if (textareaRef.current) {
         textareaRef.current.style.height = 'auto';
     }
@@ -242,16 +223,41 @@ const ChatPortal: React.FC<ChatPortalProps> = ({ currentUser, students, messages
 
   const toggleMessageMenu = (e: React.MouseEvent, msgId: string) => {
       e.stopPropagation();
-      
-      // Calculate position logic
       const trigger = e.currentTarget as HTMLElement;
       const rect = trigger.getBoundingClientRect();
       const screenHeight = window.innerHeight;
-      
-      // If lower half of screen, open upwards
       setMenuPosition(rect.top > screenHeight / 2 ? 'up' : 'down');
-      
       setMessageMenuId(prev => prev === msgId ? null : msgId);
+  };
+
+  const handleReply = (msg: Message) => {
+      setReplyToMessage(msg);
+      setMessageMenuId(null);
+      if (textareaRef.current) textareaRef.current.focus();
+  };
+
+  const handleCreateTopic = () => {
+      const name = prompt("Enter a name for this Topic Channel:");
+      if (name) {
+          const handle = `TOPIC_${name.replace(/\s+/g, '_').toUpperCase()}`;
+          setExtraChannels(prev => [...prev, { handle, name, avatar: '#', type: 'TOPIC' }]);
+          setActiveChatHandle(handle);
+          setSearchQuery('');
+      }
+  };
+
+  const handleStartGlobalChat = (student: Student) => {
+      // Add to adhoc channels so it stays in list
+      if (!extraChannels.some(c => c.handle === student.handle) && !baseChatList.some(c => c.handle === student.handle)) {
+          setExtraChannels(prev => [...prev, { 
+              handle: student.handle, 
+              name: student.name, 
+              avatar: student.avatarUrl || student.name.charAt(0), 
+              type: 'USER' 
+          }]);
+      }
+      setActiveChatHandle(student.handle);
+      setSearchQuery('');
   };
 
   return (
@@ -259,54 +265,54 @@ const ChatPortal: React.FC<ChatPortalProps> = ({ currentUser, students, messages
         className="h-full flex flex-col md:flex-row bg-white md:rounded-2xl md:shadow-sm md:border border-slate-100 overflow-hidden animate-fade-in dark:bg-[#111b21] dark:border-slate-800"
         style={{ fontFamily: 'Segoe UI, "Helvetica Neue", Helvetica, Arial, sans-serif' }}
     >
-      {/* --- Delete Modal --- */}
-      {deleteTarget && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 backdrop-blur-sm animate-fade-in">
-              <div className="bg-white rounded-lg shadow-xl p-6 max-w-sm w-full mx-4 dark:bg-[#3b4a54] dark:text-[#e9edef]">
-                  <h3 className="font-bold text-lg mb-2">Delete message?</h3>
-                  <div className="flex flex-col gap-2 mt-4">
-                      {deleteTarget.senderHandle === currentUser.handle && (
-                          <button 
-                            onClick={() => confirmDelete('everyone')}
-                            className="text-left px-4 py-3 hover:bg-slate-100 dark:hover:bg-[#111b21] rounded text-emerald-600 dark:text-emerald-400 font-medium"
-                          >
-                              Delete for everyone
-                          </button>
-                      )}
-                      <button 
-                        onClick={() => confirmDelete('me')}
-                        className="text-left px-4 py-3 hover:bg-slate-100 dark:hover:bg-[#111b21] rounded text-emerald-600 dark:text-emerald-400 font-medium"
-                      >
-                          Delete for me
-                      </button>
-                      <button 
-                        onClick={() => setDeleteTarget(null)}
-                        className="text-left px-4 py-3 hover:bg-slate-100 dark:hover:bg-[#111b21] rounded border border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300 mt-2 text-center"
-                      >
-                          Cancel
-                      </button>
-                  </div>
-              </div>
-          </div>
-      )}
-
       {/* Sidebar List */}
       <div className={`w-full md:w-96 bg-white border-r border-slate-200 flex flex-col ${activeChatHandle && !isBroadcastMode ? 'hidden md:flex' : 'flex'} dark:bg-[#111b21] dark:border-slate-800`}>
-        <div className="p-4 bg-[#f0f2f5] border-b border-slate-200 dark:bg-[#202c33] dark:border-[#202c33] flex justify-between items-center h-16 shrink-0">
-            <h2 className="font-bold text-lg text-slate-700 dark:text-[#e9edef]">Chats</h2>
-            {currentUser.role === UserRole.SPONSOR && (
-                <button 
-                    onClick={() => { setIsBroadcastMode(true); setActiveChatHandle(null); }}
-                    className="text-slate-500 hover:bg-slate-200 p-2 rounded-full transition-colors dark:text-[#aebac1] dark:hover:bg-[#374045]"
-                    title="New Broadcast"
-                >
-                    <SpeakerWaveIcon />
-                </button>
-            )}
+        
+        {/* Modern Sidebar Header with Search */}
+        <div className="bg-[#f0f2f5] dark:bg-[#202c33] dark:border-[#202c33] border-b border-slate-200 flex flex-col shrink-0">
+            {/* Top Row: Title & Actions */}
+            <div className="px-4 py-3 flex justify-between items-center">
+                <h2 className="font-bold text-xl text-slate-800 dark:text-[#e9edef]">Chats</h2>
+                <div className="flex gap-1">
+                    <button 
+                        onClick={handleCreateTopic}
+                        className="text-slate-500 hover:bg-slate-200 p-2 rounded-full transition-colors dark:text-[#aebac1] dark:hover:bg-[#374045]"
+                        title="Create Topic Channel"
+                    >
+                        <MessageSquarePlus size={22} />
+                    </button>
+                    {currentUser.role === UserRole.SPONSOR && (
+                        <button 
+                            onClick={() => { setIsBroadcastMode(true); setActiveChatHandle(null); }}
+                            className="text-slate-500 hover:bg-slate-200 p-2 rounded-full transition-colors dark:text-[#aebac1] dark:hover:bg-[#374045]"
+                            title="New Broadcast"
+                        >
+                            <SpeakerWaveIcon />
+                        </button>
+                    )}
+                </div>
+            </div>
+
+            {/* Search Row */}
+            <div className="px-3 pb-3">
+                <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <Search size={16} className="text-slate-500 dark:text-[#aebac1]" />
+                    </div>
+                    <input 
+                        type="text" 
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        placeholder="Search or start new chat" 
+                        className="w-full pl-10 pr-4 py-2 bg-white dark:bg-[#202c33] rounded-lg border border-slate-200 dark:border-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-[#00a884] dark:text-[#e9edef] placeholder-slate-500 dark:placeholder-slate-500"
+                    />
+                </div>
+            </div>
         </div>
         
         <div className="flex-1 overflow-y-auto">
-            {chatListItems.map(chat => {
+            {/* Current Chats List */}
+            {filteredChatList.map(chat => {
                 const hasUnread = messages.some(m => m.recipientHandle === currentUser.handle && m.senderHandle === chat.handle && !m.isRead);
 
                 return (
@@ -316,7 +322,7 @@ const ChatPortal: React.FC<ChatPortalProps> = ({ currentUser, students, messages
                         className={`px-4 py-3 cursor-pointer hover:bg-[#f5f6f6] transition-colors flex items-center gap-3 border-b border-slate-100 dark:border-slate-800 dark:hover:bg-[#202c33] ${activeChatHandle === chat.handle ? 'bg-[#f0f2f5] dark:bg-[#2a3942]' : ''}`}
                     >
                         <div className="w-12 h-12 rounded-full bg-slate-200 flex items-center justify-center font-bold text-lg overflow-hidden shrink-0 dark:bg-[#374045] dark:text-[#e9edef]">
-                            {chat.avatar.length > 2 ? <img src={chat.avatar} className="w-full h-full object-cover" alt={chat.name}/> : chat.avatar}
+                            {chat.avatar === '#' ? <Hash size={20}/> : (chat.avatar.length > 2 ? <img src={chat.avatar} className="w-full h-full object-cover" alt={chat.name}/> : chat.avatar)}
                         </div>
                         <div className="flex-1 min-w-0">
                             <div className="flex justify-between items-center mb-0.5">
@@ -328,15 +334,45 @@ const ChatPortal: React.FC<ChatPortalProps> = ({ currentUser, students, messages
                     </div>
                 );
             })}
+
+            {/* Global Search Results (Directory) */}
+            {searchQuery && globalSearchResults.length > 0 && (
+                <div className="mt-2">
+                    <div className="px-4 py-2 text-xs font-bold text-[#00a884] uppercase tracking-wider">Directory Results</div>
+                    {globalSearchResults.map(student => (
+                        <div 
+                            key={student.id}
+                            onClick={() => handleStartGlobalChat(student)}
+                            className="px-4 py-3 cursor-pointer hover:bg-[#f5f6f6] transition-colors flex items-center gap-3 border-b border-slate-100 dark:border-slate-800 dark:hover:bg-[#202c33]"
+                        >
+                            <div className="w-12 h-12 rounded-full bg-blue-50 text-blue-600 border border-blue-100 flex items-center justify-center font-bold text-sm overflow-hidden shrink-0 dark:bg-blue-900/20 dark:text-blue-300 dark:border-blue-900">
+                                {student.avatarUrl ? <img src={student.avatarUrl} className="w-full h-full object-cover" /> : student.name.charAt(0)}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                                <h3 className="font-semibold text-base text-slate-800 dark:text-[#e9edef] truncate">{student.name}</h3>
+                                <p className="text-sm text-slate-500 dark:text-[#8696a0] truncate">{student.handle} • {student.role}</p>
+                            </div>
+                            <div className="p-2 bg-slate-100 rounded-full dark:bg-slate-700">
+                                <Plus size={16} className="text-slate-500 dark:text-slate-300" />
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            )}
+
+            {filteredChatList.length === 0 && globalSearchResults.length === 0 && searchQuery && (
+                <div className="p-8 text-center text-slate-500 dark:text-[#8696a0]">
+                    No chats or contacts found.
+                </div>
+            )}
         </div>
       </div>
 
-      {/* Chat Area - Added min-h-0 to ensure flex shrinking works correctly */}
+      {/* Chat Area */}
       <div className={`flex-1 flex flex-col relative min-h-0 ${!activeChatHandle && !isBroadcastMode ? 'hidden md:flex' : 'flex'}`}>
         
         {/* Chat Background Layer */}
         <div className="absolute inset-0 z-0 bg-[#efeae2] dark:bg-[#0b141a]">
-            {/* Pattern Overlay */}
             <div 
                 className="absolute inset-0 opacity-[0.4] dark:opacity-[0.06] pointer-events-none" 
                 style={{ 
@@ -346,7 +382,6 @@ const ChatPortal: React.FC<ChatPortalProps> = ({ currentUser, students, messages
             ></div>
         </div>
 
-        {/* Content Container - Added max-h-full to prevent expansion beyond parent */}
         <div className="relative z-10 flex flex-col h-full max-h-full overflow-hidden">
             
             {/* Broadcast Mode UI */}
@@ -402,19 +437,21 @@ const ChatPortal: React.FC<ChatPortalProps> = ({ currentUser, students, messages
                 </div>
             ) : activeChatHandle ? (
                 <>
-                    {/* Active Chat Header - STATIC (shrink-0) */}
+                    {/* Active Chat Header */}
                     <div className="bg-[#f0f2f5] px-4 py-2.5 flex items-center gap-4 border-b border-slate-200 shadow-sm shrink-0 z-20 dark:bg-[#202c33] dark:border-[#202c33]">
                         <button onClick={() => setActiveChatHandle(null)} className="md:hidden text-slate-500 hover:text-[#00a884] dark:text-[#aebac1]">
                             <ChevronLeftIcon />
                         </button>
                         <div className="w-10 h-10 rounded-full bg-slate-300 flex items-center justify-center font-bold overflow-hidden dark:bg-[#6a7175] dark:text-[#cfd7da]">
-                            {chatListItems.find(c => c.handle === activeChatHandle)?.avatar.toString().charAt(0) === 'h' ? <img src={chatListItems.find(c => c.handle === activeChatHandle)?.avatar} className="w-full h-full object-cover"/> : chatListItems.find(c => c.handle === activeChatHandle)?.avatar}
+                            {activeChatInfo.avatar.toString().charAt(0) === '#' ? <Hash size={20}/> : (activeChatInfo.avatar.length > 2 ? <img src={activeChatInfo.avatar} className="w-full h-full object-cover"/> : activeChatInfo.avatar)}
                         </div>
                         <div className="flex-1 min-w-0">
                             <h3 className="font-semibold text-slate-800 text-base dark:text-[#e9edef] truncate">
-                                {chatListItems.find(c => c.handle === activeChatHandle)?.name}
+                                {activeChatInfo.name}
                             </h3>
-                            <p className="text-xs text-slate-500 dark:text-[#8696a0] truncate">{activeChatHandle.startsWith('GROUP_') ? `${myDownline.length + 1} members` : 'Online'}</p>
+                            <p className="text-xs text-slate-500 dark:text-[#8696a0] truncate">
+                                {activeChatHandle.startsWith('GROUP_') || activeChatHandle.startsWith('TOPIC_') ? 'Group Channel' : 'Online'}
+                            </p>
                         </div>
                         <div className="relative" ref={menuRef}>
                             <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="p-2 text-slate-500 hover:bg-slate-200 rounded-full transition-colors dark:text-[#aebac1] dark:hover:bg-[#374045]">
@@ -433,7 +470,7 @@ const ChatPortal: React.FC<ChatPortalProps> = ({ currentUser, students, messages
                         </div>
                     </div>
 
-                    {/* Messages List - SCROLLABLE INTERNAL AREA (flex-1 min-h-0) */}
+                    {/* Messages List */}
                     <div 
                         ref={messageContainerRef}
                         className="flex-1 overflow-y-auto p-4 space-y-1 scroll-smooth min-h-0"
@@ -472,13 +509,13 @@ const ChatPortal: React.FC<ChatPortalProps> = ({ currentUser, students, messages
                                                         <button onClick={() => handleReply(msg)} className="w-full text-left px-4 py-2.5 text-sm hover:bg-slate-50 dark:hover:bg-[#111b21] flex items-center gap-3">
                                                             <Reply size={16} /> Reply
                                                         </button>
-                                                        <button onClick={() => handleCopy(msg.text)} className="w-full text-left px-4 py-2.5 text-sm hover:bg-slate-50 dark:hover:bg-[#111b21] flex items-center gap-3">
+                                                        <button onClick={() => { navigator.clipboard.writeText(msg.text); setMessageMenuId(null); }} className="w-full text-left px-4 py-2.5 text-sm hover:bg-slate-50 dark:hover:bg-[#111b21] flex items-center gap-3">
                                                             <Copy size={16} /> Copy
                                                         </button>
-                                                        <button onClick={() => handleForward(msg.text)} className="w-full text-left px-4 py-2.5 text-sm hover:bg-slate-50 dark:hover:bg-[#111b21] flex items-center gap-3">
+                                                        <button onClick={() => { setNewMessage(msg.text); setMessageMenuId(null); textareaRef.current?.focus(); }} className="w-full text-left px-4 py-2.5 text-sm hover:bg-slate-50 dark:hover:bg-[#111b21] flex items-center gap-3">
                                                             <ArrowRight size={16} /> Forward
                                                         </button>
-                                                        <button onClick={() => handleDeleteRequest(msg)} className="w-full text-left px-4 py-2.5 text-sm hover:bg-slate-50 dark:hover:bg-[#111b21] flex items-center gap-3 text-red-600 dark:text-red-400">
+                                                        <button onClick={() => { setDeleteTarget(msg); setMessageMenuId(null); }} className="w-full text-left px-4 py-2.5 text-sm hover:bg-slate-50 dark:hover:bg-[#111b21] flex items-center gap-3 text-red-600 dark:text-red-400">
                                                             <Trash2 size={16} /> Delete
                                                         </button>
                                                     </div>
@@ -488,7 +525,7 @@ const ChatPortal: React.FC<ChatPortalProps> = ({ currentUser, students, messages
 
                                         <div className="px-2 pt-1.5 pb-1 pr-7">
                                             {/* Group Sender Name */}
-                                            {activeChatHandle.startsWith('GROUP_') && !isMe && (
+                                            {(activeChatHandle.startsWith('GROUP_') || activeChatHandle.startsWith('TOPIC_')) && !isMe && (
                                                 <p className={`text-xs font-bold mb-1 ${['text-orange-500', 'text-pink-500', 'text-purple-500', 'text-blue-500'][msg.senderHandle.length % 4]}`}>
                                                     {msg.senderHandle}
                                                 </p>
@@ -513,7 +550,7 @@ const ChatPortal: React.FC<ChatPortalProps> = ({ currentUser, students, messages
                         })}
                     </div>
 
-                    {/* Input Bar - STATIC (shrink-0) */}
+                    {/* Input Bar */}
                     <div className="bg-[#f0f2f5] px-2 py-2 flex flex-col border-t border-slate-200 shrink-0 z-20 dark:bg-[#202c33] dark:border-[#202c33]">
                         {/* Reply Banner */}
                         {replyToMessage && (

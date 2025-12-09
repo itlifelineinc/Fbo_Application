@@ -1,8 +1,7 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Student, Message, UserRole, MessageStatus, Attachment } from '../types';
-import { MoreVertical, Trash2, ChevronDown, Reply, Copy, ArrowRight, X, Search, MessageSquarePlus, Hash, Plus, Paperclip, LayoutTemplate, ClipboardCheck, Megaphone, Image as ImageIcon, FileText, Mic, Link as LinkIcon, Download, Play, Pause, ExternalLink, LayoutGrid } from 'lucide-react';
+import { MoreVertical, Trash2, ChevronDown, Reply, Copy, ArrowRight, X, Search, MessageSquarePlus, Hash, Plus, Paperclip, LayoutTemplate, ClipboardCheck, Megaphone, Image as ImageIcon, FileText, Mic, Link as LinkIcon, Download, Play, Pause, ExternalLink, LayoutGrid, StopCircle } from 'lucide-react';
 
 interface ChatPortalProps {
   currentUser: Student;
@@ -65,6 +64,13 @@ const ChatPortal: React.FC<ChatPortalProps> = ({ currentUser, students, messages
   const [menuPosition, setMenuPosition] = useState<'up' | 'down'>('down');
   const [replyToMessage, setReplyToMessage] = useState<Message | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Message | null>(null);
+
+  // --- Voice Recording State ---
+  const [isRecording, setIsRecording] = useState(false);
+  const [recordingDuration, setRecordingDuration] = useState(0);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // Refs
   const messageContainerRef = useRef<HTMLDivElement>(null);
@@ -241,8 +247,92 @@ const ChatPortal: React.FC<ChatPortalProps> = ({ currentUser, students, messages
       setShowAttachMenu(false);
   };
 
+  // --- Voice Recorder Logic ---
+  
+  const formatTime = (seconds: number) => {
+      const mins = Math.floor(seconds / 60);
+      const secs = seconds % 60;
+      return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+  };
+
+  const startRecording = async () => {
+      try {
+          const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+          const mediaRecorder = new MediaRecorder(stream);
+          mediaRecorderRef.current = mediaRecorder;
+          audioChunksRef.current = [];
+
+          mediaRecorder.ondataavailable = (event) => {
+              if (event.data.size > 0) audioChunksRef.current.push(event.data);
+          };
+
+          mediaRecorder.onstop = () => {
+              // Create Blob
+              const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+              
+              // Convert to Base64 for Attachment
+              const reader = new FileReader();
+              reader.readAsDataURL(audioBlob);
+              reader.onloadend = () => {
+                  const base64data = reader.result as string;
+                  setPendingAttachment({
+                      type: 'AUDIO',
+                      url: base64data,
+                      name: `Voice_Note_${new Date().toLocaleTimeString()}.webm`,
+                      size: `${(audioBlob.size / 1024).toFixed(1)} KB`,
+                      mimeType: 'audio/webm'
+                  });
+              };
+
+              // Cleanup
+              stream.getTracks().forEach(track => track.stop());
+          };
+
+          mediaRecorder.start();
+          setIsRecording(true);
+          setRecordingDuration(0);
+          
+          // Start Timer
+          timerRef.current = setInterval(() => {
+              setRecordingDuration(prev => prev + 1);
+          }, 1000);
+
+      } catch (e) {
+          console.error("Mic error", e);
+          alert("Could not access microphone.");
+      }
+  };
+
+  const stopRecording = () => {
+      if (mediaRecorderRef.current && isRecording) {
+          mediaRecorderRef.current.stop();
+          setIsRecording(false);
+          if (timerRef.current) clearInterval(timerRef.current);
+      }
+  };
+
+  const cancelRecording = () => {
+      if (mediaRecorderRef.current && isRecording) {
+          // Stop but don't save
+          mediaRecorderRef.current.onstop = null; // Remove handler to prevent save
+          mediaRecorderRef.current.stop();
+          mediaRecorderRef.current.stream.getTracks().forEach(track => track.stop());
+          
+          setIsRecording(false);
+          if (timerRef.current) clearInterval(timerRef.current);
+          audioChunksRef.current = []; // Clear chunks
+      }
+  };
+
   // Handlers
   const handleSend = () => {
+    // If recording, stop and let effect handle attachment setting, user must click send again to confirm? 
+    // WhatsApp style sends immediately on release, but for safety in this app, we'll stop recording and put it in pending.
+    if (isRecording) {
+        stopRecording();
+        return; // Wait for pendingAttachment to populate
+    }
+
     if (!newMessage.trim() && !pendingAttachment) return;
 
     const baseMessage = {
@@ -735,7 +825,7 @@ const ChatPortal: React.FC<ChatPortalProps> = ({ currentUser, students, messages
                                     
                                     <div className="flex-1 min-w-0">
                                         <p className="text-xs font-bold text-slate-700 dark:text-white truncate">{pendingAttachment.name || 'Attachment'}</p>
-                                        <p className="text-[10px] text-slate-500 dark:text-slate-400">{pendingAttachment.type} {pendingAttachment.size ? `• ${pendingAttachment.size}` : ''}</p>
+                                        <p className="text-xs text-slate-500 dark:text-slate-400">{pendingAttachment.type} {pendingAttachment.size ? `• ${pendingAttachment.size}` : ''}</p>
                                     </div>
                                 </div>
                                 <button onClick={() => setPendingAttachment(null)} className="p-1 text-slate-400 hover:text-red-500">
@@ -800,48 +890,93 @@ const ChatPortal: React.FC<ChatPortalProps> = ({ currentUser, students, messages
                         )}
 
                         <div className="flex items-end gap-2">
-                            {/* Input Container - Wrapping Buttons and Textarea */}
-                            <div className="flex-1 bg-white dark:bg-[#2a3942] rounded-2xl border border-white dark:border-[#2a3942] flex items-end relative z-20">
-                                
-                                {/* Desktop Attachment Trigger (Inside Left) */}
-                                <div className="hidden md:flex pb-2 pl-2">
+                            {/* Recording Overlay UI (Replaces Input) */}
+                            {isRecording ? (
+                                <div className="flex-1 bg-white dark:bg-[#2a3942] rounded-2xl border border-white dark:border-[#2a3942] flex items-center p-3 animate-pulse relative z-30">
+                                    <div className="flex items-center gap-2 text-red-500 font-bold">
+                                        <div className="w-3 h-3 bg-red-500 rounded-full animate-ping" />
+                                        <span>{formatTime(recordingDuration)}</span>
+                                    </div>
+                                    <div className="flex-1 text-center text-xs text-slate-400 font-medium">Recording...</div>
                                     <button 
-                                        onClick={() => setShowAttachMenu(!showAttachMenu)}
-                                        className={`p-2 rounded-full transition-transform duration-300 ${showAttachMenu ? 'rotate-45 text-slate-700 bg-slate-100 dark:text-slate-300 dark:bg-slate-700' : 'text-slate-500 hover:text-slate-700 dark:text-[#aebac1] dark:hover:text-white'}`}
+                                        onClick={cancelRecording}
+                                        className="text-slate-400 hover:text-red-500 p-2"
+                                        title="Cancel Recording"
                                     >
-                                        <Plus size={24} />
+                                        <Trash2 size={20} />
                                     </button>
                                 </div>
+                            ) : (
+                                /* Standard Input Container */
+                                <div className="flex-1 bg-white dark:bg-[#2a3942] rounded-2xl border border-white dark:border-[#2a3942] flex items-end relative z-20">
+                                    {/* Desktop Attachment Trigger (Inside Left) */}
+                                    <div className="hidden md:flex pb-2 pl-2">
+                                        <button 
+                                            onClick={() => setShowAttachMenu(!showAttachMenu)}
+                                            className={`p-2 rounded-full transition-transform duration-300 ${showAttachMenu ? 'rotate-45 text-slate-700 bg-slate-100 dark:text-slate-300 dark:bg-slate-700' : 'text-slate-500 hover:text-slate-700 dark:text-[#aebac1] dark:hover:text-white'}`}
+                                        >
+                                            <Plus size={24} />
+                                        </button>
+                                    </div>
 
-                                <textarea 
-                                    ref={textareaRef}
-                                    rows={1}
-                                    value={newMessage}
-                                    onChange={(e) => setNewMessage(e.target.value)}
-                                    onKeyDown={handleKeyDown}
-                                    placeholder={pendingAttachment ? "Add a caption..." : "Type a message"}
-                                    className="w-full py-3 px-4 md:pl-2 md:pr-4 border-none focus:ring-0 text-slate-800 bg-transparent resize-none overflow-hidden max-h-[120px] dark:text-[#e9edef] dark:placeholder-[#8696a0] leading-relaxed text-[15px]"
-                                    style={{ minHeight: '24px' }}
-                                />
+                                    <textarea 
+                                        ref={textareaRef}
+                                        rows={1}
+                                        value={newMessage}
+                                        onChange={(e) => setNewMessage(e.target.value)}
+                                        onKeyDown={handleKeyDown}
+                                        placeholder={pendingAttachment ? "Add a caption..." : "Type a message"}
+                                        className="w-full py-3 px-4 md:pl-2 md:pr-10 border-none focus:ring-0 text-slate-800 bg-transparent resize-none overflow-hidden max-h-[120px] dark:text-[#e9edef] dark:placeholder-[#8696a0] leading-relaxed text-[15px]"
+                                        style={{ minHeight: '24px' }}
+                                    />
 
-                                {/* Mobile Attachment Trigger (Inside Right) */}
-                                <div className="md:hidden absolute right-2 bottom-2">
-                                    <button 
-                                        onClick={() => setShowAttachMenu(!showAttachMenu)}
-                                        className={`p-2 text-slate-400 transition-colors ${showAttachMenu ? 'text-emerald-500' : ''}`}
-                                    >
-                                        <Paperclip size={20} className={showAttachMenu ? '' : 'transform -rotate-45'} />
-                                    </button>
+                                    {/* Desktop Mic (Inside Right) */}
+                                    <div className="hidden md:flex absolute right-2 bottom-2">
+                                        <button 
+                                            onClick={startRecording}
+                                            className="p-2 text-slate-500 hover:text-red-500 transition-colors dark:text-[#aebac1] dark:hover:text-red-400"
+                                            title="Record Voice"
+                                        >
+                                            <Mic size={20} />
+                                        </button>
+                                    </div>
+
+                                    {/* Mobile Attachment Trigger (Inside Right) */}
+                                    <div className="md:hidden absolute right-2 bottom-2">
+                                        <button 
+                                            onClick={() => setShowAttachMenu(!showAttachMenu)}
+                                            className={`p-2 text-slate-400 transition-colors ${showAttachMenu ? 'text-emerald-500' : ''}`}
+                                        >
+                                            <Paperclip size={20} className={showAttachMenu ? '' : 'transform -rotate-45'} />
+                                        </button>
+                                    </div>
                                 </div>
-                            </div>
+                            )}
                             
-                            <button 
-                                onClick={handleSend}
-                                disabled={!newMessage.trim() && !pendingAttachment}
-                                className="p-3 mb-1 bg-[#00a884] text-white rounded-full hover:bg-[#008f6f] disabled:opacity-60 transition-colors shadow-sm flex items-center justify-center"
-                            >
-                                <PaperAirplaneIcon />
-                            </button>
+                            {/* Action Button (Send / Mic) */}
+                            {isRecording ? (
+                                <button 
+                                    onClick={handleSend} // Stop & Send
+                                    className="p-3 mb-1 bg-[#00a884] text-white rounded-full hover:bg-[#008f6f] transition-colors shadow-sm flex items-center justify-center animate-pulse"
+                                >
+                                    <PaperAirplaneIcon />
+                                </button>
+                            ) : (
+                                <button 
+                                    onClick={(!newMessage.trim() && !pendingAttachment) ? startRecording : handleSend}
+                                    className={`p-3 mb-1 rounded-full transition-colors shadow-sm flex items-center justify-center ${(!newMessage.trim() && !pendingAttachment) ? 'bg-[#00a884] text-white hover:bg-[#008f6f] md:hidden' : 'bg-[#00a884] text-white hover:bg-[#008f6f]'}`}
+                                >
+                                    {(!newMessage.trim() && !pendingAttachment) ? (
+                                        // Mobile Mic State (Only visible on mobile via css, desktop always shows send here)
+                                        <>
+                                            <span className="md:hidden"><Mic size={20} /></span>
+                                            <span className="hidden md:block"><PaperAirplaneIcon /></span>
+                                        </>
+                                    ) : (
+                                        <PaperAirplaneIcon />
+                                    )}
+                                </button>
+                            )}
                         </div>
                     </div>
                 </>

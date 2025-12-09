@@ -158,6 +158,7 @@ export interface Student {
   completedChapters: string[]; // IDs of completed chapters
   enrolledCourses: string[]; // IDs of courses the student has started/chosen
   savedCourses: string[]; // IDs of bookmarked courses
+  viewedTemplates?: string[]; // IDs of viewed mentorship templates
   
   // Track where the student left off
   lastAccessed?: {

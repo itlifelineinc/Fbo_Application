@@ -117,7 +117,8 @@ const App: React.FC = () => {
                 lastLoginDate: today
             },
             // Ensure savedCourses is initialized
-            savedCourses: user.savedCourses || []
+            savedCourses: user.savedCourses || [],
+            viewedTemplates: user.viewedTemplates || []
         };
 
         setStudents(prev => prev.map(s => s.id === updatedUser.id ? updatedUser : s));
@@ -165,7 +166,8 @@ const App: React.FC = () => {
             lastLoginDate: new Date().toISOString().split('T')[0],
             learningStreak: 1
         },
-        savedCourses: []
+        savedCourses: [],
+        viewedTemplates: []
     };
     
     setCurrentUser(loggedInUser);
@@ -390,6 +392,17 @@ const App: React.FC = () => {
       setTemplates(prev => prev.filter(t => t.id !== id));
   };
 
+  const handleMarkTemplateAsViewed = (templateId: string) => {
+      if (!currentUser) return;
+      if (currentUser.viewedTemplates?.includes(templateId)) return;
+
+      const updatedStudent = {
+          ...currentUser,
+          viewedTemplates: [...(currentUser.viewedTemplates || []), templateId]
+      };
+      handleUpdateStudent(updatedStudent);
+  };
+
   // --- Notification Logic ---
   // Create notifications from unread messages for the current user
   const notifications: AppNotification[] = currentUser ? messages
@@ -424,6 +437,7 @@ const App: React.FC = () => {
                     students={students} 
                     courses={courses} 
                     onReviewCourse={handleReviewCourse}
+                    templates={templates}
                 />
             </ProtectedRoute>
         } />
@@ -583,6 +597,7 @@ const App: React.FC = () => {
                 <MentorshipInbox 
                     currentUser={currentUser!} 
                     templates={templates}
+                    onMarkAsViewed={handleMarkTemplateAsViewed}
                 />
             </ProtectedRoute>
         } />

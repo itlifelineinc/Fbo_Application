@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Brush } from 'recharts';
 import { Link, useNavigate } from 'react-router-dom';
-import { Student, UserRole, Course, CourseTrack, CourseStatus } from '../types';
+import { Student, UserRole, Course, CourseTrack, CourseStatus, MentorshipTemplate } from '../types';
 import { Edit, ExternalLink, Plus, Minus, ChevronLeft, ChevronRight, User, Users, TrendingUp, Calendar, MessageCircle, ShoppingBag, Globe, Bell, ArrowUpRight, CheckCircle, Lightbulb, Inbox } from 'lucide-react';
 import { RANKS, RANK_ORDER } from '../constants';
 
@@ -60,6 +60,7 @@ interface DashboardProps {
   students: Student[];
   currentUser: Student;
   courses: Course[];
+  templates?: MentorshipTemplate[];
   onReviewCourse?: (courseId: string, status: CourseStatus) => void;
 }
 
@@ -72,7 +73,7 @@ const isRankOrHigher = (currentId: string, targetId: string): boolean => {
 
 // --- Main Component ---
 
-const Dashboard: React.FC<DashboardProps> = ({ students, currentUser, courses, onReviewCourse }) => {
+const Dashboard: React.FC<DashboardProps> = ({ students, currentUser, courses, onReviewCourse, templates = [] }) => {
   if (!currentUser) return null;
 
   const navigate = useNavigate();
@@ -85,6 +86,15 @@ const Dashboard: React.FC<DashboardProps> = ({ students, currentUser, courses, o
   const isSponsor = currentUser.role === UserRole.SPONSOR;
   const isSuperAdmin = currentUser.role === UserRole.SUPER_ADMIN;
   const isAdmin = currentUser.role === UserRole.ADMIN || isSuperAdmin;
+
+  // Determine if user has a sponsor (everyone except root admin usually)
+  const hasSponsor = !!currentUser.sponsorId;
+
+  // Calculate unread templates count
+  const unreadTemplatesCount = templates.filter(t => 
+    (t.authorHandle === currentUser.sponsorId || t.authorHandle === '@forever_system') &&
+    !(currentUser.viewedTemplates || []).includes(t.id)
+  ).length;
 
   let visibleStudents = students || []; 
   if (isStudent) {
@@ -633,10 +643,17 @@ const Dashboard: React.FC<DashboardProps> = ({ students, currentUser, courses, o
             <div>
                 <h2 className="text-lg font-bold text-slate-800 mb-4 dark:text-slate-100">Quick Actions</h2>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    {isStudent ? (
-                        <Link to="/mentorship/inbox" className="bg-white p-4 rounded-xl border border-slate-100 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all flex flex-col items-center gap-3 text-center dark:bg-slate-800 dark:border-slate-700">
-                            <div className="w-10 h-10 bg-indigo-50 text-indigo-600 rounded-full flex items-center justify-center dark:bg-indigo-900/30 dark:text-indigo-400"><Inbox size={20} /></div>
-                            <span className="text-sm font-bold text-slate-700 dark:text-slate-300">Mentorship</span>
+                    {hasSponsor ? (
+                        <Link to="/mentorship/inbox" className="relative bg-white p-4 rounded-xl border border-slate-100 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all flex flex-col items-center gap-3 text-center dark:bg-slate-800 dark:border-slate-700">
+                            <div className="w-10 h-10 bg-indigo-50 text-indigo-600 rounded-full flex items-center justify-center dark:bg-indigo-900/30 dark:text-indigo-400 relative">
+                                <Inbox size={20} />
+                                {unreadTemplatesCount > 0 && (
+                                    <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white ring-2 ring-white dark:ring-slate-800 animate-pulse">
+                                        {unreadTemplatesCount > 9 ? '9+' : unreadTemplatesCount}
+                                    </span>
+                                )}
+                            </div>
+                            <span className="text-sm font-bold text-slate-700 dark:text-slate-300">Mentorship Inbox</span>
                         </Link>
                     ) : (
                         <Link to="/chat" className="bg-white p-4 rounded-xl border border-slate-100 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all flex flex-col items-center gap-3 text-center dark:bg-slate-800 dark:border-slate-700">

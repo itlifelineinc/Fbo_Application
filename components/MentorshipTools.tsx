@@ -283,7 +283,7 @@ const MentorshipTools: React.FC<MentorshipToolsProps> = ({
           setIsRecordingInstruction(true);
       } catch (e) {
           console.error("Mic error", e);
-          alert("Could not access microphone.");
+          alert("Could not access microphone. Please ensure microphone permissions are enabled for this app.");
       }
   };
 
@@ -317,7 +317,7 @@ const MentorshipTools: React.FC<MentorshipToolsProps> = ({
           setRecordingQuestionId(qId);
       } catch (e) {
           console.error("Mic error", e);
-          alert("Could not access microphone.");
+          alert("Could not access microphone. Please ensure microphone permissions are enabled for this app.");
       }
   };
 

@@ -1,8 +1,9 @@
 
 import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, LayoutTemplate, ClipboardCheck, Megaphone, Plus, Save, Trash2, X, ChevronDown, List, Type, AlertCircle, FileText, Upload, Video, Mic, Calendar, Users, CheckCircle, Clock, Link as LinkIcon, Paperclip, Play, Pause, Image as ImageIcon, StopCircle, Edit, Download } from 'lucide-react';
-import { Student, MentorshipTemplate, ContentBlock, BlockType, Assignment, AssignmentQuestion, AssignmentType, Attachment } from '../types';
+import { ArrowLeft, LayoutTemplate, ClipboardCheck, Megaphone, Plus, Save, Trash2, X, ChevronDown, List, Type, AlertCircle, FileText, Upload, Video, Mic, Calendar, Users, CheckCircle, Clock, Link as LinkIcon, Paperclip, Play, Pause, Image as ImageIcon, StopCircle, Edit, Download, Radio, Send } from 'lucide-react';
+import { Student, MentorshipTemplate, ContentBlock, BlockType, Assignment, AssignmentQuestion, AssignmentType, Attachment, Broadcast } from '../types';
+import BroadcastBuilder from './BroadcastBuilder';
 
 interface MentorshipToolsProps {
   currentUser: Student;
@@ -15,6 +16,7 @@ interface MentorshipToolsProps {
   onAddAssignment?: (assignment: Assignment) => void; // New
   onDeleteAssignment?: (id: string) => void; // New
   onUpdateAssignment?: (assignment: Assignment) => void; // New
+  onSendBroadcast?: (broadcast: Broadcast) => void; // New
 }
 
 const MentorshipTools: React.FC<MentorshipToolsProps> = ({ 
@@ -27,11 +29,17 @@ const MentorshipTools: React.FC<MentorshipToolsProps> = ({
     onUpdateTemplate,
     onAddAssignment,
     onDeleteAssignment,
-    onUpdateAssignment
+    onUpdateAssignment,
+    onSendBroadcast
 }) => {
   const navigate = useNavigate();
-  const [activeView, setActiveView] = useState<'MENU' | 'TEMPLATES_LIST' | 'TEMPLATE_EDITOR' | 'ASSIGNMENTS_LIST' | 'ASSIGNMENT_EDITOR'>('MENU');
+  // View State Manager
+  const [activeView, setActiveView] = useState<'MENU' | 'TEMPLATES_LIST' | 'TEMPLATE_EDITOR' | 'ASSIGNMENTS_LIST' | 'ASSIGNMENT_EDITOR' | 'BROADCAST_BUILDER' | 'BROADCAST_HISTORY'>('MENU');
   
+  // --- Broadcast State ---
+  // No local state for list, handled via App. Just need editing state.
+  const [editingBroadcast, setEditingBroadcast] = useState<Broadcast | undefined>(undefined);
+
   // --- Template State ---
   const [editingTemplateId, setEditingTemplateId] = useState<string | null>(null);
   const [templateTitle, setTemplateTitle] = useState('');
@@ -129,6 +137,15 @@ const MentorshipTools: React.FC<MentorshipToolsProps> = ({
       
       setActiveView('ASSIGNMENT_EDITOR');
       setShowTemplateModal(false);
+  };
+
+  // --- Broadcast Logic ---
+  const handleSaveBroadcast = (broadcast: Broadcast) => {
+      if (onSendBroadcast) {
+          onSendBroadcast(broadcast);
+      }
+      alert(`Broadcast ${broadcast.status === 'SENT' ? 'Sent' : 'Saved'}!`);
+      setActiveView('MENU'); 
   };
 
   // --- Template Handlers ---
@@ -415,16 +432,17 @@ const MentorshipTools: React.FC<MentorshipToolsProps> = ({
         </button>
 
         <button 
-          onClick={() => alert('Broadcast feature coming soon!')}
-          className="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all text-left group flex items-start gap-5 relative overflow-hidden opacity-70"
+          onClick={() => { setEditingBroadcast(undefined); setActiveView('BROADCAST_BUILDER'); }}
+          className="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all text-left group flex items-start gap-5 relative overflow-hidden"
         >
           <div className="p-4 rounded-2xl text-white shadow-lg bg-red-500 group-hover:scale-110 transition-transform duration-300 relative z-10">
             <Megaphone size={28} />
           </div>
           <div className="relative z-10">
             <h3 className="font-bold text-xl text-slate-800 dark:text-white mb-2">Announcements</h3>
-            <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed">Send broadcast messages to multiple team members (Coming Soon).</p>
+            <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed">Send broadcast messages to multiple team members.</p>
           </div>
+          <div className="absolute top-0 right-0 w-32 h-32 bg-red-50 dark:bg-red-900/20 rounded-full blur-3xl -mr-10 -mt-10 transition-opacity opacity-0 group-hover:opacity-100"></div>
         </button>
     </div>
   );
@@ -987,30 +1005,42 @@ const MentorshipTools: React.FC<MentorshipToolsProps> = ({
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 animate-fade-in p-4 md:p-8">
       {/* Header */}
-      <div className="max-w-4xl mx-auto mb-8">
-        <button 
-          onClick={() => {
-              if (activeView === 'TEMPLATE_EDITOR') setActiveView('TEMPLATES_LIST');
-              else if (activeView === 'TEMPLATES_LIST') setActiveView('MENU');
-              else if (activeView === 'ASSIGNMENT_EDITOR') setActiveView('ASSIGNMENTS_LIST');
-              else if (activeView === 'ASSIGNMENTS_LIST') setActiveView('MENU');
-              else navigate('/dashboard'); // Go back to dashboard from main menu
-          }}
-          className="flex items-center gap-2 text-slate-500 hover:text-emerald-600 mb-4 transition-colors font-medium text-sm dark:text-slate-400 dark:hover:text-emerald-400"
-        >
-          <ArrowLeft size={16} /> {activeView === 'MENU' ? 'Dashboard' : 'Back'}
-        </button>
-        <h1 className="text-3xl font-bold text-slate-900 dark:text-white font-heading">Mentorship Tools</h1>
-        <p className="text-slate-500 dark:text-slate-400 mt-1">Empower your team with advanced management features.</p>
-      </div>
+      {activeView !== 'BROADCAST_BUILDER' && (
+        <div className="max-w-4xl mx-auto mb-8">
+            <button 
+            onClick={() => {
+                if (activeView === 'TEMPLATE_EDITOR') setActiveView('TEMPLATES_LIST');
+                else if (activeView === 'TEMPLATES_LIST') setActiveView('MENU');
+                else if (activeView === 'ASSIGNMENT_EDITOR') setActiveView('ASSIGNMENTS_LIST');
+                else if (activeView === 'ASSIGNMENTS_LIST') setActiveView('MENU');
+                else if (activeView === 'BROADCAST_HISTORY') setActiveView('MENU');
+                else navigate('/dashboard'); // Go back to dashboard from main menu
+            }}
+            className="flex items-center gap-2 text-slate-500 hover:text-emerald-600 mb-4 transition-colors font-medium text-sm dark:text-slate-400 dark:hover:text-emerald-400"
+            >
+            <ArrowLeft size={16} /> {activeView === 'MENU' ? 'Dashboard' : 'Back'}
+            </button>
+            <h1 className="text-3xl font-bold text-slate-900 dark:text-white font-heading">Mentorship Tools</h1>
+            <p className="text-slate-500 dark:text-slate-400 mt-1">Empower your team with advanced management features.</p>
+        </div>
+      )}
 
       {/* View Switcher */}
-      <div className="max-w-4xl mx-auto">
+      <div className={`mx-auto ${activeView === 'BROADCAST_BUILDER' ? 'h-[calc(100vh-4rem)] max-w-5xl' : 'max-w-4xl'}`}>
           {activeView === 'MENU' && renderMenu()}
           {activeView === 'TEMPLATES_LIST' && renderTemplatesList()}
           {activeView === 'TEMPLATE_EDITOR' && renderTemplateEditor()}
           {activeView === 'ASSIGNMENTS_LIST' && renderAssignmentsList()}
           {activeView === 'ASSIGNMENT_EDITOR' && renderAssignmentEditor()}
+          {activeView === 'BROADCAST_BUILDER' && (
+              <BroadcastBuilder 
+                  currentUser={currentUser} 
+                  students={students} 
+                  onSave={handleSaveBroadcast} 
+                  onCancel={() => setActiveView('MENU')}
+                  initialData={editingBroadcast}
+              />
+          )}
       </div>
     </div>
   );

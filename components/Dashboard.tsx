@@ -2,8 +2,8 @@
 import React, { useState, useEffect } from 'react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Brush } from 'recharts';
 import { Link, useNavigate } from 'react-router-dom';
-import { Student, UserRole, Course, CourseTrack, CourseStatus, MentorshipTemplate } from '../types';
-import { Edit, ExternalLink, Plus, Minus, ChevronLeft, ChevronRight, User, Users, TrendingUp, Calendar, MessageCircle, ShoppingBag, Globe, Bell, ArrowUpRight, CheckCircle, Lightbulb, Inbox, ClipboardCheck } from 'lucide-react';
+import { Student, UserRole, Course, CourseTrack, CourseStatus, MentorshipTemplate, Broadcast } from '../types';
+import { Edit, ExternalLink, Plus, Minus, ChevronLeft, ChevronRight, User, Users, TrendingUp, Calendar, MessageCircle, ShoppingBag, Globe, Bell, ArrowUpRight, CheckCircle, Lightbulb, Inbox, ClipboardCheck, Megaphone } from 'lucide-react';
 import { RANKS, RANK_ORDER } from '../constants';
 
 // --- Icons (Defined Before Usage) ---
@@ -61,6 +61,7 @@ interface DashboardProps {
   currentUser: Student;
   courses: Course[];
   templates?: MentorshipTemplate[];
+  broadcasts?: Broadcast[]; // Added
   onReviewCourse?: (courseId: string, status: CourseStatus) => void;
 }
 
@@ -73,7 +74,7 @@ const isRankOrHigher = (currentId: string, targetId: string): boolean => {
 
 // --- Main Component ---
 
-const Dashboard: React.FC<DashboardProps> = ({ students, currentUser, courses, onReviewCourse, templates = [] }) => {
+const Dashboard: React.FC<DashboardProps> = ({ students, currentUser, courses, onReviewCourse, templates = [], broadcasts = [] }) => {
   if (!currentUser) return null;
 
   const navigate = useNavigate();
@@ -98,7 +99,11 @@ const Dashboard: React.FC<DashboardProps> = ({ students, currentUser, courses, o
 
   // Count pending assignments
   const pendingAssignments = (currentUser.assignmentSubmissions || [])
-    .filter(sub => sub.status !== 'SUBMITTED' && sub.status !== 'APPROVED').length; // A bit crude, better logic in full list
+    .filter(sub => sub.status !== 'SUBMITTED' && sub.status !== 'APPROVED').length; 
+
+  // Count unread broadcasts (My broadcasts = in recipients OR ALL)
+  const myBroadcasts = broadcasts.filter(b => b.recipients.includes(currentUser.handle) || b.audienceType === 'ALL');
+  const unreadBroadcastsCount = myBroadcasts.filter(b => !(currentUser.readBroadcasts || []).includes(b.id)).length;
 
   let visibleStudents = students || []; 
   if (isStudent) {
@@ -685,10 +690,18 @@ const Dashboard: React.FC<DashboardProps> = ({ students, currentUser, courses, o
                         </>
                     )}
                     
-                    <Link to="/community" className="bg-white p-4 rounded-xl border border-slate-100 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all flex flex-col items-center gap-3 text-center dark:bg-slate-800 dark:border-slate-700">
-                        <div className="w-10 h-10 bg-orange-50 text-orange-600 rounded-full flex items-center justify-center dark:bg-orange-900/30 dark:text-orange-400"><Globe size={20} /></div>
-                        <span className="text-sm font-bold text-slate-700 dark:text-slate-300">Community</span>
+                    <Link to="/broadcasts" className="relative bg-white p-4 rounded-xl border border-slate-100 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all flex flex-col items-center gap-3 text-center dark:bg-slate-800 dark:border-slate-700">
+                        <div className="w-10 h-10 bg-orange-50 text-orange-600 rounded-full flex items-center justify-center dark:bg-orange-900/30 dark:text-orange-400 relative">
+                            <Megaphone size={20} />
+                            {unreadBroadcastsCount > 0 && (
+                                <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white ring-2 ring-white dark:ring-slate-800 animate-pulse">
+                                    {unreadBroadcastsCount > 9 ? '9+' : unreadBroadcastsCount}
+                                </span>
+                            )}
+                        </div>
+                        <span className="text-sm font-bold text-slate-700 dark:text-slate-300">Broadcast Inbox</span>
                     </Link>
+                    
                     <Link to="/sales" className="bg-white p-4 rounded-xl border border-slate-100 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all flex flex-col items-center gap-3 text-center dark:bg-slate-800 dark:border-slate-700">
                         <div className="w-10 h-10 bg-emerald-50 text-emerald-600 rounded-full flex items-center justify-center dark:bg-emerald-900/30 dark:text-emerald-400"><Plus size={20} /></div>
                         <span className="text-sm font-bold text-slate-700 dark:text-slate-300">Log Sale</span>

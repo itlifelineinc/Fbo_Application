@@ -1,5 +1,5 @@
 
-import { Course, Student, UserRole, Message, CourseTrack, CommunityPost, Cohort, CourseLevel, CourseStatus, RankDefinition, MentorshipTemplate, Assignment } from './types';
+import { Course, Student, UserRole, Message, CourseTrack, CommunityPost, Cohort, CourseLevel, CourseStatus, RankDefinition, MentorshipTemplate, Assignment, Broadcast } from './types';
 
 export const RANK_ORDER = [
     'NOVUS',
@@ -99,6 +99,8 @@ export const INITIAL_STUDENTS: Student[] = [
     enrolledCourses: ['c1', 'c_demo_social'], // Enrolled for testing analytics
     savedCourses: [],
     viewedTemplates: [],
+    readBroadcasts: [],
+    bookmarkedBroadcasts: [],
     caseCredits: 100, 
     rankProgress: {
         currentRankId: 'MGR',
@@ -124,6 +126,8 @@ export const INITIAL_STUDENTS: Student[] = [
     enrolledCourses: ['c1'],
     savedCourses: [],
     viewedTemplates: [],
+    readBroadcasts: [],
+    bookmarkedBroadcasts: [],
     caseCredits: 10,
     sponsorId: '@forever_system',
     learningStats: { totalTimeSpent: 0, questionsAsked: 0, learningStreak: 0, lastLoginDate: '' }
@@ -143,6 +147,8 @@ export const INITIAL_STUDENTS: Student[] = [
     enrolledCourses: ['c1', 'c_demo_social'],
     savedCourses: [],
     viewedTemplates: [],
+    readBroadcasts: [],
+    bookmarkedBroadcasts: [],
     sponsorId: '@forever_system',
     caseCredits: 4.5, 
     rankProgress: {
@@ -174,6 +180,8 @@ export const INITIAL_STUDENTS: Student[] = [
     enrolledCourses: ['c1', 'c_demo_social'],
     savedCourses: [],
     viewedTemplates: [],
+    readBroadcasts: [],
+    bookmarkedBroadcasts: [],
     sponsorId: '@alice_success',
     caseCredits: 0.5, 
     rankProgress: {
@@ -190,6 +198,42 @@ export const INITIAL_STUDENTS: Student[] = [
     cohortId: 'cohort_jan_25',
     learningStats: { totalTimeSpent: 3600, questionsAsked: 12, learningStreak: 3, lastLoginDate: '2023-10-27' }
   }
+];
+
+// --- INITIAL BROADCASTS ---
+export const INITIAL_BROADCASTS: Broadcast[] = [
+    {
+        id: 'b1',
+        title: 'New Month Target: 4CC Active',
+        content: '<p>Welcome to October, Team! Let\'s aim for 4CC active early this month. Remember, consistency is key to building a solid business.</p><ul><li>Reach out to 5 new people daily</li><li>Follow up with last month\'s customers</li></ul>',
+        authorHandle: '@alice_success',
+        recipients: ['@bob_builder'],
+        audienceType: 'ALL',
+        attachments: [],
+        isImportant: true,
+        status: 'SENT',
+        createdAt: Date.now() - 86400000 // 1 day ago
+    },
+    {
+        id: 'b2',
+        title: 'Product Launch: Aloe Glow',
+        content: '<p>The new Aloe Glow skincare line is here! Watch the training video attached to learn the key selling points.</p>',
+        authorHandle: '@forever_system',
+        recipients: ['@alice_success', '@bob_builder'],
+        audienceType: 'ALL',
+        attachments: [
+            {
+                type: 'VIDEO',
+                url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+                name: 'Aloe Glow Training.mp4',
+                size: '25 MB',
+                mimeType: 'video/mp4'
+            }
+        ],
+        isImportant: false,
+        status: 'SENT',
+        createdAt: Date.now() - 172800000 // 2 days ago
+    }
 ];
 
 // --- FULL COURSE CONTENT ---
@@ -268,7 +312,8 @@ export const INITIAL_COURSES: Course[] = [
             }
         ]
       }
-    ]
+    ],
+    testimonials: []
   },
   // --- NEW DEMO COURSE FOR ANALYTICS TESTING ---
   {

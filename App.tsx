@@ -22,9 +22,10 @@ import AssignmentsList from './components/AssignmentsList';
 import AssignmentPlayer from './components/AssignmentPlayer';
 import CommunityPortal from './components/CommunityPortal';
 import SalesPageBuilder from './pages/SalesPageBuilder';
+import BroadcastInbox from './components/BroadcastInbox';
 
-import { Student, Course, Message, AppNotification, CommunityPost, Cohort, SaleRecord, MentorshipTemplate, Assignment, AssignmentSubmission, CourseStatus } from './types';
-import { INITIAL_STUDENTS, INITIAL_COURSES, INITIAL_MESSAGES, INITIAL_POSTS, INITIAL_COHORTS, INITIAL_TEMPLATES, INITIAL_ASSIGNMENTS } from './constants';
+import { Student, Course, Message, AppNotification, CommunityPost, Cohort, SaleRecord, MentorshipTemplate, Assignment, AssignmentSubmission, CourseStatus, Broadcast } from './types';
+import { INITIAL_STUDENTS, INITIAL_COURSES, INITIAL_MESSAGES, INITIAL_POSTS, INITIAL_COHORTS, INITIAL_TEMPLATES, INITIAL_ASSIGNMENTS, INITIAL_BROADCASTS } from './constants';
 
 const ProtectedRoute = ({ children, currentUser, ...props }: any) => {
   if (!currentUser) return <Navigate to="/" replace />;
@@ -42,6 +43,7 @@ const App: React.FC = () => {
   const [notifications, setNotifications] = useState<AppNotification[]>([]);
   const [templates, setTemplates] = useState<MentorshipTemplate[]>(INITIAL_TEMPLATES);
   const [assignments, setAssignments] = useState<Assignment[]>(INITIAL_ASSIGNMENTS);
+  const [broadcasts, setBroadcasts] = useState<Broadcast[]>(INITIAL_BROADCASTS);
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
 
   // Theme effect
@@ -172,6 +174,33 @@ const App: React.FC = () => {
       handleUpdateStudent({ ...currentUser, assignmentSubmissions: subs });
   };
 
+  // --- Broadcast Handlers ---
+  const handleSendBroadcast = (broadcast: Broadcast) => {
+      // For now, updating local state is enough since we lift state here
+      setBroadcasts(prev => {
+          const exists = prev.find(b => b.id === broadcast.id);
+          if (exists) return prev.map(b => b.id === broadcast.id ? broadcast : b);
+          return [broadcast, ...prev];
+      });
+  };
+
+  const handleReadBroadcast = (id: string) => {
+      if (!currentUser) return;
+      const read = currentUser.readBroadcasts || [];
+      if (!read.includes(id)) {
+          handleUpdateStudent({ ...currentUser, readBroadcasts: [...read, id] });
+      }
+  };
+
+  const handleToggleBroadcastBookmark = (id: string) => {
+      if (!currentUser) return;
+      const bookmarked = currentUser.bookmarkedBroadcasts || [];
+      const newBookmarked = bookmarked.includes(id) 
+          ? bookmarked.filter(bid => bid !== id) 
+          : [...bookmarked, id];
+      handleUpdateStudent({ ...currentUser, bookmarkedBroadcasts: newBookmarked });
+  };
+
   return (
     <Router>
       <Routes>
@@ -180,7 +209,7 @@ const App: React.FC = () => {
         
         <Route path="/dashboard" element={
             <ProtectedRoute currentUser={currentUser} onLogout={handleLogout} theme={theme} onToggleTheme={toggleTheme} courses={courses} notifications={notifications}>
-                <Dashboard students={students} currentUser={currentUser!} courses={courses} templates={templates} />
+                <Dashboard students={students} currentUser={currentUser!} courses={courses} templates={templates} broadcasts={broadcasts} />
             </ProtectedRoute>
         } />
 
@@ -301,6 +330,17 @@ const App: React.FC = () => {
             </ProtectedRoute>
         } />
 
+        <Route path="/broadcasts" element={
+            <ProtectedRoute currentUser={currentUser} onLogout={handleLogout} theme={theme} onToggleTheme={toggleTheme} courses={courses} notifications={notifications}>
+                <BroadcastInbox 
+                    currentUser={currentUser!} 
+                    broadcasts={broadcasts}
+                    onMarkRead={handleReadBroadcast}
+                    onToggleBookmark={handleToggleBroadcastBookmark}
+                />
+            </ProtectedRoute>
+        } />
+
         <Route path="/builder" element={
             <ProtectedRoute currentUser={currentUser} onLogout={handleLogout} theme={theme} onToggleTheme={toggleTheme} courses={courses} notifications={notifications}>
                 <CourseBuilder currentUserHandle={currentUser?.handle || ''} courses={courses} onSubmitCourse={handleSubmitCourse} students={students} />
@@ -353,6 +393,7 @@ const App: React.FC = () => {
                     onAddAssignment={handleAddAssignment}
                     onDeleteAssignment={handleDeleteAssignment}
                     onUpdateAssignment={handleUpdateAssignment}
+                    onSendBroadcast={handleSendBroadcast}
                 />
             </ProtectedRoute>
         } />

@@ -27,7 +27,8 @@ export const COURSES: Course[] = [
         pointsReward: 500,
         certificateEnabled: true,
         requiresAssessment: true,
-        teamOnly: false
+        teamOnly: false,
+        price: 0
     },
     modules: [
       {
@@ -93,7 +94,8 @@ export const COURSES: Course[] = [
           }
         ]
       }
-    ]
+    ],
+    testimonials: []
   },
   {
     id: '2',
@@ -115,9 +117,11 @@ export const COURSES: Course[] = [
         pointsReward: 500,
         certificateEnabled: true,
         requiresAssessment: true,
-        teamOnly: false
+        teamOnly: false,
+        price: 0
     },
-    modules: []
+    modules: [],
+    testimonials: []
   },
   {
     id: '3',
@@ -139,8 +143,10 @@ export const COURSES: Course[] = [
         pointsReward: 500,
         certificateEnabled: true,
         requiresAssessment: true,
-        teamOnly: false
+        teamOnly: false,
+        price: 0
     },
-    modules: []
+    modules: [],
+    testimonials: []
   }
 ];

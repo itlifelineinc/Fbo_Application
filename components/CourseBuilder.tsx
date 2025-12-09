@@ -502,7 +502,17 @@ const CourseBuilder: React.FC<CourseBuilderProps> = ({ currentUserHandle, course
   };
   const deleteModule = (moduleId: string) => { if(window.confirm('Delete module?')) setCourse(p => ({ ...p, modules: p.modules.filter(m => m.id !== moduleId) })); };
   const addChapter = (moduleId: string) => {
-    const newChapter: Chapter = { id: `chap_${Date.now()}`, title: 'New Lesson', content: '', blocks: [], durationMinutes: 10, actionSteps: [], isPublished: true, allowComments: true };
+    const newChapter: Chapter = { 
+        id: `chap_${Date.now()}`, 
+        title: 'New Lesson', 
+        content: '', 
+        blocks: [], 
+        durationMinutes: 10, 
+        actionSteps: [], 
+        isPublished: true, 
+        allowComments: true,
+        type: 'TEXT' // Add this
+    };
     setCourse(prev => ({ ...prev, modules: prev.modules.map(m => m.id === moduleId ? { ...m, chapters: [...m.chapters, newChapter] } : m) }));
   };
   const deleteChapter = (e: React.MouseEvent, moduleId: string, chapterId: string) => {

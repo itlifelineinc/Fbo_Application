@@ -1,5 +1,5 @@
 
-import { Course, Student, UserRole, Message, CourseTrack, CommunityPost, Cohort, CourseLevel, CourseStatus, RankDefinition, MentorshipTemplate } from './types';
+import { Course, Student, UserRole, Message, CourseTrack, CommunityPost, Cohort, CourseLevel, CourseStatus, RankDefinition, MentorshipTemplate, Assignment } from './types';
 
 export const RANK_ORDER = [
     'NOVUS',
@@ -517,5 +517,22 @@ export const INITIAL_TEMPLATES: MentorshipTemplate[] = [
             { id: 'b1', type: 'paragraph', content: 'Hi [Name], just checking in! How are you finding the products so far?' },
             { id: 'b2', type: 'paragraph', content: 'Let me know if you have any questions about usage or dosage.' }
         ]
+    }
+];
+
+export const INITIAL_ASSIGNMENTS: Assignment[] = [
+    {
+        id: 'assign_1',
+        title: 'Prospecting Challenge - Day 1',
+        type: 'TEXT',
+        description: 'Connect with 5 new people today. Write down their names and what you discussed. Focus on building rapport, not selling.',
+        questions: [
+            { id: 'q1', text: 'Who did you contact?', type: 'TEXT' },
+            { id: 'q2', text: 'What was the most positive response?', type: 'TEXT' }
+        ],
+        assignedTo: ['@bob_builder'],
+        authorHandle: '@alice_success',
+        status: 'ACTIVE',
+        createdAt: Date.now()
     }
 ];

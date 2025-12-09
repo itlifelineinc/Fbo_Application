@@ -19,8 +19,8 @@ import CourseModulesPage from './components/CourseModulesPage';
 import CourseLandingPage from './components/CourseLandingPage';
 import MentorshipTools from './components/MentorshipTools';
 import MentorshipInbox from './components/MentorshipInbox';
-import { INITIAL_COURSES, INITIAL_STUDENTS, INITIAL_MESSAGES, INITIAL_POSTS, INITIAL_COHORTS, INITIAL_TEMPLATES } from './constants';
-import { Course, Module, Student, SaleRecord, UserRole, Message, CourseTrack, CommunityPost, CommunityComment, Cohort, CourseStatus, AppNotification, MentorshipTemplate } from './types';
+import { INITIAL_COURSES, INITIAL_STUDENTS, INITIAL_MESSAGES, INITIAL_POSTS, INITIAL_COHORTS, INITIAL_TEMPLATES, INITIAL_ASSIGNMENTS } from './constants';
+import { Course, Module, Student, SaleRecord, UserRole, Message, CourseTrack, CommunityPost, CommunityComment, Cohort, CourseStatus, AppNotification, MentorshipTemplate, Assignment } from './types';
 import { updateStudentRank } from './services/rankEngine';
 
 // --- Protected Route ---
@@ -55,6 +55,7 @@ const App: React.FC = () => {
   const [posts, setPosts] = useState<CommunityPost[]>(INITIAL_POSTS);
   const [cohorts, setCohorts] = useState<Cohort[]>(INITIAL_COHORTS);
   const [templates, setTemplates] = useState<MentorshipTemplate[]>(INITIAL_TEMPLATES);
+  const [assignments, setAssignments] = useState<Assignment[]>(INITIAL_ASSIGNMENTS);
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
   
   // Auth State
@@ -403,6 +404,15 @@ const App: React.FC = () => {
       handleUpdateStudent(updatedStudent);
   };
 
+  // --- Assignment Handlers ---
+  const handleAddAssignment = (assignment: Assignment) => {
+      setAssignments(prev => [assignment, ...prev]);
+  };
+
+  const handleDeleteAssignment = (id: string) => {
+      setAssignments(prev => prev.filter(a => a.id !== id));
+  };
+
   // --- Notification Logic ---
   // Create notifications from unread messages for the current user
   const notifications: AppNotification[] = currentUser ? messages
@@ -585,8 +595,12 @@ const App: React.FC = () => {
                 <MentorshipTools 
                     currentUser={currentUser!} 
                     templates={templates} 
+                    assignments={assignments}
+                    students={students}
                     onAddTemplate={handleAddTemplate}
                     onDeleteTemplate={handleDeleteTemplate}
+                    onAddAssignment={handleAddAssignment}
+                    onDeleteAssignment={handleDeleteAssignment}
                 />
             </ProtectedRoute>
         } />

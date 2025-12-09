@@ -213,7 +213,7 @@ export interface AppNotification {
 export type MessageStatus = 'SENT' | 'DELIVERED' | 'READ';
 
 export interface Attachment {
-  type: 'IMAGE' | 'DOCUMENT' | 'AUDIO' | 'LINK';
+  type: 'IMAGE' | 'DOCUMENT' | 'AUDIO' | 'LINK' | 'VIDEO';
   url: string;
   name?: string;
   size?: string;
@@ -243,5 +243,32 @@ export interface MentorshipTemplate {
   category: 'PROSPECTING' | 'PRODUCT' | 'ONBOARDING' | 'MOTIVATION' | 'SALES' | 'FOLLOWUP';
   blocks: ContentBlock[];
   authorHandle: string;
+  createdAt: number;
+}
+
+// --- ASSIGNMENT TYPES ---
+
+export type AssignmentType = 'TEXT' | 'UPLOAD_IMAGE' | 'UPLOAD_DOC' | 'VIDEO_UPLOAD' | 'MULTIPLE_CHOICE' | 'LINK' | 'MIXED';
+
+export interface AssignmentQuestion {
+  id: string;
+  text: string;
+  type: 'TEXT' | 'MULTIPLE_CHOICE' | 'FILE_UPLOAD' | 'VOICE';
+  options?: string[]; // For multiple choice
+  correctAnswer?: number; // Index of correct option for MC
+  audioUrl?: string; // For creator voice prompt
+}
+
+export interface Assignment {
+  id: string;
+  title: string;
+  type: AssignmentType;
+  description: string;
+  materials?: Attachment[];
+  questions: AssignmentQuestion[];
+  deadline?: string;
+  assignedTo: string[]; // List of student handles
+  authorHandle: string;
+  status: 'DRAFT' | 'ACTIVE' | 'ARCHIVED';
   createdAt: number;
 }

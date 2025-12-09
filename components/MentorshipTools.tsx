@@ -1,7 +1,7 @@
 
 import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, LayoutTemplate, ClipboardCheck, Megaphone, Plus, Save, Trash2, X, ChevronDown, List, Type, AlertCircle, FileText, Upload, Video, Mic, Calendar, Users, CheckCircle, Clock, Link as LinkIcon, Paperclip, Play, Pause, Image as ImageIcon, StopCircle } from 'lucide-react';
+import { ArrowLeft, LayoutTemplate, ClipboardCheck, Megaphone, Plus, Save, Trash2, X, ChevronDown, List, Type, AlertCircle, FileText, Upload, Video, Mic, Calendar, Users, CheckCircle, Clock, Link as LinkIcon, Paperclip, Play, Pause, Image as ImageIcon, StopCircle, Edit } from 'lucide-react';
 import { Student, MentorshipTemplate, ContentBlock, BlockType, Assignment, AssignmentQuestion, AssignmentType, Attachment } from '../types';
 
 interface MentorshipToolsProps {
@@ -13,6 +13,7 @@ interface MentorshipToolsProps {
   onDeleteTemplate: (id: string) => void;
   onAddAssignment?: (assignment: Assignment) => void; // New
   onDeleteAssignment?: (id: string) => void; // New
+  onUpdateAssignment?: (assignment: Assignment) => void; // New
 }
 
 const MentorshipTools: React.FC<MentorshipToolsProps> = ({ 
@@ -23,7 +24,8 @@ const MentorshipTools: React.FC<MentorshipToolsProps> = ({
     onAddTemplate, 
     onDeleteTemplate,
     onAddAssignment,
-    onDeleteAssignment
+    onDeleteAssignment,
+    onUpdateAssignment
 }) => {
   const navigate = useNavigate();
   const [activeView, setActiveView] = useState<'MENU' | 'TEMPLATES_LIST' | 'TEMPLATE_EDITOR' | 'ASSIGNMENTS_LIST' | 'ASSIGNMENT_EDITOR'>('MENU');
@@ -34,6 +36,7 @@ const MentorshipTools: React.FC<MentorshipToolsProps> = ({
   const [currentBlocks, setCurrentBlocks] = useState<ContentBlock[]>([]);
 
   // --- Assignment State ---
+  const [editingAssignmentId, setEditingAssignmentId] = useState<string | null>(null);
   const [assignmentTitle, setAssignmentTitle] = useState('');
   const [assignmentType, setAssignmentType] = useState<AssignmentType>('TEXT');
   const [assignmentDescription, setAssignmentDescription] = useState('');
@@ -63,6 +66,7 @@ const MentorshipTools: React.FC<MentorshipToolsProps> = ({
   };
 
   const resetAssignmentEditor = () => {
+      setEditingAssignmentId(null);
       setAssignmentTitle('');
       setAssignmentType('TEXT');
       setAssignmentDescription('');
@@ -70,6 +74,20 @@ const MentorshipTools: React.FC<MentorshipToolsProps> = ({
       setAssignmentRecipients([]);
       setAssignmentQuestions([]);
       setAssignmentMaterials([]);
+  };
+
+  const loadAssignment = (id: string) => {
+      const assign = assignments.find(a => a.id === id);
+      if (!assign) return;
+      setEditingAssignmentId(id);
+      setAssignmentTitle(assign.title);
+      setAssignmentType(assign.type);
+      setAssignmentDescription(assign.description);
+      setAssignmentDeadline(assign.deadline || '');
+      setAssignmentRecipients(assign.assignedTo);
+      setAssignmentQuestions(assign.questions);
+      setAssignmentMaterials(assign.materials || []);
+      setActiveView('ASSIGNMENT_EDITOR');
   };
 
   // --- Template Handlers ---
@@ -118,24 +136,28 @@ const MentorshipTools: React.FC<MentorshipToolsProps> = ({
           return;
       }
 
-      if (onAddAssignment) {
-          const newAssignment: Assignment = {
-              id: `assign_${Date.now()}`,
-              title: assignmentTitle,
-              type: assignmentType,
-              description: assignmentDescription,
-              deadline: assignmentDeadline,
-              assignedTo: assignmentRecipients,
-              questions: assignmentQuestions,
-              materials: assignmentMaterials,
-              authorHandle: currentUser.handle,
-              status: status,
-              createdAt: Date.now()
-          };
-          onAddAssignment(newAssignment);
-          resetAssignmentEditor();
-          setActiveView('ASSIGNMENTS_LIST');
+      const assignmentData: Assignment = {
+          id: editingAssignmentId || `assign_${Date.now()}`,
+          title: assignmentTitle,
+          type: assignmentType,
+          description: assignmentDescription,
+          deadline: assignmentDeadline,
+          assignedTo: assignmentRecipients,
+          questions: assignmentQuestions,
+          materials: assignmentMaterials,
+          authorHandle: currentUser.handle,
+          status: status,
+          createdAt: editingAssignmentId ? (assignments.find(a => a.id === editingAssignmentId)?.createdAt || Date.now()) : Date.now()
+      };
+
+      if (editingAssignmentId && onUpdateAssignment) {
+          onUpdateAssignment(assignmentData);
+      } else if (onAddAssignment) {
+          onAddAssignment(assignmentData);
       }
+
+      resetAssignmentEditor();
+      setActiveView('ASSIGNMENTS_LIST');
   };
 
   // --- Question Logic ---
@@ -494,7 +516,7 @@ const MentorshipTools: React.FC<MentorshipToolsProps> = ({
           <div className="space-y-3">
               {myAssignments.map(assignment => (
                   <div key={assignment.id} className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between group dark:bg-slate-800 dark:border-slate-700">
-                      <div>
+                      <div className="flex-1 cursor-pointer" onClick={() => loadAssignment(assignment.id)}>
                           <div className="flex items-center gap-2 mb-1">
                               <span className={`text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-wider ${assignment.status === 'ACTIVE' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : 'bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-400'}`}>
                                   {assignment.status}
@@ -508,11 +530,11 @@ const MentorshipTools: React.FC<MentorshipToolsProps> = ({
                           </div>
                       </div>
                       <div className="flex items-center gap-2">
+                          <button onClick={() => loadAssignment(assignment.id)} className="p-2 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors dark:hover:bg-emerald-900/30 dark:hover:text-emerald-400">
+                              <Edit size={18} />
+                          </button>
                           <button onClick={() => onDeleteAssignment && onDeleteAssignment(assignment.id)} className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors dark:hover:bg-red-900/30">
                               <Trash2 size={18} />
-                          </button>
-                          <button className="text-xs font-bold text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-lg hover:bg-emerald-100 dark:bg-emerald-900/30 dark:text-emerald-400">
-                              View Submissions
                           </button>
                       </div>
                   </div>
@@ -532,7 +554,7 @@ const MentorshipTools: React.FC<MentorshipToolsProps> = ({
           {/* Header */}
           <div className="p-5 border-b border-slate-100 bg-slate-50 dark:bg-slate-900 dark:border-slate-700 flex justify-between items-center shrink-0">
               <div>
-                  <h2 className="font-bold text-lg text-slate-800 dark:text-white">Create Assignment</h2>
+                  <h2 className="font-bold text-lg text-slate-800 dark:text-white">{editingAssignmentId ? 'Edit Assignment' : 'Create Assignment'}</h2>
                   <p className="text-xs text-slate-500 dark:text-slate-400">Give your downline a task to help them grow</p>
               </div>
               <button onClick={() => setActiveView('ASSIGNMENTS_LIST')} className="text-slate-500 hover:text-slate-800 px-3 py-1.5 text-sm font-bold dark:text-slate-400 dark:hover:text-white">
@@ -554,9 +576,9 @@ const MentorshipTools: React.FC<MentorshipToolsProps> = ({
                   />
               </div>
 
-              {/* 2. Type (Simplified) */}
+              {/* 2. Type */}
               <div>
-                  <label className="block text-xs font-bold text-slate-500 uppercase mb-2 dark:text-slate-400">Assignment Type</label>
+                  <label className="block text-xs font-bold text-slate-500 uppercase mb-2 dark:text-slate-400">Submission Type</label>
                   <div className="relative">
                       <select 
                           value={assignmentType}
@@ -568,8 +590,8 @@ const MentorshipTools: React.FC<MentorshipToolsProps> = ({
                           <option value="UPLOAD_DOC">Document Upload</option>
                           <option value="VIDEO_UPLOAD">Video Upload</option>
                           <option value="MULTIPLE_CHOICE">Multiple Choice Quiz</option>
-                          <option value="LINK">External Link</option>
-                          <option value="MIXED">Mixed / Custom Questions</option>
+                          <option value="LINK">Link Submission</option>
+                          <option value="MIXED">Mixed (Questions + Upload)</option>
                       </select>
                       <ChevronDown className="absolute right-3 top-3.5 text-slate-400 pointer-events-none" size={16} />
                   </div>
@@ -589,9 +611,9 @@ const MentorshipTools: React.FC<MentorshipToolsProps> = ({
                   />
               </div>
 
-              {/* 4. Training Material */}
+              {/* 4. Attach Training Material (Simulated) */}
               <div>
-                  <label className="block text-xs font-bold text-slate-500 uppercase mb-2 dark:text-slate-400">Attach Training Material</label>
+                  <label className="block text-xs font-bold text-slate-500 uppercase mb-2 dark:text-slate-400">Training Material (Optional)</label>
                   <div className="flex flex-wrap gap-3 mb-4">
                       {/* Hidden Inputs */}
                       <input ref={fileInputRef} type="file" className="hidden" accept=".pdf,.doc,.docx,.png,.jpg,.jpeg" onChange={(e) => handleMaterialUpload(e, 'DOC')} />
@@ -629,7 +651,7 @@ const MentorshipTools: React.FC<MentorshipToolsProps> = ({
                   )}
               </div>
 
-              {/* 5. Add Questions (Dynamic) */}
+              {/* 5. Add Questions */}
               <div className="bg-slate-50 p-6 rounded-xl border border-slate-200 dark:bg-slate-700/30 dark:border-slate-600">
                   <div className="flex justify-between items-center mb-4">
                       <label className="block text-xs font-bold text-slate-500 uppercase dark:text-slate-400">Questions ({assignmentQuestions.length})</label>
@@ -638,7 +660,7 @@ const MentorshipTools: React.FC<MentorshipToolsProps> = ({
                       </button>
                   </div>
                   
-                  <div className="space-y-6">
+                  <div className="space-y-4">
                       {assignmentQuestions.map((q, idx) => (
                           <div key={q.id} className="relative flex flex-col gap-3 bg-white p-4 rounded-xl border border-slate-200 shadow-sm dark:bg-slate-800 dark:border-slate-600">
                               <div className="flex justify-between items-start">

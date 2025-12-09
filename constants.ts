@@ -534,5 +534,55 @@ export const INITIAL_ASSIGNMENTS: Assignment[] = [
         authorHandle: '@alice_success',
         status: 'ACTIVE',
         createdAt: Date.now()
+    },
+    {
+        id: 'assign_2',
+        title: 'Product Launch: Aloe Vera Gel Mastery',
+        type: 'MIXED',
+        description: 'This is a critical training task for all new FBOs. You need to master the pitch for our flagship product. \n\n1. Watch the attached training video.\n2. Read the compliance PDF.\n3. Record your pitch.\n4. Pass the knowledge check.\n\nGood luck!',
+        deadline: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(), // 7 days from now
+        materials: [
+            {
+                type: 'VIDEO',
+                url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+                name: 'Aloe Gel Training Video',
+                mimeType: 'video/external'
+            },
+            {
+                type: 'DOCUMENT',
+                url: '#', // Mock
+                name: 'Compliance_Guidelines_2024.pdf',
+                size: '2.4 MB',
+                mimeType: 'application/pdf'
+            }
+        ],
+        questions: [
+            { 
+                id: 'q_1', 
+                text: 'Record a 30-second elevator pitch for the Aloe Gel as if I am a new prospect.', 
+                type: 'VOICE' 
+            },
+            { 
+                id: 'q_2', 
+                text: 'What is the purity percentage of our stabilized Aloe Vera Gel?', 
+                type: 'MULTIPLE_CHOICE',
+                options: ['85%', '90%', '99.7%', '100%'],
+                correctAnswer: 2
+            },
+            {
+                id: 'q_3',
+                text: 'Upload a photo of your personal product display or demo setup.',
+                type: 'FILE_UPLOAD'
+            },
+            {
+                id: 'q_4',
+                text: 'List 3 common objections you might face when selling this product and how you would handle them.',
+                type: 'TEXT'
+            }
+        ],
+        assignedTo: ['@bob_builder'],
+        authorHandle: '@alice_success',
+        status: 'ACTIVE',
+        createdAt: Date.now()
     }
 ];

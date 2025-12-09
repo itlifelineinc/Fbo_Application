@@ -409,6 +409,10 @@ const App: React.FC = () => {
       setAssignments(prev => [assignment, ...prev]);
   };
 
+  const handleUpdateAssignment = (assignment: Assignment) => {
+      setAssignments(prev => prev.map(a => a.id === assignment.id ? assignment : a));
+  };
+
   const handleDeleteAssignment = (id: string) => {
       setAssignments(prev => prev.filter(a => a.id !== id));
   };
@@ -601,6 +605,7 @@ const App: React.FC = () => {
                     onDeleteTemplate={handleDeleteTemplate}
                     onAddAssignment={handleAddAssignment}
                     onDeleteAssignment={handleDeleteAssignment}
+                    onUpdateAssignment={handleUpdateAssignment}
                 />
             </ProtectedRoute>
         } />

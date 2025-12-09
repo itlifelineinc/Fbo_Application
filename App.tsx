@@ -389,6 +389,10 @@ const App: React.FC = () => {
       setTemplates(prev => [template, ...prev]);
   };
 
+  const handleUpdateTemplate = (template: MentorshipTemplate) => {
+      setTemplates(prev => prev.map(t => t.id === template.id ? template : t));
+  };
+
   const handleDeleteTemplate = (id: string) => {
       setTemplates(prev => prev.filter(t => t.id !== id));
   };
@@ -606,6 +610,7 @@ const App: React.FC = () => {
                     onAddAssignment={handleAddAssignment}
                     onDeleteAssignment={handleDeleteAssignment}
                     onUpdateAssignment={handleUpdateAssignment}
+                    onUpdateTemplate={handleUpdateTemplate}
                 />
             </ProtectedRoute>
         } />

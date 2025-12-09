@@ -264,11 +264,13 @@ export interface Assignment {
   title: string;
   type: AssignmentType;
   description: string;
+  instructionAudioUrl?: string; // New: Creator voice instructions
   materials?: Attachment[];
   questions: AssignmentQuestion[];
   deadline?: string;
   assignedTo: string[]; // List of student handles
   authorHandle: string;
   status: 'DRAFT' | 'ACTIVE' | 'ARCHIVED';
+  isTemplate?: boolean; // New: Template flag
   createdAt: number;
 }

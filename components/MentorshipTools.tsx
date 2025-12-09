@@ -1,7 +1,7 @@
 
 import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, LayoutTemplate, ClipboardCheck, Megaphone, Plus, Save, Trash2, X, ChevronDown, List, Type, AlertCircle, FileText, Upload, Video, Mic, Calendar, Users, CheckCircle, Clock, Link as LinkIcon, Paperclip, Play, Pause, Image as ImageIcon, StopCircle, Edit } from 'lucide-react';
+import { ArrowLeft, LayoutTemplate, ClipboardCheck, Megaphone, Plus, Save, Trash2, X, ChevronDown, List, Type, AlertCircle, FileText, Upload, Video, Mic, Calendar, Users, CheckCircle, Clock, Link as LinkIcon, Paperclip, Play, Pause, Image as ImageIcon, StopCircle, Edit, Download } from 'lucide-react';
 import { Student, MentorshipTemplate, ContentBlock, BlockType, Assignment, AssignmentQuestion, AssignmentType, Attachment } from '../types';
 
 interface MentorshipToolsProps {
@@ -11,6 +11,7 @@ interface MentorshipToolsProps {
   students?: Student[]; // New - needed for assigning
   onAddTemplate: (template: MentorshipTemplate) => void;
   onDeleteTemplate: (id: string) => void;
+  onUpdateTemplate?: (template: MentorshipTemplate) => void; // New
   onAddAssignment?: (assignment: Assignment) => void; // New
   onDeleteAssignment?: (id: string) => void; // New
   onUpdateAssignment?: (assignment: Assignment) => void; // New
@@ -23,6 +24,7 @@ const MentorshipTools: React.FC<MentorshipToolsProps> = ({
     students = [],
     onAddTemplate, 
     onDeleteTemplate,
+    onUpdateTemplate,
     onAddAssignment,
     onDeleteAssignment,
     onUpdateAssignment
@@ -31,6 +33,7 @@ const MentorshipTools: React.FC<MentorshipToolsProps> = ({
   const [activeView, setActiveView] = useState<'MENU' | 'TEMPLATES_LIST' | 'TEMPLATE_EDITOR' | 'ASSIGNMENTS_LIST' | 'ASSIGNMENT_EDITOR'>('MENU');
   
   // --- Template State ---
+  const [editingTemplateId, setEditingTemplateId] = useState<string | null>(null);
   const [templateTitle, setTemplateTitle] = useState('');
   const [templateCategory, setTemplateCategory] = useState<'PROSPECTING' | 'PRODUCT' | 'ONBOARDING' | 'MOTIVATION' | 'SALES' | 'FOLLOWUP'>('PROSPECTING');
   const [currentBlocks, setCurrentBlocks] = useState<ContentBlock[]>([]);
@@ -44,12 +47,21 @@ const MentorshipTools: React.FC<MentorshipToolsProps> = ({
   const [assignmentRecipients, setAssignmentRecipients] = useState<string[]>([]);
   const [assignmentQuestions, setAssignmentQuestions] = useState<AssignmentQuestion[]>([]);
   const [assignmentMaterials, setAssignmentMaterials] = useState<Attachment[]>([]); // New: Training Materials
+  const [isTemplateAssignment, setIsTemplateAssignment] = useState(false); // Checkbox state
+  const [showTemplateModal, setShowTemplateModal] = useState(false); // Modal state
+
+  // --- Assignment Voice Instruction State ---
+  const [instructionMode, setInstructionMode] = useState<'TEXT' | 'VOICE'>('TEXT');
+  const [instructionAudioUrl, setInstructionAudioUrl] = useState<string | null>(null);
+  const [isRecordingInstruction, setIsRecordingInstruction] = useState(false);
+  const instructionRecorderRef = useRef<MediaRecorder | null>(null);
+  const instructionChunksRef = useRef<Blob[]>([]);
 
   // --- Refs for Uploads ---
   const fileInputRef = useRef<HTMLInputElement>(null);
   const videoInputRef = useRef<HTMLInputElement>(null);
   
-  // --- Voice Recording State ---
+  // --- Voice Recording State (Questions) ---
   const [recordingQuestionId, setRecordingQuestionId] = useState<string | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
@@ -57,9 +69,11 @@ const MentorshipTools: React.FC<MentorshipToolsProps> = ({
   // Filter Data
   const myTemplates = templates.filter(t => t.authorHandle === currentUser.handle).sort((a,b) => b.createdAt - a.createdAt);
   const myAssignments = assignments.filter(a => a.authorHandle === currentUser.handle).sort((a,b) => b.createdAt - a.createdAt);
+  const myAssignmentTemplates = myAssignments.filter(a => a.isTemplate); // Get only templates for the modal
   const myDownline = students.filter(s => s.sponsorId === currentUser.handle);
 
   const resetEditor = () => {
+      setEditingTemplateId(null);
       setTemplateTitle('');
       setTemplateCategory('PROSPECTING');
       setCurrentBlocks([]);
@@ -74,20 +88,47 @@ const MentorshipTools: React.FC<MentorshipToolsProps> = ({
       setAssignmentRecipients([]);
       setAssignmentQuestions([]);
       setAssignmentMaterials([]);
+      setInstructionAudioUrl(null);
+      setInstructionMode('TEXT');
+      setIsTemplateAssignment(false);
   };
 
-  const loadAssignment = (id: string) => {
+  const loadTemplate = (id: string) => {
+      const temp = templates.find(t => t.id === id);
+      if (!temp) return;
+      setEditingTemplateId(id);
+      setTemplateTitle(temp.title);
+      setTemplateCategory(temp.category);
+      setCurrentBlocks(temp.blocks);
+      setActiveView('TEMPLATE_EDITOR');
+  };
+
+  const loadAssignment = (id: string, asNewCopy: boolean = false) => {
       const assign = assignments.find(a => a.id === id);
       if (!assign) return;
-      setEditingAssignmentId(id);
-      setAssignmentTitle(assign.title);
+      
+      // If loading as a new copy (from template), we clear the ID
+      if (asNewCopy) {
+          setEditingAssignmentId(null); 
+          setIsTemplateAssignment(false); // Reset template flag for the new copy
+      } else {
+          setEditingAssignmentId(id);
+          setIsTemplateAssignment(!!assign.isTemplate);
+      }
+
+      setAssignmentTitle(assign.title + (asNewCopy ? ' (Copy)' : ''));
       setAssignmentType(assign.type);
       setAssignmentDescription(assign.description);
       setAssignmentDeadline(assign.deadline || '');
-      setAssignmentRecipients(assign.assignedTo);
+      // If loading a template copy, don't carry over recipients
+      setAssignmentRecipients(asNewCopy ? [] : assign.assignedTo);
       setAssignmentQuestions(assign.questions);
       setAssignmentMaterials(assign.materials || []);
+      setInstructionAudioUrl(assign.instructionAudioUrl || null);
+      setInstructionMode(assign.instructionAudioUrl ? 'VOICE' : 'TEXT');
+      
       setActiveView('ASSIGNMENT_EDITOR');
+      setShowTemplateModal(false);
   };
 
   // --- Template Handlers ---
@@ -97,16 +138,21 @@ const MentorshipTools: React.FC<MentorshipToolsProps> = ({
           return;
       }
 
-      const newTemplate: MentorshipTemplate = {
-          id: `temp_${Date.now()}`,
+      const templateData: MentorshipTemplate = {
+          id: editingTemplateId || `temp_${Date.now()}`,
           title: templateTitle,
           category: templateCategory,
           blocks: currentBlocks,
           authorHandle: currentUser.handle,
-          createdAt: Date.now()
+          createdAt: editingTemplateId ? (templates.find(t => t.id === editingTemplateId)?.createdAt || Date.now()) : Date.now()
       };
 
-      onAddTemplate(newTemplate);
+      if (editingTemplateId && onUpdateTemplate) {
+          onUpdateTemplate(templateData);
+      } else {
+          onAddTemplate(templateData);
+      }
+
       resetEditor();
       setActiveView('TEMPLATES_LIST');
   };
@@ -130,8 +176,8 @@ const MentorshipTools: React.FC<MentorshipToolsProps> = ({
           return;
       }
       
-      // If active, validate recipients
-      if (status === 'ACTIVE' && assignmentRecipients.length === 0) {
+      // If active, validate recipients (unless it's just being saved as a template)
+      if (status === 'ACTIVE' && assignmentRecipients.length === 0 && !isTemplateAssignment) {
           alert("Please select at least one student to assign this task to.");
           return;
       }
@@ -141,12 +187,14 @@ const MentorshipTools: React.FC<MentorshipToolsProps> = ({
           title: assignmentTitle,
           type: assignmentType,
           description: assignmentDescription,
+          instructionAudioUrl: instructionAudioUrl || undefined,
           deadline: assignmentDeadline,
           assignedTo: assignmentRecipients,
           questions: assignmentQuestions,
           materials: assignmentMaterials,
           authorHandle: currentUser.handle,
           status: status,
+          isTemplate: isTemplateAssignment,
           createdAt: editingAssignmentId ? (assignments.find(a => a.id === editingAssignmentId)?.createdAt || Date.now()) : Date.now()
       };
 
@@ -212,7 +260,41 @@ const MentorshipTools: React.FC<MentorshipToolsProps> = ({
       }));
   };
 
-  // Voice Recorder Logic
+  // Voice Recorder Logic (Instructions)
+  const startRecordingInstruction = async () => {
+      try {
+          const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+          const mediaRecorder = new MediaRecorder(stream);
+          instructionRecorderRef.current = mediaRecorder;
+          instructionChunksRef.current = [];
+
+          mediaRecorder.ondataavailable = (event) => {
+              if (event.data.size > 0) instructionChunksRef.current.push(event.data);
+          };
+
+          mediaRecorder.onstop = () => {
+              const audioBlob = new Blob(instructionChunksRef.current, { type: 'audio/webm' });
+              const audioUrl = URL.createObjectURL(audioBlob);
+              setInstructionAudioUrl(audioUrl);
+              stream.getTracks().forEach(track => track.stop());
+          };
+
+          mediaRecorder.start();
+          setIsRecordingInstruction(true);
+      } catch (e) {
+          console.error("Mic error", e);
+          alert("Could not access microphone.");
+      }
+  };
+
+  const stopRecordingInstruction = () => {
+      if (instructionRecorderRef.current) {
+          instructionRecorderRef.current.stop();
+          setIsRecordingInstruction(false);
+      }
+  };
+
+  // Voice Recorder Logic (Questions)
   const startRecording = async (qId: string) => {
       try {
           const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -364,15 +446,20 @@ const MentorshipTools: React.FC<MentorshipToolsProps> = ({
               {myTemplates.map(t => (
                   <div key={t.id} className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm hover:border-emerald-300 transition-all group dark:bg-slate-800 dark:border-slate-700">
                       <div className="flex justify-between items-start mb-3">
-                          <div>
+                          <div className="flex-1 cursor-pointer" onClick={() => loadTemplate(t.id)}>
                               <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-600 bg-emerald-50 px-2 py-1 rounded dark:bg-emerald-900/30 dark:text-emerald-400">{t.category}</span>
                               <h3 className="font-bold text-lg text-slate-900 mt-1 dark:text-white">{t.title}</h3>
                           </div>
-                          <button onClick={() => onDeleteTemplate(t.id)} className="text-slate-400 hover:text-red-500 transition-colors p-2">
-                              <Trash2 size={18} />
-                          </button>
+                          <div className="flex items-center gap-1">
+                              <button onClick={() => loadTemplate(t.id)} className="text-slate-400 hover:text-emerald-600 p-2 rounded-lg hover:bg-emerald-50 transition-colors dark:hover:bg-emerald-900/30 dark:hover:text-emerald-400">
+                                  <Edit size={18} />
+                              </button>
+                              <button onClick={() => onDeleteTemplate(t.id)} className="text-slate-400 hover:text-red-500 p-2 rounded-lg hover:bg-red-50 transition-colors dark:hover:bg-red-900/30">
+                                  <Trash2 size={18} />
+                              </button>
+                          </div>
                       </div>
-                      <p className="text-sm text-slate-500 line-clamp-3 dark:text-slate-400">
+                      <p className="text-sm text-slate-500 line-clamp-3 dark:text-slate-400 cursor-pointer" onClick={() => loadTemplate(t.id)}>
                           {t.blocks.map(b => b.content).join(' ')}
                       </p>
                   </div>
@@ -390,7 +477,7 @@ const MentorshipTools: React.FC<MentorshipToolsProps> = ({
       <div className="bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden dark:bg-slate-800 dark:border-slate-700 flex flex-col h-[70vh]">
           {/* Editor Header */}
           <div className="p-4 border-b border-slate-100 bg-slate-50 dark:bg-slate-900 dark:border-slate-700 flex justify-between items-center shrink-0">
-              <h2 className="font-bold text-slate-800 dark:text-white">New Template</h2>
+              <h2 className="font-bold text-slate-800 dark:text-white">{editingTemplateId ? 'Edit Template' : 'New Template'}</h2>
               <div className="flex gap-2">
                   <button onClick={() => setActiveView('TEMPLATES_LIST')} className="text-slate-500 hover:text-slate-800 px-3 py-1.5 text-sm font-bold dark:text-slate-400 dark:hover:text-white">Cancel</button>
                   <button onClick={handleSaveTemplate} className="bg-emerald-600 text-white p-2 md:px-4 md:py-1.5 rounded-lg text-sm font-bold hover:bg-emerald-700 shadow-sm flex items-center gap-2">
@@ -521,6 +608,11 @@ const MentorshipTools: React.FC<MentorshipToolsProps> = ({
                               <span className={`text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-wider ${assignment.status === 'ACTIVE' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : 'bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-400'}`}>
                                   {assignment.status}
                               </span>
+                              {assignment.isTemplate && (
+                                  <span className="text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-wider bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400">
+                                      Template
+                                  </span>
+                              )}
                               <span className="text-xs text-slate-400">{new Date(assignment.createdAt).toLocaleDateString()}</span>
                           </div>
                           <h3 className="font-bold text-slate-900 dark:text-white">{assignment.title}</h3>
@@ -550,16 +642,51 @@ const MentorshipTools: React.FC<MentorshipToolsProps> = ({
   );
 
   const renderAssignmentEditor = () => (
-      <div className="bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden dark:bg-slate-800 dark:border-slate-700 flex flex-col h-[85vh]">
+      <div className="bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden dark:bg-slate-800 dark:border-slate-700 flex flex-col h-[85vh] relative">
+          {/* Template Loading Modal */}
+          {showTemplateModal && (
+              <div className="absolute inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+                  <div className="bg-white dark:bg-slate-900 rounded-2xl w-full max-w-md max-h-[80vh] flex flex-col overflow-hidden shadow-2xl animate-fade-in">
+                      <div className="p-4 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center">
+                          <h3 className="font-bold text-lg dark:text-white">Load Template</h3>
+                          <button onClick={() => setShowTemplateModal(false)}><X size={20} className="text-slate-400" /></button>
+                      </div>
+                      <div className="flex-1 overflow-y-auto p-4 space-y-2">
+                          {myAssignmentTemplates.length === 0 && (
+                              <p className="text-center text-slate-400 text-sm py-4">No templates found. Save an assignment as a template to reuse it later.</p>
+                          )}
+                          {myAssignmentTemplates.map(t => (
+                              <button 
+                                  key={t.id} 
+                                  onClick={() => loadAssignment(t.id, true)}
+                                  className="w-full text-left p-3 rounded-xl border border-slate-200 hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-800 transition-colors"
+                              >
+                                  <p className="font-bold text-sm text-slate-800 dark:text-white">{t.title}</p>
+                                  <p className="text-xs text-slate-500 dark:text-slate-400 truncate">{t.description}</p>
+                              </button>
+                          ))}
+                      </div>
+                  </div>
+              </div>
+          )}
+
           {/* Header */}
           <div className="p-5 border-b border-slate-100 bg-slate-50 dark:bg-slate-900 dark:border-slate-700 flex justify-between items-center shrink-0">
               <div>
                   <h2 className="font-bold text-lg text-slate-800 dark:text-white">{editingAssignmentId ? 'Edit Assignment' : 'Create Assignment'}</h2>
                   <p className="text-xs text-slate-500 dark:text-slate-400">Give your downline a task to help them grow</p>
               </div>
-              <button onClick={() => setActiveView('ASSIGNMENTS_LIST')} className="text-slate-500 hover:text-slate-800 px-3 py-1.5 text-sm font-bold dark:text-slate-400 dark:hover:text-white">
-                  Cancel
-              </button>
+              <div className="flex gap-2">
+                  <button 
+                      onClick={() => setShowTemplateModal(true)}
+                      className="text-xs bg-indigo-50 text-indigo-600 px-3 py-1.5 rounded-lg font-bold hover:bg-indigo-100 dark:bg-indigo-900/30 dark:text-indigo-400 flex items-center gap-1"
+                  >
+                      <Download size={14} /> Load Template
+                  </button>
+                  <button onClick={() => setActiveView('ASSIGNMENTS_LIST')} className="text-slate-500 hover:text-slate-800 px-3 py-1.5 text-sm font-bold dark:text-slate-400 dark:hover:text-white">
+                      Cancel
+                  </button>
+              </div>
           </div>
 
           <div className="flex-1 overflow-y-auto p-6 md:p-8 space-y-8">
@@ -597,21 +724,58 @@ const MentorshipTools: React.FC<MentorshipToolsProps> = ({
                   </div>
               </div>
 
-              {/* 3. Instructions */}
+              {/* 3. Instructions (Text vs Voice) */}
               <div>
                   <div className="flex justify-between items-center mb-2">
                       <label className="block text-xs font-bold text-slate-500 uppercase dark:text-slate-400">Instructions</label>
-                      <span className={`text-[10px] font-bold ${assignmentDescription.length > 2000 ? 'text-red-500' : 'text-slate-400'}`}>{assignmentDescription.length}/2000</span>
+                      <div className="flex bg-slate-100 rounded-lg p-0.5 dark:bg-slate-700">
+                          <button 
+                              onClick={() => setInstructionMode('TEXT')}
+                              className={`px-3 py-1 text-[10px] font-bold rounded-md transition-all ${instructionMode === 'TEXT' ? 'bg-white shadow-sm text-slate-800 dark:bg-slate-600 dark:text-white' : 'text-slate-400 hover:text-slate-600'}`}
+                          >
+                              Text
+                          </button>
+                          <button 
+                              onClick={() => setInstructionMode('VOICE')}
+                              className={`px-3 py-1 text-[10px] font-bold rounded-md transition-all ${instructionMode === 'VOICE' ? 'bg-white shadow-sm text-slate-800 dark:bg-slate-600 dark:text-white' : 'text-slate-400 hover:text-slate-600'}`}
+                          >
+                              Voice
+                          </button>
+                      </div>
                   </div>
-                  <textarea 
-                      value={assignmentDescription}
-                      onChange={(e) => setAssignmentDescription(e.target.value.slice(0, 2000))}
-                      placeholder="Explain what needs to be done..."
-                      className="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none text-slate-900 min-h-[120px] resize-none bg-white dark:bg-slate-700 dark:border-slate-600 dark:text-white dark:placeholder-slate-500"
-                  />
+
+                  {instructionMode === 'TEXT' ? (
+                      <div className="relative">
+                          <textarea 
+                              value={assignmentDescription}
+                              onChange={(e) => setAssignmentDescription(e.target.value.slice(0, 2000))}
+                              placeholder="Explain what needs to be done..."
+                              className="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none text-slate-900 min-h-[120px] resize-none bg-white dark:bg-slate-700 dark:border-slate-600 dark:text-white dark:placeholder-slate-500"
+                          />
+                          <span className={`absolute bottom-2 right-2 text-[10px] font-bold ${assignmentDescription.length > 2000 ? 'text-red-500' : 'text-slate-400'}`}>{assignmentDescription.length}/2000</span>
+                      </div>
+                  ) : (
+                      <div className="bg-slate-50 border border-slate-200 rounded-xl p-6 flex flex-col items-center justify-center gap-4 dark:bg-slate-700 dark:border-slate-600">
+                          {instructionAudioUrl ? (
+                              <div className="w-full max-w-sm flex flex-col items-center gap-2">
+                                  <audio src={instructionAudioUrl} controls className="w-full" />
+                                  <button onClick={() => setInstructionAudioUrl(null)} className="text-xs text-red-500 hover:underline font-bold">Delete & Re-record</button>
+                              </div>
+                          ) : (
+                              <>
+                                  <div className={`w-16 h-16 rounded-full flex items-center justify-center cursor-pointer transition-all ${isRecordingInstruction ? 'bg-red-500 animate-pulse text-white' : 'bg-emerald-100 text-emerald-600 hover:bg-emerald-200'}`} onClick={isRecordingInstruction ? stopRecordingInstruction : startRecordingInstruction}>
+                                      {isRecordingInstruction ? <StopCircle size={32} /> : <Mic size={32} />}
+                                  </div>
+                                  <p className="text-sm font-bold text-slate-500 dark:text-slate-300">
+                                      {isRecordingInstruction ? 'Recording... Tap to stop' : 'Tap to record instructions'}
+                                  </p>
+                              </>
+                          )}
+                      </div>
+                  )}
               </div>
 
-              {/* 4. Attach Training Material (Simulated) */}
+              {/* 4. Attach Training Material */}
               <div>
                   <label className="block text-xs font-bold text-slate-500 uppercase mb-2 dark:text-slate-400">Training Material (Optional)</label>
                   <div className="flex flex-wrap gap-3 mb-4">
@@ -753,7 +917,7 @@ const MentorshipTools: React.FC<MentorshipToolsProps> = ({
                   />
               </div>
 
-              {/* 7. Assign To */}
+              {/* 7. Assign To & Template Option */}
               <div>
                   <div className="flex justify-between items-center mb-2">
                       <label className="block text-xs font-bold text-slate-500 uppercase dark:text-slate-400">Assign To</label>
@@ -762,7 +926,7 @@ const MentorshipTools: React.FC<MentorshipToolsProps> = ({
                       </button>
                   </div>
                   
-                  <div className="border border-slate-200 rounded-xl max-h-60 overflow-y-auto bg-slate-50 p-2 space-y-1 dark:bg-slate-800 dark:border-slate-700">
+                  <div className="border border-slate-200 rounded-xl max-h-60 overflow-y-auto bg-slate-50 p-2 space-y-1 dark:bg-slate-800 dark:border-slate-700 mb-4">
                       {myDownline.length > 0 ? myDownline.map(student => (
                           <label key={student.handle} className="flex items-center gap-3 p-2 bg-white rounded-lg border border-slate-100 hover:border-emerald-200 cursor-pointer transition-colors dark:bg-slate-700 dark:border-slate-600">
                               <input 
@@ -779,7 +943,21 @@ const MentorshipTools: React.FC<MentorshipToolsProps> = ({
                           </label>
                       )) : <p className="text-center text-sm text-slate-400 py-4">No downline members found.</p>}
                   </div>
-                  <p className="text-xs text-slate-400 mt-2 text-right">{assignmentRecipients.length} selected</p>
+                  
+                  {/* Save as Template Option */}
+                  <div className="flex items-center gap-3 pt-2 border-t border-slate-100 dark:border-slate-700">
+                      <input 
+                          type="checkbox" 
+                          id="saveAsTemplate"
+                          checked={isTemplateAssignment}
+                          onChange={(e) => setIsTemplateAssignment(e.target.checked)}
+                          className="w-4 h-4 text-indigo-600 rounded focus:ring-indigo-500 border-gray-300"
+                      />
+                      <label htmlFor="saveAsTemplate" className="text-sm font-bold text-slate-700 dark:text-slate-300">
+                          Save as Assignment Template
+                      </label>
+                  </div>
+                  <p className="text-xs text-slate-400 mt-1 ml-7">Allows you to reuse this assignment structure later.</p>
               </div>
 
           </div>

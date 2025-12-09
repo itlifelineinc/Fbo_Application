@@ -607,15 +607,15 @@ const ChatPortal: React.FC<ChatPortalProps> = ({ currentUser, students, messages
                                             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1">Mentorship Tools</p>
                                             <div className="grid grid-cols-3 gap-2">
                                                 <AttachmentOption 
-                                                    icon={LayoutTemplate} label="Template" color="bg-indigo-500" 
+                                                    icon={LayoutTemplate} label="Templates" color="bg-indigo-500" 
                                                     onClick={() => alert("Template feature coming soon!")} 
                                                 />
                                                 <AttachmentOption 
-                                                    icon={ClipboardCheck} label="Assign" color="bg-orange-500" 
+                                                    icon={ClipboardCheck} label="Assignment" color="bg-orange-500" 
                                                     onClick={() => alert("Assignment feature coming soon!")} 
                                                 />
                                                 <AttachmentOption 
-                                                    icon={Megaphone} label="Broadcast" color="bg-red-500" 
+                                                    icon={Megaphone} label="Announcement" color="bg-red-500" 
                                                     onClick={() => alert("Broadcast feature coming soon!")} 
                                                 />
                                             </div>
@@ -627,7 +627,7 @@ const ChatPortal: React.FC<ChatPortalProps> = ({ currentUser, students, messages
                                         <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1">Attachments</p>
                                         <div className="grid grid-cols-4 gap-2">
                                             <AttachmentOption 
-                                                icon={ImageIcon} label="Image" color="bg-pink-500" 
+                                                icon={ImageIcon} label="Images" color="bg-pink-500" 
                                                 onClick={() => alert("Image upload coming soon!")} 
                                             />
                                             <AttachmentOption 
@@ -639,7 +639,7 @@ const ChatPortal: React.FC<ChatPortalProps> = ({ currentUser, students, messages
                                                 onClick={() => alert("Voice note feature coming soon!")} 
                                             />
                                             <AttachmentOption 
-                                                icon={LinkIcon} label="Link" color="bg-teal-500" 
+                                                icon={LinkIcon} label="Links" color="bg-teal-500" 
                                                 onClick={() => alert("Link insertion coming soon!")} 
                                             />
                                         </div>
@@ -649,15 +649,19 @@ const ChatPortal: React.FC<ChatPortalProps> = ({ currentUser, students, messages
                         )}
 
                         <div className="flex items-end gap-2">
-                            {/* Desktop Attachment Trigger (Left) */}
-                            <button 
-                                onClick={() => setShowAttachMenu(!showAttachMenu)}
-                                className={`hidden md:flex p-3 mb-1 rounded-full transition-all duration-300 ${showAttachMenu ? 'bg-slate-200 rotate-45 text-slate-800' : 'text-slate-500 hover:text-slate-700'}`}
-                            >
-                                <Plus size={24} />
-                            </button>
+                            {/* Input Container - Wrapping Buttons and Textarea */}
+                            <div className="flex-1 bg-white dark:bg-[#2a3942] rounded-2xl border border-white dark:border-[#2a3942] flex items-end relative z-20">
+                                
+                                {/* Desktop Attachment Trigger (Inside Left) */}
+                                <div className="hidden md:flex pb-2 pl-2">
+                                    <button 
+                                        onClick={() => setShowAttachMenu(!showAttachMenu)}
+                                        className={`p-2 rounded-full transition-transform duration-300 ${showAttachMenu ? 'rotate-45 text-slate-700 bg-slate-100 dark:text-slate-300 dark:bg-slate-700' : 'text-slate-500 hover:text-slate-700 dark:text-[#aebac1] dark:hover:text-white'}`}
+                                    >
+                                        <Plus size={24} />
+                                    </button>
+                                </div>
 
-                            <div className="flex-1 bg-white rounded-2xl border border-white flex items-end dark:bg-[#2a3942] dark:border-[#2a3942] relative">
                                 <textarea 
                                     ref={textareaRef}
                                     rows={1}
@@ -665,16 +669,19 @@ const ChatPortal: React.FC<ChatPortalProps> = ({ currentUser, students, messages
                                     onChange={(e) => setNewMessage(e.target.value)}
                                     onKeyDown={handleKeyDown}
                                     placeholder="Type a message"
-                                    className="w-full pl-4 pr-12 py-3 border-none focus:ring-0 text-slate-800 bg-transparent resize-none overflow-hidden max-h-[120px] dark:text-[#e9edef] dark:placeholder-[#8696a0] leading-relaxed text-[15px]"
+                                    className="w-full py-3 px-4 md:pl-2 md:pr-4 border-none focus:ring-0 text-slate-800 bg-transparent resize-none overflow-hidden max-h-[120px] dark:text-[#e9edef] dark:placeholder-[#8696a0] leading-relaxed text-[15px]"
                                     style={{ minHeight: '24px' }}
                                 />
-                                {/* Mobile Attachment Trigger (Right inside input) */}
-                                <button 
-                                    onClick={() => setShowAttachMenu(!showAttachMenu)}
-                                    className={`md:hidden absolute right-2 bottom-2 p-2 text-slate-400 transition-colors ${showAttachMenu ? 'text-emerald-500' : ''}`}
-                                >
-                                    <Paperclip size={20} className="transform -rotate-45" />
-                                </button>
+
+                                {/* Mobile Attachment Trigger (Inside Right) */}
+                                <div className="md:hidden absolute right-2 bottom-2">
+                                    <button 
+                                        onClick={() => setShowAttachMenu(!showAttachMenu)}
+                                        className={`p-2 text-slate-400 transition-colors ${showAttachMenu ? 'text-emerald-500' : ''}`}
+                                    >
+                                        <Paperclip size={20} className={showAttachMenu ? '' : 'transform -rotate-45'} />
+                                    </button>
+                                </div>
                             </div>
                             
                             <button 

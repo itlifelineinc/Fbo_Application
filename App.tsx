@@ -19,8 +19,10 @@ import CourseModulesPage from './components/CourseModulesPage';
 import CourseLandingPage from './components/CourseLandingPage';
 import MentorshipTools from './components/MentorshipTools';
 import MentorshipInbox from './components/MentorshipInbox';
+import AssignmentsList from './components/AssignmentsList'; // New
+import AssignmentPlayer from './components/AssignmentPlayer'; // New
 import { INITIAL_COURSES, INITIAL_STUDENTS, INITIAL_MESSAGES, INITIAL_POSTS, INITIAL_COHORTS, INITIAL_TEMPLATES, INITIAL_ASSIGNMENTS } from './constants';
-import { Course, Module, Student, SaleRecord, UserRole, Message, CourseTrack, CommunityPost, CommunityComment, Cohort, CourseStatus, AppNotification, MentorshipTemplate, Assignment } from './types';
+import { Course, Module, Student, SaleRecord, UserRole, Message, CourseTrack, CommunityPost, CommunityComment, Cohort, CourseStatus, AppNotification, MentorshipTemplate, Assignment, AssignmentSubmission } from './types';
 import { updateStudentRank } from './services/rankEngine';
 
 // --- Protected Route ---
@@ -119,7 +121,8 @@ const App: React.FC = () => {
             },
             // Ensure savedCourses is initialized
             savedCourses: user.savedCourses || [],
-            viewedTemplates: user.viewedTemplates || []
+            viewedTemplates: user.viewedTemplates || [],
+            assignmentSubmissions: user.assignmentSubmissions || []
         };
 
         setStudents(prev => prev.map(s => s.id === updatedUser.id ? updatedUser : s));
@@ -168,7 +171,8 @@ const App: React.FC = () => {
             learningStreak: 1
         },
         savedCourses: [],
-        viewedTemplates: []
+        viewedTemplates: [],
+        assignmentSubmissions: []
     };
     
     setCurrentUser(loggedInUser);
@@ -421,6 +425,27 @@ const App: React.FC = () => {
       setAssignments(prev => prev.filter(a => a.id !== id));
   };
 
+  // --- NEW: Assignment Submission Handler ---
+  const handleSubmitAssignment = (submission: AssignmentSubmission) => {
+      if (!currentUser) return;
+      
+      // Update the user's submissions list
+      const updatedSubmissions = [
+          ...(currentUser.assignmentSubmissions || []).filter(s => s.assignmentId !== submission.assignmentId), // Replace existing if retry
+          submission
+      ];
+
+      const updatedStudent = {
+          ...currentUser,
+          assignmentSubmissions: updatedSubmissions
+      };
+
+      handleUpdateStudent(updatedStudent);
+      
+      // Optional: Notify sponsor (Simulated by adding a system message or notification logic here if we had a backend)
+      console.log(`Notification: ${currentUser.name} submitted assignment ${submission.assignmentId}`);
+  };
+
   // --- Notification Logic ---
   // Create notifications from unread messages for the current user
   const notifications: AppNotification[] = currentUser ? messages
@@ -622,6 +647,27 @@ const App: React.FC = () => {
                     currentUser={currentUser!} 
                     templates={templates}
                     onMarkAsViewed={handleMarkTemplateAsViewed}
+                />
+            </ProtectedRoute>
+        } />
+
+        {/* Assignment List for Downline */}
+        <Route path="/assignments" element={
+            <ProtectedRoute currentUser={currentUser} onLogout={handleLogout} theme={theme} onToggleTheme={toggleTheme} courses={courses} notifications={notifications}>
+                <AssignmentsList 
+                    currentUser={currentUser!} 
+                    assignments={assignments} 
+                />
+            </ProtectedRoute>
+        } />
+
+        {/* Assignment Player for Downline */}
+        <Route path="/assignments/:assignmentId" element={
+            <ProtectedRoute currentUser={currentUser} onLogout={handleLogout} theme={theme} onToggleTheme={toggleTheme} courses={courses} notifications={notifications}>
+                <AssignmentPlayer 
+                    currentUser={currentUser!} 
+                    assignments={assignments}
+                    onSubmit={handleSubmitAssignment}
                 />
             </ProtectedRoute>
         } />

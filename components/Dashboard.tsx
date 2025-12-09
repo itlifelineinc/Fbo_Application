@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Brush } from 'recharts';
 import { Link, useNavigate } from 'react-router-dom';
 import { Student, UserRole, Course, CourseTrack, CourseStatus, MentorshipTemplate } from '../types';
-import { Edit, ExternalLink, Plus, Minus, ChevronLeft, ChevronRight, User, Users, TrendingUp, Calendar, MessageCircle, ShoppingBag, Globe, Bell, ArrowUpRight, CheckCircle, Lightbulb, Inbox } from 'lucide-react';
+import { Edit, ExternalLink, Plus, Minus, ChevronLeft, ChevronRight, User, Users, TrendingUp, Calendar, MessageCircle, ShoppingBag, Globe, Bell, ArrowUpRight, CheckCircle, Lightbulb, Inbox, ClipboardCheck } from 'lucide-react';
 import { RANKS, RANK_ORDER } from '../constants';
 
 // --- Icons (Defined Before Usage) ---
@@ -95,6 +95,10 @@ const Dashboard: React.FC<DashboardProps> = ({ students, currentUser, courses, o
     (t.authorHandle === currentUser.sponsorId || t.authorHandle === '@forever_system') &&
     !(currentUser.viewedTemplates || []).includes(t.id)
   ).length;
+
+  // Count pending assignments
+  const pendingAssignments = (currentUser.assignmentSubmissions || [])
+    .filter(sub => sub.status !== 'SUBMITTED' && sub.status !== 'APPROVED').length; // A bit crude, better logic in full list
 
   let visibleStudents = students || []; 
   if (isStudent) {
@@ -403,7 +407,7 @@ const Dashboard: React.FC<DashboardProps> = ({ students, currentUser, courses, o
         </div>
         <div className="text-right hidden md:block">
             <p className="text-xs text-slate-400 font-bold uppercase tracking-wider">Current Cycle</p>
-            <p className="text-slate-700 font-bold dark:text-slate-300">{monthNames[prevMonth.getMonth()]} - {monthNames[currentDate.getMonth()]}</p>
+            <p className="text-slate-700 font-bold dark:text-slate-300">{monthNames[prevMonth.getMonth()]]} - {monthNames[currentDate.getMonth()]}</p>
         </div>
       </header>
 
@@ -565,7 +569,7 @@ const Dashboard: React.FC<DashboardProps> = ({ students, currentUser, courses, o
                             </div>
                             <div className="text-center">
                                 <p className="text-xs font-bold text-slate-400 dark:text-slate-500">{monthNames[nextMonth.getMonth()]}</p>
-                                <p className="text-[10px] text-slate-400">Projected</p>
+                                <p className="text-xs text-slate-400">Projected</p>
                             </div>
                         </div>
                     </div>
@@ -644,27 +648,43 @@ const Dashboard: React.FC<DashboardProps> = ({ students, currentUser, courses, o
                 <h2 className="text-lg font-bold text-slate-800 mb-4 dark:text-slate-100">Quick Actions</h2>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     {hasSponsor ? (
-                        <Link to="/mentorship/inbox" className="relative bg-white p-4 rounded-xl border border-slate-100 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all flex flex-col items-center gap-3 text-center dark:bg-slate-800 dark:border-slate-700">
-                            <div className="w-10 h-10 bg-indigo-50 text-indigo-600 rounded-full flex items-center justify-center dark:bg-indigo-900/30 dark:text-indigo-400 relative">
-                                <Inbox size={20} />
-                                {unreadTemplatesCount > 0 && (
-                                    <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white ring-2 ring-white dark:ring-slate-800 animate-pulse">
-                                        {unreadTemplatesCount > 9 ? '9+' : unreadTemplatesCount}
-                                    </span>
-                                )}
-                            </div>
-                            <span className="text-sm font-bold text-slate-700 dark:text-slate-300">Mentorship Inbox</span>
-                        </Link>
+                        <>
+                            <Link to="/mentorship/inbox" className="relative bg-white p-4 rounded-xl border border-slate-100 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all flex flex-col items-center gap-3 text-center dark:bg-slate-800 dark:border-slate-700">
+                                <div className="w-10 h-10 bg-indigo-50 text-indigo-600 rounded-full flex items-center justify-center dark:bg-indigo-900/30 dark:text-indigo-400 relative">
+                                    <Inbox size={20} />
+                                    {unreadTemplatesCount > 0 && (
+                                        <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white ring-2 ring-white dark:ring-slate-800 animate-pulse">
+                                            {unreadTemplatesCount > 9 ? '9+' : unreadTemplatesCount}
+                                        </span>
+                                    )}
+                                </div>
+                                <span className="text-sm font-bold text-slate-700 dark:text-slate-300">Mentorship Inbox</span>
+                            </Link>
+                            <Link to="/assignments" className="relative bg-white p-4 rounded-xl border border-slate-100 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all flex flex-col items-center gap-3 text-center dark:bg-slate-800 dark:border-slate-700">
+                                <div className="w-10 h-10 bg-orange-50 text-orange-600 rounded-full flex items-center justify-center dark:bg-orange-900/30 dark:text-orange-400 relative">
+                                    <ClipboardCheck size={20} />
+                                    {pendingAssignments > 0 && (
+                                        <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white ring-2 ring-white dark:ring-slate-800">
+                                            {pendingAssignments > 9 ? '9+' : pendingAssignments}
+                                        </span>
+                                    )}
+                                </div>
+                                <span className="text-sm font-bold text-slate-700 dark:text-slate-300">My Assignments</span>
+                            </Link>
+                        </>
                     ) : (
-                        <Link to="/chat" className="bg-white p-4 rounded-xl border border-slate-100 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all flex flex-col items-center gap-3 text-center dark:bg-slate-800 dark:border-slate-700">
-                            <div className="w-10 h-10 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center dark:bg-blue-900/30 dark:text-blue-400"><MessageCircle size={20} /></div>
-                            <span className="text-sm font-bold text-slate-700 dark:text-slate-300">Team Chat</span>
-                        </Link>
+                        <>
+                            <Link to="/chat" className="bg-white p-4 rounded-xl border border-slate-100 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all flex flex-col items-center gap-3 text-center dark:bg-slate-800 dark:border-slate-700">
+                                <div className="w-10 h-10 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center dark:bg-blue-900/30 dark:text-blue-400"><MessageCircle size={20} /></div>
+                                <span className="text-sm font-bold text-slate-700 dark:text-slate-300">Team Chat</span>
+                            </Link>
+                            <Link to="/sales-builder" className="bg-white p-4 rounded-xl border border-slate-100 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all flex flex-col items-center gap-3 text-center dark:bg-slate-800 dark:border-slate-700">
+                                <div className="w-10 h-10 bg-purple-50 text-purple-600 rounded-full flex items-center justify-center dark:bg-purple-900/30 dark:text-purple-400"><ShoppingBag size={20} /></div>
+                                <span className="text-sm font-bold text-slate-700 dark:text-slate-300">Sales Page</span>
+                            </Link>
+                        </>
                     )}
-                    <Link to="/sales-builder" className="bg-white p-4 rounded-xl border border-slate-100 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all flex flex-col items-center gap-3 text-center dark:bg-slate-800 dark:border-slate-700">
-                        <div className="w-10 h-10 bg-purple-50 text-purple-600 rounded-full flex items-center justify-center dark:bg-purple-900/30 dark:text-purple-400"><ShoppingBag size={20} /></div>
-                        <span className="text-sm font-bold text-slate-700 dark:text-slate-300">Sales Page</span>
-                    </Link>
+                    
                     <Link to="/community" className="bg-white p-4 rounded-xl border border-slate-100 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all flex flex-col items-center gap-3 text-center dark:bg-slate-800 dark:border-slate-700">
                         <div className="w-10 h-10 bg-orange-50 text-orange-600 rounded-full flex items-center justify-center dark:bg-orange-900/30 dark:text-orange-400"><Globe size={20} /></div>
                         <span className="text-sm font-bold text-slate-700 dark:text-slate-300">Community</span>

@@ -180,7 +180,8 @@ export interface Student {
       learningStreak: number;
       lastLoginDate: string;
   };
-  salesHistory?: any[]; 
+  salesHistory?: any[];
+  assignmentSubmissions?: AssignmentSubmission[]; // New: Track assignment history
 }
 
 export interface ChatMessage {
@@ -273,4 +274,24 @@ export interface Assignment {
   status: 'DRAFT' | 'ACTIVE' | 'ARCHIVED';
   isTemplate?: boolean; // New: Template flag
   createdAt: number;
+}
+
+// --- SUBMISSION TYPES ---
+export type SubmissionStatus = 'PENDING' | 'SUBMITTED' | 'APPROVED' | 'REVISION_NEEDED';
+
+export interface AssignmentAnswer {
+  questionId: string;
+  textAnswer?: string;
+  selectedOption?: number;
+  attachment?: Attachment; // For file/image/voice uploads
+}
+
+export interface AssignmentSubmission {
+  id: string;
+  assignmentId: string;
+  studentHandle: string;
+  answers: AssignmentAnswer[];
+  submittedAt: number;
+  status: SubmissionStatus;
+  feedback?: string;
 }

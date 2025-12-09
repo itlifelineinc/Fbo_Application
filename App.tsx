@@ -17,6 +17,7 @@ import SalesPageBuilder from './pages/SalesPageBuilder';
 import ClassroomPortal from './components/ClassroomPortal';
 import CourseModulesPage from './components/CourseModulesPage';
 import CourseLandingPage from './components/CourseLandingPage';
+import MentorshipTools from './components/MentorshipTools';
 import { INITIAL_COURSES, INITIAL_STUDENTS, INITIAL_MESSAGES, INITIAL_POSTS, INITIAL_COHORTS } from './constants';
 import { Course, Module, Student, SaleRecord, UserRole, Message, CourseTrack, CommunityPost, CommunityComment, Cohort, CourseStatus, AppNotification } from './types';
 import { updateStudentRank } from './services/rankEngine';
@@ -429,7 +430,7 @@ const App: React.FC = () => {
                     students={students} 
                     messages={messages} 
                     onSendMessage={handleSendMessage} 
-                    onMarkAsRead={handleMarkAsRead}
+                    onMarkAsRead={handleMarkAsRead} 
                     onClearChat={handleClearChat}
                     onDeleteMessage={handleDeleteMessage}
                 />
@@ -552,6 +553,14 @@ const App: React.FC = () => {
                 />
             </ProtectedRoute>
         } />
+
+        {/* Mentorship Tools Route */}
+        <Route path="/mentorship-tools" element={
+            <ProtectedRoute currentUser={currentUser} onLogout={handleLogout} theme={theme} onToggleTheme={toggleTheme} courses={courses} notifications={notifications}>
+                <MentorshipTools currentUser={currentUser!} />
+            </ProtectedRoute>
+        } />
+
       </Routes>
     </HashRouter>
   );

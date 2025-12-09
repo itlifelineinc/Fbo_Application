@@ -1,7 +1,8 @@
 
 import React, { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Student, Message, UserRole, MessageStatus, Attachment } from '../types';
-import { MoreVertical, Trash2, ChevronDown, Reply, Copy, ArrowRight, X, Search, MessageSquarePlus, Hash, Plus, Paperclip, LayoutTemplate, ClipboardCheck, Megaphone, Image as ImageIcon, FileText, Mic, Link as LinkIcon, Download, Play, Pause, ExternalLink } from 'lucide-react';
+import { MoreVertical, Trash2, ChevronDown, Reply, Copy, ArrowRight, X, Search, MessageSquarePlus, Hash, Plus, Paperclip, LayoutTemplate, ClipboardCheck, Megaphone, Image as ImageIcon, FileText, Mic, Link as LinkIcon, Download, Play, Pause, ExternalLink, LayoutGrid } from 'lucide-react';
 
 interface ChatPortalProps {
   currentUser: Student;
@@ -40,6 +41,7 @@ const MessageStatusIcon: React.FC<{ status: MessageStatus, isRead: boolean }> = 
 };
 
 const ChatPortal: React.FC<ChatPortalProps> = ({ currentUser, students, messages, onSendMessage, onMarkAsRead, onClearChat, onDeleteMessage }) => {
+  const navigate = useNavigate();
   // State
   const [activeChatHandle, setActiveChatHandle] = useState<string | null>(null);
   const [newMessage, setNewMessage] = useState('');
@@ -404,11 +406,11 @@ const ChatPortal: React.FC<ChatPortalProps> = ({ currentUser, students, messages
                     </button>
                     {hasMentorshipAccess && (
                         <button 
-                            onClick={() => { setIsBroadcastMode(true); setActiveChatHandle(null); }}
+                            onClick={() => navigate('/mentorship-tools')}
                             className="text-slate-500 hover:bg-slate-200 p-2 rounded-full transition-colors dark:text-[#aebac1] dark:hover:bg-[#374045]"
-                            title="New Broadcast"
+                            title="Mentorship Tools"
                         >
-                            <SpeakerWaveIcon />
+                            <LayoutGrid size={22} />
                         </button>
                     )}
                 </div>

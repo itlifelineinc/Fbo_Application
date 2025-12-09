@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Student, Message, UserRole, MessageStatus } from '../types';
-import { MoreVertical, Trash2, ChevronDown, Reply, Copy, ArrowRight, X, Search, MessageSquarePlus, Hash, Plus, Paperclip, LayoutTemplate, ClipboardCheck, Megaphone, Image as ImageIcon, FileText, Mic, Link as LinkIcon } from 'lucide-react';
+import { Student, Message, UserRole, MessageStatus, Attachment } from '../types';
+import { MoreVertical, Trash2, ChevronDown, Reply, Copy, ArrowRight, X, Search, MessageSquarePlus, Hash, Plus, Paperclip, LayoutTemplate, ClipboardCheck, Megaphone, Image as ImageIcon, FileText, Mic, Link as LinkIcon, Download, Play, Pause, ExternalLink } from 'lucide-react';
 
 interface ChatPortalProps {
   currentUser: Student;
@@ -48,6 +48,11 @@ const ChatPortal: React.FC<ChatPortalProps> = ({ currentUser, students, messages
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [showAttachMenu, setShowAttachMenu] = useState(false);
   
+  // Attachment Logic State
+  const [pendingAttachment, setPendingAttachment] = useState<Attachment | null>(null);
+  const [isLinkModalOpen, setIsLinkModalOpen] = useState(false);
+  const [linkInput, setLinkInput] = useState('');
+  
   // Search & Topics State
   const [searchQuery, setSearchQuery] = useState('');
   const [extraChannels, setExtraChannels] = useState<{handle: string, name: string, avatar: string, type: 'TOPIC' | 'USER'}[]>([]);
@@ -64,6 +69,16 @@ const ChatPortal: React.FC<ChatPortalProps> = ({ currentUser, students, messages
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
   const attachMenuRef = useRef<HTMLDivElement>(null);
+  const fileInputImageRef = useRef<HTMLInputElement>(null);
+  const fileInputDocRef = useRef<HTMLInputElement>(null);
+  const fileInputAudioRef = useRef<HTMLInputElement>(null);
+
+  // Permission Logic: Sponsor, Admin, or Rank > NOVUS (Distributor)
+  const hasMentorshipAccess = 
+      currentUser.role === UserRole.SPONSOR || 
+      currentUser.role === UserRole.ADMIN || 
+      currentUser.role === UserRole.SUPER_ADMIN ||
+      (currentUser.rankProgress?.currentRankId && currentUser.rankProgress.currentRankId !== 'NOVUS');
 
   // Helper: Get Group ID
   const myGroupId = `GROUP_${currentUser.role === UserRole.SPONSOR ? currentUser.handle : currentUser.sponsorId}`;
@@ -142,7 +157,7 @@ const ChatPortal: React.FC<ChatPortalProps> = ({ currentUser, students, messages
             }
         }, 50);
     }
-  }, [activeMessages, activeChatHandle]);
+  }, [activeMessages, activeChatHandle, pendingAttachment]);
 
   // Mark as Read
   useEffect(() => {
@@ -175,20 +190,76 @@ const ChatPortal: React.FC<ChatPortalProps> = ({ currentUser, students, messages
       }
   }, [newMessage]);
 
+  // File Handlers
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>, type: 'IMAGE' | 'DOCUMENT' | 'AUDIO') => {
+      const file = e.target.files?.[0];
+      if (file) {
+          // File size limit (e.g., 5MB)
+          if (file.size > 5 * 1024 * 1024) {
+              alert("File is too large. Max 5MB allowed.");
+              return;
+          }
+
+          const reader = new FileReader();
+          reader.onload = () => {
+              setPendingAttachment({
+                  type,
+                  url: reader.result as string,
+                  name: file.name,
+                  size: `${(file.size / 1024).toFixed(1)} KB`,
+                  mimeType: file.type
+              });
+              setShowAttachMenu(false); // Close menu
+          };
+          reader.readAsDataURL(file);
+      }
+      // Reset input value to allow re-selection
+      e.target.value = '';
+  };
+
+  const handleLinkSubmit = () => {
+      const urlPattern = /^(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?$/;
+      if (!urlPattern.test(linkInput)) {
+          alert("Please enter a valid URL (e.g., https://example.com)");
+          return;
+      }
+      
+      let finalUrl = linkInput;
+      if (!linkInput.startsWith('http')) {
+          finalUrl = `https://${linkInput}`;
+      }
+
+      setPendingAttachment({
+          type: 'LINK',
+          url: finalUrl,
+          name: linkInput,
+      });
+      setLinkInput('');
+      setIsLinkModalOpen(false);
+      setShowAttachMenu(false);
+  };
+
   // Handlers
   const handleSend = () => {
-    if (!newMessage.trim()) return;
+    if (!newMessage.trim() && !pendingAttachment) return;
+
+    const baseMessage = {
+        id: `msg_${Date.now()}`,
+        senderHandle: currentUser.handle,
+        text: newMessage, // Text becomes caption if attachment present
+        timestamp: Date.now(),
+        isRead: false,
+        status: 'SENT' as MessageStatus,
+        attachment: pendingAttachment ? pendingAttachment : undefined
+    };
 
     if (isBroadcastMode) {
         selectedBroadcastUsers.forEach(handle => {
             onSendMessage({
+                ...baseMessage,
                 id: `msg_${Date.now()}_${Math.random()}`,
-                senderHandle: currentUser.handle,
                 recipientHandle: handle,
                 text: `[BROADCAST] ${newMessage}`,
-                timestamp: Date.now(),
-                isRead: false,
-                status: 'SENT',
                 isSystem: true
             });
         });
@@ -197,17 +268,13 @@ const ChatPortal: React.FC<ChatPortalProps> = ({ currentUser, students, messages
         alert("Broadcast sent successfully!");
     } else if (activeChatHandle) {
         onSendMessage({
-            id: `msg_${Date.now()}`,
-            senderHandle: currentUser.handle,
+            ...baseMessage,
             recipientHandle: activeChatHandle,
-            text: newMessage,
-            timestamp: Date.now(),
-            isRead: false,
-            status: 'SENT'
         });
     }
     setNewMessage('');
     setReplyToMessage(null);
+    setPendingAttachment(null);
     if (textareaRef.current) {
         textareaRef.current.style.height = 'auto';
     }
@@ -278,7 +345,7 @@ const ChatPortal: React.FC<ChatPortalProps> = ({ currentUser, students, messages
   // Attachment Option Renderer
   const AttachmentOption = ({ icon: Icon, label, color, onClick }: { icon: any, label: string, color: string, onClick: () => void }) => (
       <button 
-        onClick={() => { onClick(); setShowAttachMenu(false); }}
+        onClick={() => { onClick(); }}
         className="flex flex-col items-center gap-2 group p-2 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-xl transition-colors"
       >
           <div className={`w-12 h-12 rounded-full flex items-center justify-center text-white shadow-lg transform transition-transform group-hover:scale-110 ${color}`}>
@@ -293,6 +360,32 @@ const ChatPortal: React.FC<ChatPortalProps> = ({ currentUser, students, messages
         className="h-full flex flex-col md:flex-row bg-white md:rounded-2xl md:shadow-sm md:border border-slate-100 overflow-hidden animate-fade-in dark:bg-[#111b21] dark:border-slate-800"
         style={{ fontFamily: 'Segoe UI, "Helvetica Neue", Helvetica, Arial, sans-serif' }}
     >
+      {/* Hidden File Inputs */}
+      <input type="file" ref={fileInputImageRef} className="hidden" accept="image/*" onChange={(e) => handleFileSelect(e, 'IMAGE')} />
+      <input type="file" ref={fileInputDocRef} className="hidden" accept=".pdf,.doc,.docx,.xls,.xlsx,.txt" onChange={(e) => handleFileSelect(e, 'DOCUMENT')} />
+      <input type="file" ref={fileInputAudioRef} className="hidden" accept="audio/*" onChange={(e) => handleFileSelect(e, 'AUDIO')} />
+
+      {/* Link Input Modal */}
+      {isLinkModalOpen && (
+          <div className="fixed inset-0 z-[60] bg-black/50 flex items-center justify-center p-4">
+              <div className="bg-white dark:bg-slate-800 rounded-2xl p-6 w-full max-w-sm shadow-2xl animate-fade-in">
+                  <h3 className="font-bold text-lg mb-4 text-slate-800 dark:text-white">Add Link</h3>
+                  <input 
+                    type="text" 
+                    value={linkInput}
+                    onChange={(e) => setLinkInput(e.target.value)}
+                    placeholder="https://..."
+                    className="w-full p-3 border border-slate-200 rounded-xl mb-4 bg-slate-50 outline-none focus:ring-2 focus:ring-emerald-500 dark:bg-slate-900 dark:border-slate-700 dark:text-white"
+                    autoFocus
+                  />
+                  <div className="flex gap-3 justify-end">
+                      <button onClick={() => setIsLinkModalOpen(false)} className="text-slate-500 font-bold text-sm px-4 py-2 hover:bg-slate-100 rounded-lg dark:hover:bg-slate-700">Cancel</button>
+                      <button onClick={handleLinkSubmit} className="bg-emerald-500 text-white font-bold text-sm px-6 py-2 rounded-lg hover:bg-emerald-600 shadow-md">Add Link</button>
+                  </div>
+              </div>
+          </div>
+      )}
+
       {/* Sidebar List */}
       <div className={`w-full md:w-96 bg-white border-r border-slate-200 flex flex-col ${activeChatHandle && !isBroadcastMode ? 'hidden md:flex' : 'flex'} dark:bg-[#111b21] dark:border-slate-800`}>
         
@@ -309,7 +402,7 @@ const ChatPortal: React.FC<ChatPortalProps> = ({ currentUser, students, messages
                     >
                         <MessageSquarePlus size={22} />
                     </button>
-                    {currentUser.role === UserRole.SPONSOR && (
+                    {hasMentorshipAccess && (
                         <button 
                             onClick={() => { setIsBroadcastMode(true); setActiveChatHandle(null); }}
                             className="text-slate-500 hover:bg-slate-200 p-2 rounded-full transition-colors dark:text-[#aebac1] dark:hover:bg-[#374045]"
@@ -505,6 +598,8 @@ const ChatPortal: React.FC<ChatPortalProps> = ({ currentUser, students, messages
                     >
                         {activeMessages.map((msg) => {
                             const isMe = msg.senderHandle === currentUser.handle;
+                            const hasAttachment = !!msg.attachment;
+
                             return (
                                 <div 
                                     key={msg.id} 
@@ -514,7 +609,7 @@ const ChatPortal: React.FC<ChatPortalProps> = ({ currentUser, students, messages
                                 >
                                     <div 
                                         className={`
-                                            relative rounded-lg shadow-sm max-w-[85%] md:max-w-[65%] text-sm leading-relaxed
+                                            relative rounded-lg shadow-sm max-w-[85%] md:max-w-[65%] text-sm leading-relaxed flex flex-col
                                             ${isMe 
                                                 ? 'bg-[#d9fdd3] text-[#111b21] rounded-tr-none dark:bg-[#005c4b] dark:text-[#e9edef]' 
                                                 : 'bg-white text-[#111b21] rounded-tl-none dark:bg-[#202c33] dark:text-[#e9edef]'
@@ -551,22 +646,56 @@ const ChatPortal: React.FC<ChatPortalProps> = ({ currentUser, students, messages
                                             </div>
                                         )}
 
-                                        <div className="px-2 pt-1.5 pb-1 pr-7">
+                                        <div className="px-2 pt-1.5 pb-1 pr-2">
                                             {/* Group Sender Name */}
                                             {(activeChatHandle.startsWith('GROUP_') || activeChatHandle.startsWith('TOPIC_')) && !isMe && (
-                                                <p className={`text-xs font-bold mb-1 ${['text-orange-500', 'text-pink-500', 'text-purple-500', 'text-blue-500'][msg.senderHandle.length % 4]}`}>
+                                                <p className={`text-xs font-bold mb-1 px-1 ${['text-orange-500', 'text-pink-500', 'text-purple-500', 'text-blue-500'][msg.senderHandle.length % 4]}`}>
                                                     {msg.senderHandle}
                                                 </p>
                                             )}
                                             
-                                            <div className="relative">
+                                            {/* ATTACHMENT RENDERING */}
+                                            {hasAttachment && (
+                                                <div className="mb-1 rounded-lg overflow-hidden">
+                                                    {msg.attachment?.type === 'IMAGE' && (
+                                                        <img src={msg.attachment.url} alt="Attachment" className="max-w-full h-auto rounded-lg max-h-[300px] object-cover" />
+                                                    )}
+                                                    {msg.attachment?.type === 'DOCUMENT' && (
+                                                        <div className="flex items-center gap-3 bg-slate-100 dark:bg-slate-700 p-3 rounded-lg border border-slate-200 dark:border-slate-600">
+                                                            <div className="p-2 bg-red-100 text-red-600 rounded dark:bg-red-900/30 dark:text-red-400"><FileText size={24} /></div>
+                                                            <div className="flex-1 min-w-0">
+                                                                <p className="font-bold text-sm truncate">{msg.attachment.name || 'Document'}</p>
+                                                                <p className="text-xs text-slate-500 dark:text-slate-400">{msg.attachment.size} • {msg.attachment.mimeType?.split('/')[1].toUpperCase() || 'FILE'}</p>
+                                                            </div>
+                                                            <a href={msg.attachment.url} download={msg.attachment.name} className="p-2 text-slate-500 hover:text-emerald-600 dark:text-slate-400"><Download size={20} /></a>
+                                                        </div>
+                                                    )}
+                                                    {msg.attachment?.type === 'AUDIO' && (
+                                                        <div className="flex items-center gap-2 bg-slate-100 dark:bg-slate-700 p-2 rounded-lg min-w-[200px]">
+                                                            <div className="p-2 bg-blue-100 text-blue-600 rounded-full dark:bg-blue-900/30 dark:text-blue-400"><Mic size={20} /></div>
+                                                            <audio controls src={msg.attachment.url} className="h-8 w-full" />
+                                                        </div>
+                                                    )}
+                                                    {msg.attachment?.type === 'LINK' && (
+                                                        <a href={msg.attachment.url} target="_blank" rel="noopener noreferrer" className="block bg-slate-100 dark:bg-slate-700 p-3 rounded-lg border-l-4 border-blue-500 hover:bg-blue-50 dark:hover:bg-slate-600 transition-colors">
+                                                            <div className="flex items-center gap-2 text-blue-600 dark:text-blue-400 mb-1">
+                                                                <LinkIcon size={14} /> <span className="text-xs font-bold truncate">{msg.attachment.url}</span>
+                                                            </div>
+                                                            <p className="text-xs text-slate-600 dark:text-slate-300 line-clamp-2">Click to visit link</p>
+                                                        </a>
+                                                    )}
+                                                </div>
+                                            )}
+
+                                            <div className="relative pr-7 pl-1 pb-1">
                                                 <span className={`break-words whitespace-pre-wrap ${msg.isSystem ? 'italic text-slate-500 text-xs flex items-center gap-1' : ''}`}>
                                                     {msg.text}
-                                                    <span className="inline-block w-[76px] h-[15px] align-bottom select-none opacity-0"></span>
+                                                    {/* Spacer for timestamp */}
+                                                    <span className="inline-block w-[60px] h-[10px] align-bottom select-none opacity-0"></span>
                                                 </span>
 
                                                 {/* Absolute Positioned Timestamp & Status */}
-                                                <span className={`absolute bottom-[-1px] right-[-20px] flex items-center gap-1 text-[11px] leading-none whitespace-nowrap ${isMe ? 'text-[#54656f] dark:text-[#aebac1]' : 'text-[#54656f] dark:text-[#aebac1]'}`}>
+                                                <span className={`absolute bottom-0 right-0 flex items-center gap-1 text-[11px] leading-none whitespace-nowrap ${isMe ? 'text-[#54656f] dark:text-[#aebac1]' : 'text-[#54656f] dark:text-[#aebac1]'}`}>
                                                     <span>{new Date(msg.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', hour12: true}).toLowerCase()}</span>
                                                     {isMe && !msg.isSystem && <MessageStatusIcon status={msg.status || 'SENT'} isRead={msg.isRead} />}
                                                 </span>
@@ -593,6 +722,26 @@ const ChatPortal: React.FC<ChatPortalProps> = ({ currentUser, students, messages
                             </div>
                         )}
 
+                        {/* Pending Attachment Preview (Above Input) */}
+                        {pendingAttachment && (
+                            <div className="bg-slate-100 dark:bg-[#1f2c33] border-l-4 border-blue-500 rounded-t-lg p-3 mb-1 flex justify-between items-center shadow-sm mx-1 animate-fade-in">
+                                <div className="flex items-center gap-3 overflow-hidden">
+                                    {pendingAttachment.type === 'IMAGE' && <img src={pendingAttachment.url} className="w-10 h-10 object-cover rounded" />}
+                                    {pendingAttachment.type === 'DOCUMENT' && <div className="w-10 h-10 bg-red-100 text-red-600 flex items-center justify-center rounded"><FileText size={20}/></div>}
+                                    {pendingAttachment.type === 'AUDIO' && <div className="w-10 h-10 bg-blue-100 text-blue-600 flex items-center justify-center rounded"><Mic size={20}/></div>}
+                                    {pendingAttachment.type === 'LINK' && <div className="w-10 h-10 bg-slate-200 text-slate-600 flex items-center justify-center rounded"><LinkIcon size={20}/></div>}
+                                    
+                                    <div className="flex-1 min-w-0">
+                                        <p className="text-xs font-bold text-slate-700 dark:text-white truncate">{pendingAttachment.name || 'Attachment'}</p>
+                                        <p className="text-[10px] text-slate-500 dark:text-slate-400">{pendingAttachment.type} {pendingAttachment.size ? `• ${pendingAttachment.size}` : ''}</p>
+                                    </div>
+                                </div>
+                                <button onClick={() => setPendingAttachment(null)} className="p-1 text-slate-400 hover:text-red-500">
+                                    <X size={20} />
+                                </button>
+                            </div>
+                        )}
+
                         {/* Attachment Menu Popup */}
                         {showAttachMenu && (
                             <div 
@@ -601,8 +750,8 @@ const ChatPortal: React.FC<ChatPortalProps> = ({ currentUser, students, messages
                             >
                                 <div className="bg-white dark:bg-[#233138] rounded-2xl shadow-2xl p-4 flex flex-col gap-4 border border-slate-100 dark:border-slate-700 min-w-[280px]">
                                     
-                                    {/* Mentorship Section - Sponsor Only */}
-                                    {currentUser.role === UserRole.SPONSOR && (
+                                    {/* Mentorship Section - Sponsor, Admin or Assistant Supervisor+ */}
+                                    {hasMentorshipAccess && (
                                         <div className="space-y-3 pb-3 border-b border-slate-100 dark:border-slate-700">
                                             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1">Mentorship Tools</p>
                                             <div className="grid grid-cols-3 gap-2">
@@ -628,19 +777,19 @@ const ChatPortal: React.FC<ChatPortalProps> = ({ currentUser, students, messages
                                         <div className="grid grid-cols-4 gap-2">
                                             <AttachmentOption 
                                                 icon={ImageIcon} label="Images" color="bg-pink-500" 
-                                                onClick={() => alert("Image upload coming soon!")} 
+                                                onClick={() => fileInputImageRef.current?.click()} 
                                             />
                                             <AttachmentOption 
                                                 icon={FileText} label="Document" color="bg-purple-600" 
-                                                onClick={() => alert("Document upload coming soon!")} 
+                                                onClick={() => fileInputDocRef.current?.click()} 
                                             />
                                             <AttachmentOption 
                                                 icon={Mic} label="Voice" color="bg-blue-500" 
-                                                onClick={() => alert("Voice note feature coming soon!")} 
+                                                onClick={() => fileInputAudioRef.current?.click()} 
                                             />
                                             <AttachmentOption 
                                                 icon={LinkIcon} label="Links" color="bg-teal-500" 
-                                                onClick={() => alert("Link insertion coming soon!")} 
+                                                onClick={() => { setIsLinkModalOpen(true); setShowAttachMenu(false); }} 
                                             />
                                         </div>
                                     </div>
@@ -668,7 +817,7 @@ const ChatPortal: React.FC<ChatPortalProps> = ({ currentUser, students, messages
                                     value={newMessage}
                                     onChange={(e) => setNewMessage(e.target.value)}
                                     onKeyDown={handleKeyDown}
-                                    placeholder="Type a message"
+                                    placeholder={pendingAttachment ? "Add a caption..." : "Type a message"}
                                     className="w-full py-3 px-4 md:pl-2 md:pr-4 border-none focus:ring-0 text-slate-800 bg-transparent resize-none overflow-hidden max-h-[120px] dark:text-[#e9edef] dark:placeholder-[#8696a0] leading-relaxed text-[15px]"
                                     style={{ minHeight: '24px' }}
                                 />
@@ -686,7 +835,7 @@ const ChatPortal: React.FC<ChatPortalProps> = ({ currentUser, students, messages
                             
                             <button 
                                 onClick={handleSend}
-                                disabled={!newMessage.trim()}
+                                disabled={!newMessage.trim() && !pendingAttachment}
                                 className="p-3 mb-1 bg-[#00a884] text-white rounded-full hover:bg-[#008f6f] disabled:opacity-60 transition-colors shadow-sm flex items-center justify-center"
                             >
                                 <PaperAirplaneIcon />

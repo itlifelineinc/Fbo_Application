@@ -211,6 +211,14 @@ export interface AppNotification {
 
 export type MessageStatus = 'SENT' | 'DELIVERED' | 'READ';
 
+export interface Attachment {
+  type: 'IMAGE' | 'DOCUMENT' | 'AUDIO' | 'LINK';
+  url: string;
+  name?: string;
+  size?: string;
+  mimeType?: string;
+}
+
 // Chat & Community types kept for compatibility
 export interface Message { 
   id: string; 
@@ -221,6 +229,7 @@ export interface Message {
   isRead: boolean; 
   status?: MessageStatus; // Added status
   isSystem?: boolean; 
+  attachment?: Attachment; // New Attachment Field
 }
 
 export interface CommunityPost { id: string; authorHandle: string; authorName: string; authorRole: UserRole; authorAvatar?: string; content: string; type: string; tags: string[]; likes: number; likedBy: string[]; comments: CommunityComment[]; cohortId?: string; timestamp: number; }

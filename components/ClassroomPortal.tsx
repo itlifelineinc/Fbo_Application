@@ -112,8 +112,8 @@ const ClassroomPortal: React.FC<ClassroomPortalProps> = ({ courses, currentUser,
   return (
     <div className="space-y-6 animate-fade-in pb-20">
       
-      {/* Header */}
-      <div className="flex flex-col gap-4">
+      {/* Header with Inline Search */}
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
           <div>
             <h1 className="text-3xl font-bold text-slate-900 font-heading dark:text-white">Classroom</h1>
             <p className="text-slate-500 mt-1 text-lg dark:text-slate-400">
@@ -122,14 +122,14 @@ const ClassroomPortal: React.FC<ClassroomPortalProps> = ({ courses, currentUser,
           </div>
 
           {/* Search Bar */}
-          <div className="relative max-w-md">
+          <div className="relative w-full md:w-72 lg:w-96">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
               <input 
                   type="text" 
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search courses, tracks, or topics..."
-                  className="w-full pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none transition-all dark:bg-slate-800 dark:border-slate-700 dark:text-white"
+                  placeholder="Search courses, tracks..."
+                  className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none transition-all dark:bg-slate-800 dark:border-slate-700 dark:text-white shadow-sm"
               />
           </div>
       </div>

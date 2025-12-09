@@ -444,18 +444,26 @@ const ChatPortal: React.FC<ChatPortalProps> = ({ currentUser, students, messages
   };
 
   const handleTemplateSelect = (t: MentorshipTemplate) => {
-      // Convert blocks to plain text for the message input
-      const text = t.blocks.map(b => b.content).join('\n\n');
-      setNewMessage(text);
-      setShowAttachMenu(false);
+      setPendingAttachment({
+          type: 'TEMPLATE',
+          url: t.id,
+          name: t.title,
+          size: t.category // Using size field to store category for display
+      });
       setAttachmentView('MAIN');
+      setShowAttachMenu(false);
       if(textareaRef.current) textareaRef.current.focus();
   };
 
   const handleAssignmentSelect = (a: Assignment) => {
-      setNewMessage(`Please complete this assignment: ${a.title}\n\nDue: ${a.deadline ? new Date(a.deadline).toLocaleDateString() : 'No Deadline'}`);
-      setShowAttachMenu(false);
+      setPendingAttachment({
+          type: 'ASSIGNMENT',
+          url: a.id,
+          name: a.title,
+          size: a.deadline ? new Date(a.deadline).toLocaleDateString() : 'No Deadline' // Using size field for date display
+      });
       setAttachmentView('MAIN');
+      setShowAttachMenu(false);
       if(textareaRef.current) textareaRef.current.focus();
   };
 
@@ -687,7 +695,7 @@ const ChatPortal: React.FC<ChatPortalProps> = ({ currentUser, students, messages
                             <h3 className="font-semibold text-slate-800 text-base dark:text-[#e9edef] truncate">
                                 {activeChatInfo.name}
                             </h3>
-                            <p className="text-xs text-slate-500 dark:text-[#8696a0] truncate">
+                            <p className="text-xs text-slate-500 dark:text-slate-800 truncate">
                                 {activeChatHandle.startsWith('GROUP_') || activeChatHandle.startsWith('TOPIC_') ? 'Group Channel' : 'Online'}
                             </p>
                         </div>
@@ -801,6 +809,46 @@ const ChatPortal: React.FC<ChatPortalProps> = ({ currentUser, students, messages
                                                             <p className="text-xs text-slate-600 dark:text-slate-300 line-clamp-2">Click to visit link</p>
                                                         </a>
                                                     )}
+                                                    {msg.attachment?.type === 'TEMPLATE' && (
+                                                        <div 
+                                                            onClick={() => navigate('/mentorship/inbox')}
+                                                            className="cursor-pointer bg-slate-100 dark:bg-slate-700 p-3 rounded-lg border-l-4 border-indigo-500 hover:bg-indigo-50 dark:hover:bg-slate-600 transition-colors group/card"
+                                                        >
+                                                            <div className="flex items-center gap-3 mb-2">
+                                                                <div className="w-10 h-10 bg-indigo-100 text-indigo-600 rounded-lg flex items-center justify-center dark:bg-indigo-900/30 dark:text-indigo-400">
+                                                                    <LayoutTemplate size={20} />
+                                                                </div>
+                                                                <div className="flex-1 min-w-0">
+                                                                    <p className="text-xs font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-wide">Mentorship Strategy</p>
+                                                                    <p className="text-sm font-bold text-slate-800 dark:text-white truncate">{msg.attachment.name}</p>
+                                                                </div>
+                                                            </div>
+                                                            <div className="flex items-center justify-between mt-1">
+                                                                <p className="text-[10px] text-slate-500 dark:text-slate-400 font-medium uppercase">{msg.attachment.size}</p>
+                                                                <span className="text-xs font-bold text-indigo-600 dark:text-indigo-400 flex items-center gap-1 group-hover/card:underline">View Strategy <ArrowRight size={12}/></span>
+                                                            </div>
+                                                        </div>
+                                                    )}
+                                                    {msg.attachment?.type === 'ASSIGNMENT' && (
+                                                        <div 
+                                                            onClick={() => navigate(`/assignments/${msg.attachment!.url}`)}
+                                                            className="cursor-pointer bg-slate-100 dark:bg-slate-700 p-3 rounded-lg border-l-4 border-orange-500 hover:bg-orange-50 dark:hover:bg-slate-600 transition-colors group/card"
+                                                        >
+                                                            <div className="flex items-center gap-3 mb-2">
+                                                                <div className="w-10 h-10 bg-orange-100 text-orange-600 rounded-lg flex items-center justify-center dark:bg-orange-900/30 dark:text-orange-400">
+                                                                    <ClipboardCheck size={20} />
+                                                                </div>
+                                                                <div className="flex-1 min-w-0">
+                                                                    <p className="text-xs font-bold text-orange-600 dark:text-orange-400 uppercase tracking-wide">New Task</p>
+                                                                    <p className="text-sm font-bold text-slate-800 dark:text-white truncate">{msg.attachment.name}</p>
+                                                                </div>
+                                                            </div>
+                                                            <div className="flex items-center justify-between mt-1">
+                                                                <p className="text-[10px] text-slate-500 dark:text-slate-400 font-medium uppercase">Due: {msg.attachment.size}</p>
+                                                                <span className="text-xs font-bold text-orange-600 dark:text-orange-400 flex items-center gap-1 group-hover/card:underline">Open Task <ArrowRight size={12}/></span>
+                                                            </div>
+                                                        </div>
+                                                    )}
                                                 </div>
                                             )}
 
@@ -847,6 +895,8 @@ const ChatPortal: React.FC<ChatPortalProps> = ({ currentUser, students, messages
                                     {pendingAttachment.type === 'DOCUMENT' && <div className="w-10 h-10 bg-red-100 text-red-600 flex items-center justify-center rounded"><FileText size={20}/></div>}
                                     {pendingAttachment.type === 'AUDIO' && <div className="w-10 h-10 bg-blue-100 text-blue-600 flex items-center justify-center rounded"><Mic size={20}/></div>}
                                     {pendingAttachment.type === 'LINK' && <div className="w-10 h-10 bg-slate-200 text-slate-600 flex items-center justify-center rounded"><LinkIcon size={20}/></div>}
+                                    {pendingAttachment.type === 'TEMPLATE' && <div className="w-10 h-10 bg-indigo-100 text-indigo-600 flex items-center justify-center rounded"><LayoutTemplate size={20}/></div>}
+                                    {pendingAttachment.type === 'ASSIGNMENT' && <div className="w-10 h-10 bg-orange-100 text-orange-600 flex items-center justify-center rounded"><ClipboardCheck size={20}/></div>}
                                     
                                     <div className="flex-1 min-w-0">
                                         <p className="text-xs font-bold text-slate-700 dark:text-white truncate">{pendingAttachment.name || 'Attachment'}</p>

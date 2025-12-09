@@ -214,10 +214,10 @@ export interface AppNotification {
 export type MessageStatus = 'SENT' | 'DELIVERED' | 'READ';
 
 export interface Attachment {
-  type: 'IMAGE' | 'DOCUMENT' | 'AUDIO' | 'LINK' | 'VIDEO';
-  url: string;
-  name?: string;
-  size?: string;
+  type: 'IMAGE' | 'DOCUMENT' | 'AUDIO' | 'LINK' | 'VIDEO' | 'TEMPLATE' | 'ASSIGNMENT';
+  url: string; // URL or ID
+  name?: string; // Filename or Title
+  size?: string; // Size or Extra Meta (e.g. Category/Deadline)
   mimeType?: string;
 }
 

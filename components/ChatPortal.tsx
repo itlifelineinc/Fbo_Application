@@ -1,12 +1,15 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Student, Message, UserRole, MessageStatus, Attachment } from '../types';
-import { MoreVertical, Trash2, ChevronDown, Reply, Copy, ArrowRight, X, Search, MessageSquarePlus, Hash, Plus, Paperclip, LayoutTemplate, ClipboardCheck, Megaphone, Image as ImageIcon, FileText, Mic, Link as LinkIcon, Download, Play, Pause, ExternalLink, LayoutGrid, StopCircle } from 'lucide-react';
+import { Student, Message, UserRole, MessageStatus, Attachment, MentorshipTemplate, Assignment } from '../types';
+import { MoreVertical, Trash2, ChevronDown, Reply, Copy, ArrowRight, X, Search, MessageSquarePlus, Hash, Plus, Paperclip, LayoutTemplate, ClipboardCheck, Megaphone, Image as ImageIcon, FileText, Mic, Link as LinkIcon, Download, Play, Pause, ExternalLink, LayoutGrid, StopCircle, ArrowLeft } from 'lucide-react';
 
 interface ChatPortalProps {
   currentUser: Student;
   students: Student[];
   messages: Message[];
+  templates?: MentorshipTemplate[];
+  assignments?: Assignment[];
   onSendMessage: (message: Message) => void;
   onMarkAsRead?: (senderHandle: string) => void;
   onClearChat?: (handle: string) => void;
@@ -39,7 +42,7 @@ const MessageStatusIcon: React.FC<{ status: MessageStatus, isRead: boolean }> = 
     );
 };
 
-const ChatPortal: React.FC<ChatPortalProps> = ({ currentUser, students, messages, onSendMessage, onMarkAsRead, onClearChat, onDeleteMessage }) => {
+const ChatPortal: React.FC<ChatPortalProps> = ({ currentUser, students, messages, templates = [], assignments = [], onSendMessage, onMarkAsRead, onClearChat, onDeleteMessage }) => {
   const navigate = useNavigate();
   // State
   const [activeChatHandle, setActiveChatHandle] = useState<string | null>(null);
@@ -48,6 +51,7 @@ const ChatPortal: React.FC<ChatPortalProps> = ({ currentUser, students, messages
   const [selectedBroadcastUsers, setSelectedBroadcastUsers] = useState<string[]>([]);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [showAttachMenu, setShowAttachMenu] = useState(false);
+  const [attachmentView, setAttachmentView] = useState<'MAIN' | 'TEMPLATES' | 'ASSIGNMENTS'>('MAIN');
   
   // Attachment Logic State
   const [pendingAttachment, setPendingAttachment] = useState<Attachment | null>(null);
@@ -87,6 +91,10 @@ const ChatPortal: React.FC<ChatPortalProps> = ({ currentUser, students, messages
       currentUser.role === UserRole.ADMIN || 
       currentUser.role === UserRole.SUPER_ADMIN ||
       (currentUser.rankProgress?.currentRankId && currentUser.rankProgress.currentRankId !== 'NOVUS');
+
+  // Filtered Lists for Attachment Menu
+  const myTemplates = templates.filter(t => t.authorHandle === currentUser.handle || t.authorHandle === '@forever_system');
+  const myAssignments = assignments.filter(a => a.authorHandle === currentUser.handle);
 
   // Helper: Get Group ID
   const myGroupId = `GROUP_${currentUser.role === UserRole.SPONSOR ? currentUser.handle : currentUser.sponsorId}`;
@@ -182,6 +190,7 @@ const ChatPortal: React.FC<ChatPortalProps> = ({ currentUser, students, messages
       const handleClickOutside = (event: MouseEvent) => {
           if (attachMenuRef.current && !attachMenuRef.current.contains(event.target as Node)) {
               setShowAttachMenu(false);
+              setAttachmentView('MAIN'); // Reset view on close
           }
       };
       if (showAttachMenu) {
@@ -432,6 +441,22 @@ const ChatPortal: React.FC<ChatPortalProps> = ({ currentUser, students, messages
       }
       setActiveChatHandle(student.handle);
       setSearchQuery('');
+  };
+
+  const handleTemplateSelect = (t: MentorshipTemplate) => {
+      // Convert blocks to plain text for the message input
+      const text = t.blocks.map(b => b.content).join('\n\n');
+      setNewMessage(text);
+      setShowAttachMenu(false);
+      setAttachmentView('MAIN');
+      if(textareaRef.current) textareaRef.current.focus();
+  };
+
+  const handleAssignmentSelect = (a: Assignment) => {
+      setNewMessage(`Please complete this assignment: ${a.title}\n\nDue: ${a.deadline ? new Date(a.deadline).toLocaleDateString() : 'No Deadline'}`);
+      setShowAttachMenu(false);
+      setAttachmentView('MAIN');
+      if(textareaRef.current) textareaRef.current.focus();
   };
 
   // Attachment Option Renderer
@@ -840,51 +865,104 @@ const ChatPortal: React.FC<ChatPortalProps> = ({ currentUser, students, messages
                                 ref={attachMenuRef}
                                 className="absolute bottom-16 left-2 md:left-4 z-50 animate-fade-in origin-bottom-left"
                             >
-                                <div className="bg-white dark:bg-[#233138] rounded-2xl shadow-2xl p-4 flex flex-col gap-4 border border-slate-100 dark:border-slate-700 min-w-[280px]">
+                                <div className="bg-white dark:bg-[#233138] rounded-2xl shadow-2xl overflow-hidden border border-slate-100 dark:border-slate-700 w-[280px] h-[320px] relative">
                                     
-                                    {/* Mentorship Section - Sponsor, Admin or Assistant Supervisor+ */}
-                                    {hasMentorshipAccess && (
-                                        <div className="space-y-3 pb-3 border-b border-slate-100 dark:border-slate-700">
-                                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1">Mentorship Tools</p>
-                                            <div className="grid grid-cols-3 gap-2">
+                                    {/* Main Menu View */}
+                                    <div className={`absolute inset-0 p-4 transition-transform duration-300 ease-in-out ${attachmentView === 'MAIN' ? 'translate-x-0' : '-translate-x-full'}`}>
+                                        
+                                        {/* Mentorship Section - Sponsor, Admin or Assistant Supervisor+ */}
+                                        {hasMentorshipAccess && (
+                                            <div className="space-y-3 pb-3 border-b border-slate-100 dark:border-slate-700">
+                                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1">Mentorship Tools</p>
+                                                <div className="grid grid-cols-3 gap-2">
+                                                    <AttachmentOption 
+                                                        icon={LayoutTemplate} label="Templates" color="bg-indigo-500" 
+                                                        onClick={() => setAttachmentView('TEMPLATES')} 
+                                                    />
+                                                    <AttachmentOption 
+                                                        icon={ClipboardCheck} label="Assignment" color="bg-orange-500" 
+                                                        onClick={() => setAttachmentView('ASSIGNMENTS')} 
+                                                    />
+                                                    <AttachmentOption 
+                                                        icon={Megaphone} label="Announcement" color="bg-red-500" 
+                                                        onClick={() => alert("Broadcast feature coming soon!")} 
+                                                    />
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {/* Media Attachments */}
+                                        <div className="space-y-3 pt-3">
+                                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1">Attachments</p>
+                                            <div className="grid grid-cols-4 gap-2">
                                                 <AttachmentOption 
-                                                    icon={LayoutTemplate} label="Templates" color="bg-indigo-500" 
-                                                    onClick={() => alert("Template feature coming soon!")} 
+                                                    icon={ImageIcon} label="Images" color="bg-pink-500" 
+                                                    onClick={() => fileInputImageRef.current?.click()} 
                                                 />
                                                 <AttachmentOption 
-                                                    icon={ClipboardCheck} label="Assignment" color="bg-orange-500" 
-                                                    onClick={() => alert("Assignment feature coming soon!")} 
+                                                    icon={FileText} label="Document" color="bg-purple-600" 
+                                                    onClick={() => fileInputDocRef.current?.click()} 
                                                 />
                                                 <AttachmentOption 
-                                                    icon={Megaphone} label="Announcement" color="bg-red-500" 
-                                                    onClick={() => alert("Broadcast feature coming soon!")} 
+                                                    icon={Mic} label="Voice" color="bg-blue-500" 
+                                                    onClick={() => fileInputAudioRef.current?.click()} 
+                                                />
+                                                <AttachmentOption 
+                                                    icon={LinkIcon} label="Links" color="bg-teal-500" 
+                                                    onClick={() => { setIsLinkModalOpen(true); setShowAttachMenu(false); }} 
                                                 />
                                             </div>
                                         </div>
-                                    )}
+                                    </div>
 
-                                    {/* Media Attachments */}
-                                    <div className="space-y-3">
-                                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1">Attachments</p>
-                                        <div className="grid grid-cols-4 gap-2">
-                                            <AttachmentOption 
-                                                icon={ImageIcon} label="Images" color="bg-pink-500" 
-                                                onClick={() => fileInputImageRef.current?.click()} 
-                                            />
-                                            <AttachmentOption 
-                                                icon={FileText} label="Document" color="bg-purple-600" 
-                                                onClick={() => fileInputDocRef.current?.click()} 
-                                            />
-                                            <AttachmentOption 
-                                                icon={Mic} label="Voice" color="bg-blue-500" 
-                                                onClick={() => fileInputAudioRef.current?.click()} 
-                                            />
-                                            <AttachmentOption 
-                                                icon={LinkIcon} label="Links" color="bg-teal-500" 
-                                                onClick={() => { setIsLinkModalOpen(true); setShowAttachMenu(false); }} 
-                                            />
+                                    {/* Templates Sub-Menu */}
+                                    <div className={`absolute inset-0 bg-white dark:bg-[#233138] transition-transform duration-300 ease-in-out flex flex-col ${attachmentView === 'TEMPLATES' ? 'translate-x-0' : 'translate-x-full'}`}>
+                                        <div className="flex items-center gap-2 p-3 border-b border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-[#111b21]">
+                                            <button onClick={() => setAttachmentView('MAIN')} className="p-1 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-full transition-colors text-slate-500 dark:text-slate-300">
+                                                <ArrowLeft size={18} />
+                                            </button>
+                                            <h3 className="font-bold text-sm text-slate-800 dark:text-white">Saved Templates</h3>
+                                        </div>
+                                        <div className="flex-1 overflow-y-auto p-2 space-y-1">
+                                            {myTemplates.length > 0 ? myTemplates.map(t => (
+                                                <button 
+                                                    key={t.id}
+                                                    onClick={() => handleTemplateSelect(t)}
+                                                    className="w-full text-left p-3 hover:bg-slate-50 dark:hover:bg-slate-700 rounded-lg transition-colors border border-transparent hover:border-slate-100 dark:hover:border-slate-600 group"
+                                                >
+                                                    <p className="font-bold text-xs text-slate-800 dark:text-white mb-0.5">{t.title}</p>
+                                                    <p className="text-[10px] text-slate-500 dark:text-slate-400 line-clamp-2">{t.blocks.map(b => b.content).join(' ')}</p>
+                                                </button>
+                                            )) : (
+                                                <div className="p-4 text-center text-slate-400 text-xs">No templates found. Create them in Mentorship Tools.</div>
+                                            )}
                                         </div>
                                     </div>
+
+                                    {/* Assignments Sub-Menu */}
+                                    <div className={`absolute inset-0 bg-white dark:bg-[#233138] transition-transform duration-300 ease-in-out flex flex-col ${attachmentView === 'ASSIGNMENTS' ? 'translate-x-0' : 'translate-x-full'}`}>
+                                        <div className="flex items-center gap-2 p-3 border-b border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-[#111b21]">
+                                            <button onClick={() => setAttachmentView('MAIN')} className="p-1 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-full transition-colors text-slate-500 dark:text-slate-300">
+                                                <ArrowLeft size={18} />
+                                            </button>
+                                            <h3 className="font-bold text-sm text-slate-800 dark:text-white">Assignments</h3>
+                                        </div>
+                                        <div className="flex-1 overflow-y-auto p-2 space-y-1">
+                                            {myAssignments.length > 0 ? myAssignments.map(a => (
+                                                <button 
+                                                    key={a.id}
+                                                    onClick={() => handleAssignmentSelect(a)}
+                                                    className="w-full text-left p-3 hover:bg-slate-50 dark:hover:bg-slate-700 rounded-lg transition-colors border border-transparent hover:border-slate-100 dark:hover:border-slate-600 group"
+                                                >
+                                                    <p className="font-bold text-xs text-slate-800 dark:text-white mb-0.5">{a.title}</p>
+                                                    <p className="text-[10px] text-slate-500 dark:text-slate-400 truncate">{a.status} • {a.assignedTo.length} Assigned</p>
+                                                </button>
+                                            )) : (
+                                                <div className="p-4 text-center text-slate-400 text-xs">No assignments created yet.</div>
+                                            )}
+                                        </div>
+                                    </div>
+
                                 </div>
                             </div>
                         )}
@@ -912,7 +990,7 @@ const ChatPortal: React.FC<ChatPortalProps> = ({ currentUser, students, messages
                                     {/* Desktop Attachment Trigger (Inside Left) */}
                                     <div className="hidden md:flex pb-2 pl-2">
                                         <button 
-                                            onClick={() => setShowAttachMenu(!showAttachMenu)}
+                                            onClick={() => { setShowAttachMenu(!showAttachMenu); setAttachmentView('MAIN'); }}
                                             className={`p-2 rounded-full transition-transform duration-300 ${showAttachMenu ? 'rotate-45 text-slate-700 bg-slate-100 dark:text-slate-300 dark:bg-slate-700' : 'text-slate-500 hover:text-slate-700 dark:text-[#aebac1] dark:hover:text-white'}`}
                                         >
                                             <Plus size={24} />
@@ -926,7 +1004,7 @@ const ChatPortal: React.FC<ChatPortalProps> = ({ currentUser, students, messages
                                         onChange={(e) => setNewMessage(e.target.value)}
                                         onKeyDown={handleKeyDown}
                                         placeholder={pendingAttachment ? "Add a caption..." : "Type a message"}
-                                        className="w-full py-3 px-4 md:pl-2 md:pr-10 border-none focus:ring-0 text-slate-800 bg-transparent resize-none overflow-hidden max-h-[120px] dark:text-[#e9edef] dark:placeholder-[#8696a0] leading-relaxed text-[15px]"
+                                        className="w-full py-3 px-4 md:pl-2 md:pr-10 border-none focus:ring-0 focus:outline-none outline-none ring-0 text-slate-800 bg-transparent resize-none overflow-hidden max-h-[120px] dark:text-[#e9edef] dark:placeholder-[#8696a0] leading-relaxed text-[15px]"
                                         style={{ minHeight: '24px' }}
                                     />
 
@@ -944,7 +1022,7 @@ const ChatPortal: React.FC<ChatPortalProps> = ({ currentUser, students, messages
                                     {/* Mobile Attachment Trigger (Inside Right) */}
                                     <div className="md:hidden absolute right-2 bottom-2">
                                         <button 
-                                            onClick={() => setShowAttachMenu(!showAttachMenu)}
+                                            onClick={() => { setShowAttachMenu(!showAttachMenu); setAttachmentView('MAIN'); }}
                                             className={`p-2 text-slate-400 transition-colors ${showAttachMenu ? 'text-emerald-500' : ''}`}
                                         >
                                             <Paperclip size={20} className={showAttachMenu ? '' : 'transform -rotate-45'} />

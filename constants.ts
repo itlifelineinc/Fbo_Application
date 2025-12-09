@@ -1,5 +1,5 @@
 
-import { Course, Student, UserRole, Message, CourseTrack, CommunityPost, Cohort, CourseLevel, CourseStatus, RankDefinition } from './types';
+import { Course, Student, UserRole, Message, CourseTrack, CommunityPost, Cohort, CourseLevel, CourseStatus, RankDefinition, MentorshipTemplate } from './types';
 
 export const RANK_ORDER = [
     'NOVUS',
@@ -474,5 +474,44 @@ export const INITIAL_POSTS: CommunityPost[] = [
         comments: [],
         cohortId: 'cohort_jan_25',
         timestamp: Date.now() - 100000
+    }
+];
+
+export const INITIAL_TEMPLATES: MentorshipTemplate[] = [
+    {
+        id: 'temp_1',
+        title: 'New Recruit Welcome',
+        category: 'ONBOARDING',
+        authorHandle: '@alice_success',
+        createdAt: Date.now(),
+        blocks: [
+            { id: 'b1', type: 'paragraph', content: 'Hi [Name], welcome to the team! I\'m so excited to help you start your journey with Forever.' },
+            { id: 'b2', type: 'heading', style: 'h3', content: 'First Steps' },
+            { id: 'b3', type: 'list', content: '1. Log in to the FBO Academy app\n2. Complete the "Forever Opportunity Basics" course\n3. Schedule your strategy call with me' },
+            { id: 'b4', type: 'paragraph', content: 'Let me know once you\'re in!' }
+        ]
+    },
+    {
+        id: 'temp_2',
+        title: 'C9 Product Pitch',
+        category: 'SALES',
+        authorHandle: '@alice_success',
+        createdAt: Date.now() - 86400000,
+        blocks: [
+            { id: 'b1', type: 'paragraph', content: 'Hey! I saw you were looking to reset your health habits. Have you heard of the C9 program?' },
+            { id: 'b2', type: 'paragraph', content: 'It\'s a 9-day cleansing plan that helps you look better and feel better. It focuses on nutrition and building healthy habits, not just weight loss.' },
+            { id: 'b3', type: 'callout', style: 'tip', content: 'Tip: Send before/after photos if available (ask for permission first!)' }
+        ]
+    },
+    {
+        id: 'temp_3',
+        title: 'Follow-Up (3 Days)',
+        category: 'FOLLOWUP',
+        authorHandle: '@forever_system',
+        createdAt: Date.now() - 100000000,
+        blocks: [
+            { id: 'b1', type: 'paragraph', content: 'Hi [Name], just checking in! How are you finding the products so far?' },
+            { id: 'b2', type: 'paragraph', content: 'Let me know if you have any questions about usage or dosage.' }
+        ]
     }
 ];

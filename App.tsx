@@ -18,8 +18,9 @@ import ClassroomPortal from './components/ClassroomPortal';
 import CourseModulesPage from './components/CourseModulesPage';
 import CourseLandingPage from './components/CourseLandingPage';
 import MentorshipTools from './components/MentorshipTools';
-import { INITIAL_COURSES, INITIAL_STUDENTS, INITIAL_MESSAGES, INITIAL_POSTS, INITIAL_COHORTS } from './constants';
-import { Course, Module, Student, SaleRecord, UserRole, Message, CourseTrack, CommunityPost, CommunityComment, Cohort, CourseStatus, AppNotification } from './types';
+import MentorshipInbox from './components/MentorshipInbox';
+import { INITIAL_COURSES, INITIAL_STUDENTS, INITIAL_MESSAGES, INITIAL_POSTS, INITIAL_COHORTS, INITIAL_TEMPLATES } from './constants';
+import { Course, Module, Student, SaleRecord, UserRole, Message, CourseTrack, CommunityPost, CommunityComment, Cohort, CourseStatus, AppNotification, MentorshipTemplate } from './types';
 import { updateStudentRank } from './services/rankEngine';
 
 // --- Protected Route ---
@@ -53,6 +54,7 @@ const App: React.FC = () => {
   const [messages, setMessages] = useState<Message[]>(INITIAL_MESSAGES.map(m => ({...m, status: m.isRead ? 'READ' : 'DELIVERED'}))); // Initialize with status
   const [posts, setPosts] = useState<CommunityPost[]>(INITIAL_POSTS);
   const [cohorts, setCohorts] = useState<Cohort[]>(INITIAL_COHORTS);
+  const [templates, setTemplates] = useState<MentorshipTemplate[]>(INITIAL_TEMPLATES);
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
   
   // Auth State
@@ -379,6 +381,15 @@ const App: React.FC = () => {
       handleUpdateStudent(updatedStudent);
   };
 
+  // --- Template Handlers ---
+  const handleAddTemplate = (template: MentorshipTemplate) => {
+      setTemplates(prev => [template, ...prev]);
+  };
+
+  const handleDeleteTemplate = (id: string) => {
+      setTemplates(prev => prev.filter(t => t.id !== id));
+  };
+
   // --- Notification Logic ---
   // Create notifications from unread messages for the current user
   const notifications: AppNotification[] = currentUser ? messages
@@ -557,7 +568,22 @@ const App: React.FC = () => {
         {/* Mentorship Tools Route */}
         <Route path="/mentorship-tools" element={
             <ProtectedRoute currentUser={currentUser} onLogout={handleLogout} theme={theme} onToggleTheme={toggleTheme} courses={courses} notifications={notifications}>
-                <MentorshipTools currentUser={currentUser!} />
+                <MentorshipTools 
+                    currentUser={currentUser!} 
+                    templates={templates} 
+                    onAddTemplate={handleAddTemplate}
+                    onDeleteTemplate={handleDeleteTemplate}
+                />
+            </ProtectedRoute>
+        } />
+
+        {/* Mentorship Inbox Route */}
+        <Route path="/mentorship/inbox" element={
+            <ProtectedRoute currentUser={currentUser} onLogout={handleLogout} theme={theme} onToggleTheme={toggleTheme} courses={courses} notifications={notifications}>
+                <MentorshipInbox 
+                    currentUser={currentUser!} 
+                    templates={templates}
+                />
             </ProtectedRoute>
         } />
 

@@ -235,3 +235,12 @@ export interface Message {
 export interface CommunityPost { id: string; authorHandle: string; authorName: string; authorRole: UserRole; authorAvatar?: string; content: string; type: string; tags: string[]; likes: number; likedBy: string[]; comments: CommunityComment[]; cohortId?: string; timestamp: number; }
 export interface Cohort { id: string; name: string; description: string; mentorHandle: string; }
 export interface SaleRecord { id: string; date: string; amount: number; type: 'RETAIL' | 'WHOLESALE'; ccEarned: number; transactionId: string; status: string; receiptUrl?: string; }
+
+export interface MentorshipTemplate {
+  id: string;
+  title: string;
+  category: 'PROSPECTING' | 'PRODUCT' | 'ONBOARDING' | 'MOTIVATION' | 'SALES' | 'FOLLOWUP';
+  blocks: ContentBlock[];
+  authorHandle: string;
+  createdAt: number;
+}

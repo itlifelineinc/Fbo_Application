@@ -97,6 +97,7 @@ export const INITIAL_STUDENTS: Student[] = [
     completedModules: [],
     completedChapters: [],
     enrolledCourses: ['c1', 'c_demo_social'], // Enrolled for testing analytics
+    savedCourses: [],
     caseCredits: 100, 
     rankProgress: {
         currentRankId: 'MGR',
@@ -120,6 +121,7 @@ export const INITIAL_STUDENTS: Student[] = [
     completedModules: [],
     completedChapters: [],
     enrolledCourses: ['c1'],
+    savedCourses: [],
     caseCredits: 10,
     sponsorId: '@forever_system',
     learningStats: { totalTimeSpent: 0, questionsAsked: 0, learningStreak: 0, lastLoginDate: '' }
@@ -137,6 +139,7 @@ export const INITIAL_STUDENTS: Student[] = [
     completedModules: ['m1', 'mod_social_1', 'mod_social_2'],
     completedChapters: ['c1-m1-1', 'chap_s1_1', 'chap_s1_2', 'chap_s1_3', 'chap_s2_1', 'chap_s2_2', 'chap_s2_3'],
     enrolledCourses: ['c1', 'c_demo_social'],
+    savedCourses: [],
     sponsorId: '@forever_system',
     caseCredits: 4.5, 
     rankProgress: {
@@ -166,6 +169,7 @@ export const INITIAL_STUDENTS: Student[] = [
     completedModules: [],
     completedChapters: ['chap_s1_1'],
     enrolledCourses: ['c1', 'c_demo_social'],
+    savedCourses: [],
     sponsorId: '@alice_success',
     caseCredits: 0.5, 
     rankProgress: {

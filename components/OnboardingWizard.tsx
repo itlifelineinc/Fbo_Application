@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { Student, QuizResult, UserRole } from '../types';
@@ -250,6 +249,7 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onEnroll, existingS
       completedModules: [],
       completedChapters: [],
       enrolledCourses: [],
+      savedCourses: [],
       sponsorId: verifiedSponsor?.handle || '@forever_system',
       caseCredits: 0, 
       quizResults: quizAnswers,

@@ -378,7 +378,7 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
             <div className="flex items-center gap-2 text-sm text-slate-300">
                 <Link to="/dashboard" className="hover:text-white transition-colors">Home</Link>
                 <span className="text-slate-500">/</span>
-                <Link to="/training/global" className="hover:text-white transition-colors">Training</Link>
+                <Link to="/classroom" className="hover:text-white transition-colors">Training</Link>
                 <span className="text-slate-500">/</span>
                 <Link to={`/training/course/${cId}`} className="hover:text-white transition-colors truncate max-w-[150px]" title={course?.title}>{course?.title || 'Course'}</Link>
                 <span className="text-slate-500">/</span>
@@ -396,7 +396,7 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
             <div className="flex items-center gap-2 text-sm text-slate-300">
                 <Link to="/dashboard" className="hover:text-white transition-colors">Home</Link>
                 <span className="text-slate-500">/</span>
-                <Link to="/training/global" className="hover:text-white transition-colors">Training</Link>
+                <Link to="/classroom" className="hover:text-white transition-colors">Training</Link>
                 <span className="text-slate-500">/</span>
                 <span className="font-semibold text-white truncate max-w-[250px]">{course?.title || 'Course Overview'}</span>
             </div>
@@ -406,9 +406,7 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
       '/sales-builder': ['Sales', 'Sales Pages'],
       '/sales': ['Sales', 'Sales Log'],
       '/chat': ['Communication', 'Team Chat'],
-      '/courses': ['Training', 'My Classroom'],
-      '/training/global': ['Training', 'Global Library'],
-      '/training/team': ['Training', 'Team Portal'],
+      '/classroom': ['Training', 'My Classroom'],
       '/community': ['Community', 'Global Hub'],
       '/students': ['Team', 'Members'],
       '/builder': ['Admin', 'Course Builder'],
@@ -464,13 +462,8 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
   const navItems: NavItemConfig[] = [
     { to: '/dashboard', icon: <HomeIcon />, label: 'Home', active: isActive('/dashboard') },
     { to: '/chat', icon: <ChatBubbleOvalLeftIcon />, label: 'Chat', active: isActive('/chat') },
-    { to: '/courses', icon: <BookOpenIcon />, label: 'Classroom', active: isActive('/courses') },
-    { to: '/training/global', icon: <GlobeEducationIcon />, label: 'Global', active: isActive('/training/global') },
+    { to: '/classroom', icon: <BookOpenIcon />, label: 'Classroom', active: isActive('/classroom') },
   ];
-
-  if (hasTeamAccess) {
-    navItems.push({ to: '/training/team', icon: <UserGroupIcon />, label: 'Team', active: isActive('/training/team') });
-  }
 
   // Flattened Sales Menu for Mobile Dock
   navItems.push({ to: '/sales', icon: <CurrencyDollarIcon />, label: 'Sales Log', active: isActive('/sales') });
@@ -526,28 +519,12 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
           <div className="px-4 py-2 text-xs font-bold text-emerald-400 uppercase tracking-wider">Training</div>
           
           <NavItem 
-            to="/courses" 
+            to="/classroom" 
             icon={<BookOpenIcon />} 
-            label="My Classroom" 
-            active={isActive('/courses') || location.pathname.startsWith('/classroom')} 
+            label="Classroom" 
+            active={isActive('/classroom') || location.pathname.startsWith('/training')} 
           />
           
-          <NavItem 
-            to="/training/global" 
-            icon={<GlobeEducationIcon />} 
-            label="Global Training" 
-            active={isActive('/training/global')} 
-          />
-
-          {hasTeamAccess && (
-            <NavItem 
-              to="/training/team" 
-              icon={<UserGroupIcon />} 
-              label="Team Training" 
-              active={isActive('/training/team')} 
-            />
-          )}
-
           <div className="my-2 border-t border-emerald-800 dark:border-emerald-900 mx-4 opacity-50"></div>
 
           {/* Sales & CC Dropdown */}

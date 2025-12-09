@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Course } from '../types';
-import { PlayCircle, BookOpen, Clock, Info } from 'lucide-react';
+import { PlayCircle, BookOpen, Clock, Info, Bookmark } from 'lucide-react';
 
 interface CourseCardProps {
   course: Course;
@@ -9,9 +9,19 @@ interface CourseCardProps {
   progress?: number; // Optional progress percentage (0-100)
   showTrackBadge?: boolean;
   actionLabel?: string; // "Start Learning" vs "View Details"
+  isSaved?: boolean;
+  onToggleSave?: (courseId: string) => void;
 }
 
-const CourseCard: React.FC<CourseCardProps> = ({ course, onClick, progress, showTrackBadge = true, actionLabel }) => {
+const CourseCard: React.FC<CourseCardProps> = ({ 
+    course, 
+    onClick, 
+    progress, 
+    showTrackBadge = true, 
+    actionLabel,
+    isSaved,
+    onToggleSave 
+}) => {
   // Calculate duration string
   const totalDuration = course.modules.reduce((acc, m) => acc + m.chapters.reduce((cAcc, c) => cAcc + c.durationMinutes, 0), 0);
   const durationStr = totalDuration > 60 ? `${Math.floor(totalDuration / 60)}h ${totalDuration % 60}m` : `${totalDuration}m`;
@@ -43,6 +53,16 @@ const CourseCard: React.FC<CourseCardProps> = ({ course, onClick, progress, show
                     style={{ width: `${progress}%` }}
                 />
             </div>
+        )}
+
+        {/* Bookmark Button */}
+        {onToggleSave && (
+            <button 
+                onClick={(e) => { e.stopPropagation(); onToggleSave(course.id); }}
+                className={`absolute top-6 right-6 p-2 rounded-full backdrop-blur-md transition-all z-30 ${isSaved ? 'bg-emerald-500 text-white' : 'bg-white/10 text-white hover:bg-white/20'}`}
+            >
+                <Bookmark size={18} fill={isSaved ? "currentColor" : "none"} />
+            </button>
         )}
 
         {/* Content Overlay */}

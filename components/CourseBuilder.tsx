@@ -2,7 +2,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Course, Module, Chapter, CourseTrack, CourseLevel, CourseStatus, ContentBlock, BlockType, CourseTestimonial, Student } from '../types';
-import { Eye, X, PlayCircle, FileText, HelpCircle, ChevronDown, ChevronRight, CheckCircle, Menu, BookOpen, Clock, Plus, Trash2, ArrowUp, ArrowDown, LayoutTemplate, Type, Image as ImageIcon, List, Quote, AlertCircle, ArrowLeft, ShoppingBag, Users, Sparkles, Save, Search, Check, Wand2, Loader2, MessageSquare, Settings, Rocket, BarChart, Edit, Maximize2, MoreHorizontal, Eraser, AlertTriangle } from 'lucide-react';
+import { Eye, X, PlayCircle, FileText, HelpCircle, ChevronDown, ChevronRight, CheckCircle, Menu, BookOpen, Clock, Plus, Trash2, ArrowUp, ArrowDown, LayoutTemplate, Type, Image as ImageIcon, List, Quote, AlertCircle, ArrowLeft, ShoppingBag, Users, Sparkles, Save, Search, Check, Wand2, Loader2, MessageSquare, Settings, Rocket, BarChart, Edit, Maximize2, MoreHorizontal, Eraser, AlertTriangle, Lock } from 'lucide-react';
 import { generateModuleContent } from '../services/geminiService';
 
 // --- HELPER COMPONENTS (Defined Top-Level to avoid Reference Errors) ---
@@ -231,32 +231,148 @@ const MediaInput: React.FC<{
 
 // --- PREVIEW COMPONENT ---
 const CoursePreview: React.FC<{ course: Course; onClose: () => void }> = ({ course, onClose }) => {
-    // Mode state: 'LANDING' -> 'MODULES' -> 'PLAYER'
-    const [viewMode, setViewMode] = useState<'LANDING' | 'MODULES' | 'PLAYER'>('LANDING');
-    
-    // Default to first chapter if available
-    const [activeChapter, setActiveChapter] = useState<Chapter | null>(() => {
-        if (course.modules.length > 0 && course.modules[0].chapters.length > 0) {
-            return course.modules[0].chapters[0];
-        }
-        return null;
-    });
-
-    const activeModule = course.modules.find(m => m.chapters.some(c => c.id === activeChapter?.id));
+    // Calculate total duration
     const totalDuration = course.modules.reduce((acc, m) => acc + m.chapters.reduce((cAcc, c) => cAcc + c.durationMinutes, 0), 0);
     const durationStr = totalDuration > 60 ? `${Math.floor(totalDuration / 60)}h ${totalDuration % 60}m` : `${totalDuration}m`;
 
     return (
-        <div className="fixed inset-0 z-50 bg-white flex flex-col dark:bg-slate-950 animate-fade-in">
-             <div className="bg-slate-900 text-white h-16 flex items-center justify-between px-6 shrink-0 shadow-md z-50">
+        <div className="fixed inset-0 z-50 bg-slate-50 flex flex-col dark:bg-slate-950 animate-fade-in overflow-hidden">
+             {/* Preview Header */}
+             <div className="bg-slate-900 text-white h-14 flex items-center justify-between px-6 shrink-0 shadow-md z-50">
                 <div className="flex items-center gap-4">
-                    <div className="bg-emerald-500 text-xs font-bold px-2 py-1 rounded uppercase tracking-wider">Preview Mode</div>
+                    <span className="text-emerald-400 font-bold tracking-wider text-xs uppercase">Preview Mode</span>
+                    <div className="h-4 w-px bg-white/20"></div>
+                    <h3 className="font-bold text-sm truncate max-w-[200px] text-slate-200">{course.title || "Untitled Course"}</h3>
                 </div>
-                <button onClick={onClose} className="text-white hover:text-emerald-400 font-bold">Close Preview</button>
+                <button onClick={onClose} className="text-white/70 hover:text-white font-bold text-sm bg-white/10 px-3 py-1.5 rounded-lg transition-colors">
+                    Close Preview
+                </button>
              </div>
-             {/* Content */}
-             <div className="flex-1 flex items-center justify-center">
-                 <p className="text-slate-500">Preview content here...</p>
+
+             {/* Content Simulation */}
+             <div className="flex-1 overflow-y-auto no-scrollbar scroll-smooth">
+                {/* Hero Section */}
+                <div className="relative h-[350px] md:h-[450px] w-full overflow-hidden">
+                    <div className="absolute inset-0">
+                        {course.thumbnailUrl || course.bannerImageUrl ? (
+                            <img src={course.bannerImageUrl || course.thumbnailUrl} className="w-full h-full object-cover" alt="Preview" />
+                        ) : (
+                            <div className="w-full h-full bg-slate-800 flex items-center justify-center text-slate-600 flex-col gap-4">
+                                <ImageIcon size={64} />
+                                <span className="font-bold text-lg">No Cover Image</span>
+                            </div>
+                        )}
+                        <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-900/60 to-transparent"></div>
+                    </div>
+                    
+                    <div className="absolute inset-0 flex flex-col justify-end p-6 md:p-12 max-w-7xl mx-auto w-full">
+                        <div className="flex flex-wrap gap-2 mb-4">
+                            <span className="px-3 py-1 bg-emerald-500/90 w-fit text-white text-xs font-bold rounded-full uppercase tracking-wider shadow-lg">
+                                {course.track}
+                            </span>
+                            <span className="px-3 py-1 bg-white/20 w-fit text-white text-xs font-bold rounded-full uppercase tracking-wider border border-white/10">
+                                {course.level}
+                            </span>
+                        </div>
+                        <h1 className="text-3xl md:text-5xl font-bold text-white font-heading leading-tight mb-3 drop-shadow-lg">
+                            {course.title || "Course Title"}
+                        </h1>
+                        <p className="text-lg text-slate-200 line-clamp-2 max-w-2xl drop-shadow-md leading-relaxed mb-6">
+                            {course.subtitle || "Your course subtitle will appear here, giving students a brief overview of what to expect."}
+                        </p>
+                        
+                        <div className="flex items-center gap-6 text-slate-300 text-sm font-bold uppercase tracking-widest bg-black/20 w-fit px-4 py-2 rounded-xl backdrop-blur-sm border border-white/10">
+                             <div className="flex items-center gap-2"><Clock size={16} className="text-emerald-400" /> {durationStr}</div>
+                             <div className="flex items-center gap-2"><BookOpen size={16} className="text-emerald-400" /> {course.modules.length} Modules</div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Main Content Grid */}
+                <div className="max-w-7xl mx-auto px-6 py-12 grid grid-cols-1 lg:grid-cols-3 gap-12">
+                    
+                    {/* Left Column: Description & Curriculum */}
+                    <div className="lg:col-span-2 space-y-12">
+                        {/* About */}
+                        <div className="bg-white p-8 rounded-3xl shadow-sm border border-slate-100 dark:bg-slate-900 dark:border-slate-800">
+                            <h2 className="text-2xl font-bold text-slate-900 mb-6 dark:text-white font-heading">About this Course</h2>
+                            <p className="text-slate-600 leading-relaxed dark:text-slate-300 whitespace-pre-wrap text-lg">
+                                {course.description || "No description provided yet. Add a detailed description in the 'Info' tab to help students understand what they will learn."}
+                            </p>
+                        </div>
+
+                        {/* Curriculum */}
+                        <div>
+                            <h2 className="text-2xl font-bold text-slate-900 mb-6 dark:text-white font-heading">Curriculum</h2>
+                            <div className="space-y-4">
+                                {course.modules.map((module, idx) => (
+                                    <div key={module.id} className="bg-white border border-slate-200 rounded-2xl overflow-hidden dark:bg-slate-900 dark:border-slate-800 shadow-sm">
+                                        <div className="p-5 flex items-center justify-between bg-slate-50/50 dark:bg-slate-800 border-b border-slate-100 dark:border-slate-800">
+                                            <div className="flex items-center gap-4">
+                                                <span className="w-8 h-8 rounded-lg bg-slate-200 text-slate-600 flex items-center justify-center font-bold text-sm dark:bg-slate-700 dark:text-slate-300 shadow-inner">
+                                                    {idx + 1}
+                                                </span>
+                                                <h3 className="font-bold text-slate-800 dark:text-slate-200 text-lg">{module.title}</h3>
+                                            </div>
+                                            <span className="text-xs font-bold text-slate-400 uppercase tracking-wide">{module.chapters.length} Lessons</span>
+                                        </div>
+                                        <div className="divide-y divide-slate-100 dark:divide-slate-800/50">
+                                            {module.chapters.map(chap => (
+                                                <div key={chap.id} className="p-4 flex items-center justify-between text-sm text-slate-600 pl-16 dark:text-slate-400 hover:bg-slate-50 transition-colors dark:hover:bg-slate-800/50">
+                                                    <div className="flex items-center gap-3">
+                                                        {chap.type === 'VIDEO' ? <PlayCircle size={18} className="text-emerald-500" /> : <BookOpen size={18} className="text-blue-500" />}
+                                                        <span className="font-medium">{chap.title}</span>
+                                                    </div>
+                                                    <div className="flex items-center gap-3">
+                                                        <span className="text-xs text-slate-400">{chap.durationMinutes} min</span>
+                                                        <Lock size={14} className="text-slate-300" />
+                                                    </div>
+                                                </div>
+                                            ))}
+                                            {module.chapters.length === 0 && <div className="p-4 pl-16 text-xs text-slate-400 italic">No lessons added to this module yet.</div>}
+                                        </div>
+                                    </div>
+                                ))}
+                                {course.modules.length === 0 && (
+                                    <div className="text-center p-12 text-slate-400 border-2 border-dashed border-slate-200 rounded-3xl dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50">
+                                        <p className="font-medium mb-1">Curriculum is empty</p>
+                                        <p className="text-sm opacity-70">Add modules and chapters in the 'Curriculum' tab.</p>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Right Column: Sidebar */}
+                    <div className="space-y-6">
+                        <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-200 dark:bg-slate-900 dark:border-slate-800 sticky top-4">
+                            <div className="text-center">
+                                <p className="text-slate-400 text-xs font-bold uppercase tracking-widest mb-4">Course Creator</p>
+                                <div className="w-20 h-20 bg-emerald-100 text-emerald-800 rounded-full flex items-center justify-center font-bold text-2xl mx-auto mb-4 dark:bg-emerald-900 dark:text-emerald-300 border-4 border-slate-50 dark:border-slate-800 shadow-sm">
+                                    {course.authorHandle.charAt(1).toUpperCase()}
+                                </div>
+                                <p className="font-bold text-slate-900 dark:text-white text-lg">{course.authorHandle}</p>
+                                <p className="text-sm text-slate-500 dark:text-slate-400">Senior Instructor</p>
+                            </div>
+                            
+                            <div className="mt-8 pt-6 border-t border-slate-100 dark:border-slate-800 space-y-3">
+                                <div className="flex justify-between text-sm">
+                                    <span className="text-slate-500 dark:text-slate-400">Price</span>
+                                    <span className="font-bold text-slate-900 dark:text-white">{course.settings.price ? `$${course.settings.price}` : 'Free'}</span>
+                                </div>
+                                <div className="flex justify-between text-sm">
+                                    <span className="text-slate-500 dark:text-slate-400">Certificates</span>
+                                    <span className="font-bold text-slate-900 dark:text-white">{course.settings.certificateEnabled ? 'Yes' : 'No'}</span>
+                                </div>
+                                <button disabled className="w-full bg-slate-100 text-slate-400 font-bold py-3.5 rounded-xl cursor-not-allowed dark:bg-slate-800 dark:text-slate-600 mt-4 border border-slate-200 dark:border-slate-700">
+                                    Enroll Now
+                                </button>
+                                <p className="text-[10px] text-center text-slate-400 mt-2 bg-slate-50 py-1 rounded dark:bg-slate-800/50">Preview Mode: Enrollment Disabled</p>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
              </div>
         </div>
     );
@@ -533,8 +649,8 @@ const CourseBuilder: React.FC<CourseBuilderProps> = ({ currentUserHandle, course
   );
 
   const renderStep2_Curriculum = () => (
-    <div className="space-y-6 h-full flex flex-col">
-      <div className="flex justify-between items-center mb-2 px-2">
+    <div className="flex flex-col h-full">
+      <div className="flex justify-between items-center mb-4 px-2 shrink-0">
         <div><h2 className="text-lg md:text-xl font-bold text-slate-800 dark:text-slate-100 font-heading">Curriculum</h2><p className="text-sm text-slate-500 dark:text-slate-400">Structure your course.</p></div>
         <div className="flex gap-2">
             <button 
@@ -556,7 +672,7 @@ const CourseBuilder: React.FC<CourseBuilderProps> = ({ currentUserHandle, course
             </button>
         </div>
       </div>
-      <div className="flex-1 overflow-y-auto space-y-6 pr-2 no-scrollbar pb-32">
+      <div className="flex-1 overflow-y-auto space-y-6 pr-2 no-scrollbar pb-24">
         {course.modules.length === 0 && <div className="text-center py-16 border-2 border-dashed border-slate-200 rounded-3xl bg-slate-50/50 dark:border-slate-700 dark:bg-slate-900/50"><p className="text-slate-500 font-bold dark:text-slate-400">Add your first module.</p></div>}
         {course.modules.map((module, mIdx) => (
           <div key={module.id} className="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden dark:bg-slate-800 dark:border-slate-700 group transition-all hover:shadow-md">

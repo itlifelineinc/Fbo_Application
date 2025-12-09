@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { Student, Message, UserRole, MessageStatus } from '../types';
-import { MoreVertical, Trash2, ChevronDown, Reply, Copy, ArrowRight, X, Search, MessageSquarePlus, Hash, Plus } from 'lucide-react';
+import { MoreVertical, Trash2, ChevronDown, Reply, Copy, ArrowRight, X, Search, MessageSquarePlus, Hash, Plus, Paperclip, LayoutTemplate, ClipboardCheck, Megaphone, Image as ImageIcon, FileText, Mic, Link as LinkIcon } from 'lucide-react';
 
 interface ChatPortalProps {
   currentUser: Student;
@@ -46,6 +46,7 @@ const ChatPortal: React.FC<ChatPortalProps> = ({ currentUser, students, messages
   const [isBroadcastMode, setIsBroadcastMode] = useState(false);
   const [selectedBroadcastUsers, setSelectedBroadcastUsers] = useState<string[]>([]);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [showAttachMenu, setShowAttachMenu] = useState(false);
   
   // Search & Topics State
   const [searchQuery, setSearchQuery] = useState('');
@@ -62,6 +63,7 @@ const ChatPortal: React.FC<ChatPortalProps> = ({ currentUser, students, messages
   const messageContainerRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
+  const attachMenuRef = useRef<HTMLDivElement>(null);
 
   // Helper: Get Group ID
   const myGroupId = `GROUP_${currentUser.role === UserRole.SPONSOR ? currentUser.handle : currentUser.sponsorId}`;
@@ -151,6 +153,19 @@ const ChatPortal: React.FC<ChatPortalProps> = ({ currentUser, students, messages
           }
       }
   }, [activeChatHandle, activeMessages, onMarkAsRead]);
+
+  // Click Outside to close Attach Menu
+  useEffect(() => {
+      const handleClickOutside = (event: MouseEvent) => {
+          if (attachMenuRef.current && !attachMenuRef.current.contains(event.target as Node)) {
+              setShowAttachMenu(false);
+          }
+      };
+      if (showAttachMenu) {
+          document.addEventListener('mousedown', handleClickOutside);
+      }
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showAttachMenu]);
 
   // Textarea Auto-Resize
   useEffect(() => {
@@ -259,6 +274,19 @@ const ChatPortal: React.FC<ChatPortalProps> = ({ currentUser, students, messages
       setActiveChatHandle(student.handle);
       setSearchQuery('');
   };
+
+  // Attachment Option Renderer
+  const AttachmentOption = ({ icon: Icon, label, color, onClick }: { icon: any, label: string, color: string, onClick: () => void }) => (
+      <button 
+        onClick={() => { onClick(); setShowAttachMenu(false); }}
+        className="flex flex-col items-center gap-2 group p-2 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-xl transition-colors"
+      >
+          <div className={`w-12 h-12 rounded-full flex items-center justify-center text-white shadow-lg transform transition-transform group-hover:scale-110 ${color}`}>
+              <Icon size={24} />
+          </div>
+          <span className="text-xs font-bold text-slate-600 dark:text-slate-300">{label}</span>
+      </button>
+  );
 
   return (
     <div 
@@ -550,8 +578,8 @@ const ChatPortal: React.FC<ChatPortalProps> = ({ currentUser, students, messages
                         })}
                     </div>
 
-                    {/* Input Bar */}
-                    <div className="bg-[#f0f2f5] px-2 py-2 flex flex-col border-t border-slate-200 shrink-0 z-20 dark:bg-[#202c33] dark:border-[#202c33]">
+                    {/* Input Bar with Attachment Features */}
+                    <div className="bg-[#f0f2f5] px-2 py-2 flex flex-col border-t border-slate-200 shrink-0 z-20 dark:bg-[#202c33] dark:border-[#202c33] relative">
                         {/* Reply Banner */}
                         {replyToMessage && (
                             <div className="bg-white dark:bg-[#1f2c33] border-l-4 border-emerald-500 rounded-t-lg p-2 mb-1 flex justify-between items-center shadow-sm mx-1">
@@ -565,8 +593,71 @@ const ChatPortal: React.FC<ChatPortalProps> = ({ currentUser, students, messages
                             </div>
                         )}
 
+                        {/* Attachment Menu Popup */}
+                        {showAttachMenu && (
+                            <div 
+                                ref={attachMenuRef}
+                                className="absolute bottom-16 left-2 md:left-4 z-50 animate-fade-in origin-bottom-left"
+                            >
+                                <div className="bg-white dark:bg-[#233138] rounded-2xl shadow-2xl p-4 flex flex-col gap-4 border border-slate-100 dark:border-slate-700 min-w-[280px]">
+                                    
+                                    {/* Mentorship Section - Sponsor Only */}
+                                    {currentUser.role === UserRole.SPONSOR && (
+                                        <div className="space-y-3 pb-3 border-b border-slate-100 dark:border-slate-700">
+                                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1">Mentorship Tools</p>
+                                            <div className="grid grid-cols-3 gap-2">
+                                                <AttachmentOption 
+                                                    icon={LayoutTemplate} label="Template" color="bg-indigo-500" 
+                                                    onClick={() => alert("Template feature coming soon!")} 
+                                                />
+                                                <AttachmentOption 
+                                                    icon={ClipboardCheck} label="Assign" color="bg-orange-500" 
+                                                    onClick={() => alert("Assignment feature coming soon!")} 
+                                                />
+                                                <AttachmentOption 
+                                                    icon={Megaphone} label="Broadcast" color="bg-red-500" 
+                                                    onClick={() => alert("Broadcast feature coming soon!")} 
+                                                />
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* Media Attachments */}
+                                    <div className="space-y-3">
+                                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1">Attachments</p>
+                                        <div className="grid grid-cols-4 gap-2">
+                                            <AttachmentOption 
+                                                icon={ImageIcon} label="Image" color="bg-pink-500" 
+                                                onClick={() => alert("Image upload coming soon!")} 
+                                            />
+                                            <AttachmentOption 
+                                                icon={FileText} label="Document" color="bg-purple-600" 
+                                                onClick={() => alert("Document upload coming soon!")} 
+                                            />
+                                            <AttachmentOption 
+                                                icon={Mic} label="Voice" color="bg-blue-500" 
+                                                onClick={() => alert("Voice note feature coming soon!")} 
+                                            />
+                                            <AttachmentOption 
+                                                icon={LinkIcon} label="Link" color="bg-teal-500" 
+                                                onClick={() => alert("Link insertion coming soon!")} 
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
                         <div className="flex items-end gap-2">
-                            <div className="flex-1 bg-white rounded-2xl border border-white flex items-end dark:bg-[#2a3942] dark:border-[#2a3942] pl-4 pr-2 py-2">
+                            {/* Desktop Attachment Trigger (Left) */}
+                            <button 
+                                onClick={() => setShowAttachMenu(!showAttachMenu)}
+                                className={`hidden md:flex p-3 mb-1 rounded-full transition-all duration-300 ${showAttachMenu ? 'bg-slate-200 rotate-45 text-slate-800' : 'text-slate-500 hover:text-slate-700'}`}
+                            >
+                                <Plus size={24} />
+                            </button>
+
+                            <div className="flex-1 bg-white rounded-2xl border border-white flex items-end dark:bg-[#2a3942] dark:border-[#2a3942] relative">
                                 <textarea 
                                     ref={textareaRef}
                                     rows={1}
@@ -574,10 +665,18 @@ const ChatPortal: React.FC<ChatPortalProps> = ({ currentUser, students, messages
                                     onChange={(e) => setNewMessage(e.target.value)}
                                     onKeyDown={handleKeyDown}
                                     placeholder="Type a message"
-                                    className="w-full border-none focus:ring-0 text-slate-800 bg-transparent resize-none overflow-hidden max-h-[120px] dark:text-[#e9edef] dark:placeholder-[#8696a0] p-0 leading-relaxed text-[15px]"
+                                    className="w-full pl-4 pr-12 py-3 border-none focus:ring-0 text-slate-800 bg-transparent resize-none overflow-hidden max-h-[120px] dark:text-[#e9edef] dark:placeholder-[#8696a0] leading-relaxed text-[15px]"
                                     style={{ minHeight: '24px' }}
                                 />
+                                {/* Mobile Attachment Trigger (Right inside input) */}
+                                <button 
+                                    onClick={() => setShowAttachMenu(!showAttachMenu)}
+                                    className={`md:hidden absolute right-2 bottom-2 p-2 text-slate-400 transition-colors ${showAttachMenu ? 'text-emerald-500' : ''}`}
+                                >
+                                    <Paperclip size={20} className="transform -rotate-45" />
+                                </button>
                             </div>
+                            
                             <button 
                                 onClick={handleSend}
                                 disabled={!newMessage.trim()}

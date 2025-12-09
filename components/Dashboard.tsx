@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Brush } from 'recharts';
 import { Link, useNavigate } from 'react-router-dom';
 import { Student, UserRole, Course, CourseTrack, CourseStatus, MentorshipTemplate, Broadcast } from '../types';
-import { Edit, ExternalLink, Plus, Minus, ChevronLeft, ChevronRight, User, Users, TrendingUp, Calendar, MessageCircle, ShoppingBag, Globe, Bell, ArrowUpRight, CheckCircle, Lightbulb, Inbox, ClipboardCheck, Megaphone } from 'lucide-react';
+import { Edit, ExternalLink, Plus, Minus, ChevronLeft, ChevronRight, User, Users, TrendingUp, Calendar, MessageCircle, ShoppingBag, Globe, Bell, ArrowUpRight, CheckCircle, Lightbulb, Inbox, ClipboardCheck, Megaphone, LayoutGrid } from 'lucide-react';
 import { RANKS, RANK_ORDER } from '../constants';
 
 // --- Icons (Defined Before Usage) ---
@@ -126,6 +126,9 @@ const Dashboard: React.FC<DashboardProps> = ({ students, currentUser, courses, o
   const currentRankName = currentRankDef?.name || 'Distributor';
   const nextRankDef = currentRankDef?.nextRankId ? RANKS[currentRankDef.nextRankId] : null;
   
+  // Logic to switch between Log Sale and Mentorship Tools
+  const isDistributor = rankProgress.currentRankId === 'NOVUS';
+
   // Calculate "Needed"
   let progressText = '0';
   let progressTrend = 'You made it!';
@@ -702,10 +705,19 @@ const Dashboard: React.FC<DashboardProps> = ({ students, currentUser, courses, o
                         <span className="text-sm font-bold text-slate-700 dark:text-slate-300">Broadcast Inbox</span>
                     </Link>
                     
-                    <Link to="/sales" className="bg-white p-4 rounded-xl border border-slate-100 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all flex flex-col items-center gap-3 text-center dark:bg-slate-800 dark:border-slate-700">
-                        <div className="w-10 h-10 bg-emerald-50 text-emerald-600 rounded-full flex items-center justify-center dark:bg-emerald-900/30 dark:text-emerald-400"><Plus size={20} /></div>
-                        <span className="text-sm font-bold text-slate-700 dark:text-slate-300">Log Sale</span>
-                    </Link>
+                    {!isDistributor ? (
+                        <Link to="/mentorship-tools" className="bg-white p-4 rounded-xl border border-slate-100 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all flex flex-col items-center gap-3 text-center dark:bg-slate-800 dark:border-slate-700">
+                            <div className="w-10 h-10 bg-violet-50 text-violet-600 rounded-full flex items-center justify-center dark:bg-violet-900/30 dark:text-violet-400">
+                                <LayoutGrid size={20} />
+                            </div>
+                            <span className="text-sm font-bold text-slate-700 dark:text-slate-300">Mentorship Tools</span>
+                        </Link>
+                    ) : (
+                        <Link to="/sales" className="bg-white p-4 rounded-xl border border-slate-100 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all flex flex-col items-center gap-3 text-center dark:bg-slate-800 dark:border-slate-700">
+                            <div className="w-10 h-10 bg-emerald-50 text-emerald-600 rounded-full flex items-center justify-center dark:bg-emerald-900/30 dark:text-emerald-400"><Plus size={20} /></div>
+                            <span className="text-sm font-bold text-slate-700 dark:text-slate-300">Log Sale</span>
+                        </Link>
+                    )}
                 </div>
             </div>
 

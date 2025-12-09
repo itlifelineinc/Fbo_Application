@@ -263,7 +263,7 @@ const AssignmentPlayer: React.FC<AssignmentPlayerProps> = ({ currentUser, assign
                                             <span className="text-sm font-bold">{q.type === 'VOICE' ? 'Upload Audio Recording' : 'Upload File'}</span>
                                             <input 
                                                 type="file" 
-                                                ref={el => fileInputRefs.current[q.id] = el}
+                                                ref={(el) => { fileInputRefs.current[q.id] = el; }}
                                                 className="hidden" 
                                                 accept={q.type === 'VOICE' ? 'audio/*' : '*/*'}
                                                 onChange={(e) => handleFileUpload(q.id, e)}

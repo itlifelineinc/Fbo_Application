@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Student, Message, UserRole, MessageStatus, Attachment, MentorshipTemplate, Assignment } from '../types';
+import { Student, Message, UserRole, MessageStatus, Attachment, MentorshipTemplate, Assignment, Broadcast } from '../types';
 import { MoreVertical, Trash2, ChevronDown, Reply, Copy, ArrowRight, X, Search, MessageSquarePlus, Hash, Plus, Paperclip, LayoutTemplate, ClipboardCheck, Megaphone, Image as ImageIcon, FileText, Mic, Link as LinkIcon, Download, Play, Pause, ExternalLink, LayoutGrid, StopCircle, ArrowLeft } from 'lucide-react';
 
 interface ChatPortalProps {
@@ -10,6 +10,7 @@ interface ChatPortalProps {
   messages: Message[];
   templates?: MentorshipTemplate[];
   assignments?: Assignment[];
+  broadcasts?: Broadcast[]; // Added
   onSendMessage: (message: Message) => void;
   onMarkAsRead?: (senderHandle: string) => void;
   onClearChat?: (handle: string) => void;
@@ -42,7 +43,7 @@ const MessageStatusIcon: React.FC<{ status: MessageStatus, isRead: boolean }> = 
     );
 };
 
-const ChatPortal: React.FC<ChatPortalProps> = ({ currentUser, students, messages, templates = [], assignments = [], onSendMessage, onMarkAsRead, onClearChat, onDeleteMessage }) => {
+const ChatPortal: React.FC<ChatPortalProps> = ({ currentUser, students, messages, templates = [], assignments = [], broadcasts = [], onSendMessage, onMarkAsRead, onClearChat, onDeleteMessage }) => {
   const navigate = useNavigate();
   // State
   const [activeChatHandle, setActiveChatHandle] = useState<string | null>(null);
@@ -51,7 +52,7 @@ const ChatPortal: React.FC<ChatPortalProps> = ({ currentUser, students, messages
   const [selectedBroadcastUsers, setSelectedBroadcastUsers] = useState<string[]>([]);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [showAttachMenu, setShowAttachMenu] = useState(false);
-  const [attachmentView, setAttachmentView] = useState<'MAIN' | 'TEMPLATES' | 'ASSIGNMENTS'>('MAIN');
+  const [attachmentView, setAttachmentView] = useState<'MAIN' | 'TEMPLATES' | 'ASSIGNMENTS' | 'ANNOUNCEMENTS'>('MAIN');
   
   // Attachment Logic State
   const [pendingAttachment, setPendingAttachment] = useState<Attachment | null>(null);
@@ -95,6 +96,7 @@ const ChatPortal: React.FC<ChatPortalProps> = ({ currentUser, students, messages
   // Filtered Lists for Attachment Menu
   const myTemplates = templates.filter(t => t.authorHandle === currentUser.handle || t.authorHandle === '@forever_system');
   const myAssignments = assignments.filter(a => a.authorHandle === currentUser.handle);
+  const myBroadcasts = broadcasts.filter(b => b.authorHandle === currentUser.handle).sort((a,b) => b.createdAt - a.createdAt);
 
   // Helper: Get Group ID
   const myGroupId = `GROUP_${currentUser.role === UserRole.SPONSOR ? currentUser.handle : currentUser.sponsorId}`;
@@ -466,6 +468,18 @@ const ChatPortal: React.FC<ChatPortalProps> = ({ currentUser, students, messages
       setShowAttachMenu(false);
       if(textareaRef.current) textareaRef.current.focus();
   };
+
+  const handleBroadcastSelect = (b: Broadcast) => {
+      setPendingAttachment({
+          type: 'BROADCAST',
+          url: b.id,
+          name: b.title,
+          size: 'Announcement'
+      });
+      setAttachmentView('MAIN');
+      setShowAttachMenu(false);
+      if(textareaRef.current) textareaRef.current.focus();
+  }
 
   // Attachment Option Renderer
   const AttachmentOption = ({ icon: Icon, label, color, onClick }: { icon: any, label: string, color: string, onClick: () => void }) => (
@@ -848,6 +862,25 @@ const ChatPortal: React.FC<ChatPortalProps> = ({ currentUser, students, messages
                                                             </div>
                                                         </div>
                                                     )}
+                                                    {msg.attachment?.type === 'BROADCAST' && (
+                                                        <div 
+                                                            onClick={() => navigate('/broadcasts', { state: { openBroadcastId: msg.attachment!.url } })}
+                                                            className="cursor-pointer bg-slate-100 dark:bg-slate-700 p-3 rounded-lg border-l-4 border-red-500 hover:bg-red-50 dark:hover:bg-slate-600 transition-colors group/card"
+                                                        >
+                                                            <div className="flex items-center gap-3 mb-2">
+                                                                <div className="w-10 h-10 bg-red-100 text-red-600 rounded-lg flex items-center justify-center dark:bg-red-900/30 dark:text-red-400">
+                                                                    <Megaphone size={20} />
+                                                                </div>
+                                                                <div className="flex-1 min-w-0">
+                                                                    <p className="text-xs font-bold text-red-600 dark:text-red-400 uppercase tracking-wide">Announcement</p>
+                                                                    <p className="text-sm font-bold text-slate-800 dark:text-white truncate">{msg.attachment.name}</p>
+                                                                </div>
+                                                            </div>
+                                                            <div className="flex items-center justify-end mt-1">
+                                                                <span className="text-xs font-bold text-red-600 dark:text-red-400 flex items-center gap-1 group-hover/card:underline">View Announcement <ArrowRight size={12}/></span>
+                                                            </div>
+                                                        </div>
+                                                    )}
                                                 </div>
                                             )}
 
@@ -896,6 +929,7 @@ const ChatPortal: React.FC<ChatPortalProps> = ({ currentUser, students, messages
                                     {pendingAttachment.type === 'LINK' && <div className="w-10 h-10 bg-slate-200 text-slate-600 flex items-center justify-center rounded"><LinkIcon size={20}/></div>}
                                     {pendingAttachment.type === 'TEMPLATE' && <div className="w-10 h-10 bg-indigo-100 text-indigo-600 flex items-center justify-center rounded"><LayoutTemplate size={20}/></div>}
                                     {pendingAttachment.type === 'ASSIGNMENT' && <div className="w-10 h-10 bg-orange-100 text-orange-600 flex items-center justify-center rounded"><ClipboardCheck size={20}/></div>}
+                                    {pendingAttachment.type === 'BROADCAST' && <div className="w-10 h-10 bg-red-100 text-red-600 flex items-center justify-center rounded"><Megaphone size={20}/></div>}
                                     
                                     <div className="flex-1 min-w-0">
                                         <p className="text-xs font-bold text-slate-700 dark:text-white truncate">{pendingAttachment.name || 'Attachment'}</p>
@@ -934,7 +968,7 @@ const ChatPortal: React.FC<ChatPortalProps> = ({ currentUser, students, messages
                                                     />
                                                     <AttachmentOption 
                                                         icon={Megaphone} label="Announcement" color="bg-red-500" 
-                                                        onClick={() => alert("Broadcast feature coming soon!")} 
+                                                        onClick={() => setAttachmentView('ANNOUNCEMENTS')} 
                                                     />
                                                 </div>
                                             </div>
@@ -1008,6 +1042,30 @@ const ChatPortal: React.FC<ChatPortalProps> = ({ currentUser, students, messages
                                                 </button>
                                             )) : (
                                                 <div className="p-4 text-center text-slate-400 text-xs">No assignments created yet.</div>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    {/* Announcements (Broadcasts) Sub-Menu */}
+                                    <div className={`absolute inset-0 bg-white dark:bg-[#233138] transition-transform duration-300 ease-in-out flex flex-col ${attachmentView === 'ANNOUNCEMENTS' ? 'translate-x-0' : 'translate-x-full'}`}>
+                                        <div className="flex items-center gap-2 p-3 border-b border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-[#111b21]">
+                                            <button onClick={() => setAttachmentView('MAIN')} className="p-1 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-full transition-colors text-slate-500 dark:text-slate-300">
+                                                <ArrowLeft size={18} />
+                                            </button>
+                                            <h3 className="font-bold text-sm text-slate-800 dark:text-white">Announcements</h3>
+                                        </div>
+                                        <div className="flex-1 overflow-y-auto p-2 space-y-1">
+                                            {myBroadcasts.length > 0 ? myBroadcasts.map(b => (
+                                                <button 
+                                                    key={b.id}
+                                                    onClick={() => handleBroadcastSelect(b)}
+                                                    className="w-full text-left p-3 hover:bg-slate-50 dark:hover:bg-slate-700 rounded-lg transition-colors border border-transparent hover:border-slate-100 dark:hover:border-slate-600 group"
+                                                >
+                                                    <p className="font-bold text-xs text-slate-800 dark:text-white mb-0.5">{b.title}</p>
+                                                    <p className="text-[10px] text-slate-500 dark:text-slate-400 truncate">{new Date(b.createdAt).toLocaleDateString()}</p>
+                                                </button>
+                                            )) : (
+                                                <div className="p-4 text-center text-slate-400 text-xs">No announcements created yet. Create one in Mentorship Tools.</div>
                                             )}
                                         </div>
                                     </div>

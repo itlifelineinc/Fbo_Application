@@ -1,8 +1,8 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Broadcast, Student } from '../types';
 import { Megaphone, AlertTriangle, User, Calendar, FileText, Video, Image as ImageIcon, CheckCircle, Bookmark, ArrowLeft } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 interface BroadcastInboxProps {
   currentUser: Student;
@@ -13,6 +13,7 @@ interface BroadcastInboxProps {
 
 const BroadcastInbox: React.FC<BroadcastInboxProps> = ({ currentUser, broadcasts, onMarkRead, onToggleBookmark }) => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [activeTab, setActiveTab] = useState<'ALL' | 'IMPORTANT' | 'BOOKMARKED'>('ALL');
   const [selectedBroadcast, setSelectedBroadcast] = useState<Broadcast | null>(null);
 
@@ -26,6 +27,20 @@ const BroadcastInbox: React.FC<BroadcastInboxProps> = ({ currentUser, broadcasts
       if (activeTab === 'BOOKMARKED') return (currentUser.bookmarkedBroadcasts || []).includes(b.id);
       return true;
   }).sort((a, b) => b.createdAt - a.createdAt);
+
+  // Deep Link Handling (via Navigation State)
+  useEffect(() => {
+      if (location.state && (location.state as any).openBroadcastId) {
+          const targetId = (location.state as any).openBroadcastId;
+          // Look up in ALL broadcasts to allow viewing 'Sent' items or others if linked
+          const target = broadcasts.find(b => b.id === targetId);
+          if (target) {
+              setSelectedBroadcast(target);
+              // Clear state to prevent reopening on refresh
+              window.history.replaceState({}, document.title);
+          }
+      }
+  }, [location.state, broadcasts]);
 
   const handleSelect = (broadcast: Broadcast) => {
       setSelectedBroadcast(broadcast);

@@ -218,13 +218,14 @@ const App: React.FC = () => {
         } />
 
         <Route path="/chat" element={
-            <ProtectedRoute currentUser={currentUser} onLogout={handleLogout} theme={theme} onToggleTheme={toggleTheme} courses={courses} notifications={notifications} templates={templates} assignments={assignments}>
+            <ProtectedRoute currentUser={currentUser} onLogout={handleLogout} theme={theme} onToggleTheme={toggleTheme} courses={courses} notifications={notifications} templates={templates} assignments={assignments} broadcasts={broadcasts}>
                 <ChatPortal 
                     currentUser={currentUser!} 
                     students={students} 
                     messages={messages} 
                     templates={templates}
                     assignments={assignments}
+                    broadcasts={broadcasts}
                     onSendMessage={handleSendMessage} 
                     onMarkAsRead={handleMarkAsRead} 
                     onClearChat={handleClearChat}

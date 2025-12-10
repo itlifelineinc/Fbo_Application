@@ -29,7 +29,7 @@ export enum CourseStatus {
 }
 
 export interface Attachment {
-  type: 'IMAGE' | 'DOCUMENT' | 'VIDEO' | 'AUDIO' | 'LINK' | 'TEMPLATE' | 'ASSIGNMENT';
+  type: 'IMAGE' | 'DOCUMENT' | 'VIDEO' | 'AUDIO' | 'LINK' | 'TEMPLATE' | 'ASSIGNMENT' | 'BROADCAST';
   url: string;
   name?: string;
   size?: string;

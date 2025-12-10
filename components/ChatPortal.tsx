@@ -483,7 +483,6 @@ const ChatPortal: React.FC<ChatPortalProps> = ({ currentUser, students, messages
   return (
     <div 
         className="h-full flex flex-col md:flex-row bg-white md:rounded-2xl md:shadow-sm md:border border-slate-100 overflow-hidden animate-fade-in dark:bg-[#111b21] dark:border-slate-800"
-        style={{ fontFamily: 'Segoe UI, "Helvetica Neue", Helvetica, Arial, sans-serif' }}
     >
       {/* Hidden File Inputs */}
       <input type="file" ref={fileInputImageRef} className="hidden" accept="image/*" onChange={(e) => handleFileSelect(e, 'IMAGE')} />

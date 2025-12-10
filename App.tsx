@@ -184,6 +184,10 @@ const App: React.FC = () => {
       });
   };
 
+  const handleDeleteBroadcast = (id: string) => {
+      setBroadcasts(prev => prev.filter(b => b.id !== id));
+  };
+
   const handleReadBroadcast = (id: string) => {
       if (!currentUser) return;
       const read = currentUser.readBroadcasts || [];
@@ -208,13 +212,13 @@ const App: React.FC = () => {
         <Route path="/join" element={<OnboardingWizard onEnroll={handleEnroll} existingStudents={students} />} />
         
         <Route path="/dashboard" element={
-            <ProtectedRoute currentUser={currentUser} onLogout={handleLogout} theme={theme} onToggleTheme={toggleTheme} courses={courses} notifications={notifications}>
+            <ProtectedRoute currentUser={currentUser} onLogout={handleLogout} theme={theme} onToggleTheme={toggleTheme} courses={courses} notifications={notifications} templates={templates} broadcasts={broadcasts}>
                 <Dashboard students={students} currentUser={currentUser!} courses={courses} templates={templates} broadcasts={broadcasts} />
             </ProtectedRoute>
         } />
 
         <Route path="/chat" element={
-            <ProtectedRoute currentUser={currentUser} onLogout={handleLogout} theme={theme} onToggleTheme={toggleTheme} courses={courses} notifications={notifications}>
+            <ProtectedRoute currentUser={currentUser} onLogout={handleLogout} theme={theme} onToggleTheme={toggleTheme} courses={courses} notifications={notifications} templates={templates} assignments={assignments}>
                 <ChatPortal 
                     currentUser={currentUser!} 
                     students={students} 
@@ -387,6 +391,7 @@ const App: React.FC = () => {
                     templates={templates} 
                     assignments={assignments}
                     students={students}
+                    broadcasts={broadcasts}
                     onAddTemplate={handleAddTemplate} 
                     onDeleteTemplate={handleDeleteTemplate}
                     onUpdateTemplate={handleUpdateTemplate}
@@ -394,6 +399,7 @@ const App: React.FC = () => {
                     onDeleteAssignment={handleDeleteAssignment}
                     onUpdateAssignment={handleUpdateAssignment}
                     onSendBroadcast={handleSendBroadcast}
+                    onDeleteBroadcast={handleDeleteBroadcast}
                 />
             </ProtectedRoute>
         } />

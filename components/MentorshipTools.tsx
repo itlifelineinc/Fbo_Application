@@ -1,22 +1,25 @@
 
 import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, LayoutTemplate, ClipboardCheck, Megaphone, Plus, Save, Trash2, X, ChevronDown, List, Type, AlertCircle, FileText, Upload, Video, Mic, Calendar, Users, CheckCircle, Clock, Link as LinkIcon, Paperclip, Play, Pause, Image as ImageIcon, StopCircle, Edit, Download, Radio, Send } from 'lucide-react';
+import { ArrowLeft, LayoutTemplate, ClipboardCheck, Megaphone, Plus, Save, Trash2, X, ChevronDown, List, Type, AlertCircle, FileText, Upload, Video, Mic, Calendar, Users, CheckCircle, Clock, Link as LinkIcon, Paperclip, Play, Pause, Image as ImageIcon, StopCircle, Edit, Download, Radio, Send, Youtube } from 'lucide-react';
 import { Student, MentorshipTemplate, ContentBlock, BlockType, Assignment, AssignmentQuestion, AssignmentType, Attachment, Broadcast } from '../types';
 import BroadcastBuilder from './BroadcastBuilder';
+import RichTextEditor from './SalesEditor/RichTextEditor';
 
 interface MentorshipToolsProps {
   currentUser: Student;
   templates: MentorshipTemplate[];
-  assignments?: Assignment[]; // New
-  students?: Student[]; // New - needed for assigning
+  assignments?: Assignment[]; 
+  students?: Student[];
+  broadcasts?: Broadcast[]; // Added
   onAddTemplate: (template: MentorshipTemplate) => void;
   onDeleteTemplate: (id: string) => void;
-  onUpdateTemplate?: (template: MentorshipTemplate) => void; // New
-  onAddAssignment?: (assignment: Assignment) => void; // New
-  onDeleteAssignment?: (id: string) => void; // New
-  onUpdateAssignment?: (assignment: Assignment) => void; // New
-  onSendBroadcast?: (broadcast: Broadcast) => void; // New
+  onUpdateTemplate?: (template: MentorshipTemplate) => void;
+  onAddAssignment?: (assignment: Assignment) => void;
+  onDeleteAssignment?: (id: string) => void;
+  onUpdateAssignment?: (assignment: Assignment) => void;
+  onSendBroadcast?: (broadcast: Broadcast) => void;
+  onDeleteBroadcast?: (id: string) => void; // Added
 }
 
 const MentorshipTools: React.FC<MentorshipToolsProps> = ({ 
@@ -24,20 +27,22 @@ const MentorshipTools: React.FC<MentorshipToolsProps> = ({
     templates, 
     assignments = [], 
     students = [],
+    broadcasts = [],
     onAddTemplate, 
     onDeleteTemplate,
     onUpdateTemplate,
     onAddAssignment,
     onDeleteAssignment,
     onUpdateAssignment,
-    onSendBroadcast
+    onSendBroadcast,
+    onDeleteBroadcast
 }) => {
   const navigate = useNavigate();
   // View State Manager
-  const [activeView, setActiveView] = useState<'MENU' | 'TEMPLATES_LIST' | 'TEMPLATE_EDITOR' | 'ASSIGNMENTS_LIST' | 'ASSIGNMENT_EDITOR' | 'BROADCAST_BUILDER' | 'BROADCAST_HISTORY'>('MENU');
+  const [activeView, setActiveView] = useState<'MENU' | 'TEMPLATES_LIST' | 'TEMPLATE_EDITOR' | 'ASSIGNMENTS_LIST' | 'ASSIGNMENT_EDITOR' | 'BROADCAST_SECTION'>('MENU');
   
   // --- Broadcast State ---
-  // No local state for list, handled via App. Just need editing state.
+  const [broadcastTab, setBroadcastTab] = useState<'NEW' | 'SAVED'>('NEW');
   const [editingBroadcast, setEditingBroadcast] = useState<Broadcast | undefined>(undefined);
 
   // --- Template State ---
@@ -54,9 +59,10 @@ const MentorshipTools: React.FC<MentorshipToolsProps> = ({
   const [assignmentDeadline, setAssignmentDeadline] = useState('');
   const [assignmentRecipients, setAssignmentRecipients] = useState<string[]>([]);
   const [assignmentQuestions, setAssignmentQuestions] = useState<AssignmentQuestion[]>([]);
-  const [assignmentMaterials, setAssignmentMaterials] = useState<Attachment[]>([]); // New: Training Materials
-  const [isTemplateAssignment, setIsTemplateAssignment] = useState(false); // Checkbox state
-  const [showTemplateModal, setShowTemplateModal] = useState(false); // Modal state
+  const [assignmentMaterials, setAssignmentMaterials] = useState<Attachment[]>([]);
+  const [isTemplateAssignment, setIsTemplateAssignment] = useState(false);
+  const [showTemplateModal, setShowTemplateModal] = useState(false);
+  const [showVideoOptions, setShowVideoOptions] = useState(false); // New: Video options modal
 
   // --- Assignment Voice Instruction State ---
   const [instructionMode, setInstructionMode] = useState<'TEXT' | 'VOICE'>('TEXT');
@@ -79,6 +85,7 @@ const MentorshipTools: React.FC<MentorshipToolsProps> = ({
   const myAssignments = assignments.filter(a => a.authorHandle === currentUser.handle).sort((a,b) => b.createdAt - a.createdAt);
   const myAssignmentTemplates = myAssignments.filter(a => a.isTemplate); // Get only templates for the modal
   const myDownline = students.filter(s => s.sponsorId === currentUser.handle);
+  const myBroadcasts = broadcasts.filter(b => b.authorHandle === currentUser.handle).sort((a, b) => b.createdAt - a.createdAt);
 
   const resetEditor = () => {
       setEditingTemplateId(null);
@@ -145,7 +152,20 @@ const MentorshipTools: React.FC<MentorshipToolsProps> = ({
           onSendBroadcast(broadcast);
       }
       alert(`Broadcast ${broadcast.status === 'SENT' ? 'Sent' : 'Saved'}!`);
-      setActiveView('MENU'); 
+      // Stay on broadcast view, maybe switch to Saved tab?
+      setBroadcastTab('SAVED');
+      setEditingBroadcast(undefined);
+  };
+
+  const handleEditBroadcast = (broadcast: Broadcast) => {
+      setEditingBroadcast(broadcast);
+      setBroadcastTab('NEW');
+  };
+
+  const handleDeleteSavedBroadcast = (id: string) => {
+      if (window.confirm("Delete this broadcast history? This cannot be undone.")) {
+          if (onDeleteBroadcast) onDeleteBroadcast(id);
+      }
   };
 
   // --- Template Handlers ---
@@ -360,13 +380,13 @@ const MentorshipTools: React.FC<MentorshipToolsProps> = ({
               mimeType: file.type
           };
           setAssignmentMaterials(prev => [...prev, newAtt]);
+          setShowVideoOptions(false); // Close modal if open
       };
       reader.readAsDataURL(file);
       e.target.value = ''; // Reset
   };
 
-  const addVideoLink = () => {
-      const url = prompt("Enter video URL (YouTube, Vimeo, etc):");
+  const addVideoLink = (url: string) => {
       if (url) {
           const newAtt: Attachment = {
               type: 'VIDEO',
@@ -375,6 +395,7 @@ const MentorshipTools: React.FC<MentorshipToolsProps> = ({
               mimeType: 'video/external'
           };
           setAssignmentMaterials(prev => [...prev, newAtt]);
+          setShowVideoOptions(false);
       }
   };
 
@@ -432,7 +453,7 @@ const MentorshipTools: React.FC<MentorshipToolsProps> = ({
         </button>
 
         <button 
-          onClick={() => { setEditingBroadcast(undefined); setActiveView('BROADCAST_BUILDER'); }}
+          onClick={() => { setEditingBroadcast(undefined); setActiveView('BROADCAST_SECTION'); setBroadcastTab('NEW'); }}
           className="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all text-left group flex items-start gap-5 relative overflow-hidden"
         >
           <div className="p-4 rounded-2xl text-white shadow-lg bg-red-500 group-hover:scale-110 transition-transform duration-300 relative z-10">
@@ -661,6 +682,43 @@ const MentorshipTools: React.FC<MentorshipToolsProps> = ({
 
   const renderAssignmentEditor = () => (
       <div className="bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden dark:bg-slate-800 dark:border-slate-700 flex flex-col h-[85vh] relative">
+          
+          {/* --- VIDEO SELECTION MODAL --- */}
+          {showVideoOptions && (
+              <div className="absolute inset-0 bg-black/60 z-[60] flex items-center justify-center p-4">
+                  <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 w-full max-w-sm shadow-xl animate-fade-in border border-slate-100 dark:border-slate-700">
+                      <h3 className="font-bold text-lg mb-4 text-center dark:text-white">Add Video</h3>
+                      <div className="flex flex-col gap-3">
+                          <button 
+                              onClick={() => videoInputRef.current?.click()}
+                              className="flex items-center gap-3 p-4 border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors dark:border-slate-700 dark:hover:bg-slate-800 text-left"
+                          >
+                              <div className="bg-purple-100 p-2 rounded-lg text-purple-600 dark:bg-purple-900/30 dark:text-purple-400"><Upload size={20} /></div>
+                              <div>
+                                  <p className="font-bold text-sm text-slate-800 dark:text-white">Upload File</p>
+                                  <p className="text-xs text-slate-500 dark:text-slate-400">MP4, WEBM (Max 50MB)</p>
+                              </div>
+                          </button>
+                          
+                          <button 
+                              onClick={() => {
+                                  const url = prompt("Enter video URL (YouTube, Vimeo, etc):");
+                                  addVideoLink(url || '');
+                              }}
+                              className="flex items-center gap-3 p-4 border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors dark:border-slate-700 dark:hover:bg-slate-800 text-left"
+                          >
+                              <div className="bg-red-100 p-2 rounded-lg text-red-600 dark:bg-red-900/30 dark:text-red-400"><Youtube size={20} /></div>
+                              <div>
+                                  <p className="font-bold text-sm text-slate-800 dark:text-white">Paste URL</p>
+                                  <p className="text-xs text-slate-500 dark:text-slate-400">YouTube, Vimeo, etc.</p>
+                              </div>
+                          </button>
+                      </div>
+                      <button onClick={() => setShowVideoOptions(false)} className="mt-4 w-full py-2 text-slate-500 text-sm font-bold hover:text-slate-700 dark:text-slate-400 dark:hover:text-white">Cancel</button>
+                  </div>
+              </div>
+          )}
+
           {/* Template Loading Modal */}
           {showTemplateModal && (
               <div className="absolute inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
@@ -711,11 +769,15 @@ const MentorshipTools: React.FC<MentorshipToolsProps> = ({
               
               {/* 1. Title */}
               <div>
-                  <label className="block text-xs font-bold text-slate-500 uppercase mb-2 dark:text-slate-400">Assignment Title</label>
+                  <div className="flex justify-between mb-2">
+                      <label className="block text-xs font-bold text-slate-500 uppercase dark:text-slate-400">Assignment Title</label>
+                      <span className={`text-[10px] font-bold ${assignmentTitle.length === 50 ? 'text-red-500' : 'text-slate-400'}`}>{assignmentTitle.length}/50</span>
+                  </div>
                   <input 
                       type="text" 
                       value={assignmentTitle}
                       onChange={(e) => setAssignmentTitle(e.target.value)}
+                      maxLength={50}
                       placeholder="e.g. Prospecting Challenge – Day 1"
                       className="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none text-slate-900 font-bold bg-white dark:bg-slate-700 dark:border-slate-600 dark:text-white"
                   />
@@ -764,13 +826,7 @@ const MentorshipTools: React.FC<MentorshipToolsProps> = ({
 
                   {instructionMode === 'TEXT' ? (
                       <div className="relative">
-                          <textarea 
-                              value={assignmentDescription}
-                              onChange={(e) => setAssignmentDescription(e.target.value.slice(0, 2000))}
-                              placeholder="Explain what needs to be done..."
-                              className="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none text-slate-900 min-h-[120px] resize-none bg-white dark:bg-slate-700 dark:border-slate-600 dark:text-white dark:placeholder-slate-500"
-                          />
-                          <span className={`absolute bottom-2 right-2 text-[10px] font-bold ${assignmentDescription.length > 2000 ? 'text-red-500' : 'text-slate-400'}`}>{assignmentDescription.length}/2000</span>
+                          <RichTextEditor value={assignmentDescription} onChange={setAssignmentDescription} />
                       </div>
                   ) : (
                       <div className="bg-slate-50 border border-slate-200 rounded-xl p-6 flex flex-col items-center justify-center gap-4 dark:bg-slate-700 dark:border-slate-600">
@@ -799,6 +855,7 @@ const MentorshipTools: React.FC<MentorshipToolsProps> = ({
                   <div className="flex flex-wrap gap-3 mb-4">
                       {/* Hidden Inputs */}
                       <input ref={fileInputRef} type="file" className="hidden" accept=".pdf,.doc,.docx,.png,.jpg,.jpeg" onChange={(e) => handleMaterialUpload(e, 'DOC')} />
+                      <input ref={videoInputRef} type="file" className="hidden" accept="video/mp4,video/webm,video/ogg" onChange={(e) => handleMaterialUpload(e, 'VIDEO')} />
                       
                       <button 
                         onClick={() => fileInputRef.current?.click()}
@@ -807,10 +864,10 @@ const MentorshipTools: React.FC<MentorshipToolsProps> = ({
                           <Upload size={16} /> Upload PDF/Img
                       </button>
                       <button 
-                        onClick={addVideoLink}
+                        onClick={() => setShowVideoOptions(true)}
                         className="flex items-center gap-2 px-4 py-2 border border-dashed border-slate-300 rounded-lg text-slate-600 hover:bg-slate-50 text-sm font-medium transition-colors dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-700"
                       >
-                          <Video size={16} /> Add Video Link
+                          <Video size={16} /> Add Video
                       </button>
                   </div>
 
@@ -1002,10 +1059,89 @@ const MentorshipTools: React.FC<MentorshipToolsProps> = ({
       </div>
   );
 
+  const renderBroadcastSection = () => (
+      <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden flex flex-col h-[calc(100vh-6rem)]">
+          {/* Tabs */}
+          <div className="flex border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 px-6 pt-4 gap-6">
+              <button 
+                  onClick={() => setBroadcastTab('NEW')}
+                  className={`pb-3 text-sm font-bold transition-all relative ${broadcastTab === 'NEW' ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-500 hover:text-slate-700 dark:text-slate-400'}`}
+              >
+                  Create New
+                  {broadcastTab === 'NEW' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-emerald-600 dark:bg-emerald-400 rounded-t-full"></div>}
+              </button>
+              <button 
+                  onClick={() => setBroadcastTab('SAVED')}
+                  className={`pb-3 text-sm font-bold transition-all relative ${broadcastTab === 'SAVED' ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-500 hover:text-slate-700 dark:text-slate-400'}`}
+              >
+                  Saved & History
+                  {broadcastTab === 'SAVED' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-emerald-600 dark:bg-emerald-400 rounded-t-full"></div>}
+              </button>
+          </div>
+
+          <div className="flex-1 overflow-hidden">
+              {broadcastTab === 'NEW' ? (
+                  <BroadcastBuilder 
+                      currentUser={currentUser} 
+                      students={students} 
+                      onSave={handleSaveBroadcast} 
+                      onCancel={() => setActiveView('MENU')}
+                      initialData={editingBroadcast}
+                  />
+              ) : (
+                  <div className="h-full overflow-y-auto p-4 md:p-6 no-scrollbar">
+                      {myBroadcasts.length === 0 ? (
+                          <div className="flex flex-col items-center justify-center h-full text-slate-400">
+                              <Megaphone size={48} className="mb-4 opacity-20" />
+                              <p className="font-bold">No broadcasts found</p>
+                              <button onClick={() => setBroadcastTab('NEW')} className="mt-4 text-sm text-emerald-600 font-bold hover:underline">Create One</button>
+                          </div>
+                      ) : (
+                          <div className="grid gap-4">
+                              {myBroadcasts.map(b => (
+                                  <div key={b.id} className="bg-white border border-slate-200 rounded-xl p-4 flex flex-col md:flex-row justify-between gap-4 hover:shadow-md transition-shadow dark:bg-slate-800 dark:border-slate-700">
+                                      <div className="flex-1 min-w-0">
+                                          <div className="flex items-center gap-2 mb-1">
+                                              <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${b.status === 'SENT' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : b.status === 'DRAFT' ? 'bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300' : 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'}`}>
+                                                  {b.status}
+                                              </span>
+                                              <span className="text-xs text-slate-400">{new Date(b.createdAt).toLocaleDateString()}</span>
+                                          </div>
+                                          <h3 className="font-bold text-slate-800 dark:text-white truncate">{b.title}</h3>
+                                          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 line-clamp-1">
+                                              {b.content.replace(/<[^>]+>/g, '')}
+                                          </p>
+                                      </div>
+                                      <div className="flex items-center gap-2">
+                                          <button 
+                                              onClick={() => handleEditBroadcast(b)}
+                                              className="p-2 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors dark:text-slate-400 dark:hover:bg-slate-700"
+                                              title="Edit / Reuse"
+                                          >
+                                              <Edit size={18} />
+                                          </button>
+                                          <button 
+                                              onClick={() => handleDeleteSavedBroadcast(b.id)}
+                                              className="p-2 text-slate-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors dark:text-slate-400 dark:hover:bg-red-900/30"
+                                              title="Delete"
+                                          >
+                                              <Trash2 size={18} />
+                                          </button>
+                                      </div>
+                                  </div>
+                              ))}
+                          </div>
+                      )}
+                  </div>
+              )}
+          </div>
+      </div>
+  );
+
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 animate-fade-in p-4 md:p-8">
       {/* Header */}
-      {activeView !== 'BROADCAST_BUILDER' && (
+      {activeView !== 'BROADCAST_SECTION' && (
         <div className="max-w-4xl mx-auto mb-8">
             <button 
             onClick={() => {
@@ -1026,21 +1162,13 @@ const MentorshipTools: React.FC<MentorshipToolsProps> = ({
       )}
 
       {/* View Switcher */}
-      <div className={`mx-auto ${activeView === 'BROADCAST_BUILDER' ? 'h-[calc(100vh-4rem)] max-w-5xl' : 'max-w-4xl'}`}>
+      <div className={`mx-auto ${activeView === 'BROADCAST_SECTION' ? 'h-[calc(100vh-4rem)] max-w-5xl' : 'max-w-4xl'}`}>
           {activeView === 'MENU' && renderMenu()}
           {activeView === 'TEMPLATES_LIST' && renderTemplatesList()}
           {activeView === 'TEMPLATE_EDITOR' && renderTemplateEditor()}
           {activeView === 'ASSIGNMENTS_LIST' && renderAssignmentsList()}
           {activeView === 'ASSIGNMENT_EDITOR' && renderAssignmentEditor()}
-          {activeView === 'BROADCAST_BUILDER' && (
-              <BroadcastBuilder 
-                  currentUser={currentUser} 
-                  students={students} 
-                  onSave={handleSaveBroadcast} 
-                  onCancel={() => setActiveView('MENU')}
-                  initialData={editingBroadcast}
-              />
-          )}
+          {activeView === 'BROADCAST_SECTION' && renderBroadcastSection()}
       </div>
     </div>
   );

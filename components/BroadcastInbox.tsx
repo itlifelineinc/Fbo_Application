@@ -46,12 +46,12 @@ const BroadcastInbox: React.FC<BroadcastInboxProps> = ({ currentUser, broadcasts
                   <button onClick={() => setSelectedBroadcast(null)} className="flex items-center gap-2 text-slate-500 hover:text-emerald-600 transition-colors self-start font-medium text-sm">
                       <ArrowLeft size={18} /> Back to Inbox
                   </button>
-                  <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 dark:bg-slate-800 dark:border-slate-700">
+                  <div className="bg-white p-5 md:p-6 rounded-2xl shadow-sm border border-slate-200 dark:bg-slate-800 dark:border-slate-700">
                       <div className="flex justify-between items-start mb-4">
                           <div className="flex gap-3 items-center">
                               {selectedBroadcast.isImportant && (
-                                  <span className="bg-red-100 text-red-600 px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1 border border-red-200 dark:bg-red-900/30 dark:border-red-900 dark:text-red-400">
-                                      <AlertTriangle size={12} /> Important
+                                  <span className="bg-red-100 text-red-600 px-2 py-1 md:px-3 rounded-full text-xs font-bold flex items-center gap-1 border border-red-200 dark:bg-red-900/30 dark:border-red-900 dark:text-red-400">
+                                      <AlertTriangle size={12} /> <span className="hidden md:inline">Important</span>
                                   </span>
                               )}
                               <span className="text-xs text-slate-400 font-mono">{new Date(selectedBroadcast.createdAt).toLocaleString()}</span>
@@ -65,7 +65,7 @@ const BroadcastInbox: React.FC<BroadcastInboxProps> = ({ currentUser, broadcasts
                           </button>
                       </div>
                       
-                      <h1 className="text-2xl md:text-3xl font-bold text-slate-900 mb-2 dark:text-white">{selectedBroadcast.title}</h1>
+                      <h1 className="text-xl md:text-3xl font-bold text-slate-900 mb-2 dark:text-white leading-tight">{selectedBroadcast.title}</h1>
                       
                       <div className="flex items-center gap-3 mt-4 pt-4 border-t border-slate-100 dark:border-slate-700">
                           <div className="w-10 h-10 bg-emerald-100 text-emerald-800 rounded-full flex items-center justify-center font-bold text-sm dark:bg-emerald-900 dark:text-emerald-300">
@@ -80,9 +80,9 @@ const BroadcastInbox: React.FC<BroadcastInboxProps> = ({ currentUser, broadcasts
               </div>
 
               {/* Content Body */}
-              <div className="bg-white p-8 rounded-2xl shadow-sm border border-slate-200 mb-6 dark:bg-slate-800 dark:border-slate-700">
+              <div className="bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-slate-200 mb-6 dark:bg-slate-800 dark:border-slate-700">
                   <div 
-                      className="prose prose-slate max-w-none dark:prose-invert [&_h1]:text-2xl [&_h2]:text-xl [&_p]:text-slate-600 dark:[&_p]:text-slate-300"
+                      className="prose prose-slate prose-sm md:prose-base max-w-none dark:prose-invert [&_h1]:text-2xl [&_h2]:text-xl [&_p]:text-slate-600 dark:[&_p]:text-slate-300"
                       dangerouslySetInnerHTML={{ __html: selectedBroadcast.content }}
                   />
               </div>
@@ -124,20 +124,25 @@ const BroadcastInbox: React.FC<BroadcastInboxProps> = ({ currentUser, broadcasts
     <div className="max-w-4xl mx-auto p-4 md:p-8 animate-fade-in pb-24">
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8">
-            <div>
-                <h1 className="text-3xl font-bold text-slate-900 font-heading dark:text-white flex items-center gap-3">
-                    Broadcast Inbox 
-                    <span className="bg-red-500 text-white text-xs px-2 py-1 rounded-full font-sans align-middle">{myBroadcasts.filter(b => !isRead(b.id)).length} New</span>
-                </h1>
-                <p className="text-slate-500 dark:text-slate-400 mt-1">Official announcements and updates from your team.</p>
+            <div className="flex items-center gap-3">
+                <button onClick={() => navigate(-1)} className="p-2 -ml-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 transition-colors">
+                    <ArrowLeft size={20} />
+                </button>
+                <div>
+                    <h1 className="text-xl md:text-3xl font-bold text-slate-900 font-heading dark:text-white flex items-center gap-3">
+                        Broadcasts
+                        <span className="bg-red-500 text-white text-xs px-2 py-1 rounded-full font-sans align-middle">{myBroadcasts.filter(b => !isRead(b.id)).length} New</span>
+                    </h1>
+                    <p className="text-slate-500 dark:text-slate-400 mt-1 text-xs md:text-sm">Official announcements and updates.</p>
+                </div>
             </div>
             
-            <div className="flex bg-slate-100 p-1 rounded-xl dark:bg-slate-800">
+            <div className="flex bg-slate-100 p-1 rounded-xl dark:bg-slate-800 overflow-x-auto no-scrollbar">
                 {(['ALL', 'IMPORTANT', 'BOOKMARKED'] as const).map(tab => (
                     <button
                         key={tab}
                         onClick={() => setActiveTab(tab)}
-                        className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${activeTab === tab ? 'bg-white shadow-sm text-slate-900 dark:bg-slate-700 dark:text-white' : 'text-slate-500 hover:text-slate-700 dark:text-slate-400'}`}
+                        className={`px-4 py-2 rounded-lg text-xs font-bold transition-all whitespace-nowrap ${activeTab === tab ? 'bg-white shadow-sm text-slate-900 dark:bg-slate-700 dark:text-white' : 'text-slate-500 hover:text-slate-700 dark:text-slate-400'}`}
                     >
                         {tab.charAt(0) + tab.slice(1).toLowerCase()}
                     </button>
@@ -164,10 +169,15 @@ const BroadcastInbox: React.FC<BroadcastInboxProps> = ({ currentUser, broadcasts
                             
                             <div className="flex-1 min-w-0">
                                 <div className="flex items-center gap-2 mb-1">
-                                    <h3 className={`text-lg font-bold truncate ${read ? 'text-slate-800 dark:text-slate-200' : 'text-slate-900 dark:text-white'}`}>
+                                    <h3 className={`text-base md:text-lg font-bold truncate ${read ? 'text-slate-800 dark:text-slate-200' : 'text-slate-900 dark:text-white'}`}>
                                         {broadcast.title}
                                     </h3>
-                                    {broadcast.isImportant && <span className="bg-red-100 text-red-700 text-[10px] font-bold px-2 py-0.5 rounded border border-red-200 dark:bg-red-900/30 dark:text-red-300 dark:border-red-800">IMPORTANT</span>}
+                                    {broadcast.isImportant && (
+                                        <span className="bg-red-100 text-red-700 text-[10px] font-bold px-2 py-0.5 rounded border border-red-200 dark:bg-red-900/30 dark:text-red-300 dark:border-red-800 flex items-center gap-1">
+                                            <AlertTriangle size={10} className="md:hidden" />
+                                            <span className="hidden md:inline">IMPORTANT</span>
+                                        </span>
+                                    )}
                                     {isBookmarked(broadcast.id) && <Bookmark size={14} className="text-yellow-500 fill-current" />}
                                 </div>
                                 

@@ -1014,11 +1014,11 @@ const MentorshipTools: React.FC<MentorshipToolsProps> = ({
                 else if (activeView === 'ASSIGNMENT_EDITOR') setActiveView('ASSIGNMENTS_LIST');
                 else if (activeView === 'ASSIGNMENTS_LIST') setActiveView('MENU');
                 else if (activeView === 'BROADCAST_HISTORY') setActiveView('MENU');
-                else navigate('/dashboard'); // Go back to dashboard from main menu
+                else navigate(-1); // Go back to dashboard/previous route
             }}
             className="flex items-center gap-2 text-slate-500 hover:text-emerald-600 mb-4 transition-colors font-medium text-sm dark:text-slate-400 dark:hover:text-emerald-400"
             >
-            <ArrowLeft size={16} /> {activeView === 'MENU' ? 'Dashboard' : 'Back'}
+            <ArrowLeft size={16} /> {activeView === 'MENU' ? 'Back' : 'Back'}
             </button>
             <h1 className="text-3xl font-bold text-slate-900 dark:text-white font-heading">Mentorship Tools</h1>
             <p className="text-slate-500 dark:text-slate-400 mt-1">Empower your team with advanced management features.</p>

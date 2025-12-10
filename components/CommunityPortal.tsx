@@ -1,5 +1,11 @@
-import React, { useState } from 'react';
-import { Student, CommunityPost, Cohort, UserRole, CommunityComment } from '../types';
+
+import React, { useState, useRef } from 'react';
+import { Student, CommunityPost, Cohort, UserRole, CommunityComment, Poll, PostMedia } from '../types';
+import { 
+  Globe, Users, Hash, Search, Image as ImageIcon, Video, BarChart2, 
+  Send, MoreHorizontal, Heart, MessageCircle, Share2, Pin, Trash2, 
+  Slash, Flag, X, Plus, CheckCircle, Smile 
+} from 'lucide-react';
 
 interface CommunityPortalProps {
   currentUser: Student;
@@ -8,53 +14,40 @@ interface CommunityPortalProps {
   onAddPost: (post: CommunityPost) => void;
   onAddComment: (postId: string, comment: CommunityComment) => void;
   onLikePost: (postId: string) => void;
+  // In a real app, these would be separate props or a context method
+  onUpdatePost?: (post: CommunityPost) => void; 
+  onDeletePost?: (postId: string) => void;
 }
 
-const CommunityPortal: React.FC<CommunityPortalProps> = ({ currentUser, posts, cohorts, onAddPost, onAddComment, onLikePost }) => {
+const CommunityPortal: React.FC<CommunityPortalProps> = ({ 
+  currentUser, 
+  posts, 
+  cohorts, 
+  onAddPost, 
+  onAddComment, 
+  onLikePost,
+  onUpdatePost,
+  onDeletePost
+}) => {
   // 'GLOBAL' or cohortId
   const [activeTab, setActiveTab] = useState<string>('GLOBAL');
-  const [newPostContent, setNewPostContent] = useState('');
-  const [newPostType, setNewPostType] = useState<'QUESTION' | 'WIN' | 'DISCUSSION' | 'ANNOUNCEMENT'>('DISCUSSION');
-  const [newPostTags, setNewPostTags] = useState<string[]>([]);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
-  // Filter logic
+  // Sorting: Pinned first, then Newest
   const visiblePosts = posts.filter(post => {
     if (activeTab === 'GLOBAL') return !post.cohortId; // Show global posts
     return post.cohortId === activeTab; // Show specific cohort posts
-  }).sort((a,b) => b.timestamp - a.timestamp);
+  }).sort((a,b) => {
+    if (a.isPinned && !b.isPinned) return -1;
+    if (!a.isPinned && b.isPinned) return 1;
+    return b.timestamp - a.timestamp;
+  });
 
   const myCohort = cohorts.find(c => c.id === currentUser.cohortId);
-  const isSponsorOrAdmin = currentUser.role === UserRole.SPONSOR || currentUser.role === UserRole.ADMIN || currentUser.role === UserRole.SUPER_ADMIN;
-  const isSuperAdmin = currentUser.role === UserRole.SUPER_ADMIN;
-
-  const handleCreatePost = () => {
-    if (!newPostContent.trim()) return;
-
-    const newPost: CommunityPost = {
-        id: `post_${Date.now()}`,
-        authorHandle: currentUser.handle,
-        authorName: currentUser.name,
-        authorRole: currentUser.role,
-        authorAvatar: currentUser.avatarUrl,
-        content: newPostContent,
-        type: newPostType,
-        tags: newPostTags,
-        likes: 0,
-        likedBy: [],
-        comments: [],
-        cohortId: activeTab === 'GLOBAL' ? undefined : activeTab,
-        timestamp: Date.now()
-    };
-
-    onAddPost(newPost);
-    setNewPostContent('');
-    setNewPostTags([]);
-    setNewPostType('DISCUSSION');
-  };
+  const isModerator = currentUser.role === UserRole.SPONSOR || currentUser.role === UserRole.ADMIN || currentUser.role === UserRole.SUPER_ADMIN;
 
   return (
-    <div className="flex flex-col md:flex-row gap-6 animate-fade-in relative">
+    <div className="flex flex-col md:flex-row gap-6 animate-fade-in relative min-h-screen bg-slate-50 dark:bg-slate-950">
       
       {/* Mobile Sidebar Overlay */}
       {isSidebarOpen && (
@@ -65,7 +58,6 @@ const CommunityPortal: React.FC<CommunityPortalProps> = ({ currentUser, posts, c
       )}
 
       {/* Sidebar Navigation */}
-      {/* Mobile: Fixed Drawer. Desktop: Sticky Sidebar */}
       <div className={`
           fixed inset-y-0 left-0 z-50 w-72 bg-white border-r border-slate-200 flex flex-col shadow-2xl transition-transform duration-300 ease-in-out
           md:translate-x-0 md:static md:z-0 md:shadow-none md:border-0 md:bg-transparent md:w-64 md:h-[calc(100vh-6rem)] md:sticky md:top-4 dark:bg-slate-900 dark:border-slate-800
@@ -73,43 +65,45 @@ const CommunityPortal: React.FC<CommunityPortalProps> = ({ currentUser, posts, c
       `}>
         <div className="p-6 border-b border-slate-100 md:hidden flex justify-between items-center dark:border-slate-800">
              <h2 className="font-bold text-lg text-emerald-900 font-heading flex items-center gap-2 dark:text-emerald-400">
-                <GlobeAltIcon /> Community
+                Community
              </h2>
              <button onClick={() => setIsSidebarOpen(false)} className="text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300">
-                <XMarkIcon />
+                <X />
              </button>
         </div>
 
-        {/* Desktop Sidebar Content Container */}
+        {/* Sidebar Content */}
         <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden flex-1 flex flex-col dark:bg-slate-800 dark:border-slate-700">
             <div className="p-4 border-b border-slate-100 hidden md:flex items-center gap-2 bg-slate-50 dark:bg-slate-900 dark:border-slate-700">
-                <GlobeAltIcon />
-                <span className="font-bold text-slate-700 font-heading dark:text-slate-200">Groups & Hubs</span>
+                <Globe size={18} className="text-emerald-600 dark:text-emerald-400" />
+                <span className="font-bold text-slate-700 font-heading dark:text-slate-200">Feeds</span>
             </div>
             
             <div className="p-2 space-y-1 flex-1 overflow-y-auto">
                 <button 
                     onClick={() => { setActiveTab('GLOBAL'); setIsSidebarOpen(false); }}
-                    className={`w-full text-left px-3 py-2.5 rounded-lg text-sm font-medium transition-all flex items-center gap-3 ${
+                    className={`w-full text-left px-3 py-3 rounded-lg text-sm font-medium transition-all flex items-center gap-3 ${
                         activeTab === 'GLOBAL' ? 'bg-emerald-50 text-emerald-700 border border-emerald-100 dark:bg-emerald-900/30 dark:text-emerald-400 dark:border-emerald-800' : 'text-slate-600 hover:bg-slate-50 dark:text-slate-400 dark:hover:bg-slate-700/50'
                     }`}
                 >
-                    <div className="w-8 h-8 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center shrink-0 dark:bg-blue-900/30 dark:text-blue-400"><HashtagIcon /></div>
-                    <span className="truncate">Global Hub</span>
+                    <div className="w-8 h-8 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center shrink-0 dark:bg-blue-900/30 dark:text-blue-400"><Hash size={16} /></div>
+                    <span className="truncate font-bold">Global Hub</span>
                 </button>
 
-                {/* My Cohort Section */}
-                <div className="mt-4 mb-1 px-3 text-[10px] font-bold text-slate-400 uppercase tracking-wider dark:text-slate-500">My Cohort</div>
+                <div className="mt-6 mb-2 px-3 text-[10px] font-bold text-slate-400 uppercase tracking-wider dark:text-slate-500 flex items-center gap-2">
+                    <Users size={12} /> Your Teams
+                </div>
+                
                 {myCohort ? (
                     <button 
                         onClick={() => { setActiveTab(myCohort.id); setIsSidebarOpen(false); }}
-                        className={`w-full text-left px-3 py-2.5 rounded-lg text-sm font-medium transition-all flex items-center gap-3 ${
+                        className={`w-full text-left px-3 py-3 rounded-lg text-sm font-medium transition-all flex items-center gap-3 ${
                             activeTab === myCohort.id ? 'bg-emerald-50 text-emerald-700 border border-emerald-100 dark:bg-emerald-900/30 dark:text-emerald-400 dark:border-emerald-800' : 'text-slate-600 hover:bg-slate-50 dark:text-slate-400 dark:hover:bg-slate-700/50'
                         }`}
                     >
-                        <div className="w-8 h-8 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center shrink-0 dark:bg-emerald-900/30 dark:text-emerald-400"><UserGroupIcon /></div>
+                        <div className="w-8 h-8 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center shrink-0 dark:bg-emerald-900/30 dark:text-emerald-400"><Users size={16} /></div>
                         <div className="min-w-0">
-                            <div className="truncate font-semibold">{myCohort.name}</div>
+                            <div className="truncate font-bold">{myCohort.name}</div>
                             <div className="text-[10px] text-slate-400 font-normal truncate dark:text-slate-500">Mentor: {myCohort.mentorHandle}</div>
                         </div>
                     </button>
@@ -117,10 +111,10 @@ const CommunityPortal: React.FC<CommunityPortalProps> = ({ currentUser, posts, c
                     <div className="px-3 py-2 text-xs text-slate-400 italic dark:text-slate-500">No active cohort.</div>
                 )}
 
-                {/* Admin/Sponsor View All Cohorts */}
-                {isSponsorOrAdmin && (
+                {/* Admin View All Cohorts */}
+                {isModerator && (
                     <>
-                        <div className="mt-4 mb-1 px-3 text-[10px] font-bold text-slate-400 uppercase tracking-wider dark:text-slate-500">All Cohorts (Admin)</div>
+                        <div className="mt-6 mb-2 px-3 text-[10px] font-bold text-slate-400 uppercase tracking-wider dark:text-slate-500">All Cohorts (Admin)</div>
                         {cohorts.filter(c => c.id !== currentUser.cohortId).map(c => (
                             <button 
                                 key={c.id}
@@ -129,8 +123,8 @@ const CommunityPortal: React.FC<CommunityPortalProps> = ({ currentUser, posts, c
                                     activeTab === c.id ? 'bg-emerald-50 text-emerald-700 border border-emerald-100 dark:bg-emerald-900/30 dark:text-emerald-400 dark:border-emerald-800' : 'text-slate-600 hover:bg-slate-50 dark:text-slate-400 dark:hover:bg-slate-700/50'
                                 }`}
                             >
-                                <div className="w-8 h-8 bg-slate-100 text-slate-500 rounded-full flex items-center justify-center shrink-0 dark:bg-slate-700 dark:text-slate-400"><UserGroupIcon /></div>
-                                <div className="truncate">{c.name}</div>
+                                <div className="w-6 h-6 bg-slate-100 text-slate-500 rounded-full flex items-center justify-center shrink-0 dark:bg-slate-700 dark:text-slate-400"><Users size={12} /></div>
+                                <div className="truncate text-xs">{c.name}</div>
                             </button>
                         ))}
                     </>
@@ -140,276 +134,489 @@ const CommunityPortal: React.FC<CommunityPortalProps> = ({ currentUser, posts, c
       </div>
 
       {/* Main Feed Area */}
-      <div className="flex-1 min-w-0">
-          {/* Mobile Header Trigger */}
+      <div className="flex-1 min-w-0 max-w-3xl">
+          {/* Mobile Header */}
           <div className="md:hidden mb-4 flex items-center justify-between bg-white p-4 rounded-xl shadow-sm border border-slate-200 dark:bg-slate-800 dark:border-slate-700">
              <div>
                 <h2 className="font-bold text-slate-800 font-heading dark:text-slate-100">
-                    {activeTab === 'GLOBAL' ? 'Global Hub' : 'My Cohort'}
+                    {activeTab === 'GLOBAL' ? 'Global Hub' : 'My Team'}
                 </h2>
-                <p className="text-xs text-slate-500 dark:text-slate-400">Tap menu to switch groups</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400">Tap to switch</p>
              </div>
              <button onClick={() => setIsSidebarOpen(true)} className="p-2 bg-slate-100 rounded-lg text-slate-600 dark:bg-slate-700 dark:text-slate-300">
-                 <Bars3Icon />
+                 <Users size={20} />
              </button>
-          </div>
-
-          {/* Header Card (Desktop mainly, but adaptable) */}
-          <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-6 relative overflow-hidden dark:bg-slate-800 dark:border-slate-700">
-               <div className="relative z-10">
-                    <h1 className="text-2xl font-bold text-emerald-900 font-heading mb-1 dark:text-emerald-400">
-                        {activeTab === 'GLOBAL' ? 'Global Community Hub' : cohorts.find(c => c.id === activeTab)?.name}
-                    </h1>
-                    <p className="text-slate-500 text-sm dark:text-slate-400">
-                        {activeTab === 'GLOBAL' 
-                            ? 'Connect with FBOs worldwide. Share wins, ask questions, and grow.' 
-                            : `Private cohort mentored by ${cohorts.find(c => c.id === activeTab)?.mentorHandle}`
-                        }
-                    </p>
-               </div>
-               <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-50 rounded-bl-full -mr-8 -mt-8 z-0 dark:bg-emerald-900/20"></div>
           </div>
 
           <div className="space-y-6">
               
-              {/* Create Post Box */}
-              {(activeTab !== 'GLOBAL' || isSuperAdmin) && (
-                  <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4 dark:bg-slate-800 dark:border-slate-700">
-                      <div className="flex gap-4">
-                          <div className="w-10 h-10 rounded-full bg-emerald-100 text-emerald-800 flex items-center justify-center font-bold text-sm flex-shrink-0 overflow-hidden border-2 border-white shadow-sm dark:bg-emerald-900 dark:text-emerald-300 dark:border-slate-600">
-                              {currentUser.avatarUrl ? <img src={currentUser.avatarUrl} className="w-full h-full object-cover" /> : currentUser.name.charAt(0)}
-                          </div>
-                          <div className="flex-1">
-                              <textarea 
-                                value={newPostContent}
-                                onChange={(e) => setNewPostContent(e.target.value)}
-                                placeholder={activeTab === 'GLOBAL' ? "Post an announcement..." : "What's on your mind? Ask a question or share a win..."}
-                                className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/20 min-h-[80px] resize-none text-slate-900 placeholder-slate-400 transition-all dark:bg-slate-900 dark:border-slate-600 dark:text-slate-100 dark:placeholder-slate-500"
-                              />
-                              <div className="flex flex-wrap justify-between items-center mt-3 gap-2">
-                                  <div className="flex gap-2 overflow-x-auto pb-1 no-scrollbar">
-                                      {/* Post Type Selectors */}
-                                      {activeTab !== 'GLOBAL' && (
-                                          <>
-                                            <button onClick={() => setNewPostType('QUESTION')} className={`text-xs px-3 py-1.5 rounded-full border font-medium transition-colors ${newPostType === 'QUESTION' ? 'bg-orange-50 border-orange-200 text-orange-700 dark:bg-orange-900/30 dark:border-orange-800 dark:text-orange-300' : 'border-slate-200 text-slate-500 hover:bg-slate-50 dark:border-slate-600 dark:text-slate-400 dark:hover:bg-slate-700'}`}>❓ Question</button>
-                                            <button onClick={() => setNewPostType('WIN')} className={`text-xs px-3 py-1.5 rounded-full border font-medium transition-colors ${newPostType === 'WIN' ? 'bg-green-50 border-green-200 text-green-700 dark:bg-green-900/30 dark:border-green-800 dark:text-green-300' : 'border-slate-200 text-slate-500 hover:bg-slate-50 dark:border-slate-600 dark:text-slate-400 dark:hover:bg-slate-700'}`}>🏆 Win</button>
-                                            <button onClick={() => setNewPostType('DISCUSSION')} className={`text-xs px-3 py-1.5 rounded-full border font-medium transition-colors ${newPostType === 'DISCUSSION' ? 'bg-blue-50 border-blue-200 text-blue-700 dark:bg-blue-900/30 dark:border-blue-800 dark:text-blue-300' : 'border-slate-200 text-slate-500 hover:bg-slate-50 dark:border-slate-600 dark:text-slate-400 dark:hover:bg-slate-700'}`}>💬 Discussion</button>
-                                          </>
-                                      )}
-                                      {isSuperAdmin && activeTab === 'GLOBAL' && (
-                                          <span className="text-xs px-3 py-1.5 rounded-full bg-red-50 text-red-700 border border-red-100 font-bold dark:bg-red-900/30 dark:text-red-300 dark:border-red-800">Announcement</span>
-                                      )}
-                                  </div>
-                                  <button 
-                                    onClick={handleCreatePost}
-                                    disabled={!newPostContent.trim()}
-                                    className="bg-emerald-600 text-white px-6 py-2 rounded-lg text-sm font-bold hover:bg-emerald-700 disabled:opacity-50 transition-all shadow-md hover:shadow-lg transform active:scale-95 ml-auto"
-                                  >
-                                      Post
-                                  </button>
-                              </div>
-                          </div>
-                      </div>
-                  </div>
-              )}
+              {/* Create Post Widget */}
+              <CreatePostWidget 
+                currentUser={currentUser} 
+                onPost={(post) => onAddPost({ ...post, cohortId: activeTab === 'GLOBAL' ? undefined : activeTab })}
+                activeFeedName={activeTab === 'GLOBAL' ? 'Global Hub' : 'Team Feed'}
+              />
 
-              {/* Posts List */}
-              {visiblePosts.length > 0 ? visiblePosts.map(post => (
-                  <PostItem key={post.id} post={post} currentUser={currentUser} onAddComment={onAddComment} onLikePost={onLikePost} />
-              )) : (
-                  <div className="text-center py-12 text-slate-400 bg-white rounded-xl border border-dashed border-slate-200 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-500">
-                      <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4 dark:bg-slate-700">
-                          <ChatBubbleBottomCenterTextIcon />
-                      </div>
-                      <p className="font-medium">No posts yet in this channel.</p>
-                      <p className="text-sm mt-1">Be the first to start the conversation!</p>
-                  </div>
-              )}
+              {/* Feed */}
+              <div className="space-y-6">
+                {visiblePosts.length > 0 ? visiblePosts.map(post => (
+                    <PostItem 
+                        key={post.id} 
+                        post={post} 
+                        currentUser={currentUser} 
+                        onAddComment={onAddComment} 
+                        onLikePost={onLikePost}
+                        isModerator={isModerator}
+                        onUpdatePost={onUpdatePost}
+                        onDeletePost={onDeletePost}
+                    />
+                )) : (
+                    <div className="text-center py-16 text-slate-400 bg-white rounded-2xl border-2 border-dashed border-slate-200 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-500">
+                        <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4 dark:bg-slate-700">
+                            <MessageCircle size={32} />
+                        </div>
+                        <p className="font-medium">No posts yet in this channel.</p>
+                        <p className="text-sm mt-1">Share a win or ask a question to start!</p>
+                    </div>
+                )}
+              </div>
               
-              {/* Spacer for mobile bottom nav area if needed */}
-              <div className="h-10 md:hidden"></div>
+              <div className="h-20"></div>
+          </div>
+      </div>
+
+      {/* Right Column (Desktop Only) - Trending / Tips */}
+      <div className="hidden xl:block w-80 shrink-0">
+          <div className="sticky top-6 space-y-6">
+              <div className="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 dark:bg-slate-800 dark:border-slate-700">
+                  <h3 className="font-bold text-slate-800 mb-4 dark:text-white flex items-center gap-2">
+                      <BarChart2 size={18} className="text-emerald-500" /> Community Stats
+                  </h3>
+                  <div className="space-y-3">
+                      <div className="flex justify-between text-sm">
+                          <span className="text-slate-500 dark:text-slate-400">Active Members</span>
+                          <span className="font-bold text-slate-900 dark:text-white">128</span>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                          <span className="text-slate-500 dark:text-slate-400">Total Posts</span>
+                          <span className="font-bold text-slate-900 dark:text-white">{posts.length}</span>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                          <span className="text-slate-500 dark:text-slate-400">Wins Celebrated</span>
+                          <span className="font-bold text-slate-900 dark:text-white">{posts.filter(p => p.type === 'WIN').length}</span>
+                      </div>
+                  </div>
+              </div>
+
+              <div className="bg-gradient-to-br from-indigo-900 to-slate-900 p-5 rounded-2xl shadow-lg text-white">
+                  <h3 className="font-bold mb-2">💡 Tip of the Day</h3>
+                  <p className="text-sm text-indigo-200 leading-relaxed">
+                      "Consistency beats intensity. Post one update or comment every day to build momentum."
+                  </p>
+              </div>
           </div>
       </div>
     </div>
   );
 };
 
-const PostItem: React.FC<{ post: CommunityPost; currentUser: Student; onAddComment: (id: string, c: CommunityComment) => void; onLikePost: (id: string) => void }> = ({ post, currentUser, onAddComment, onLikePost }) => {
-    const [commentText, setCommentText] = useState('');
+// --- SUB-COMPONENTS ---
+
+const CreatePostWidget: React.FC<{ 
+    currentUser: Student; 
+    onPost: (post: Omit<CommunityPost, 'cohortId'>) => void;
+    activeFeedName: string;
+}> = ({ currentUser, onPost, activeFeedName }) => {
+    const [content, setContent] = useState('');
+    const [activeMode, setActiveMode] = useState<'STATUS' | 'MEDIA' | 'POLL'>('STATUS');
+    const [postType, setPostType] = useState<CommunityPost['type']>('DISCUSSION');
+    const [mediaFiles, setMediaFiles] = useState<PostMedia[]>([]);
+    const [pollOptions, setPollOptions] = useState<string[]>(['', '']);
+    const fileInputRef = useRef<HTMLInputElement>(null);
+
+    const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files && e.target.files[0]) {
+            const file = e.target.files[0];
+            const reader = new FileReader();
+            reader.onload = (ev) => {
+                if(ev.target?.result) {
+                    setMediaFiles(prev => [...prev, {
+                        type: file.type.startsWith('video') ? 'VIDEO' : 'IMAGE',
+                        url: ev.target!.result as string
+                    }]);
+                }
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+
+    const handleSubmit = () => {
+        if (!content.trim() && mediaFiles.length === 0 && activeMode !== 'POLL') return;
+        if (activeMode === 'POLL' && (!content.trim() || pollOptions.some(o => !o.trim()))) return;
+
+        const newPost: any = { // Using any to bypass partial type creation complexity
+            id: `post_${Date.now()}`,
+            authorHandle: currentUser.handle,
+            authorName: currentUser.name,
+            authorRole: currentUser.role,
+            authorAvatar: currentUser.avatarUrl,
+            content,
+            type: postType,
+            tags: [],
+            likes: 0,
+            likedBy: [],
+            comments: [],
+            timestamp: Date.now(),
+            media: mediaFiles,
+        };
+
+        if (activeMode === 'POLL') {
+            newPost.poll = {
+                question: content, // Content acts as question
+                options: pollOptions.map((text, i) => ({ id: `opt_${i}`, text, votes: [] })),
+                isOpen: true
+            };
+            newPost.type = 'QUESTION'; // Force type
+        }
+
+        onPost(newPost);
+        
+        // Reset
+        setContent('');
+        setMediaFiles([]);
+        setPollOptions(['', '']);
+        setActiveMode('STATUS');
+        setPostType('DISCUSSION');
+    };
+
+    return (
+        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 dark:bg-slate-800 dark:border-slate-700">
+            {/* Header Tabs */}
+            <div className="flex gap-4 mb-4 border-b border-slate-100 pb-2 dark:border-slate-700">
+                <button 
+                    onClick={() => setActiveMode('STATUS')}
+                    className={`pb-2 text-sm font-bold transition-colors ${activeMode === 'STATUS' ? 'text-emerald-600 border-b-2 border-emerald-600' : 'text-slate-500 hover:text-slate-800 dark:text-slate-400'}`}
+                >
+                    Write Post
+                </button>
+                <button 
+                    onClick={() => setActiveMode('MEDIA')}
+                    className={`pb-2 text-sm font-bold transition-colors ${activeMode === 'MEDIA' ? 'text-emerald-600 border-b-2 border-emerald-600' : 'text-slate-500 hover:text-slate-800 dark:text-slate-400'}`}
+                >
+                    Photo/Video
+                </button>
+                <button 
+                    onClick={() => setActiveMode('POLL')}
+                    className={`pb-2 text-sm font-bold transition-colors ${activeMode === 'POLL' ? 'text-emerald-600 border-b-2 border-emerald-600' : 'text-slate-500 hover:text-slate-800 dark:text-slate-400'}`}
+                >
+                    Poll
+                </button>
+            </div>
+
+            <div className="flex gap-4">
+                <div className="w-10 h-10 rounded-full bg-emerald-100 text-emerald-800 flex items-center justify-center font-bold text-sm flex-shrink-0 border-2 border-white shadow-sm dark:bg-emerald-900 dark:text-emerald-300 dark:border-slate-600 overflow-hidden">
+                    {currentUser.avatarUrl ? <img src={currentUser.avatarUrl} className="w-full h-full object-cover"/> : currentUser.name.charAt(0)}
+                </div>
+                
+                <div className="flex-1">
+                    <textarea 
+                        value={content}
+                        onChange={(e) => setContent(e.target.value)}
+                        placeholder={activeMode === 'POLL' ? "Ask a question..." : `Share something with ${activeFeedName}...`}
+                        className="w-full bg-transparent border-none p-0 text-base focus:ring-0 resize-none h-20 placeholder-slate-400 text-slate-800 dark:text-white dark:placeholder-slate-600"
+                    />
+
+                    {/* Media Preview */}
+                    {mediaFiles.length > 0 && (
+                        <div className="flex gap-2 mb-4 overflow-x-auto pb-2">
+                            {mediaFiles.map((media, i) => (
+                                <div key={i} className="relative w-20 h-20 rounded-lg overflow-hidden border border-slate-200 shrink-0">
+                                    {media.type === 'VIDEO' ? <div className="bg-black w-full h-full flex items-center justify-center"><Video className="text-white" size={20}/></div> : <img src={media.url} className="w-full h-full object-cover"/>}
+                                    <button onClick={() => setMediaFiles(prev => prev.filter((_, idx) => idx !== i))} className="absolute top-0 right-0 bg-black/50 text-white p-0.5 rounded-bl"><X size={12}/></button>
+                                </div>
+                            ))}
+                            <button onClick={() => fileInputRef.current?.click()} className="w-20 h-20 rounded-lg border-2 border-dashed border-slate-300 flex items-center justify-center text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700"><Plus size={20}/></button>
+                        </div>
+                    )}
+
+                    {/* Poll Options */}
+                    {activeMode === 'POLL' && (
+                        <div className="space-y-2 mb-4 bg-slate-50 p-3 rounded-xl dark:bg-slate-900/50">
+                            {pollOptions.map((opt, i) => (
+                                <input 
+                                    key={i}
+                                    value={opt}
+                                    onChange={(e) => {
+                                        const newOpts = [...pollOptions];
+                                        newOpts[i] = e.target.value;
+                                        setPollOptions(newOpts);
+                                    }}
+                                    placeholder={`Option ${i + 1}`}
+                                    className="w-full p-2 text-sm border border-slate-200 rounded-lg dark:bg-slate-800 dark:border-slate-700 dark:text-white"
+                                />
+                            ))}
+                            <button onClick={() => setPollOptions([...pollOptions, ''])} className="text-xs font-bold text-emerald-600 hover:underline">+ Add Option</button>
+                        </div>
+                    )}
+
+                    <div className="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-slate-700 mt-2">
+                        {/* Category Pills */}
+                        <div className="flex gap-2 overflow-x-auto no-scrollbar max-w-[200px] md:max-w-none">
+                            {activeMode === 'MEDIA' && (
+                                <button onClick={() => fileInputRef.current?.click()} className="p-2 text-emerald-600 bg-emerald-50 rounded-lg hover:bg-emerald-100 transition-colors dark:bg-emerald-900/20 dark:text-emerald-400"><ImageIcon size={20} /></button>
+                            )}
+                            {activeMode !== 'POLL' && ['DISCUSSION', 'WIN', 'CHALLENGE', 'QUESTION', 'MOTIVATION'].map(type => (
+                                <button 
+                                    key={type}
+                                    onClick={() => setPostType(type as any)}
+                                    className={`px-3 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-colors border ${
+                                        postType === type 
+                                        ? 'bg-slate-800 text-white border-slate-800 dark:bg-white dark:text-slate-900' 
+                                        : 'bg-white text-slate-500 border-slate-200 hover:bg-slate-50 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-600'
+                                    }`}
+                                >
+                                    {type}
+                                </button>
+                            ))}
+                        </div>
+
+                        <button 
+                            onClick={handleSubmit}
+                            disabled={!content && mediaFiles.length === 0 && activeMode !== 'POLL'}
+                            className="bg-emerald-600 text-white px-6 py-2 rounded-full font-bold text-sm hover:bg-emerald-700 transition-all shadow-md disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                        >
+                            Post <Send size={14} />
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <input type="file" ref={fileInputRef} className="hidden" accept="image/*,video/*" onChange={handleFileSelect} />
+        </div>
+    );
+};
+
+const PostItem: React.FC<{ 
+    post: CommunityPost; 
+    currentUser: Student; 
+    onAddComment: (id: string, c: CommunityComment) => void; 
+    onLikePost: (id: string) => void;
+    isModerator: boolean;
+    onUpdatePost?: (post: CommunityPost) => void;
+    onDeletePost?: (id: string) => void;
+}> = ({ post, currentUser, onAddComment, onLikePost, isModerator, onUpdatePost, onDeletePost }) => {
     const [showComments, setShowComments] = useState(false);
+    const [commentText, setCommentText] = useState('');
+    const [showMenu, setShowMenu] = useState(false);
 
     const hasLiked = post.likedBy.includes(currentUser.handle);
 
-    const handleSubmitComment = (e: React.FormEvent) => {
-        e.preventDefault();
-        if(!commentText.trim()) return;
-        
-        onAddComment(post.id, {
-            id: `c_${Date.now()}`,
-            authorHandle: currentUser.handle,
-            authorName: currentUser.name,
-            authorAvatar: currentUser.avatarUrl,
-            content: commentText,
-            timestamp: Date.now()
+    const handleVote = (optionId: string) => {
+        if (!post.poll || !onUpdatePost) return;
+        // Logic to toggle vote
+        const newOptions = post.poll.options.map(opt => {
+            const hasVoted = opt.votes.includes(currentUser.handle);
+            if (opt.id === optionId) {
+                return { ...opt, votes: hasVoted ? opt.votes : [...opt.votes, currentUser.handle] };
+            } else {
+                // Single choice poll: Remove vote from other options
+                return { ...opt, votes: opt.votes.filter(h => h !== currentUser.handle) };
+            }
         });
-        setCommentText('');
-        setShowComments(true);
+        onUpdatePost({ ...post, poll: { ...post.poll, options: newOptions } });
     };
 
-    // Render badges
-    const getTypeBadge = () => {
-        switch(post.type) {
-            case 'ANNOUNCEMENT': return <span className="bg-red-100 text-red-700 text-[10px] font-bold px-2 py-1 rounded-full border border-red-200 dark:bg-red-900/30 dark:text-red-300 dark:border-red-800">ANNOUNCEMENT</span>;
-            case 'WIN': return <span className="bg-green-100 text-green-700 text-[10px] font-bold px-2 py-1 rounded-full border border-green-200 dark:bg-green-900/30 dark:text-green-300 dark:border-green-800">WIN 🏆</span>;
-            case 'QUESTION': return <span className="bg-orange-100 text-orange-700 text-[10px] font-bold px-2 py-1 rounded-full border border-orange-200 dark:bg-orange-900/30 dark:text-orange-300 dark:border-orange-800">QUESTION ❓</span>;
-            default: return null;
+    const handlePin = () => {
+        if (onUpdatePost) onUpdatePost({ ...post, isPinned: !post.isPinned });
+        setShowMenu(false);
+    };
+
+    const handleDelete = () => {
+        if (onDeletePost && window.confirm("Are you sure?")) onDeletePost(post.id);
+    };
+
+    const getTypeColor = (type: string) => {
+        switch(type) {
+            case 'WIN': return 'bg-yellow-100 text-yellow-800 border-yellow-200 dark:bg-yellow-900/30 dark:text-yellow-400 dark:border-yellow-800';
+            case 'CHALLENGE': return 'bg-red-100 text-red-800 border-red-200 dark:bg-red-900/30 dark:text-red-400 dark:border-red-800';
+            case 'QUESTION': return 'bg-orange-100 text-orange-800 border-orange-200 dark:bg-orange-900/30 dark:text-orange-400 dark:border-orange-800';
+            case 'MOTIVATION': return 'bg-purple-100 text-purple-800 border-purple-200 dark:bg-purple-900/30 dark:text-purple-400 dark:border-purple-800';
+            default: return 'bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-700 dark:text-slate-300 dark:border-slate-600';
         }
     };
 
     return (
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-5 transition-shadow hover:shadow-md dark:bg-slate-800 dark:border-slate-700">
-            <div className="flex items-start justify-between mb-3">
+        <div className={`bg-white rounded-2xl shadow-sm border border-slate-200 p-5 dark:bg-slate-800 dark:border-slate-700 transition-all hover:shadow-md ${post.isPinned ? 'ring-2 ring-emerald-500/20 bg-emerald-50/10' : ''}`}>
+            
+            {/* Header */}
+            <div className="flex justify-between items-start mb-3">
                 <div className="flex items-center gap-3">
-                     <div className="w-10 h-10 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center overflow-hidden shadow-sm dark:bg-slate-700 dark:border-slate-600">
+                    <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center overflow-hidden border border-slate-200 dark:bg-slate-700 dark:border-slate-600">
                         {post.authorAvatar ? <img src={post.authorAvatar} className="w-full h-full object-cover"/> : <span className="font-bold text-slate-500 dark:text-slate-300">{post.authorName.charAt(0)}</span>}
-                     </div>
-                     <div>
-                         <div className="flex items-center gap-2 flex-wrap">
-                            <h4 className="font-bold text-slate-800 text-sm dark:text-slate-100">{post.authorName}</h4>
-                            <span className={`text-[10px] px-1.5 py-0.5 rounded border font-medium ${post.authorRole === 'STUDENT' ? 'bg-slate-50 text-slate-500 border-slate-200 dark:bg-slate-700 dark:text-slate-300 dark:border-slate-600' : 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-300 dark:border-emerald-800'}`}>{post.authorRole}</span>
-                         </div>
-                         <p className="text-xs text-slate-400 dark:text-slate-500">{new Date(post.timestamp).toLocaleDateString()} at {new Date(post.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</p>
-                     </div>
+                    </div>
+                    <div>
+                        <div className="flex items-center gap-2">
+                            <h4 className="font-bold text-slate-900 text-sm dark:text-white">{post.authorName}</h4>
+                            <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold border uppercase ${getTypeColor(post.type)}`}>
+                                {post.type}
+                            </span>
+                        </div>
+                        <div className="flex items-center gap-2 text-xs text-slate-400">
+                            <span>{new Date(post.timestamp).toLocaleDateString()}</span>
+                            {post.isPinned && <span className="flex items-center gap-1 text-emerald-600 font-bold"><Pin size={10} fill="currentColor"/> Pinned</span>}
+                        </div>
+                    </div>
                 </div>
-                {getTypeBadge()}
+                
+                <div className="relative">
+                    {(isModerator || post.authorHandle === currentUser.handle) && (
+                        <button onClick={() => setShowMenu(!showMenu)} className="p-1 text-slate-400 hover:bg-slate-100 rounded-full dark:hover:bg-slate-700">
+                            <MoreHorizontal size={20} />
+                        </button>
+                    )}
+                    {showMenu && (
+                        <div className="absolute right-0 top-8 w-40 bg-white border border-slate-200 rounded-xl shadow-xl z-20 py-1 overflow-hidden dark:bg-slate-800 dark:border-slate-700">
+                            {isModerator && (
+                                <button onClick={handlePin} className="w-full text-left px-4 py-2 text-sm hover:bg-slate-50 flex items-center gap-2 dark:hover:bg-slate-700 dark:text-slate-300">
+                                    <Pin size={14} /> {post.isPinned ? 'Unpin' : 'Pin Post'}
+                                </button>
+                            )}
+                            <button onClick={handleDelete} className="w-full text-left px-4 py-2 text-sm hover:bg-red-50 text-red-600 flex items-center gap-2 dark:hover:bg-red-900/20">
+                                <Trash2 size={14} /> Delete
+                            </button>
+                        </div>
+                    )}
+                </div>
             </div>
-            
-            <p className="text-sm text-slate-800 leading-relaxed whitespace-pre-wrap mb-4 dark:text-slate-200">{post.content}</p>
-            
-            {/* Tags */}
-            {post.tags.length > 0 && (
-                <div className="flex gap-2 mb-4 flex-wrap">
-                    {post.tags.map(tag => (
-                        <span key={tag} className="text-xs text-slate-500 bg-slate-100 px-2 py-1 rounded-md border border-slate-200 dark:bg-slate-700 dark:border-slate-600 dark:text-slate-300">#{tag}</span>
-                    ))}
-                </div>
-            )}
+
+            {/* Content */}
+            <div className="mb-4">
+                <p className="text-sm text-slate-800 leading-relaxed whitespace-pre-wrap dark:text-slate-200">{post.content}</p>
+                
+                {/* Media Grid */}
+                {post.media && post.media.length > 0 && (
+                    <div className={`grid gap-2 mt-3 rounded-xl overflow-hidden ${post.media.length > 1 ? 'grid-cols-2' : 'grid-cols-1'}`}>
+                        {post.media.map((m, i) => (
+                            <div key={i} className="aspect-video bg-black relative">
+                                {m.type === 'VIDEO' ? (
+                                    <video src={m.url} controls className="w-full h-full object-contain" />
+                                ) : (
+                                    <img src={m.url} className="w-full h-full object-cover" />
+                                )}
+                            </div>
+                        ))}
+                    </div>
+                )}
+
+                {/* Poll */}
+                {post.poll && (
+                    <div className="mt-3 space-y-2 bg-slate-50 p-4 rounded-xl border border-slate-100 dark:bg-slate-700/30 dark:border-slate-700">
+                        {post.poll.options.map(opt => {
+                            const totalVotes = post.poll!.options.reduce((acc, o) => acc + o.votes.length, 0);
+                            const percent = totalVotes === 0 ? 0 : Math.round((opt.votes.length / totalVotes) * 100);
+                            const hasVoted = opt.votes.includes(currentUser.handle);
+
+                            return (
+                                <button 
+                                    key={opt.id}
+                                    onClick={() => handleVote(opt.id)}
+                                    className={`relative w-full text-left p-3 rounded-lg border transition-all overflow-hidden ${hasVoted ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20' : 'border-slate-200 bg-white hover:bg-slate-50 dark:bg-slate-800 dark:border-slate-600'}`}
+                                >
+                                    <div className="absolute top-0 left-0 bottom-0 bg-emerald-100 dark:bg-emerald-900/40 transition-all duration-500" style={{ width: `${percent}%` }}></div>
+                                    <div className="relative flex justify-between items-center z-10">
+                                        <span className="font-medium text-sm text-slate-800 dark:text-white">{opt.text}</span>
+                                        <span className="text-xs font-bold text-slate-500 dark:text-slate-300">{percent}%</span>
+                                    </div>
+                                </button>
+                            );
+                        })}
+                        <p className="text-xs text-slate-400 text-right mt-1">{post.poll.options.reduce((acc, o) => acc + o.votes.length, 0)} votes</p>
+                    </div>
+                )}
+            </div>
 
             {/* Actions */}
             <div className="flex items-center gap-6 pt-3 border-t border-slate-100 dark:border-slate-700">
-                 <button 
+                <button 
                     onClick={() => onLikePost(post.id)}
-                    className={`flex items-center gap-2 transition-all text-sm font-medium ${hasLiked ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-500 hover:text-emerald-600 dark:text-slate-400 dark:hover:text-emerald-400'}`}
-                 >
-                    <HeartIcon filled={hasLiked} /> 
-                    <span>{post.likes} {post.likes === 1 ? 'Like' : 'Likes'}</span>
-                 </button>
-                 <button onClick={() => setShowComments(!showComments)} className="flex items-center gap-2 text-slate-500 hover:text-blue-600 transition-colors text-sm font-medium dark:text-slate-400 dark:hover:text-blue-400">
-                    <ChatBubbleLeftIcon /> 
-                    <span>{post.comments.length} {post.comments.length === 1 ? 'Comment' : 'Comments'}</span>
-                 </button>
+                    className={`flex items-center gap-2 text-sm font-bold transition-colors ${hasLiked ? 'text-pink-500' : 'text-slate-500 hover:text-slate-800 dark:text-slate-400'}`}
+                >
+                    <Heart size={18} fill={hasLiked ? "currentColor" : "none"} /> {post.likes}
+                </button>
+                <button 
+                    onClick={() => setShowComments(!showComments)}
+                    className="flex items-center gap-2 text-sm font-bold text-slate-500 hover:text-blue-500 transition-colors dark:text-slate-400"
+                >
+                    <MessageCircle size={18} /> {post.comments.length}
+                </button>
+                <button className="flex items-center gap-2 text-sm font-bold text-slate-500 hover:text-emerald-600 transition-colors ml-auto dark:text-slate-400">
+                    <Share2 size={18} /> <span className="hidden sm:inline">Share</span>
+                </button>
             </div>
 
-            {/* Comments Section */}
+            {/* Comments */}
             {showComments && (
-                <div className="mt-4 pt-4 border-t border-slate-100 animate-fade-in dark:border-slate-700">
+                <div className="mt-4 pt-4 border-t border-slate-100 dark:border-slate-700 animate-fade-in">
                     <div className="space-y-4 mb-4">
-                        {post.comments.map(comment => (
-                            <div key={comment.id} className="flex gap-3 items-start">
-                                <div className="w-8 h-8 rounded-full bg-white border border-slate-200 flex items-center justify-center text-xs font-bold shrink-0 overflow-hidden shadow-sm dark:bg-slate-700 dark:border-slate-600 dark:text-slate-300">
-                                    {comment.authorAvatar ? <img src={comment.authorAvatar} className="w-full h-full object-cover"/> : comment.authorName.charAt(0)}
+                        {post.comments.map(c => (
+                            <div key={c.id} className="flex gap-3">
+                                <div className="w-8 h-8 rounded-full bg-slate-100 overflow-hidden flex items-center justify-center text-xs font-bold dark:bg-slate-700 dark:text-slate-300">
+                                    {c.authorAvatar ? <img src={c.authorAvatar} className="w-full h-full object-cover"/> : c.authorName.charAt(0)}
                                 </div>
-                                <div className="bg-slate-50 rounded-2xl rounded-tl-none p-3 border border-slate-100 flex-1 dark:bg-slate-700/50 dark:border-slate-600">
-                                    <div className="flex items-baseline justify-between mb-1">
-                                        <span className="text-xs font-bold text-slate-800 dark:text-slate-200">{comment.authorName}</span>
-                                        <span className="text-[10px] text-slate-400 dark:text-slate-500">{new Date(comment.timestamp).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</span>
+                                <div className="flex-1">
+                                    <div className="bg-slate-50 p-3 rounded-2xl rounded-tl-none dark:bg-slate-700/50">
+                                        <p className="text-xs font-bold text-slate-800 mb-0.5 dark:text-white">{c.authorName}</p>
+                                        <p className="text-sm text-slate-700 dark:text-slate-300">{c.content}</p>
                                     </div>
-                                    <p className="text-sm text-slate-700 leading-snug dark:text-slate-300">{comment.content}</p>
+                                    <div className="flex gap-3 mt-1 ml-1">
+                                        <button className="text-[10px] font-bold text-slate-400 hover:text-slate-600">Like</button>
+                                        <span className="text-[10px] text-slate-300">•</span>
+                                        <span className="text-[10px] text-slate-400">{new Date(c.timestamp).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</span>
+                                    </div>
                                 </div>
                             </div>
                         ))}
                     </div>
                     
-                    <form onSubmit={handleSubmitComment} className="flex gap-3 items-center">
-                         <div className="w-8 h-8 rounded-full bg-emerald-100 text-emerald-800 flex items-center justify-center font-bold text-xs shrink-0 border border-emerald-200 dark:bg-emerald-900 dark:text-emerald-300 dark:border-emerald-800">
-                            {currentUser.avatarUrl ? <img src={currentUser.avatarUrl} className="w-full h-full object-cover rounded-full" /> : currentUser.name.charAt(0)}
-                         </div>
-                        <div className="flex-1 relative">
-                            <input 
-                                type="text" 
-                                value={commentText}
-                                onChange={(e) => setCommentText(e.target.value)}
-                                className="w-full text-sm bg-slate-50 border border-slate-200 rounded-full pl-4 pr-12 py-2.5 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/20 text-slate-900 placeholder-slate-400 transition-all dark:bg-slate-900 dark:border-slate-600 dark:text-slate-100 dark:placeholder-slate-500"
-                                placeholder="Write a comment..."
-                            />
-                            <button 
-                                type="submit" 
-                                disabled={!commentText.trim()} 
-                                className="absolute right-2 top-1/2 -translate-y-1/2 text-emerald-600 p-1.5 hover:bg-emerald-50 rounded-full disabled:opacity-50 disabled:hover:bg-transparent transition-colors dark:text-emerald-400 dark:hover:bg-emerald-900/30"
-                            >
-                                <PaperAirplaneIcon />
-                            </button>
-                        </div>
-                    </form>
+                    {!post.commentsDisabled ? (
+                        <form 
+                            onSubmit={(e) => {
+                                e.preventDefault();
+                                if(!commentText.trim()) return;
+                                onAddComment(post.id, {
+                                    id: `c_${Date.now()}`,
+                                    authorHandle: currentUser.handle,
+                                    authorName: currentUser.name,
+                                    authorAvatar: currentUser.avatarUrl,
+                                    content: commentText,
+                                    timestamp: Date.now()
+                                });
+                                setCommentText('');
+                            }}
+                            className="flex gap-2"
+                        >
+                            <div className="w-8 h-8 rounded-full bg-emerald-100 text-emerald-800 flex items-center justify-center font-bold text-xs shrink-0 dark:bg-emerald-900 dark:text-emerald-300">
+                                {currentUser.name.charAt(0)}
+                            </div>
+                            <div className="flex-1 relative">
+                                <input 
+                                    type="text" 
+                                    value={commentText}
+                                    onChange={(e) => setCommentText(e.target.value)}
+                                    placeholder="Write a comment..." 
+                                    className="w-full bg-slate-50 border border-slate-200 rounded-full py-2 px-4 text-sm focus:outline-none focus:border-emerald-500 pr-10 dark:bg-slate-800 dark:border-slate-700 dark:text-white"
+                                />
+                                <button type="submit" disabled={!commentText.trim()} className="absolute right-2 top-1/2 -translate-y-1/2 text-emerald-600 disabled:opacity-50 hover:scale-110 transition-transform">
+                                    <Send size={16} />
+                                </button>
+                            </div>
+                        </form>
+                    ) : (
+                        <p className="text-center text-xs text-slate-400 italic">Comments are disabled for this post.</p>
+                    )}
                 </div>
             )}
         </div>
     );
 };
-
-// Icons
-const GlobeAltIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
-        <path strokeLinecap="round" strokeLinejoin="round" d="M12 21a9.004 9.004 0 008.716-6.747M12 21a9.004 9.004 0 01-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S12 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S12 3 12 3m0 0a8.997 8.997 0 017.843 4.582M12 3a8.997 8.997 0 00-7.843 4.582m15.686 0A11.953 11.953 0 0112 10.5c-2.998 0-5.74-1.1-7.843-2.918m15.686 0A8.959 8.959 0 0121 12c0 .778-.099 1.533-.284 2.253m0 0A17.919 17.919 0 0112 16.5c-3.162 0-6.133-.815-8.716-2.247m0 0A9.015 9.015 0 013 12c0-1.605.42-3.113 1.157-4.418" />
-    </svg>
-);
-
-const UserGroupIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
-        <path strokeLinecap="round" strokeLinejoin="round" d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m.94 3.198l.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0112 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 016 18.719m12 0a5.971 5.971 0 00-.941-3.197m0 0A5.995 5.995 0 0012 12.75a5.995 5.995 0 00-5.058 2.772m0 0a3 3 0 00-4.681 2.72 8.986 8.986 0 003.74.477m.94-3.197a5.971 5.971 0 00-.94 3.197M15 6.75a3 3 0 11-6 0 3 3 0 016 0zm6 3a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0zm-13.5 0a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z" />
-    </svg>
-);
-
-const HashtagIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
-        <path strokeLinecap="round" strokeLinejoin="round" d="M5.25 8.25h15m-16.5 7.5h15m-1.8-13.5l-3.9 19.5m-2.1-19.5l-3.9 19.5" />
-    </svg>
-);
-
-const ChatBubbleBottomCenterTextIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-8 h-8">
-        <path strokeLinecap="round" strokeLinejoin="round" d="M7.5 8.25h9m-9 3H12m-9.75 1.51c0 1.6 1.123 2.994 2.707 3.227 1.129.166 2.27.293 3.423.379.35.026.67.21.865.501L12 21l2.755-4.133a1.14 1.14 0 01.865-.501 48.172 48.172 0 003.423-.379c1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0012 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018z" />
-    </svg>
-);
-
-const HeartIcon = ({ filled }: { filled?: boolean }) => (
-    <svg xmlns="http://www.w3.org/2000/svg" fill={filled ? "currentColor" : "none"} viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
-        <path strokeLinecap="round" strokeLinejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
-    </svg>
-);
-
-const ChatBubbleLeftIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
-        <path strokeLinecap="round" strokeLinejoin="round" d="M7.5 8.25h9m-9 3H12m-9.75 1.51c0 1.6 1.123 2.994 2.707 3.227 1.129.166 2.27.293 3.423.379.35.026.67.21.865.501L12 21l2.755-4.133a1.14 1.14 0 01.865-.501 48.172 48.172 0 003.423-.379c1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0012 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018z" />
-    </svg>
-);
-
-const Bars3Icon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
-    <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
-  </svg>
-);
-
-const XMarkIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
-    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-  </svg>
-);
-
-const PaperAirplaneIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4">
-        <path d="M3.478 2.405a.75.75 0 00-.926.94l2.432 7.905H13.5a.75.75 0 010 1.5H4.984l-2.432 7.905a.75.75 0 00.926.94 60.519 60.519 0 0018.445-8.986.75.75 0 000-1.218A60.517 60.517 0 003.478 2.405z" />
-    </svg>
-);
 
 export default CommunityPortal;

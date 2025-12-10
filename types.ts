@@ -196,8 +196,8 @@ export interface Student {
   enrolledCourses: string[];
   savedCourses: string[];
   viewedTemplates?: string[];
-  readBroadcasts?: string[]; // New: IDs of read broadcasts
-  bookmarkedBroadcasts?: string[]; // New: IDs of bookmarked broadcasts
+  readBroadcasts?: string[];
+  bookmarkedBroadcasts?: string[];
   caseCredits: number;
   rankProgress?: RankProgress;
   sponsorId: string;
@@ -245,6 +245,24 @@ export interface CommunityComment {
   authorAvatar?: string;
   content: string;
   timestamp: number;
+  likes?: number; // Added likes to comments
+}
+
+export interface PollOption {
+  id: string;
+  text: string;
+  votes: string[]; // Array of user handles who voted
+}
+
+export interface Poll {
+  question: string;
+  options: PollOption[];
+  isOpen: boolean;
+}
+
+export interface PostMedia {
+  type: 'IMAGE' | 'VIDEO';
+  url: string;
 }
 
 export interface CommunityPost {
@@ -254,13 +272,22 @@ export interface CommunityPost {
   authorRole: UserRole;
   authorAvatar?: string;
   content: string;
-  type: 'QUESTION' | 'WIN' | 'DISCUSSION' | 'ANNOUNCEMENT';
+  // Expanded types
+  type: 'QUESTION' | 'WIN' | 'CHALLENGE' | 'DISCUSSION' | 'ANNOUNCEMENT' | 'PRODUCT_TIPP' | 'MOTIVATION';
   tags: string[];
   likedBy: string[];
   likes: number;
   comments: CommunityComment[];
-  cohortId?: string;
+  cohortId?: string; // If undefined, it's global
   timestamp: number;
+  
+  // New Features
+  media?: PostMedia[];
+  poll?: Poll;
+  isPinned?: boolean;
+  commentsDisabled?: boolean;
+  shares?: number;
+  mentions?: string[]; // Array of handles mentioned
 }
 
 export interface Cohort {

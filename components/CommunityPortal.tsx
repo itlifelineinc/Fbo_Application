@@ -5,7 +5,7 @@ import {
   Globe, Users, Hash, Search, Image as ImageIcon, Video, BarChart2, 
   Send, MoreHorizontal, Heart, MessageCircle, Share2, Pin, Trash2, 
   Slash, Flag, X, Plus, CheckCircle, Smile, Tag, XCircle, Lock, Settings, 
-  Shield, UserPlus, Clock, LayoutList, Info, Calendar, Eye
+  Shield, UserPlus, Clock, LayoutList, Info, Calendar, Eye, ArrowLeft, BookOpen, AlertCircle
 } from 'lucide-react';
 
 interface CommunityPortalProps {
@@ -18,6 +18,7 @@ interface CommunityPortalProps {
   onLikePost: (postId: string) => void;
   onUpdatePost?: (post: CommunityPost) => void; 
   onDeletePost?: (postId: string) => void;
+  onCreateCohort: (cohort: Cohort) => void;
 }
 
 const CommunityPortal: React.FC<CommunityPortalProps> = ({ 
@@ -29,11 +30,19 @@ const CommunityPortal: React.FC<CommunityPortalProps> = ({
   onAddComment, 
   onLikePost,
   onUpdatePost,
-  onDeletePost
+  onDeletePost,
+  onCreateCohort
 }) => {
   // 'GLOBAL' or cohortId
   const [activeTab, setActiveTab] = useState<string>('GLOBAL');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isCreateCohortModalOpen, setIsCreateCohortModalOpen] = useState(false);
+  
+  // Create Modal State
+  const [newCohortName, setNewCohortName] = useState('');
+  const [newCohortDesc, setNewCohortDesc] = useState('');
+  const [newCohortCover, setNewCohortCover] = useState('');
+  const coverInputRef = useRef<HTMLInputElement>(null);
 
   // Sorting: Pinned first, then Newest
   const visiblePosts = posts.filter(post => {
@@ -47,6 +56,7 @@ const CommunityPortal: React.FC<CommunityPortalProps> = ({
 
   const myCohort = cohorts.find(c => c.id === currentUser.cohortId);
   const isGlobalAdmin = currentUser.role === UserRole.ADMIN || currentUser.role === UserRole.SUPER_ADMIN;
+  const canCreateCohort = currentUser.role === UserRole.SPONSOR || isGlobalAdmin;
 
   // Active Cohort Details
   const activeCohortDetails = activeTab !== 'GLOBAL' ? cohorts.find(c => c.id === activeTab) : null;
@@ -56,6 +66,40 @@ const CommunityPortal: React.FC<CommunityPortalProps> = ({
   const isCohortAdmin = activeCohortDetails && (currentUser.handle === activeCohortDetails.mentorHandle || isGlobalAdmin);
   
   const isModerator = activeTab === 'GLOBAL' ? isGlobalAdmin : !!isCohortAdmin;
+
+  const handleCreateSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newCohortName.trim()) return;
+    
+    const newCohort: Cohort = {
+        id: `cohort_${Date.now()}`,
+        name: newCohortName,
+        description: newCohortDesc,
+        mentorHandle: currentUser.handle,
+        coverImage: newCohortCover // Add cover image
+    };
+    
+    onCreateCohort(newCohort);
+    setIsCreateCohortModalOpen(false);
+    
+    // Reset
+    setNewCohortName('');
+    setNewCohortDesc('');
+    setNewCohortCover('');
+    
+    setActiveTab(newCohort.id);
+  };
+
+  const handleCoverUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      if (file) {
+          const reader = new FileReader();
+          reader.onloadend = () => {
+              setNewCohortCover(reader.result as string);
+          };
+          reader.readAsDataURL(file);
+      }
+  };
 
   return (
     <div className="flex flex-col md:flex-row gap-6 animate-fade-in relative min-h-screen bg-slate-50 dark:bg-slate-950">
@@ -86,91 +130,116 @@ const CommunityPortal: React.FC<CommunityPortalProps> = ({
         {/* Sidebar Content */}
         <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden flex-1 flex flex-col dark:bg-slate-800 dark:border-slate-700">
             
-            {/* Logic: If inside a Cohort and User is Admin, show Admin Tools first */}
-            {activeTab !== 'GLOBAL' && isCohortAdmin ? (
+            {/* Logic: If inside a Cohort, show Back Button & Admin Tools. Else show Global Nav */}
+            {activeTab !== 'GLOBAL' && activeCohortDetails ? (
                 <>
-                    <div className="p-4 border-b border-slate-100 bg-emerald-50 dark:bg-emerald-900/10 dark:border-slate-700">
-                        <div className="flex items-center gap-2 text-emerald-800 dark:text-emerald-400 mb-1">
-                            <Shield size={18} />
-                            <span className="font-bold font-heading">Manage Group</span>
-                        </div>
-                        <p className="text-[10px] text-emerald-600/80 dark:text-emerald-500">Admin Tools</p>
-                    </div>
-                    <div className="p-2 space-y-1">
-                        <button className="w-full text-left px-3 py-2.5 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-50 flex items-center gap-3 transition-colors dark:text-slate-300 dark:hover:bg-slate-700/50">
-                            <UserPlus size={16} className="text-slate-400"/> Member Requests
-                        </button>
-                        <button className="w-full text-left px-3 py-2.5 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-50 flex items-center gap-3 transition-colors dark:text-slate-300 dark:hover:bg-slate-700/50">
-                            <Clock size={16} className="text-slate-400"/> Scheduled Posts
-                        </button>
-                        <button className="w-full text-left px-3 py-2.5 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-50 flex items-center gap-3 transition-colors dark:text-slate-300 dark:hover:bg-slate-700/50">
-                            <Flag size={16} className="text-slate-400"/> Member Reported
-                        </button>
-                        <button className="w-full text-left px-3 py-2.5 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-50 flex items-center gap-3 transition-colors dark:text-slate-300 dark:hover:bg-slate-700/50">
-                            <Settings size={16} className="text-slate-400"/> Group Settings
+                    <div className="p-4 border-b border-slate-100 bg-slate-50 dark:bg-slate-900/50 dark:border-slate-700">
+                        <button 
+                            onClick={() => setActiveTab('GLOBAL')}
+                            className="flex items-center gap-2 text-sm font-bold text-slate-600 hover:text-emerald-600 transition-colors dark:text-slate-300 dark:hover:text-emerald-400"
+                        >
+                            <ArrowLeft size={16} /> Back to For You
                         </button>
                     </div>
-                    <div className="h-px bg-slate-100 mx-4 my-2 dark:bg-slate-700"></div>
+
+                    {isCohortAdmin && (
+                        <>
+                            <div className="p-4 border-b border-slate-100 bg-emerald-50 dark:bg-emerald-900/10 dark:border-slate-700">
+                                <div className="flex items-center gap-2 text-emerald-800 dark:text-emerald-400 mb-1">
+                                    <Shield size={18} />
+                                    <span className="font-bold font-heading">Manage Cohort</span>
+                                </div>
+                                <p className="text-[10px] text-emerald-600/80 dark:text-emerald-500">Admin Tools</p>
+                            </div>
+                            <div className="p-2 space-y-1">
+                                <button className="w-full text-left px-3 py-2.5 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-50 flex items-center gap-3 transition-colors dark:text-slate-300 dark:hover:bg-slate-700/50">
+                                    <UserPlus size={16} className="text-slate-400"/> Member Requests
+                                </button>
+                                <button className="w-full text-left px-3 py-2.5 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-50 flex items-center gap-3 transition-colors dark:text-slate-300 dark:hover:bg-slate-700/50">
+                                    <Clock size={16} className="text-slate-400"/> Scheduled Posts
+                                </button>
+                                <button className="w-full text-left px-3 py-2.5 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-50 flex items-center gap-3 transition-colors dark:text-slate-300 dark:hover:bg-slate-700/50">
+                                    <Flag size={16} className="text-slate-400"/> Member Reported
+                                </button>
+                                <button className="w-full text-left px-3 py-2.5 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-50 flex items-center gap-3 transition-colors dark:text-slate-300 dark:hover:bg-slate-700/50">
+                                    <BookOpen size={16} className="text-slate-400"/> Cohort Rules
+                                </button>
+                                <button className="w-full text-left px-3 py-2.5 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-50 flex items-center gap-3 transition-colors dark:text-slate-300 dark:hover:bg-slate-700/50">
+                                    <BarChart2 size={16} className="text-slate-400"/> Analytics
+                                </button>
+                                <button className="w-full text-left px-3 py-2.5 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-50 flex items-center gap-3 transition-colors dark:text-slate-300 dark:hover:bg-slate-700/50">
+                                    <Settings size={16} className="text-slate-400"/> Group Settings
+                                </button>
+                            </div>
+                        </>
+                    )}
                 </>
-            ) : null}
+            ) : (
+                <>
+                    {/* Standard Navigation (For You & List) */}
+                    <div className="p-4 border-b border-slate-100 hidden md:flex items-center gap-2 bg-slate-50 dark:bg-slate-900 dark:border-slate-700">
+                        <Globe size={18} className="text-emerald-600 dark:text-emerald-400" />
+                        <span className="font-bold text-slate-700 font-heading dark:text-slate-200">Feeds</span>
+                    </div>
+                    
+                    <div className="p-2 space-y-1 flex-1 overflow-y-auto">
+                        <button 
+                            onClick={() => { setActiveTab('GLOBAL'); setIsSidebarOpen(false); }}
+                            className={`w-full text-left px-3 py-3 rounded-lg text-sm font-medium transition-all flex items-center gap-3 ${
+                                activeTab === 'GLOBAL' ? 'bg-emerald-50 text-emerald-700 border border-emerald-100 dark:bg-emerald-900/30 dark:text-emerald-400 dark:border-emerald-800' : 'text-slate-600 hover:bg-slate-50 dark:text-slate-400 dark:hover:bg-slate-700/50'
+                            }`}
+                        >
+                            <div className="w-8 h-8 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center shrink-0 dark:bg-blue-900/30 dark:text-blue-400"><Hash size={16} /></div>
+                            <span className="truncate font-bold">For You</span>
+                        </button>
 
-            {/* Standard Navigation (Always visible but context aware) */}
-            <div className="p-4 border-b border-slate-100 hidden md:flex items-center gap-2 bg-slate-50 dark:bg-slate-900 dark:border-slate-700">
-                <Globe size={18} className="text-emerald-600 dark:text-emerald-400" />
-                <span className="font-bold text-slate-700 font-heading dark:text-slate-200">Shortcuts</span>
-            </div>
-            
-            <div className="p-2 space-y-1 flex-1 overflow-y-auto">
-                <button 
-                    onClick={() => { setActiveTab('GLOBAL'); setIsSidebarOpen(false); }}
-                    className={`w-full text-left px-3 py-3 rounded-lg text-sm font-medium transition-all flex items-center gap-3 ${
-                        activeTab === 'GLOBAL' ? 'bg-emerald-50 text-emerald-700 border border-emerald-100 dark:bg-emerald-900/30 dark:text-emerald-400 dark:border-emerald-800' : 'text-slate-600 hover:bg-slate-50 dark:text-slate-400 dark:hover:bg-slate-700/50'
-                    }`}
-                >
-                    <div className="w-8 h-8 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center shrink-0 dark:bg-blue-900/30 dark:text-blue-400"><Hash size={16} /></div>
-                    <span className="truncate font-bold">Global Hub</span>
-                </button>
-
-                <div className="mt-6 mb-2 px-3 text-[10px] font-bold text-slate-400 uppercase tracking-wider dark:text-slate-500 flex items-center gap-2">
-                    <Users size={12} /> Your Teams
-                </div>
-                
-                {myCohort ? (
-                    <button 
-                        onClick={() => { setActiveTab(myCohort.id); setIsSidebarOpen(false); }}
-                        className={`w-full text-left px-3 py-3 rounded-lg text-sm font-medium transition-all flex items-center gap-3 ${
-                            activeTab === myCohort.id ? 'bg-emerald-50 text-emerald-700 border border-emerald-100 dark:bg-emerald-900/30 dark:text-emerald-400 dark:border-emerald-800' : 'text-slate-600 hover:bg-slate-50 dark:text-slate-400 dark:hover:bg-slate-700/50'
-                        }`}
-                    >
-                        <div className="w-8 h-8 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center shrink-0 dark:bg-emerald-900/30 dark:text-emerald-400"><Users size={16} /></div>
-                        <div className="min-w-0">
-                            <div className="truncate font-bold">{myCohort.name}</div>
-                            <div className="text-[10px] text-slate-400 font-normal truncate dark:text-slate-500">Mentor: {myCohort.mentorHandle}</div>
+                        <div className="mt-6 mb-2 px-3 flex justify-between items-center text-[10px] font-bold text-slate-400 uppercase tracking-wider dark:text-slate-500">
+                            <div className="flex items-center gap-2"><Users size={12} /> Your Teams</div>
+                            {canCreateCohort && (
+                                <button 
+                                    onClick={() => setIsCreateCohortModalOpen(true)}
+                                    className="p-1 hover:bg-slate-100 rounded dark:hover:bg-slate-700 text-emerald-600 dark:text-emerald-400 transition-colors"
+                                    title="Create Cohort"
+                                >
+                                    <Plus size={12} />
+                                </button>
+                            )}
                         </div>
-                    </button>
-                ) : (
-                    <div className="px-3 py-2 text-xs text-slate-400 italic dark:text-slate-500">No active cohort.</div>
-                )}
-
-                {/* Admin View All Cohorts */}
-                {isGlobalAdmin && (
-                    <>
-                        <div className="mt-6 mb-2 px-3 text-[10px] font-bold text-slate-400 uppercase tracking-wider dark:text-slate-500">All Cohorts (Admin)</div>
-                        {cohorts.filter(c => c.id !== currentUser.cohortId).map(c => (
+                        
+                        {myCohort ? (
                             <button 
-                                key={c.id}
-                                onClick={() => { setActiveTab(c.id); setIsSidebarOpen(false); }}
-                                className={`w-full text-left px-3 py-2.5 rounded-lg text-sm font-medium transition-all flex items-center gap-3 ${
-                                    activeTab === c.id ? 'bg-emerald-50 text-emerald-700 border border-emerald-100 dark:bg-emerald-900/30 dark:text-emerald-400 dark:border-emerald-800' : 'text-slate-600 hover:bg-slate-50 dark:text-slate-400 dark:hover:bg-slate-700/50'
-                                }`}
+                                onClick={() => { setActiveTab(myCohort.id); setIsSidebarOpen(false); }}
+                                className="w-full text-left px-3 py-3 rounded-lg text-sm font-medium transition-all flex items-center gap-3 text-slate-600 hover:bg-slate-50 dark:text-slate-400 dark:hover:bg-slate-700/50"
                             >
-                                <div className="w-6 h-6 bg-slate-100 text-slate-500 rounded-full flex items-center justify-center shrink-0 dark:bg-slate-700 dark:text-slate-400"><Users size={12} /></div>
-                                <div className="truncate text-xs">{c.name}</div>
+                                <div className="w-8 h-8 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center shrink-0 dark:bg-emerald-900/30 dark:text-emerald-400"><Users size={16} /></div>
+                                <div className="min-w-0">
+                                    <div className="truncate font-bold">{myCohort.name}</div>
+                                    <div className="text-[10px] text-slate-400 font-normal truncate dark:text-slate-500">Mentor: {myCohort.mentorHandle}</div>
+                                </div>
                             </button>
-                        ))}
-                    </>
-                )}
-            </div>
+                        ) : (
+                            <div className="px-3 py-2 text-xs text-slate-400 italic dark:text-slate-500">No active cohort.</div>
+                        )}
+
+                        {/* Admin View All Cohorts */}
+                        {isGlobalAdmin && (
+                            <>
+                                <div className="mt-6 mb-2 px-3 text-[10px] font-bold text-slate-400 uppercase tracking-wider dark:text-slate-500">All Cohorts (Admin)</div>
+                                {cohorts.filter(c => c.id !== currentUser.cohortId).map(c => (
+                                    <button 
+                                        key={c.id}
+                                        onClick={() => { setActiveTab(c.id); setIsSidebarOpen(false); }}
+                                        className="w-full text-left px-3 py-2.5 rounded-lg text-sm font-medium transition-all flex items-center gap-3 text-slate-600 hover:bg-slate-50 dark:text-slate-400 dark:hover:bg-slate-700/50"
+                                    >
+                                        <div className="w-6 h-6 bg-slate-100 text-slate-500 rounded-full flex items-center justify-center shrink-0 dark:bg-slate-700 dark:text-slate-400"><Users size={12} /></div>
+                                        <div className="truncate text-xs">{c.name}</div>
+                                    </button>
+                                ))}
+                            </>
+                        )}
+                    </div>
+                </>
+            )}
         </div>
       </div>
 
@@ -180,7 +249,7 @@ const CommunityPortal: React.FC<CommunityPortalProps> = ({
           <div className="md:hidden mb-4 flex items-center justify-between bg-white p-4 rounded-xl shadow-sm border border-slate-200 dark:bg-slate-800 dark:border-slate-700">
              <div>
                 <h2 className="font-bold text-slate-800 font-heading dark:text-slate-100">
-                    {activeTab === 'GLOBAL' ? 'Global Hub' : 'My Team'}
+                    {activeTab === 'GLOBAL' ? 'For You' : activeCohortDetails?.name || 'My Team'}
                 </h2>
                 <p className="text-xs text-slate-500 dark:text-slate-400">Tap to switch</p>
              </div>
@@ -193,10 +262,12 @@ const CommunityPortal: React.FC<CommunityPortalProps> = ({
               
               {/* Cohort Group Header (Facebook Style) */}
               {activeCohortDetails && (
-                  <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden dark:bg-slate-800 dark:border-slate-700">
-                      <div className="h-32 bg-gradient-to-r from-emerald-600 to-teal-500 relative">
-                          <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-black/60 to-transparent">
-                              <h1 className="text-2xl font-bold text-white font-heading shadow-sm">{activeCohortDetails.name}</h1>
+                  <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden dark:bg-slate-800 dark:border-slate-700 group">
+                      <div className="h-40 md:h-56 bg-gradient-to-r from-emerald-600 to-teal-500 relative bg-cover bg-center" style={activeCohortDetails.coverImage ? { backgroundImage: `url(${activeCohortDetails.coverImage})` } : {}}>
+                          {/* Gradient Overlay for Text Readability */}
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent"></div>
+                          <div className="absolute bottom-0 left-0 right-0 p-6">
+                              <h1 className="text-2xl md:text-3xl font-bold text-white font-heading shadow-sm">{activeCohortDetails.name}</h1>
                           </div>
                       </div>
                       <div className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -337,6 +408,96 @@ const CommunityPortal: React.FC<CommunityPortalProps> = ({
               </div>
           </div>
       </div>
+
+      {/* Create Cohort Modal */}
+      {isCreateCohortModalOpen && (
+          <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
+              <div className="bg-white dark:bg-slate-800 w-full max-w-lg rounded-2xl shadow-xl overflow-hidden flex flex-col max-h-[90vh] animate-fade-in border border-slate-200 dark:border-slate-700">
+                  <div className="px-6 py-4 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-slate-50 dark:bg-slate-900">
+                      <h3 className="font-bold text-xl text-slate-900 dark:text-white">Create New Cohort</h3>
+                      <button onClick={() => setIsCreateCohortModalOpen(false)} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300">
+                          <X size={20} />
+                      </button>
+                  </div>
+                  <div className="p-6 overflow-y-auto">
+                      <form onSubmit={handleCreateSubmit} className="space-y-6">
+                          {/* Cover Image Upload */}
+                          <div>
+                              <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Cover Image</label>
+                              <div 
+                                onClick={() => coverInputRef.current?.click()}
+                                className={`relative w-full h-32 rounded-xl border-2 border-dashed flex flex-col items-center justify-center cursor-pointer transition-all overflow-hidden ${newCohortCover ? 'border-transparent' : 'border-slate-300 hover:border-emerald-400 hover:bg-slate-50 dark:border-slate-600 dark:hover:bg-slate-700'}`}
+                              >
+                                  {newCohortCover ? (
+                                      <>
+                                        <img src={newCohortCover} alt="Cover" className="w-full h-full object-cover" />
+                                        <div className="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
+                                            <span className="text-white text-xs font-bold">Change Image</span>
+                                        </div>
+                                      </>
+                                  ) : (
+                                      <div className="text-center text-slate-400 dark:text-slate-500">
+                                          <ImageIcon className="mx-auto mb-1" />
+                                          <span className="text-xs font-bold">Upload Cover</span>
+                                      </div>
+                                  )}
+                                  <input type="file" ref={coverInputRef} className="hidden" accept="image/*" onChange={handleCoverUpload} />
+                              </div>
+                              <p className="text-[10px] text-slate-400 mt-1">Recommended: 820px x 312px</p>
+                          </div>
+
+                          <div>
+                              <div className="flex justify-between items-center mb-1">
+                                <label className="block text-sm font-bold text-slate-700 dark:text-slate-300">Cohort Name</label>
+                                <span className={`text-[10px] font-bold ${newCohortName.length === 50 ? 'text-red-500' : 'text-slate-400'}`}>{newCohortName.length}/50</span>
+                              </div>
+                              <input 
+                                  type="text" 
+                                  value={newCohortName}
+                                  maxLength={50}
+                                  onChange={(e) => setNewCohortName(e.target.value)}
+                                  placeholder="e.g. June Achievers 2025"
+                                  className="w-full p-3 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-emerald-500 bg-white dark:bg-slate-700 dark:border-slate-600 dark:text-white"
+                                  required
+                              />
+                          </div>
+                          
+                          <div>
+                              <div className="flex justify-between items-center mb-1">
+                                <label className="block text-sm font-bold text-slate-700 dark:text-slate-300">Description</label>
+                                <span className={`text-[10px] font-bold ${newCohortDesc.length === 100 ? 'text-red-500' : 'text-slate-400'}`}>{newCohortDesc.length}/100</span>
+                              </div>
+                              <textarea 
+                                  value={newCohortDesc}
+                                  maxLength={100}
+                                  onChange={(e) => setNewCohortDesc(e.target.value)}
+                                  placeholder="What is this group about?"
+                                  className="w-full p-3 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-emerald-500 h-24 resize-none bg-white dark:bg-slate-700 dark:border-slate-600 dark:text-white"
+                              />
+                          </div>
+
+                          <div className="flex justify-end gap-3 pt-2">
+                              <button 
+                                  type="button" 
+                                  onClick={() => setIsCreateCohortModalOpen(false)}
+                                  className="px-4 py-2 text-slate-600 font-bold hover:bg-slate-100 rounded-lg transition-colors dark:text-slate-300 dark:hover:bg-slate-700"
+                              >
+                                  Cancel
+                              </button>
+                              <button 
+                                  type="submit"
+                                  disabled={!newCohortName.trim()}
+                                  className="px-6 py-2 bg-emerald-600 text-white font-bold rounded-lg hover:bg-emerald-700 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                              >
+                                  Create Group
+                              </button>
+                          </div>
+                      </form>
+                  </div>
+              </div>
+          </div>
+      )}
+
     </div>
   );
 };
@@ -354,6 +515,7 @@ const CreatePostWidget: React.FC<{
     const [mediaFiles, setMediaFiles] = useState<PostMedia[]>([]);
     const [pollOptions, setPollOptions] = useState<string[]>(['', '']);
     const [showTypeSelector, setShowTypeSelector] = useState(false);
+    const [isExpanded, setIsExpanded] = useState(false);
     
     const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -431,125 +593,132 @@ const CreatePostWidget: React.FC<{
         setActiveMode('STATUS');
         setPostType('DISCUSSION');
         setShowTypeSelector(false);
+        setIsExpanded(false);
     };
 
     return (
-        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 dark:bg-slate-800 dark:border-slate-700">
+        <div className={`bg-white rounded-2xl shadow-sm border border-slate-200 p-4 dark:bg-slate-800 dark:border-slate-700 transition-all duration-300 ${isExpanded ? 'ring-2 ring-emerald-500/20' : ''}`}>
             {/* Top Area: Avatar + Input */}
-            <div className="flex gap-3 mb-3">
+            <div className="flex gap-3">
                 <div className="w-10 h-10 rounded-full bg-emerald-100 text-emerald-800 flex items-center justify-center font-bold text-sm flex-shrink-0 border border-slate-100 shadow-sm dark:bg-emerald-900 dark:text-emerald-300 dark:border-slate-600 overflow-hidden">
                     {currentUser.avatarUrl ? <img src={currentUser.avatarUrl} className="w-full h-full object-cover"/> : currentUser.name.charAt(0)}
                 </div>
                 
-                <div className="flex-1 bg-slate-100 dark:bg-slate-700/50 rounded-2xl px-4 py-2 hover:bg-slate-200/50 transition-colors dark:hover:bg-slate-700 cursor-text">
+                <div className="flex-1">
                     <textarea 
                         value={content}
+                        onClick={() => setIsExpanded(true)}
                         onChange={(e) => setContent(e.target.value)}
                         placeholder={activeMode === 'POLL' ? "Ask a question..." : `What's on your mind, ${currentUser.name.split(' ')[0]}?`}
-                        className="w-full bg-transparent border-none p-0 text-base focus:ring-0 resize-none h-10 min-h-[40px] placeholder-slate-500 text-slate-800 dark:text-white dark:placeholder-slate-400 focus:h-20 transition-all"
+                        className={`w-full bg-slate-100 dark:bg-slate-700/50 rounded-2xl px-4 py-2 hover:bg-slate-200/50 transition-all border-none p-0 text-base focus:ring-0 resize-none placeholder-slate-500 text-slate-800 dark:text-white dark:placeholder-slate-400 cursor-text ${isExpanded ? 'min-h-[80px]' : 'h-10 overflow-hidden'}`}
+                        rows={isExpanded ? 3 : 1}
                     />
                 </div>
             </div>
 
-            {/* Middle: Content Previews / Poll Editor */}
-            <div className="px-2">
-                {/* Media Preview */}
-                {mediaFiles.length > 0 && activeMode === 'STATUS' && (
-                    <div className="flex gap-2 mb-4 overflow-x-auto pb-2 pt-1">
-                        {mediaFiles.map((media, i) => (
-                            <div key={i} className="relative w-24 h-24 rounded-xl overflow-hidden border border-slate-200 shrink-0 shadow-sm">
-                                {media.type === 'VIDEO' ? <div className="bg-black w-full h-full flex items-center justify-center"><Video className="text-white" size={24}/></div> : <img src={media.url} className="w-full h-full object-cover"/>}
-                                <button onClick={() => setMediaFiles(prev => prev.filter((_, idx) => idx !== i))} className="absolute top-1 right-1 bg-black/50 hover:bg-black/70 text-white p-1 rounded-full backdrop-blur-sm transition-colors"><X size={12}/></button>
+            {/* Expanded Content Area */}
+            {isExpanded && (
+                <div className="mt-3 animate-fade-in">
+                    <div className="px-2">
+                        {/* Media Preview */}
+                        {mediaFiles.length > 0 && activeMode === 'STATUS' && (
+                            <div className="flex gap-2 mb-4 overflow-x-auto pb-2 pt-1">
+                                {mediaFiles.map((media, i) => (
+                                    <div key={i} className="relative w-24 h-24 rounded-xl overflow-hidden border border-slate-200 shrink-0 shadow-sm bg-white dark:bg-slate-700">
+                                        {media.type === 'VIDEO' ? <div className="bg-black w-full h-full flex items-center justify-center"><Video className="text-white" size={24}/></div> : <img src={media.url} className="w-full h-full object-cover"/>}
+                                        <button onClick={() => setMediaFiles(prev => prev.filter((_, idx) => idx !== i))} className="absolute top-1 right-1 bg-black/50 hover:bg-black/70 text-white p-1 rounded-full backdrop-blur-sm transition-colors"><X size={12}/></button>
+                                    </div>
+                                ))}
+                                <button onClick={() => fileInputRef.current?.click()} className="w-24 h-24 rounded-xl border-2 border-dashed border-slate-300 flex flex-col items-center justify-center text-slate-400 hover:bg-slate-50 hover:border-emerald-400 hover:text-emerald-500 transition-all dark:hover:bg-slate-700"><Plus size={24}/><span className="text-xs font-bold mt-1">Add</span></button>
                             </div>
-                        ))}
-                        <button onClick={() => fileInputRef.current?.click()} className="w-24 h-24 rounded-xl border-2 border-dashed border-slate-300 flex flex-col items-center justify-center text-slate-400 hover:bg-slate-50 hover:border-emerald-400 hover:text-emerald-500 transition-all dark:hover:bg-slate-700"><Plus size={24}/><span className="text-xs font-bold mt-1">Add</span></button>
-                    </div>
-                )}
+                        )}
 
-                {/* Poll Editor */}
-                {activeMode === 'POLL' && (
-                    <div className="space-y-2 mb-4 bg-slate-50 p-4 rounded-xl border border-slate-100 dark:bg-slate-900/50 dark:border-slate-700 animate-fade-in">
-                        <div className="flex justify-between items-center mb-1">
-                            <span className="text-xs font-bold text-slate-400 uppercase">Poll Options</span>
-                            <button onClick={togglePollMode} className="text-slate-400 hover:text-red-500"><XCircle size={16}/></button>
-                        </div>
-                        {pollOptions.map((opt, i) => (
-                            <input 
-                                key={i}
-                                value={opt}
-                                onChange={(e) => {
-                                    const newOpts = [...pollOptions];
-                                    newOpts[i] = e.target.value;
-                                    setPollOptions(newOpts);
-                                }}
-                                placeholder={`Option ${i + 1}`}
-                                className="w-full p-2.5 text-sm border border-slate-200 rounded-lg dark:bg-slate-800 dark:border-slate-700 dark:text-white focus:ring-1 focus:ring-emerald-500 outline-none"
-                            />
-                        ))}
-                        <button onClick={() => setPollOptions([...pollOptions, ''])} className="text-xs font-bold text-emerald-600 hover:underline flex items-center gap-1"><Plus size={14} /> Add Option</button>
-                    </div>
-                )}
+                        {/* Poll Editor */}
+                        {activeMode === 'POLL' && (
+                            <div className="space-y-2 mb-4 bg-slate-50 p-4 rounded-xl border border-slate-100 dark:bg-slate-900/50 dark:border-slate-700 animate-fade-in">
+                                <div className="flex justify-between items-center mb-1">
+                                    <span className="text-xs font-bold text-slate-400 uppercase">Poll Options</span>
+                                    <button onClick={togglePollMode} className="text-slate-400 hover:text-red-500"><XCircle size={16}/></button>
+                                </div>
+                                {pollOptions.map((opt, i) => (
+                                    <input 
+                                        key={i}
+                                        value={opt}
+                                        onChange={(e) => {
+                                            const newOpts = [...pollOptions];
+                                            newOpts[i] = e.target.value;
+                                            setPollOptions(newOpts);
+                                        }}
+                                        placeholder={`Option ${i + 1}`}
+                                        className="w-full p-2.5 text-sm border border-slate-200 rounded-lg dark:bg-slate-800 dark:border-slate-700 dark:text-white focus:ring-1 focus:ring-emerald-500 outline-none"
+                                    />
+                                ))}
+                                <button onClick={() => setPollOptions([...pollOptions, ''])} className="text-xs font-bold text-emerald-600 hover:underline flex items-center gap-1"><Plus size={14} /> Add Option</button>
+                            </div>
+                        )}
 
-                {/* Type Selector (Category) */}
-                {showTypeSelector && (
-                    <div className="flex flex-wrap gap-2 mb-4 pt-2 animate-fade-in border-t border-slate-100 dark:border-slate-700">
-                        {['DISCUSSION', 'WIN', 'CHALLENGE', 'QUESTION', 'MOTIVATION'].map(type => (
+                        {/* Type Selector (Category) */}
+                        {showTypeSelector && (
+                            <div className="flex flex-wrap gap-2 mb-4 pt-2 animate-fade-in border-t border-slate-100 dark:border-slate-700">
+                                {['DISCUSSION', 'WIN', 'CHALLENGE', 'QUESTION', 'MOTIVATION'].map(type => (
+                                    <button 
+                                        key={type}
+                                        onClick={() => { setPostType(type as any); setShowTypeSelector(false); }}
+                                        className={`px-3 py-1.5 rounded-full text-xs font-bold border transition-all ${
+                                            postType === type 
+                                            ? getTypeColor(type) + ' shadow-sm'
+                                            : 'bg-white text-slate-500 border-slate-200 hover:bg-slate-50 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-600'
+                                        }`}
+                                    >
+                                        {type}
+                                    </button>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Divider */}
+                    <div className="h-px bg-slate-100 w-full mb-3 dark:bg-slate-700"></div>
+
+                    {/* Bottom Actions Bar */}
+                    <div className="flex items-center justify-between px-1">
+                        <div className="flex gap-1 md:gap-2">
                             <button 
-                                key={type}
-                                onClick={() => { setPostType(type as any); setShowTypeSelector(false); }}
-                                className={`px-3 py-1.5 rounded-full text-xs font-bold border transition-all ${
-                                    postType === type 
-                                    ? getTypeColor(type) + ' shadow-sm'
-                                    : 'bg-white text-slate-500 border-slate-200 hover:bg-slate-50 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-600'
-                                }`}
+                                onClick={() => fileInputRef.current?.click()} 
+                                className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-slate-100 text-slate-500 font-semibold text-sm transition-colors dark:hover:bg-slate-700 dark:text-slate-400"
                             >
-                                {type}
+                                <ImageIcon size={20} className="text-green-500" />
+                                <span className="hidden sm:inline">Photo/Video</span>
                             </button>
-                        ))}
+                            
+                            <button 
+                                onClick={togglePollMode}
+                                className={`flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-slate-100 font-semibold text-sm transition-colors ${activeMode === 'POLL' ? 'bg-orange-50 text-orange-600' : 'text-slate-500 dark:hover:bg-slate-700 dark:text-slate-400'}`}
+                            >
+                                <BarChart2 size={20} className="text-orange-500" />
+                                <span className="hidden sm:inline">Poll</span>
+                            </button>
+
+                            <button 
+                                onClick={() => setShowTypeSelector(!showTypeSelector)}
+                                className={`flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-slate-100 font-semibold text-sm transition-colors ${showTypeSelector ? 'bg-yellow-50 text-yellow-700' : 'text-slate-500 dark:hover:bg-slate-700 dark:text-slate-400'}`}
+                            >
+                                <Tag size={20} className="text-yellow-500" />
+                                <span className="hidden sm:inline">{postType === 'DISCUSSION' ? 'Topic' : postType}</span>
+                                {postType !== 'DISCUSSION' && <span className="sm:hidden font-bold text-xs uppercase">{postType}</span>}
+                            </button>
+                        </div>
+
+                        <button 
+                            onClick={handleSubmit}
+                            disabled={!content && mediaFiles.length === 0 && activeMode !== 'POLL'}
+                            className="bg-emerald-600 text-white px-6 py-2 rounded-lg font-bold text-sm hover:bg-emerald-700 transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                        >
+                            Post <Send size={14} className="opacity-80" />
+                        </button>
                     </div>
-                )}
-            </div>
-
-            {/* Divider */}
-            <div className="h-px bg-slate-100 w-full mb-3 dark:bg-slate-700"></div>
-
-            {/* Bottom Actions Bar */}
-            <div className="flex items-center justify-between px-1">
-                <div className="flex gap-1 md:gap-2">
-                    <button 
-                        onClick={() => fileInputRef.current?.click()} 
-                        className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-slate-100 text-slate-500 font-semibold text-sm transition-colors dark:hover:bg-slate-700 dark:text-slate-400"
-                    >
-                        <ImageIcon size={20} className="text-green-500" />
-                        <span className="hidden sm:inline">Photo/Video</span>
-                    </button>
-                    
-                    <button 
-                        onClick={togglePollMode}
-                        className={`flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-slate-100 font-semibold text-sm transition-colors ${activeMode === 'POLL' ? 'bg-orange-50 text-orange-600' : 'text-slate-500 dark:hover:bg-slate-700 dark:text-slate-400'}`}
-                    >
-                        <BarChart2 size={20} className="text-orange-500" />
-                        <span className="hidden sm:inline">Poll</span>
-                    </button>
-
-                    <button 
-                        onClick={() => setShowTypeSelector(!showTypeSelector)}
-                        className={`flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-slate-100 font-semibold text-sm transition-colors ${showTypeSelector ? 'bg-yellow-50 text-yellow-700' : 'text-slate-500 dark:hover:bg-slate-700 dark:text-slate-400'}`}
-                    >
-                        <Tag size={20} className="text-yellow-500" />
-                        <span className="hidden sm:inline">{postType === 'DISCUSSION' ? 'Topic' : postType}</span>
-                        {postType !== 'DISCUSSION' && <span className="sm:hidden font-bold text-xs uppercase">{postType}</span>}
-                    </button>
                 </div>
-
-                <button 
-                    onClick={handleSubmit}
-                    disabled={!content && mediaFiles.length === 0 && activeMode !== 'POLL'}
-                    className="bg-emerald-600 text-white px-6 py-2 rounded-lg font-bold text-sm hover:bg-emerald-700 transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-                >
-                    Post <Send size={14} className="opacity-80" />
-                </button>
-            </div>
+            )}
             
             <input type="file" ref={fileInputRef} className="hidden" accept="image/*,video/*" onChange={handleFileSelect} />
         </div>
@@ -653,13 +822,13 @@ const PostItem: React.FC<{
             <div className="mb-4">
                 <p className="text-sm text-slate-800 leading-relaxed whitespace-pre-wrap dark:text-slate-200">{post.content}</p>
                 
-                {/* Media Grid */}
+                {/* Media Grid - Improved for transparent images */}
                 {post.media && post.media.length > 0 && (
                     <div className={`grid gap-2 mt-3 rounded-xl overflow-hidden ${post.media.length > 1 ? 'grid-cols-2' : 'grid-cols-1'}`}>
                         {post.media.map((m, i) => (
-                            <div key={i} className="aspect-video bg-black relative">
+                            <div key={i} className="aspect-video bg-white relative shadow-sm">
                                 {m.type === 'VIDEO' ? (
-                                    <video src={m.url} controls className="w-full h-full object-contain" />
+                                    <video src={m.url} controls className="w-full h-full object-contain bg-black" />
                                 ) : (
                                     <img src={m.url} className="w-full h-full object-cover" />
                                 )}

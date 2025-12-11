@@ -135,6 +135,10 @@ const App: React.FC = () => {
       }));
   };
 
+  const handleCreateCohort = (cohort: Cohort) => {
+      setCohorts([...cohorts, cohort]);
+  };
+
   const handleSubmitSale = (sale: SaleRecord) => {
       if (!currentUser) return;
       const history = [...(currentUser.salesHistory || []), sale];
@@ -332,6 +336,7 @@ const App: React.FC = () => {
                     onAddPost={handleAddPost} 
                     onAddComment={handleAddComment} 
                     onLikePost={handleLikePost} 
+                    onCreateCohort={handleCreateCohort}
                 />
             </ProtectedRoute>
         } />

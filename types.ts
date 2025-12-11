@@ -295,6 +295,7 @@ export interface Cohort {
   name: string;
   description: string;
   mentorHandle: string;
+  coverImage?: string; // Added field for Facebook-style banner
 }
 
 export interface MentorshipTemplate {

@@ -60,6 +60,9 @@ const CommunityPortal: React.FC<CommunityPortalProps> = ({
   const [newCohortCover, setNewCohortCover] = useState('');
   const coverInputRef = useRef<HTMLInputElement>(null);
 
+  // Tab State for Cohort Page
+  const [activeCohortTab, setActiveCohortTab] = useState('Discussion');
+
   // Sorting: Pinned first, then Newest
   const visiblePosts = posts.filter(post => {
     if (activeTab === 'GLOBAL') return !post.cohortId; // Show global posts
@@ -200,49 +203,68 @@ const CommunityPortal: React.FC<CommunityPortalProps> = ({
   const renderCohortContent = () => (
       <div className="space-y-2 md:space-y-6 bg-slate-100/50 dark:bg-black/20 md:bg-transparent -mx-4 md:mx-0 pb-20 md:pb-0 min-h-screen">
           {activeCohortDetails && (
-              <div className="bg-white rounded-b-3xl md:rounded-2xl shadow-sm border-b md:border border-slate-200 overflow-hidden dark:bg-slate-800 dark:border-slate-700 group -mx-4 md:mx-0 -mt-4 md:mt-0 mb-2 md:mb-0">
-                  <div className="h-44 md:h-56 bg-gradient-to-r from-emerald-600 to-teal-500 relative bg-cover bg-center" style={activeCohortDetails.coverImage ? { backgroundImage: `url(${activeCohortDetails.coverImage})` } : {}}>
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
+              <div className="bg-white md:rounded-2xl shadow-sm border-b md:border border-slate-200 overflow-hidden dark:bg-slate-800 dark:border-slate-700 group -mx-4 md:mx-0 -mt-4 md:mt-0 mb-2 md:mb-0 pb-2">
+                  {/* Banner Image - Full width on mobile */}
+                  <div className="h-48 md:h-64 bg-slate-200 relative bg-cover bg-center" style={activeCohortDetails.coverImage ? { backgroundImage: `url(${activeCohortDetails.coverImage})` } : {}}>
+                      {!activeCohortDetails.coverImage && <div className="absolute inset-0 flex items-center justify-center text-slate-400"><ImageIcon size={48} /></div>}
                   </div>
                   
-                  {/* Cohort Header Info - Reorganized for visual balance */}
-                  <div className="px-6 pt-5 pb-2 flex flex-col gap-4">
-                      {/* Top Row: Title & Avatars */}
-                      <div className="flex justify-between items-start">
-                          <h1 className="text-2xl md:text-3xl font-bold text-slate-900 font-heading leading-tight dark:text-white max-w-[70%]">
-                              {activeCohortDetails.name}
-                          </h1>
-                          <div className="flex -space-x-2 overflow-hidden pt-1">
-                              {[1,2,3].map(i => (
-                                  <div key={i} className="w-8 h-8 rounded-full bg-slate-200 border-2 border-white dark:border-slate-800 dark:bg-slate-700 shadow-sm"></div>
+                  {/* Content Area - Below Banner */}
+                  <div className="px-4 pt-4">
+                      
+                      {/* Title */}
+                      <h1 className="text-2xl md:text-3xl font-bold text-slate-900 dark:text-white leading-tight font-heading">
+                          {activeCohortDetails.name}
+                      </h1>
+
+                      {/* Privacy & Member Stats (Text Only) */}
+                      <div className="flex items-center gap-2 mt-1.5 text-xs md:text-sm font-medium text-slate-500 dark:text-slate-400">
+                          {activeCohortDetails.privacy === 'PUBLIC' ? <Globe size={14} /> : <Lock size={14} />}
+                          <span>{activeCohortDetails.privacy === 'PUBLIC' ? 'Public group' : 'Private group'}</span>
+                          <span className="font-bold">·</span>
+                          <span className="font-bold text-slate-700 dark:text-slate-300">{activeCohortMembers} members</span>
+                      </div>
+
+                      {/* Member Facepile - Below privacy text */}
+                      <div className="flex items-center gap-3 mt-4 mb-5">
+                          <div className="flex -space-x-3 overflow-hidden pl-1">
+                              {[1,2,3,4,5].map(i => (
+                                  <div key={i} className="w-9 h-9 rounded-full bg-slate-200 border-2 border-white dark:border-slate-800 dark:bg-slate-700 shadow-sm" />
                               ))}
                           </div>
                       </div>
 
-                      {/* Meta Row: Privacy & Stats */}
-                      <div className="flex flex-wrap items-center gap-3">
-                          <span className="flex items-center gap-1.5 text-xs font-bold text-slate-700 bg-slate-100 px-3 py-1.5 rounded-full border border-slate-200 dark:bg-slate-700 dark:text-slate-200 dark:border-slate-600">
-                              {activeCohortDetails.privacy === 'PUBLIC' ? <Globe size={12}/> : <Lock size={12} />} 
-                              {activeCohortDetails.privacy === 'PUBLIC' ? 'Public Group' : 'Private Group'}
-                          </span>
-                          <span className="text-sm font-medium text-slate-400 dark:text-slate-500">•</span>
-                          <span className="text-sm font-bold text-slate-900 dark:text-white">{activeCohortMembers} Members</span>
-                          {activeCohortDetails.location && (
-                              <>
-                                <span className="text-sm font-medium text-slate-400 dark:text-slate-500 hidden sm:inline">•</span>
-                                <span className="text-sm text-slate-500 flex items-center gap-1 dark:text-slate-400 font-medium"><MapPin size={14} className="text-slate-400" /> {activeCohortDetails.location}</span>
-                              </>
+                      {/* Action Buttons */}
+                      <div className="flex gap-3 mb-2">
+                          <button className="flex-1 bg-blue-600 active:bg-blue-700 text-white rounded-lg py-2.5 font-bold text-sm flex items-center justify-center gap-2 shadow-sm transition-colors">
+                              <UserPlus size={18} />
+                              <span>Invite</span>
+                          </button>
+                          
+                          {isCohortAdmin && (
+                              <button 
+                                onClick={() => setIsMobileAdminSheetOpen(true)}
+                                className="flex-1 bg-slate-100 active:bg-slate-200 text-slate-700 rounded-lg py-2.5 font-bold text-sm flex items-center justify-center gap-2 shadow-sm border border-slate-200 dark:bg-slate-700 dark:border-slate-600 dark:text-slate-200 transition-colors"
+                              >
+                                  <Shield size={18} />
+                                  <span>Manage</span>
+                              </button>
                           )}
                       </div>
                   </div>
                   
-                  {/* Tabs: Full width container with padding for first item */}
-                  <div className="w-full overflow-x-auto no-scrollbar border-t border-slate-100 dark:border-slate-700 pt-1">
-                      <div className="flex px-6 min-w-max">
-                          {['Discussion', 'Members', 'Events', 'Media', 'Files'].map((tab, idx) => (
+                  {/* Scrollable Pill Tabs */}
+                  <div className="w-full overflow-x-auto no-scrollbar border-t border-slate-100 dark:border-slate-800 mt-4 pt-3">
+                      <div className="flex gap-2 px-4 min-w-max pb-2">
+                          {['Discussion', 'Members', 'Events', 'Media', 'Files'].map((tab) => (
                               <button 
                                   key={tab}
-                                  className={`text-sm font-bold px-1 py-4 mr-6 border-b-2 transition-colors ${idx === 0 ? 'text-emerald-600 border-emerald-600 dark:text-emerald-400 dark:border-emerald-400' : 'text-slate-500 border-transparent hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200'}`}
+                                  onClick={() => setActiveCohortTab(tab)}
+                                  className={`px-4 py-2 rounded-full text-sm font-bold whitespace-nowrap transition-colors border ${
+                                      activeCohortTab === tab
+                                      ? 'bg-emerald-100 text-emerald-800 border-emerald-100 dark:bg-emerald-900/40 dark:text-emerald-300 dark:border-emerald-800'
+                                      : 'bg-slate-100 text-slate-600 border-slate-100 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700'
+                                  }`}
                               >
                                   {tab}
                               </button>
@@ -253,36 +275,51 @@ const CommunityPortal: React.FC<CommunityPortalProps> = ({
           )}
 
           {/* Create Post Widget Wrapper - Floating Card on Mobile with padding */}
-          <div className="px-4 pt-4 pb-2 md:p-0">
-            <CreatePostWidget 
-                currentUser={currentUser} 
-                onPost={(post) => onAddPost({ ...post, cohortId: activeTab })}
-                activeFeedName={activeCohortDetails?.name || 'Team Feed'}
-            />
-          </div>
-
-          <div className="space-y-2 md:space-y-6">
-            {visiblePosts.length > 0 ? visiblePosts.map(post => (
-                <PostItem 
-                    key={post.id} 
-                    post={post} 
-                    currentUser={currentUser} 
-                    onAddComment={onAddComment} 
-                    onLikePost={onLikePost}
-                    isModerator={isModerator}
-                    onUpdatePost={onUpdatePost}
-                    onDeletePost={onDeletePost}
-                />
-            )) : (
-                <div className="mx-4 md:mx-0 text-center py-16 text-slate-400 bg-white rounded-2xl border-2 border-dashed border-slate-200 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-500 mt-2">
-                    <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4 dark:bg-slate-700">
-                        <MessageCircle size={32} />
-                    </div>
-                    <p className="font-medium">No posts yet in this channel.</p>
-                    <p className="text-sm mt-1">Share a win or ask a question to start!</p>
+          {activeCohortTab === 'Discussion' && (
+            <>
+                <div className="px-4 pt-4 pb-2 md:p-0">
+                    <CreatePostWidget 
+                        currentUser={currentUser} 
+                        onPost={(post) => onAddPost({ ...post, cohortId: activeTab })}
+                        activeFeedName={activeCohortDetails?.name || 'Team Feed'}
+                    />
                 </div>
-            )}
-          </div>
+
+                <div className="space-y-2 md:space-y-6">
+                    {visiblePosts.length > 0 ? visiblePosts.map(post => (
+                        <PostItem 
+                            key={post.id} 
+                            post={post} 
+                            currentUser={currentUser} 
+                            onAddComment={onAddComment} 
+                            onLikePost={onLikePost}
+                            isModerator={isModerator}
+                            onUpdatePost={onUpdatePost}
+                            onDeletePost={onDeletePost}
+                        />
+                    )) : (
+                        <div className="mx-4 md:mx-0 text-center py-16 text-slate-400 bg-white rounded-2xl border-2 border-dashed border-slate-200 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-500 mt-2">
+                            <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4 dark:bg-slate-700">
+                                <MessageCircle size={32} />
+                            </div>
+                            <p className="font-medium">No posts yet in this channel.</p>
+                            <p className="text-sm mt-1">Share a win or ask a question to start!</p>
+                        </div>
+                    )}
+                </div>
+            </>
+          )}
+          
+          {/* Placeholder for other tabs */}
+          {activeCohortTab !== 'Discussion' && (
+              <div className="flex flex-col items-center justify-center py-20 text-slate-400 px-4 text-center">
+                  <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mb-4 dark:bg-slate-800">
+                      <Info size={32} />
+                  </div>
+                  <p className="font-medium">{activeCohortTab} view coming soon.</p>
+              </div>
+          )}
+
           <div className="h-20 md:h-0"></div>
       </div>
   );
@@ -295,7 +332,7 @@ const CommunityPortal: React.FC<CommunityPortalProps> = ({
       */}
       {activeCohortDetails && (
           <div className="fixed inset-0 z-[150] bg-slate-50 dark:bg-slate-950 overflow-y-auto md:hidden flex flex-col">
-              {/* Custom Mobile Header */}
+              {/* Custom Mobile Header - Simplified for Facebook feel (Back + Title/Search/Menu) */}
               <div className="flex items-center justify-between px-4 py-3 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 sticky top-0 z-50">
                   <button 
                       onClick={() => setActiveTab('GLOBAL')} 
@@ -304,7 +341,7 @@ const CommunityPortal: React.FC<CommunityPortalProps> = ({
                       <ArrowLeft size={24} />
                   </button>
                   
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-2">
                       <button 
                           onClick={() => setIsCohortSearchOpen(true)}
                           className="p-2 text-slate-600 dark:text-slate-300 hover:bg-slate-100 rounded-full"
@@ -312,22 +349,9 @@ const CommunityPortal: React.FC<CommunityPortalProps> = ({
                           <SearchIcon size={24} />
                       </button>
                       
-                      {isCohortAdmin ? (
-                          <button 
-                              onClick={() => setIsMobileAdminSheetOpen(true)}
-                              className="relative p-2 text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 rounded-full"
-                          >
-                              <Shield size={24} fill="currentColor" className="opacity-20 absolute" />
-                              <Shield size={24} />
-                              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                                  <span className="text-[10px] font-bold text-white mb-0.5">★</span>
-                              </div>
-                          </button>
-                      ) : (
-                          <button className="p-2 text-slate-600 dark:text-slate-300 hover:bg-slate-100 rounded-full">
-                              <MoreHorizontal size={24} />
-                          </button>
-                      )}
+                      <button className="p-2 text-slate-600 dark:text-slate-300 hover:bg-slate-100 rounded-full">
+                          <MoreHorizontal size={24} />
+                      </button>
                   </div>
               </div>
 

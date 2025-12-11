@@ -159,12 +159,18 @@ const CommunityPortal: React.FC<CommunityPortalProps> = ({
   // --- Content Renderers ---
 
   const renderGlobalFeedContent = () => (
-      <div className="space-y-2 md:space-y-6 bg-slate-100/50 dark:bg-black/20 md:bg-transparent -mx-4 md:mx-0 pb-20 md:pb-0">
-          <CreatePostWidget 
-            currentUser={currentUser} 
-            onPost={(post) => onAddPost({ ...post, cohortId: undefined })}
-            activeFeedName="Global Hub"
-          />
+      // Negative margins on mobile to touch edges, reset on desktop
+      <div className="space-y-2 md:space-y-6 bg-slate-100/50 dark:bg-black/20 md:bg-transparent -mx-4 md:mx-0 pb-20 md:pb-0 min-h-screen">
+          
+          {/* Create Post Widget Wrapper - Floating Card on Mobile with padding */}
+          <div className="px-4 pt-4 pb-2 md:p-0">
+            <CreatePostWidget 
+                currentUser={currentUser} 
+                onPost={(post) => onAddPost({ ...post, cohortId: undefined })}
+                activeFeedName="Global Hub"
+            />
+          </div>
+
           <div className="space-y-2 md:space-y-6">
             {visiblePosts.length > 0 ? visiblePosts.map(post => (
                 <PostItem 
@@ -178,7 +184,7 @@ const CommunityPortal: React.FC<CommunityPortalProps> = ({
                     onDeletePost={onDeletePost}
                 />
             )) : (
-                <div className="text-center py-16 text-slate-400 bg-white rounded-none md:rounded-2xl border-y md:border-2 border-dashed border-slate-200 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-500 mt-2">
+                <div className="mx-4 md:mx-0 text-center py-16 text-slate-400 bg-white rounded-2xl border-2 border-dashed border-slate-200 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-500 mt-2">
                     <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4 dark:bg-slate-700">
                         <MessageCircle size={32} />
                     </div>
@@ -192,55 +198,68 @@ const CommunityPortal: React.FC<CommunityPortalProps> = ({
   );
 
   const renderCohortContent = () => (
-      <div className="space-y-2 md:space-y-6 bg-slate-100/50 dark:bg-black/20 md:bg-transparent -mx-4 md:mx-0 pb-20 md:pb-0">
+      <div className="space-y-2 md:space-y-6 bg-slate-100/50 dark:bg-black/20 md:bg-transparent -mx-4 md:mx-0 pb-20 md:pb-0 min-h-screen">
           {activeCohortDetails && (
-              <div className="bg-white rounded-b-2xl md:rounded-2xl shadow-sm border-b md:border border-slate-200 overflow-hidden dark:bg-slate-800 dark:border-slate-700 group -mx-4 md:mx-0 -mt-4 md:mt-0 mb-2 md:mb-0">
-                  <div className="h-40 md:h-56 bg-gradient-to-r from-emerald-600 to-teal-500 relative bg-cover bg-center" style={activeCohortDetails.coverImage ? { backgroundImage: `url(${activeCohortDetails.coverImage})` } : {}}>
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent"></div>
-                      <div className="absolute bottom-0 left-0 right-0 p-6">
-                          <h1 className="text-2xl md:text-3xl font-bold text-white font-heading shadow-sm">{activeCohortDetails.name}</h1>
-                      </div>
+              <div className="bg-white rounded-b-3xl md:rounded-2xl shadow-sm border-b md:border border-slate-200 overflow-hidden dark:bg-slate-800 dark:border-slate-700 group -mx-4 md:mx-0 -mt-4 md:mt-0 mb-2 md:mb-0">
+                  <div className="h-44 md:h-56 bg-gradient-to-r from-emerald-600 to-teal-500 relative bg-cover bg-center" style={activeCohortDetails.coverImage ? { backgroundImage: `url(${activeCohortDetails.coverImage})` } : {}}>
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
                   </div>
-                  <div className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                      <div className="flex items-center gap-3">
-                          <div className="flex items-center gap-1 text-xs font-bold text-slate-500 bg-slate-100 px-3 py-1.5 rounded-full dark:bg-slate-700 dark:text-slate-300">
+                  
+                  {/* Cohort Header Info - Reorganized for visual balance */}
+                  <div className="px-6 pt-5 pb-2 flex flex-col gap-4">
+                      {/* Top Row: Title & Avatars */}
+                      <div className="flex justify-between items-start">
+                          <h1 className="text-2xl md:text-3xl font-bold text-slate-900 font-heading leading-tight dark:text-white max-w-[70%]">
+                              {activeCohortDetails.name}
+                          </h1>
+                          <div className="flex -space-x-2 overflow-hidden pt-1">
+                              {[1,2,3].map(i => (
+                                  <div key={i} className="w-8 h-8 rounded-full bg-slate-200 border-2 border-white dark:border-slate-800 dark:bg-slate-700 shadow-sm"></div>
+                              ))}
+                          </div>
+                      </div>
+
+                      {/* Meta Row: Privacy & Stats */}
+                      <div className="flex flex-wrap items-center gap-3">
+                          <span className="flex items-center gap-1.5 text-xs font-bold text-slate-700 bg-slate-100 px-3 py-1.5 rounded-full border border-slate-200 dark:bg-slate-700 dark:text-slate-200 dark:border-slate-600">
                               {activeCohortDetails.privacy === 'PUBLIC' ? <Globe size={12}/> : <Lock size={12} />} 
                               {activeCohortDetails.privacy === 'PUBLIC' ? 'Public Group' : 'Private Group'}
-                          </div>
-                          <div className="text-sm text-slate-500 font-medium dark:text-slate-400">
-                              <span className="font-bold text-slate-900 dark:text-white">{activeCohortMembers}</span> Members
-                          </div>
+                          </span>
+                          <span className="text-sm font-medium text-slate-400 dark:text-slate-500">•</span>
+                          <span className="text-sm font-bold text-slate-900 dark:text-white">{activeCohortMembers} Members</span>
                           {activeCohortDetails.location && (
-                              <div className="flex items-center gap-1 text-xs text-slate-500 dark:text-slate-400">
-                                  <MapPin size={12} /> {activeCohortDetails.location}
-                              </div>
+                              <>
+                                <span className="text-sm font-medium text-slate-400 dark:text-slate-500 hidden sm:inline">•</span>
+                                <span className="text-sm text-slate-500 flex items-center gap-1 dark:text-slate-400 font-medium"><MapPin size={14} className="text-slate-400" /> {activeCohortDetails.location}</span>
+                              </>
                           )}
-                      </div>
-                      
-                      <div className="flex -space-x-2">
-                          {[1,2,3].map(i => (
-                              <div key={i} className="w-8 h-8 rounded-full bg-slate-200 border-2 border-white dark:border-slate-800 dark:bg-slate-700"></div>
-                          ))}
-                          <div className="w-8 h-8 rounded-full bg-emerald-100 border-2 border-white flex items-center justify-center text-[10px] font-bold text-emerald-700 dark:border-slate-800 dark:bg-emerald-900 dark:text-emerald-300">
-                              +{Math.max(0, activeCohortMembers - 3)}
-                          </div>
                       </div>
                   </div>
                   
-                  <div className="px-4 pb-2 flex gap-4 border-t border-slate-100 dark:border-slate-700 pt-3 overflow-x-auto no-scrollbar">
-                      <button className="text-sm font-bold text-emerald-600 border-b-2 border-emerald-600 pb-2 dark:text-emerald-400">Discussion</button>
-                      <button className="text-sm font-medium text-slate-500 hover:bg-slate-50 px-3 py-1 rounded-lg transition-colors pb-2 dark:text-slate-400 dark:hover:bg-slate-700">Members</button>
-                      <button className="text-sm font-medium text-slate-500 hover:bg-slate-50 px-3 py-1 rounded-lg transition-colors pb-2 dark:text-slate-400 dark:hover:bg-slate-700">Events</button>
-                      <button className="text-sm font-medium text-slate-500 hover:bg-slate-50 px-3 py-1 rounded-lg transition-colors pb-2 dark:text-slate-400 dark:hover:bg-slate-700">Media</button>
+                  {/* Tabs: Full width container with padding for first item */}
+                  <div className="w-full overflow-x-auto no-scrollbar border-t border-slate-100 dark:border-slate-700 pt-1">
+                      <div className="flex px-6 min-w-max">
+                          {['Discussion', 'Members', 'Events', 'Media', 'Files'].map((tab, idx) => (
+                              <button 
+                                  key={tab}
+                                  className={`text-sm font-bold px-1 py-4 mr-6 border-b-2 transition-colors ${idx === 0 ? 'text-emerald-600 border-emerald-600 dark:text-emerald-400 dark:border-emerald-400' : 'text-slate-500 border-transparent hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200'}`}
+                              >
+                                  {tab}
+                              </button>
+                          ))}
+                      </div>
                   </div>
               </div>
           )}
 
-          <CreatePostWidget 
-            currentUser={currentUser} 
-            onPost={(post) => onAddPost({ ...post, cohortId: activeTab })}
-            activeFeedName={activeCohortDetails?.name || 'Team Feed'}
-          />
+          {/* Create Post Widget Wrapper - Floating Card on Mobile with padding */}
+          <div className="px-4 pt-4 pb-2 md:p-0">
+            <CreatePostWidget 
+                currentUser={currentUser} 
+                onPost={(post) => onAddPost({ ...post, cohortId: activeTab })}
+                activeFeedName={activeCohortDetails?.name || 'Team Feed'}
+            />
+          </div>
 
           <div className="space-y-2 md:space-y-6">
             {visiblePosts.length > 0 ? visiblePosts.map(post => (
@@ -255,7 +274,7 @@ const CommunityPortal: React.FC<CommunityPortalProps> = ({
                     onDeletePost={onDeletePost}
                 />
             )) : (
-                <div className="text-center py-16 text-slate-400 bg-white rounded-none md:rounded-2xl border-y md:border-2 border-dashed border-slate-200 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-500 mt-2">
+                <div className="mx-4 md:mx-0 text-center py-16 text-slate-400 bg-white rounded-2xl border-2 border-dashed border-slate-200 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-500 mt-2">
                     <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4 dark:bg-slate-700">
                         <MessageCircle size={32} />
                     </div>
@@ -273,7 +292,6 @@ const CommunityPortal: React.FC<CommunityPortalProps> = ({
       
       {/* 
           MOBILE COHORT OVERLAY 
-          - z-index set to 150 to override the Mobile Dock (z-100) from Layout
       */}
       {activeCohortDetails && (
           <div className="fixed inset-0 z-[150] bg-slate-50 dark:bg-slate-950 overflow-y-auto md:hidden flex flex-col">
@@ -313,11 +331,11 @@ const CommunityPortal: React.FC<CommunityPortalProps> = ({
                   </div>
               </div>
 
-              <div className="p-4 flex-1 bg-slate-100/50 dark:bg-black/20">
+              <div className="flex-1 bg-slate-100/50 dark:bg-black/20">
                   {renderCohortContent()}
               </div>
 
-              {/* Slide Left Drawer (Search) - Cohort Specific */}
+              {/* ... (Search Drawer & Admin Sheet similar to original but nested here) ... */}
               <div className={`fixed inset-0 z-[70] transition-transform duration-300 ${isCohortSearchOpen ? 'translate-x-0' : 'translate-x-full'}`}>
                    <div className="absolute inset-0 bg-white dark:bg-slate-950 flex flex-col">
                        <div className="flex items-center gap-3 p-4 border-b border-slate-200 dark:border-slate-800">
@@ -383,8 +401,6 @@ const CommunityPortal: React.FC<CommunityPortalProps> = ({
 
       {/* 
           MOBILE GLOBAL FEED OVERLAY 
-          - Only visible on mobile when 'GLOBAL' is active.
-          - Replaces standard header with custom "For You" Facebook-style header.
       */}
       {activeTab === 'GLOBAL' && (
           <div className="fixed inset-0 z-[60] bg-slate-50 dark:bg-slate-950 flex flex-col md:hidden">
@@ -392,7 +408,6 @@ const CommunityPortal: React.FC<CommunityPortalProps> = ({
               <div className="flex justify-between items-center px-4 py-3 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 shrink-0">
                    <div className="flex items-center gap-3">
                        <button onClick={() => setIsSidebarOpen(true)} className="p-1 text-slate-800 dark:text-slate-200 hover:bg-slate-100 rounded-lg">
-                          {/* CHANGED: Hamburger to Widgets icon */}
                           <LayoutGrid size={24} />
                        </button>
                        <h1 className="text-2xl font-bold font-heading text-slate-900 dark:text-white tracking-tight">ForYou</h1>
@@ -492,7 +507,6 @@ const CommunityPortal: React.FC<CommunityPortalProps> = ({
 
       {/* 
           Sidebar Navigation - Full Screen on Mobile 
-          - z-index increased to 150 to override layout dock (z-100)
       */}
       <div className={`
           fixed inset-0 z-[150] bg-white border-r border-slate-200 flex flex-col shadow-2xl transition-transform duration-300 ease-in-out
@@ -1104,7 +1118,7 @@ const CreatePostWidget: React.FC<{
     };
 
     return (
-        <div ref={widgetRef} className={`bg-white md:rounded-2xl shadow-sm border-b md:border border-slate-200 p-4 dark:bg-slate-800 dark:border-slate-700 transition-all duration-300`}>
+        <div ref={widgetRef} className={`bg-white rounded-2xl shadow-sm border border-slate-200 p-4 dark:bg-slate-800 dark:border-slate-700 transition-all duration-300`}>
             {/* Top Area: Avatar + Input */}
             <div className="flex gap-3 items-start">
                 <div className="w-10 h-10 rounded-full bg-emerald-100 text-emerald-800 flex items-center justify-center font-bold text-sm flex-shrink-0 border border-slate-100 shadow-sm dark:bg-emerald-900 dark:text-emerald-300 dark:border-slate-600 overflow-hidden">
@@ -1290,7 +1304,8 @@ const PostItem: React.FC<{
     };
 
     return (
-        <div className={`bg-white md:rounded-2xl shadow-sm md:border border-slate-200 p-4 md:p-5 dark:bg-slate-800 dark:border-slate-700 transition-all hover:shadow-md mb-2 md:mb-0 last:mb-0 ${post.isPinned ? 'ring-2 ring-emerald-500/20 bg-emerald-50/10' : ''}`}>
+        // Adjusted card styles: rounded-none on mobile to touch edges, p-5 to protect content
+        <div className={`bg-white md:rounded-2xl shadow-sm border-b md:border border-slate-200 p-6 md:p-6 dark:bg-slate-800 dark:border-slate-700 transition-all hover:shadow-md mb-0 md:mb-0 last:mb-0 ${post.isPinned ? 'ring-2 ring-emerald-500/20 bg-emerald-50/10' : ''}`}>
             
             {/* Header */}
             <div className="flex justify-between items-start mb-3">

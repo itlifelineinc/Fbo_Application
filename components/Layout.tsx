@@ -140,9 +140,6 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
   const isDraggingRef = useRef(false);
   const dragOffsetRef = useRef({ x: 0, y: 0 });
 
-  // Mobile Rank Display State
-  const [showMobileRank, setShowMobileRank] = useState(false);
-
   // Refs for Click Outside Logic
   const profileMenuRef = useRef<HTMLDivElement>(null);
   const profileBtnRef = useRef<HTMLButtonElement>(null);
@@ -171,14 +168,6 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
 
   // Determine current Rank Name for Display
   const currentRankName = currentUser.rankProgress ? RANKS[currentUser.rankProgress.currentRankId]?.name : 'FBO';
-
-  // Toggle Mobile Header Content (Logo vs Rank)
-  useEffect(() => {
-    const interval = setInterval(() => {
-        setShowMobileRank(prev => !prev);
-    }, 5000);
-    return () => clearInterval(interval);
-  }, []);
 
   // Check if we are in a builder mode (full screen tools)
   const isBuilder = location.pathname.startsWith('/sales-builder') || location.pathname.startsWith('/builder');
@@ -786,20 +775,9 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
         {/* Mobile Header - With Auto-Hide Logic & Dynamic Content */}
         <header className={`lg:hidden bg-white border-b border-slate-200 p-4 flex justify-between items-center z-40 shadow-sm dark:bg-slate-900 dark:border-slate-800 shrink-0 transition-transform duration-300 ease-in-out ${showMobileHeader ? 'translate-y-0' : '-translate-y-full absolute w-full'}`}>
            <div className="flex-1 flex items-center min-w-0 mr-2">
-                {/* Logo State */}
-                <div className={`transition-opacity duration-500 absolute ${showMobileRank ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
-                    <Logo className="w-8 h-8" textClassName="text-xl font-bold text-emerald-900 dark:text-emerald-400" />
-                </div>
-                {/* Rank State */}
-                <div className={`transition-opacity duration-500 ${showMobileRank ? 'opacity-100' : 'opacity-0 pointer-events-none'} flex items-center gap-2.5`}>
-                    <div className="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center dark:bg-emerald-900 dark:text-emerald-300 shadow-sm border border-emerald-200 dark:border-emerald-800">
-                        <Award size={18} />
-                    </div>
-                    <div className="flex flex-col justify-center">
-                        <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest leading-none">CURRENT RANK</span>
-                        <span className="text-sm font-bold text-emerald-900 dark:text-white leading-tight truncate max-w-[120px]">{currentRankName}</span>
-                    </div>
-                </div>
+               <h1 className="text-3xl font-extrabold tracking-tighter text-emerald-950 dark:text-white font-heading">
+                   Nexu
+               </h1>
            </div>
 
            <div className="flex items-center gap-4 relative z-[100]">

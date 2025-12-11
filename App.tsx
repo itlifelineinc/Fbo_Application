@@ -328,6 +328,7 @@ const App: React.FC = () => {
                     currentUser={currentUser!} 
                     posts={posts} 
                     cohorts={cohorts} 
+                    students={students}
                     onAddPost={handleAddPost} 
                     onAddComment={handleAddComment} 
                     onLikePost={handleLikePost} 

@@ -4,17 +4,18 @@ import { Student, CommunityPost, Cohort, UserRole, CommunityComment, Poll, PostM
 import { 
   Globe, Users, Hash, Search, Image as ImageIcon, Video, BarChart2, 
   Send, MoreHorizontal, Heart, MessageCircle, Share2, Pin, Trash2, 
-  Slash, Flag, X, Plus, CheckCircle, Smile, Tag, XCircle 
+  Slash, Flag, X, Plus, CheckCircle, Smile, Tag, XCircle, Lock, Settings, 
+  Shield, UserPlus, Clock, LayoutList, Info, Calendar, Eye
 } from 'lucide-react';
 
 interface CommunityPortalProps {
   currentUser: Student;
   posts: CommunityPost[];
   cohorts: Cohort[];
+  students: Student[]; // Added students prop to count members
   onAddPost: (post: CommunityPost) => void;
   onAddComment: (postId: string, comment: CommunityComment) => void;
   onLikePost: (postId: string) => void;
-  // In a real app, these would be separate props or a context method
   onUpdatePost?: (post: CommunityPost) => void; 
   onDeletePost?: (postId: string) => void;
 }
@@ -23,6 +24,7 @@ const CommunityPortal: React.FC<CommunityPortalProps> = ({
   currentUser, 
   posts, 
   cohorts, 
+  students,
   onAddPost, 
   onAddComment, 
   onLikePost,
@@ -44,7 +46,16 @@ const CommunityPortal: React.FC<CommunityPortalProps> = ({
   });
 
   const myCohort = cohorts.find(c => c.id === currentUser.cohortId);
-  const isModerator = currentUser.role === UserRole.SPONSOR || currentUser.role === UserRole.ADMIN || currentUser.role === UserRole.SUPER_ADMIN;
+  const isGlobalAdmin = currentUser.role === UserRole.ADMIN || currentUser.role === UserRole.SUPER_ADMIN;
+
+  // Active Cohort Details
+  const activeCohortDetails = activeTab !== 'GLOBAL' ? cohorts.find(c => c.id === activeTab) : null;
+  const activeCohortMembers = activeTab !== 'GLOBAL' ? students.filter(s => s.cohortId === activeTab).length : 0;
+
+  // Check if current user is the "Admin" of the current view (Sponsor of the cohort)
+  const isCohortAdmin = activeCohortDetails && (currentUser.handle === activeCohortDetails.mentorHandle || isGlobalAdmin);
+  
+  const isModerator = activeTab === 'GLOBAL' ? isGlobalAdmin : !!isCohortAdmin;
 
   return (
     <div className="flex flex-col md:flex-row gap-6 animate-fade-in relative min-h-screen bg-slate-50 dark:bg-slate-950">
@@ -74,9 +85,39 @@ const CommunityPortal: React.FC<CommunityPortalProps> = ({
 
         {/* Sidebar Content */}
         <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden flex-1 flex flex-col dark:bg-slate-800 dark:border-slate-700">
+            
+            {/* Logic: If inside a Cohort and User is Admin, show Admin Tools first */}
+            {activeTab !== 'GLOBAL' && isCohortAdmin ? (
+                <>
+                    <div className="p-4 border-b border-slate-100 bg-emerald-50 dark:bg-emerald-900/10 dark:border-slate-700">
+                        <div className="flex items-center gap-2 text-emerald-800 dark:text-emerald-400 mb-1">
+                            <Shield size={18} />
+                            <span className="font-bold font-heading">Manage Group</span>
+                        </div>
+                        <p className="text-[10px] text-emerald-600/80 dark:text-emerald-500">Admin Tools</p>
+                    </div>
+                    <div className="p-2 space-y-1">
+                        <button className="w-full text-left px-3 py-2.5 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-50 flex items-center gap-3 transition-colors dark:text-slate-300 dark:hover:bg-slate-700/50">
+                            <UserPlus size={16} className="text-slate-400"/> Member Requests
+                        </button>
+                        <button className="w-full text-left px-3 py-2.5 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-50 flex items-center gap-3 transition-colors dark:text-slate-300 dark:hover:bg-slate-700/50">
+                            <Clock size={16} className="text-slate-400"/> Scheduled Posts
+                        </button>
+                        <button className="w-full text-left px-3 py-2.5 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-50 flex items-center gap-3 transition-colors dark:text-slate-300 dark:hover:bg-slate-700/50">
+                            <Flag size={16} className="text-slate-400"/> Member Reported
+                        </button>
+                        <button className="w-full text-left px-3 py-2.5 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-50 flex items-center gap-3 transition-colors dark:text-slate-300 dark:hover:bg-slate-700/50">
+                            <Settings size={16} className="text-slate-400"/> Group Settings
+                        </button>
+                    </div>
+                    <div className="h-px bg-slate-100 mx-4 my-2 dark:bg-slate-700"></div>
+                </>
+            ) : null}
+
+            {/* Standard Navigation (Always visible but context aware) */}
             <div className="p-4 border-b border-slate-100 hidden md:flex items-center gap-2 bg-slate-50 dark:bg-slate-900 dark:border-slate-700">
                 <Globe size={18} className="text-emerald-600 dark:text-emerald-400" />
-                <span className="font-bold text-slate-700 font-heading dark:text-slate-200">Feeds</span>
+                <span className="font-bold text-slate-700 font-heading dark:text-slate-200">Shortcuts</span>
             </div>
             
             <div className="p-2 space-y-1 flex-1 overflow-y-auto">
@@ -112,7 +153,7 @@ const CommunityPortal: React.FC<CommunityPortalProps> = ({
                 )}
 
                 {/* Admin View All Cohorts */}
-                {isModerator && (
+                {isGlobalAdmin && (
                     <>
                         <div className="mt-6 mb-2 px-3 text-[10px] font-bold text-slate-400 uppercase tracking-wider dark:text-slate-500">All Cohorts (Admin)</div>
                         {cohorts.filter(c => c.id !== currentUser.cohortId).map(c => (
@@ -150,6 +191,45 @@ const CommunityPortal: React.FC<CommunityPortalProps> = ({
 
           <div className="space-y-6">
               
+              {/* Cohort Group Header (Facebook Style) */}
+              {activeCohortDetails && (
+                  <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden dark:bg-slate-800 dark:border-slate-700">
+                      <div className="h-32 bg-gradient-to-r from-emerald-600 to-teal-500 relative">
+                          <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-black/60 to-transparent">
+                              <h1 className="text-2xl font-bold text-white font-heading shadow-sm">{activeCohortDetails.name}</h1>
+                          </div>
+                      </div>
+                      <div className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                          <div className="flex items-center gap-3">
+                              <div className="flex items-center gap-1 text-xs font-bold text-slate-500 bg-slate-100 px-3 py-1.5 rounded-full dark:bg-slate-700 dark:text-slate-300">
+                                  <Lock size={12} /> Private Group
+                              </div>
+                              <div className="text-sm text-slate-500 font-medium dark:text-slate-400">
+                                  <span className="font-bold text-slate-900 dark:text-white">{activeCohortMembers}</span> Members
+                              </div>
+                          </div>
+                          
+                          <div className="flex -space-x-2">
+                              {/* Avatar Stack Mockup */}
+                              {[1,2,3].map(i => (
+                                  <div key={i} className="w-8 h-8 rounded-full bg-slate-200 border-2 border-white dark:border-slate-800 dark:bg-slate-700"></div>
+                              ))}
+                              <div className="w-8 h-8 rounded-full bg-emerald-100 border-2 border-white flex items-center justify-center text-[10px] font-bold text-emerald-700 dark:border-slate-800 dark:bg-emerald-900 dark:text-emerald-300">
+                                  +{Math.max(0, activeCohortMembers - 3)}
+                              </div>
+                          </div>
+                      </div>
+                      
+                      {/* Cohort Tabs (Discussion, Members, etc.) */}
+                      <div className="px-4 pb-2 flex gap-4 border-t border-slate-100 dark:border-slate-700 pt-3 overflow-x-auto no-scrollbar">
+                          <button className="text-sm font-bold text-emerald-600 border-b-2 border-emerald-600 pb-2 dark:text-emerald-400">Discussion</button>
+                          <button className="text-sm font-medium text-slate-500 hover:bg-slate-50 px-3 py-1 rounded-lg transition-colors pb-2 dark:text-slate-400 dark:hover:bg-slate-700">Members</button>
+                          <button className="text-sm font-medium text-slate-500 hover:bg-slate-50 px-3 py-1 rounded-lg transition-colors pb-2 dark:text-slate-400 dark:hover:bg-slate-700">Events</button>
+                          <button className="text-sm font-medium text-slate-500 hover:bg-slate-50 px-3 py-1 rounded-lg transition-colors pb-2 dark:text-slate-400 dark:hover:bg-slate-700">Media</button>
+                      </div>
+                  </div>
+              )}
+
               {/* Create Post Widget */}
               <CreatePostWidget 
                 currentUser={currentUser} 
@@ -185,28 +265,69 @@ const CommunityPortal: React.FC<CommunityPortalProps> = ({
           </div>
       </div>
 
-      {/* Right Column (Desktop Only) - Trending / Tips */}
+      {/* Right Column (Desktop Only) - Context Aware */}
       <div className="hidden xl:block w-80 shrink-0">
           <div className="sticky top-6 space-y-6">
-              <div className="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 dark:bg-slate-800 dark:border-slate-700">
-                  <h3 className="font-bold text-slate-800 mb-4 dark:text-white flex items-center gap-2">
-                      <BarChart2 size={18} className="text-emerald-500" /> Community Stats
-                  </h3>
-                  <div className="space-y-3">
-                      <div className="flex justify-between text-sm">
-                          <span className="text-slate-500 dark:text-slate-400">Active Members</span>
-                          <span className="font-bold text-slate-900 dark:text-white">128</span>
-                      </div>
-                      <div className="flex justify-between text-sm">
-                          <span className="text-slate-500 dark:text-slate-400">Total Posts</span>
-                          <span className="font-bold text-slate-900 dark:text-white">{posts.length}</span>
-                      </div>
-                      <div className="flex justify-between text-sm">
-                          <span className="text-slate-500 dark:text-slate-400">Wins Celebrated</span>
-                          <span className="font-bold text-slate-900 dark:text-white">{posts.filter(p => p.type === 'WIN').length}</span>
+              
+              {/* Context Switcher for Right Column */}
+              {activeTab === 'GLOBAL' ? (
+                  // --- GLOBAL CONTEXT ---
+                  <div className="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 dark:bg-slate-800 dark:border-slate-700">
+                      <h3 className="font-bold text-slate-800 mb-4 dark:text-white flex items-center gap-2">
+                          <BarChart2 size={18} className="text-emerald-500" /> Community Stats
+                      </h3>
+                      <div className="space-y-3">
+                          <div className="flex justify-between text-sm">
+                              <span className="text-slate-500 dark:text-slate-400">Active Members</span>
+                              <span className="font-bold text-slate-900 dark:text-white">128</span>
+                          </div>
+                          <div className="flex justify-between text-sm">
+                              <span className="text-slate-500 dark:text-slate-400">Total Posts</span>
+                              <span className="font-bold text-slate-900 dark:text-white">{posts.length}</span>
+                          </div>
+                          <div className="flex justify-between text-sm">
+                              <span className="text-slate-500 dark:text-slate-400">Wins Celebrated</span>
+                              <span className="font-bold text-slate-900 dark:text-white">{posts.filter(p => p.type === 'WIN').length}</span>
+                          </div>
                       </div>
                   </div>
-              </div>
+              ) : activeCohortDetails ? (
+                  // --- COHORT CONTEXT ---
+                  <div className="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 dark:bg-slate-800 dark:border-slate-700">
+                      <h3 className="font-bold text-slate-800 mb-4 dark:text-white flex items-center gap-2">
+                          <Info size={18} className="text-emerald-500" /> About this Cohort
+                      </h3>
+                      <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed mb-4">
+                          {activeCohortDetails.description}
+                      </p>
+                      
+                      <div className="space-y-4 pt-4 border-t border-slate-100 dark:border-slate-700">
+                          <div className="flex items-center gap-3">
+                              <Globe size={16} className="text-slate-400" />
+                              <div className="flex-1">
+                                  <p className="text-sm font-bold text-slate-800 dark:text-white">Private</p>
+                                  <p className="text-xs text-slate-500 dark:text-slate-400">Only members can see who's in the group and what they post.</p>
+                              </div>
+                          </div>
+                          <div className="flex items-center gap-3">
+                              <Eye size={16} className="text-slate-400" />
+                              <div className="flex-1">
+                                  <p className="text-sm font-bold text-slate-800 dark:text-white">Visible</p>
+                                  <p className="text-xs text-slate-500 dark:text-slate-400">Anyone can find this group.</p>
+                              </div>
+                          </div>
+                          <div className="flex items-center gap-3">
+                              <div className="w-8 h-8 rounded-full bg-emerald-100 text-emerald-800 flex items-center justify-center font-bold text-xs dark:bg-emerald-900 dark:text-emerald-300">
+                                  {activeCohortDetails.mentorHandle.charAt(1).toUpperCase()}
+                              </div>
+                              <div className="flex-1">
+                                  <p className="text-sm font-bold text-slate-800 dark:text-white">Created by</p>
+                                  <p className="text-xs text-emerald-600 dark:text-emerald-400">{activeCohortDetails.mentorHandle}</p>
+                              </div>
+                          </div>
+                      </div>
+                  </div>
+              ) : null}
 
               <div className="bg-gradient-to-br from-indigo-900 to-slate-900 p-5 rounded-2xl shadow-lg text-white">
                   <h3 className="font-bold mb-2">💡 Tip of the Day</h3>

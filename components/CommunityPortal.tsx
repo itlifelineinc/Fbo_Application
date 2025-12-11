@@ -1,5 +1,6 @@
 
 import React, { useState, useRef, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Student, CommunityPost, Cohort, UserRole, CommunityComment, Poll, PostMedia } from '../types';
 import { 
   Globe, Users, Hash, Search, Image as ImageIcon, Video, BarChart2, 
@@ -33,6 +34,7 @@ const CommunityPortal: React.FC<CommunityPortalProps> = ({
   onDeletePost,
   onCreateCohort
 }) => {
+  const navigate = useNavigate();
   // 'GLOBAL' or cohortId
   const [activeTab, setActiveTab] = useState<string>('GLOBAL');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -474,15 +476,18 @@ const CommunityPortal: React.FC<CommunityPortalProps> = ({
         />
       )}
 
-      {/* Sidebar Navigation */}
+      {/* Sidebar Navigation - Full Screen on Mobile */}
       <div className={`
-          fixed inset-y-0 left-0 z-[90] w-full max-w-[320px] bg-white border-r border-slate-200 flex flex-col shadow-2xl transition-transform duration-300 ease-in-out
+          fixed inset-0 z-[90] bg-white border-r border-slate-200 flex flex-col shadow-2xl transition-transform duration-300 ease-in-out
           md:translate-x-0 md:static md:z-0 md:shadow-none md:border-0 md:bg-transparent md:w-64 md:h-[calc(100vh-6rem)] md:sticky md:top-4 dark:bg-slate-900 dark:border-slate-800
           ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}
       `}>
         {/* NEW: Custom Mobile Sidebar Header */}
         <div className="p-4 border-b border-slate-100 md:hidden flex justify-between items-center bg-white dark:bg-slate-900 dark:border-slate-800">
-             <button onClick={() => setIsSidebarOpen(false)} className="p-2 -ml-2 text-slate-600 dark:text-slate-300 hover:bg-slate-100 rounded-full">
+             <button 
+                onClick={() => { setIsSidebarOpen(false); navigate(-1); }} 
+                className="p-2 -ml-2 text-slate-600 dark:text-slate-300 hover:bg-slate-100 rounded-full"
+             >
                 <ChevronLeft size={28} />
              </button>
              <h2 className="font-bold text-2xl text-slate-900 font-heading dark:text-white">
@@ -717,8 +722,11 @@ const CommunityPortal: React.FC<CommunityPortalProps> = ({
 
       {/* Create Cohort Modal */}
       {isCreateCohortModalOpen && (
-          <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
-              <div className="bg-white dark:bg-slate-800 w-full max-w-lg rounded-2xl shadow-xl overflow-hidden flex flex-col max-h-[90vh] animate-fade-in border border-slate-200 dark:border-slate-700">
+          <div className="fixed inset-0 z-50 bg-black/50 flex items-end md:items-center justify-center p-0 md:p-4 animate-fade-in" onClick={() => setIsCreateCohortModalOpen(false)}>
+              <div 
+                className="bg-white dark:bg-slate-800 w-full md:max-w-lg rounded-t-3xl md:rounded-2xl shadow-2xl overflow-hidden flex flex-col h-[90vh] md:h-auto md:max-h-[90vh] animate-slide-up border-t md:border border-slate-200 dark:border-slate-700"
+                onClick={e => e.stopPropagation()}
+              >
                   <div className="px-6 py-4 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-slate-50 dark:bg-slate-900">
                       <h3 className="font-bold text-xl text-slate-900 dark:text-white">Create New Cohort</h3>
                       <button onClick={() => setIsCreateCohortModalOpen(false)} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300">
@@ -782,7 +790,7 @@ const CommunityPortal: React.FC<CommunityPortalProps> = ({
                               />
                           </div>
 
-                          <div className="flex justify-end gap-3 pt-2">
+                          <div className="flex justify-end gap-3 pt-2 pb-6 md:pb-0">
                               <button 
                                   type="button" 
                                   onClick={() => setIsCreateCohortModalOpen(false)}

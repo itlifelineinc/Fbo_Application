@@ -5,7 +5,7 @@ import {
   Globe, Users, Hash, Search, Image as ImageIcon, Video, BarChart2, 
   Send, MoreHorizontal, Heart, MessageCircle, Share2, Pin, Trash2, 
   Slash, Flag, X, Plus, CheckCircle, Smile, Tag, XCircle, Lock, Settings, 
-  Shield, UserPlus, Clock, LayoutList, Info, Calendar, Eye, ArrowLeft, BookOpen, AlertCircle, MapPin, EyeOff, Search as SearchIcon, PlusSquare, Edit3, Menu
+  Shield, UserPlus, Clock, LayoutList, Info, Calendar, Eye, ArrowLeft, BookOpen, AlertCircle, MapPin, EyeOff, Search as SearchIcon, PlusSquare, Edit3, Menu, LayoutGrid, ChevronLeft, PlusCircle
 } from 'lucide-react';
 
 interface CommunityPortalProps {
@@ -71,6 +71,9 @@ const CommunityPortal: React.FC<CommunityPortalProps> = ({
   const myCohort = cohorts.find(c => c.id === currentUser.cohortId);
   const isGlobalAdmin = currentUser.role === UserRole.ADMIN || currentUser.role === UserRole.SUPER_ADMIN;
   const canCreateCohort = currentUser.role === UserRole.SPONSOR || isGlobalAdmin;
+
+  // Filter for Suggested Cohorts (Public ones that aren't my cohort)
+  const suggestedCohorts = cohorts.filter(c => c.id !== currentUser.cohortId && c.privacy === 'PUBLIC' && !c.isHidden);
 
   // Active Cohort Details
   const activeCohortDetails = activeTab !== 'GLOBAL' ? cohorts.find(c => c.id === activeTab) : null;
@@ -385,8 +388,9 @@ const CommunityPortal: React.FC<CommunityPortalProps> = ({
               {/* Custom Header */}
               <div className="flex justify-between items-center px-4 py-3 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 shrink-0">
                    <div className="flex items-center gap-3">
-                       <button onClick={() => setIsSidebarOpen(true)} className="p-1">
-                          <Menu size={24} className="text-slate-900 dark:text-white" />
+                       <button onClick={() => setIsSidebarOpen(true)} className="p-1 text-slate-800 dark:text-slate-200 hover:bg-slate-100 rounded-lg">
+                          {/* CHANGED: Hamburger to Widgets icon */}
+                          <LayoutGrid size={24} />
                        </button>
                        <h1 className="text-2xl font-bold font-heading text-slate-900 dark:text-white tracking-tight">For You</h1>
                    </div>
@@ -472,17 +476,28 @@ const CommunityPortal: React.FC<CommunityPortalProps> = ({
 
       {/* Sidebar Navigation */}
       <div className={`
-          fixed inset-y-0 left-0 z-[90] w-72 bg-white border-r border-slate-200 flex flex-col shadow-2xl transition-transform duration-300 ease-in-out
+          fixed inset-y-0 left-0 z-[90] w-full max-w-[320px] bg-white border-r border-slate-200 flex flex-col shadow-2xl transition-transform duration-300 ease-in-out
           md:translate-x-0 md:static md:z-0 md:shadow-none md:border-0 md:bg-transparent md:w-64 md:h-[calc(100vh-6rem)] md:sticky md:top-4 dark:bg-slate-900 dark:border-slate-800
           ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}
       `}>
-        <div className="p-6 border-b border-slate-100 md:hidden flex justify-between items-center dark:border-slate-800">
-             <h2 className="font-bold text-lg text-emerald-900 font-heading flex items-center gap-2 dark:text-emerald-400">
+        {/* NEW: Custom Mobile Sidebar Header */}
+        <div className="p-4 border-b border-slate-100 md:hidden flex justify-between items-center bg-white dark:bg-slate-900 dark:border-slate-800">
+             <button onClick={() => setIsSidebarOpen(false)} className="p-2 -ml-2 text-slate-600 dark:text-slate-300 hover:bg-slate-100 rounded-full">
+                <ChevronLeft size={28} />
+             </button>
+             <h2 className="font-bold text-2xl text-slate-900 font-heading dark:text-white">
                 Community
              </h2>
-             <button onClick={() => setIsSidebarOpen(false)} className="text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300">
-                <X />
-             </button>
+             <div className="flex items-center gap-2">
+                {canCreateCohort && (
+                    <button onClick={() => { setIsCreateCohortModalOpen(true); setIsSidebarOpen(false); }} className="text-emerald-600 hover:bg-emerald-50 p-2 rounded-full dark:text-emerald-400 dark:hover:bg-emerald-900/30">
+                        <PlusCircle size={24} />
+                    </button>
+                )}
+                <button onClick={() => setIsSidebarOpen(false)} className="text-slate-400 hover:text-slate-600 p-2 rounded-full dark:text-slate-500 dark:hover:text-slate-300">
+                    <X size={24} />
+                </button>
+             </div>
         </div>
 
         {/* Sidebar Content */}
@@ -533,7 +548,7 @@ const CommunityPortal: React.FC<CommunityPortalProps> = ({
                 </>
             ) : (
                 <>
-                    {/* Standard Navigation (For You & List) */}
+                    {/* Standard Navigation (For You & List) - Desktop Header */}
                     <div className="p-4 border-b border-slate-100 hidden md:flex items-center gap-2 bg-slate-50 dark:bg-slate-900 dark:border-slate-700">
                         <Globe size={18} className="text-emerald-600 dark:text-emerald-400" />
                         <span className="font-bold text-slate-700 font-heading dark:text-slate-200">Feeds</span>
@@ -551,11 +566,11 @@ const CommunityPortal: React.FC<CommunityPortalProps> = ({
                         </button>
 
                         <div className="mt-6 mb-2 px-3 flex justify-between items-center text-[10px] font-bold text-slate-400 uppercase tracking-wider dark:text-slate-500">
-                            <div className="flex items-center gap-2"><Users size={12} /> Your Teams</div>
+                            <div className="flex items-center gap-2"><Users size={12} /> Your Spaces</div>
                             {canCreateCohort && (
                                 <button 
                                     onClick={() => setIsCreateCohortModalOpen(true)}
-                                    className="p-1 hover:bg-slate-100 rounded dark:hover:bg-slate-700 text-emerald-600 dark:text-emerald-400 transition-colors"
+                                    className="p-1 hover:bg-slate-100 rounded dark:hover:bg-slate-700 text-emerald-600 dark:text-emerald-400 transition-colors hidden md:block"
                                     title="Create Cohort"
                                 >
                                     <Plus size={12} />
@@ -575,14 +590,34 @@ const CommunityPortal: React.FC<CommunityPortalProps> = ({
                                 </div>
                             </button>
                         ) : (
-                            <div className="px-3 py-2 text-xs text-slate-400 italic dark:text-slate-500">No active cohort.</div>
+                            <div className="px-3 py-2 text-xs text-slate-400 italic dark:text-slate-500">No active team cohort.</div>
                         )}
 
-                        {/* Admin View All Cohorts */}
+                        {/* Suggested / Public Groups Section */}
+                        {suggestedCohorts.length > 0 && (
+                            <>
+                                <div className="mt-6 mb-2 px-3 text-[10px] font-bold text-slate-400 uppercase tracking-wider dark:text-slate-500">Suggested Groups</div>
+                                {suggestedCohorts.map(c => (
+                                    <button 
+                                        key={c.id}
+                                        onClick={() => { setActiveTab(c.id); setIsSidebarOpen(false); }}
+                                        className="w-full text-left px-3 py-2.5 rounded-lg text-sm font-medium transition-all flex items-center gap-3 text-slate-600 hover:bg-slate-50 dark:text-slate-400 dark:hover:bg-slate-700/50"
+                                    >
+                                        <div className="w-8 h-8 bg-indigo-50 text-indigo-500 rounded-full flex items-center justify-center shrink-0 dark:bg-indigo-900/20 dark:text-indigo-400"><Globe size={14} /></div>
+                                        <div className="min-w-0">
+                                            <div className="truncate font-bold text-xs">{c.name}</div>
+                                            <div className="text-[9px] text-slate-400 truncate">{c.description}</div>
+                                        </div>
+                                    </button>
+                                ))}
+                            </>
+                        )}
+
+                        {/* Admin View All Cohorts (Hidden Duplicate if logic overlaps, keeping for admin) */}
                         {isGlobalAdmin && (
                             <>
                                 <div className="mt-6 mb-2 px-3 text-[10px] font-bold text-slate-400 uppercase tracking-wider dark:text-slate-500">All Cohorts (Admin)</div>
-                                {cohorts.filter(c => c.id !== currentUser.cohortId).map(c => (
+                                {cohorts.filter(c => c.id !== currentUser.cohortId && !suggestedCohorts.find(sc => sc.id === c.id)).map(c => (
                                     <button 
                                         key={c.id}
                                         onClick={() => { setActiveTab(c.id); setIsSidebarOpen(false); }}

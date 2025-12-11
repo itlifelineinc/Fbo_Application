@@ -1,11 +1,11 @@
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Student, CommunityPost, Cohort, UserRole, CommunityComment, Poll, PostMedia } from '../types';
 import { 
   Globe, Users, Hash, Search, Image as ImageIcon, Video, BarChart2, 
   Send, MoreHorizontal, Heart, MessageCircle, Share2, Pin, Trash2, 
   Slash, Flag, X, Plus, CheckCircle, Smile, Tag, XCircle, Lock, Settings, 
-  Shield, UserPlus, Clock, LayoutList, Info, Calendar, Eye, ArrowLeft, BookOpen, AlertCircle
+  Shield, UserPlus, Clock, LayoutList, Info, Calendar, Eye, ArrowLeft, BookOpen, AlertCircle, MapPin, EyeOff
 } from 'lucide-react';
 
 interface CommunityPortalProps {
@@ -38,6 +38,11 @@ const CommunityPortal: React.FC<CommunityPortalProps> = ({
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isCreateCohortModalOpen, setIsCreateCohortModalOpen] = useState(false);
   
+  // Settings Modal State
+  const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
+  const [settingsForm, setSettingsForm] = useState<Partial<Cohort>>({});
+  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
+
   // Create Modal State
   const [newCohortName, setNewCohortName] = useState('');
   const [newCohortDesc, setNewCohortDesc] = useState('');
@@ -67,6 +72,8 @@ const CommunityPortal: React.FC<CommunityPortalProps> = ({
   
   const isModerator = activeTab === 'GLOBAL' ? isGlobalAdmin : !!isCohortAdmin;
 
+  // --- Handlers ---
+
   const handleCreateSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newCohortName.trim()) return;
@@ -76,7 +83,10 @@ const CommunityPortal: React.FC<CommunityPortalProps> = ({
         name: newCohortName,
         description: newCohortDesc,
         mentorHandle: currentUser.handle,
-        coverImage: newCohortCover // Add cover image
+        coverImage: newCohortCover,
+        privacy: 'PRIVATE', // Default
+        introEnabled: true,
+        isHidden: false
     };
     
     onCreateCohort(newCohort);
@@ -99,6 +109,36 @@ const CommunityPortal: React.FC<CommunityPortalProps> = ({
           };
           reader.readAsDataURL(file);
       }
+  };
+
+  const openSettings = () => {
+      if (activeCohortDetails) {
+          setSettingsForm({ ...activeCohortDetails });
+          setIsSettingsModalOpen(true);
+      }
+  };
+
+  const handleSaveSettings = () => {
+      // In a real app, this would dispatch an update action to the parent/backend
+      // For this demo, we'll manually update the local state array reference (mock)
+      const updatedCohort = { ...activeCohortDetails, ...settingsForm } as Cohort;
+      
+      // MOCK UPDATE: Locate in array and mutate (simulated)
+      const idx = cohorts.findIndex(c => c.id === updatedCohort.id);
+      if (idx !== -1) {
+          cohorts[idx] = updatedCohort; 
+      }
+      setIsSettingsModalOpen(false);
+      alert("Group settings saved!");
+  };
+
+  const handleDeleteGroup = () => {
+      // Mock delete
+      alert("Group deleted successfully.");
+      setIsDeleteConfirmOpen(false);
+      setIsSettingsModalOpen(false);
+      setActiveTab('GLOBAL');
+      // In real app: onCreateCohort (or onDeleteCohort) would propagate up
   };
 
   return (
@@ -167,7 +207,7 @@ const CommunityPortal: React.FC<CommunityPortalProps> = ({
                                 <button className="w-full text-left px-3 py-2.5 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-50 flex items-center gap-3 transition-colors dark:text-slate-300 dark:hover:bg-slate-700/50">
                                     <BarChart2 size={16} className="text-slate-400"/> Analytics
                                 </button>
-                                <button className="w-full text-left px-3 py-2.5 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-50 flex items-center gap-3 transition-colors dark:text-slate-300 dark:hover:bg-slate-700/50">
+                                <button onClick={openSettings} className="w-full text-left px-3 py-2.5 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-50 flex items-center gap-3 transition-colors dark:text-slate-300 dark:hover:bg-slate-700/50">
                                     <Settings size={16} className="text-slate-400"/> Group Settings
                                 </button>
                             </div>
@@ -273,11 +313,17 @@ const CommunityPortal: React.FC<CommunityPortalProps> = ({
                       <div className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                           <div className="flex items-center gap-3">
                               <div className="flex items-center gap-1 text-xs font-bold text-slate-500 bg-slate-100 px-3 py-1.5 rounded-full dark:bg-slate-700 dark:text-slate-300">
-                                  <Lock size={12} /> Private Group
+                                  {activeCohortDetails.privacy === 'PUBLIC' ? <Globe size={12}/> : <Lock size={12} />} 
+                                  {activeCohortDetails.privacy === 'PUBLIC' ? 'Public Group' : 'Private Group'}
                               </div>
                               <div className="text-sm text-slate-500 font-medium dark:text-slate-400">
                                   <span className="font-bold text-slate-900 dark:text-white">{activeCohortMembers}</span> Members
                               </div>
+                              {activeCohortDetails.location && (
+                                  <div className="flex items-center gap-1 text-xs text-slate-500 dark:text-slate-400">
+                                      <MapPin size={12} /> {activeCohortDetails.location}
+                                  </div>
+                              )}
                           </div>
                           
                           <div className="flex -space-x-2">
@@ -374,17 +420,19 @@ const CommunityPortal: React.FC<CommunityPortalProps> = ({
                       
                       <div className="space-y-4 pt-4 border-t border-slate-100 dark:border-slate-700">
                           <div className="flex items-center gap-3">
-                              <Globe size={16} className="text-slate-400" />
+                              {activeCohortDetails.privacy === 'PUBLIC' ? <Globe size={16} className="text-slate-400"/> : <Lock size={16} className="text-slate-400"/>}
                               <div className="flex-1">
-                                  <p className="text-sm font-bold text-slate-800 dark:text-white">Private</p>
-                                  <p className="text-xs text-slate-500 dark:text-slate-400">Only members can see who's in the group and what they post.</p>
+                                  <p className="text-sm font-bold text-slate-800 dark:text-white">{activeCohortDetails.privacy === 'PUBLIC' ? 'Public' : 'Private'}</p>
+                                  <p className="text-xs text-slate-500 dark:text-slate-400">
+                                      {activeCohortDetails.privacy === 'PUBLIC' ? 'Visible to everyone.' : 'Only members can see posts.'}
+                                  </p>
                               </div>
                           </div>
                           <div className="flex items-center gap-3">
-                              <Eye size={16} className="text-slate-400" />
+                              {activeCohortDetails.isHidden ? <EyeOff size={16} className="text-slate-400"/> : <Eye size={16} className="text-slate-400"/>}
                               <div className="flex-1">
-                                  <p className="text-sm font-bold text-slate-800 dark:text-white">Visible</p>
-                                  <p className="text-xs text-slate-500 dark:text-slate-400">Anyone can find this group.</p>
+                                  <p className="text-sm font-bold text-slate-800 dark:text-white">{activeCohortDetails.isHidden ? 'Hidden' : 'Visible'}</p>
+                                  <p className="text-xs text-slate-500 dark:text-slate-400">{activeCohortDetails.isHidden ? 'Search hidden.' : 'Anyone can find this group.'}</p>
                               </div>
                           </div>
                           <div className="flex items-center gap-3">
@@ -498,6 +546,156 @@ const CommunityPortal: React.FC<CommunityPortalProps> = ({
           </div>
       )}
 
+      {/* Group Settings Modal */}
+      {isSettingsModalOpen && activeCohortDetails && (
+          <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
+              <div className="bg-white dark:bg-slate-900 w-full max-w-lg rounded-2xl shadow-xl overflow-hidden flex flex-col max-h-[90vh] animate-fade-in border border-slate-200 dark:border-slate-700">
+                  <div className="px-6 py-4 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-slate-50 dark:bg-slate-900">
+                      <h3 className="font-bold text-xl text-slate-900 dark:text-white">Group Settings</h3>
+                      <button onClick={() => setIsSettingsModalOpen(false)} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300">
+                          <X size={20} />
+                      </button>
+                  </div>
+                  <div className="p-6 overflow-y-auto space-y-6">
+                      
+                      {/* Set up group */}
+                      <div className="space-y-4">
+                          <h4 className="text-sm font-bold text-slate-400 uppercase tracking-wider border-b border-slate-100 pb-2 dark:border-slate-800">Set Up Group</h4>
+                          <div>
+                              <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1">Name</label>
+                              <input 
+                                  type="text" 
+                                  value={settingsForm.name}
+                                  onChange={(e) => setSettingsForm(prev => ({...prev, name: e.target.value}))}
+                                  className="w-full p-3 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-emerald-500 bg-white dark:bg-slate-800 dark:border-slate-700 dark:text-white"
+                              />
+                          </div>
+                          <div>
+                              <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1">Description</label>
+                              <textarea 
+                                  value={settingsForm.description}
+                                  onChange={(e) => setSettingsForm(prev => ({...prev, description: e.target.value}))}
+                                  className="w-full p-3 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-emerald-500 h-20 resize-none bg-white dark:bg-slate-800 dark:border-slate-700 dark:text-white"
+                              />
+                          </div>
+                      </div>
+
+                      {/* New Member Intro */}
+                      <div className="space-y-4">
+                          <h4 className="text-sm font-bold text-slate-400 uppercase tracking-wider border-b border-slate-100 pb-2 dark:border-slate-800">Community Features</h4>
+                          <div className="flex items-center justify-between">
+                              <div>
+                                  <p className="text-sm font-bold text-slate-800 dark:text-slate-200">New Member Intro</p>
+                                  <p className="text-xs text-slate-500 dark:text-slate-400">Welcome new members automatically</p>
+                              </div>
+                              <label className="relative inline-flex items-center cursor-pointer">
+                                  <input 
+                                    type="checkbox" 
+                                    checked={settingsForm.introEnabled ?? true} 
+                                    onChange={(e) => setSettingsForm(prev => ({...prev, introEnabled: e.target.checked}))} 
+                                    className="sr-only peer" 
+                                  />
+                                  <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500 dark:bg-slate-700"></div>
+                              </label>
+                          </div>
+                      </div>
+
+                      {/* Privacy & Visibility */}
+                      <div className="space-y-4">
+                          <h4 className="text-sm font-bold text-slate-400 uppercase tracking-wider border-b border-slate-100 pb-2 dark:border-slate-800">Privacy & Location</h4>
+                          
+                          <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-2">
+                                  <Lock size={18} className="text-slate-400"/>
+                                  <div>
+                                      <p className="text-sm font-bold text-slate-800 dark:text-slate-200">Privacy</p>
+                                      <p className="text-xs text-slate-500 dark:text-slate-400">Public or Private</p>
+                                  </div>
+                              </div>
+                              <select 
+                                  value={settingsForm.privacy || 'PRIVATE'}
+                                  onChange={(e) => setSettingsForm(prev => ({...prev, privacy: e.target.value as 'PUBLIC' | 'PRIVATE'}))}
+                                  className="p-2 border border-slate-200 rounded-lg text-sm bg-white dark:bg-slate-800 dark:border-slate-700 dark:text-white outline-none"
+                              >
+                                  <option value="PUBLIC">Public</option>
+                                  <option value="PRIVATE">Private</option>
+                              </select>
+                          </div>
+
+                          <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-2">
+                                  <EyeOff size={18} className="text-slate-400"/>
+                                  <div>
+                                      <p className="text-sm font-bold text-slate-800 dark:text-slate-200">Hide Group</p>
+                                      <p className="text-xs text-slate-500 dark:text-slate-400">Visibility in search</p>
+                                  </div>
+                              </div>
+                              <select 
+                                  value={settingsForm.isHidden ? 'HIDDEN' : 'VISIBLE'}
+                                  onChange={(e) => setSettingsForm(prev => ({...prev, isHidden: e.target.value === 'HIDDEN'}))}
+                                  className="p-2 border border-slate-200 rounded-lg text-sm bg-white dark:bg-slate-800 dark:border-slate-700 dark:text-white outline-none"
+                              >
+                                  <option value="VISIBLE">Visible</option>
+                                  <option value="HIDDEN">Hidden</option>
+                              </select>
+                          </div>
+
+                          <div>
+                              <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1">Location</label>
+                              <div className="relative">
+                                  <MapPin size={16} className="absolute left-3 top-3.5 text-slate-400" />
+                                  <input 
+                                      type="text" 
+                                      value={settingsForm.location || ''}
+                                      onChange={(e) => setSettingsForm(prev => ({...prev, location: e.target.value}))}
+                                      placeholder="e.g. London, UK"
+                                      className="w-full pl-9 p-3 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-emerald-500 bg-white dark:bg-slate-800 dark:border-slate-700 dark:text-white"
+                                  />
+                              </div>
+                          </div>
+                      </div>
+
+                      {/* Danger Zone */}
+                      <div className="pt-4 border-t border-red-100 dark:border-red-900/30">
+                          <button 
+                              type="button" 
+                              onClick={() => setIsDeleteConfirmOpen(true)}
+                              className="w-full py-3 text-red-600 hover:bg-red-50 rounded-xl font-bold text-sm transition-colors border border-red-200 dark:border-red-900/50 dark:bg-red-900/10 dark:text-red-400 dark:hover:bg-red-900/30"
+                          >
+                              Delete Group
+                          </button>
+                      </div>
+
+                  </div>
+                  <div className="p-4 border-t border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 flex justify-end gap-3">
+                      <button onClick={() => setIsSettingsModalOpen(false)} className="px-4 py-2 text-slate-600 font-bold hover:bg-slate-200 rounded-lg transition-colors dark:text-slate-300 dark:hover:bg-slate-800">Cancel</button>
+                      <button onClick={handleSaveSettings} className="px-6 py-2 bg-emerald-600 text-white font-bold rounded-lg hover:bg-emerald-700 shadow-sm">Save Changes</button>
+                  </div>
+              </div>
+          </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {isDeleteConfirmOpen && (
+          <div className="fixed inset-0 z-[60] bg-black/60 flex items-center justify-center p-4">
+              <div className="bg-white dark:bg-slate-900 w-full max-w-sm rounded-2xl p-6 shadow-2xl animate-fade-in border border-slate-200 dark:border-slate-700">
+                  <div className="text-center">
+                      <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4 dark:bg-red-900/30">
+                          <AlertCircle size={24} className="text-red-600 dark:text-red-400" />
+                      </div>
+                      <h3 className="font-bold text-lg text-slate-900 dark:text-white mb-2">Delete Group?</h3>
+                      <p className="text-sm text-slate-500 dark:text-slate-400 mb-6">
+                          Are you sure you want to delete <strong>{activeCohortDetails?.name}</strong>? This action cannot be undone and all data will be lost.
+                      </p>
+                      <div className="flex gap-3">
+                          <button onClick={() => setIsDeleteConfirmOpen(false)} className="flex-1 py-2.5 rounded-lg border border-slate-200 font-bold text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800">Cancel</button>
+                          <button onClick={handleDeleteGroup} className="flex-1 py-2.5 rounded-lg bg-red-600 text-white font-bold hover:bg-red-700 shadow-md">Delete</button>
+                      </div>
+                  </div>
+              </div>
+          </div>
+      )}
+
     </div>
   );
 };
@@ -518,6 +716,24 @@ const CreatePostWidget: React.FC<{
     const [isExpanded, setIsExpanded] = useState(false);
     
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const widgetRef = useRef<HTMLDivElement>(null);
+
+    // Close logic: Click Outside OR Empty Content
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (widgetRef.current && !widgetRef.current.contains(event.target as Node)) {
+                // Only collapse if content is empty and no media/poll active
+                if (!content.trim() && mediaFiles.length === 0 && activeMode !== 'POLL') {
+                    setIsExpanded(false);
+                }
+            }
+        };
+
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, [content, mediaFiles, activeMode]);
 
     const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files[0]) {
@@ -530,6 +746,7 @@ const CreatePostWidget: React.FC<{
                         url: ev.target!.result as string
                     }]);
                     setActiveMode('STATUS'); // Ensure we are in status mode to see preview
+                    setIsExpanded(true); // Ensure expanded
                 }
             };
             reader.readAsDataURL(file);
@@ -542,6 +759,7 @@ const CreatePostWidget: React.FC<{
         } else {
             setActiveMode('POLL');
             setMediaFiles([]); // Clear media if switching to poll
+            setIsExpanded(true);
         }
     };
 
@@ -597,22 +815,30 @@ const CreatePostWidget: React.FC<{
     };
 
     return (
-        <div className={`bg-white rounded-2xl shadow-sm border border-slate-200 p-4 dark:bg-slate-800 dark:border-slate-700 transition-all duration-300 ${isExpanded ? 'ring-2 ring-emerald-500/20' : ''}`}>
+        <div ref={widgetRef} className={`bg-white rounded-2xl shadow-sm border border-slate-200 p-4 dark:bg-slate-800 dark:border-slate-700 transition-all duration-300`}>
             {/* Top Area: Avatar + Input */}
-            <div className="flex gap-3">
+            <div className="flex gap-3 items-start">
                 <div className="w-10 h-10 rounded-full bg-emerald-100 text-emerald-800 flex items-center justify-center font-bold text-sm flex-shrink-0 border border-slate-100 shadow-sm dark:bg-emerald-900 dark:text-emerald-300 dark:border-slate-600 overflow-hidden">
                     {currentUser.avatarUrl ? <img src={currentUser.avatarUrl} className="w-full h-full object-cover"/> : currentUser.name.charAt(0)}
                 </div>
                 
                 <div className="flex-1">
-                    <textarea 
-                        value={content}
-                        onClick={() => setIsExpanded(true)}
-                        onChange={(e) => setContent(e.target.value)}
-                        placeholder={activeMode === 'POLL' ? "Ask a question..." : `What's on your mind, ${currentUser.name.split(' ')[0]}?`}
-                        className={`w-full bg-slate-100 dark:bg-slate-700/50 rounded-2xl px-4 py-2 hover:bg-slate-200/50 transition-all border-none p-0 text-base focus:ring-0 resize-none placeholder-slate-500 text-slate-800 dark:text-white dark:placeholder-slate-400 cursor-text ${isExpanded ? 'min-h-[80px]' : 'h-10 overflow-hidden'}`}
-                        rows={isExpanded ? 3 : 1}
-                    />
+                    {isExpanded ? (
+                        <textarea 
+                            value={content}
+                            onChange={(e) => setContent(e.target.value)}
+                            placeholder={activeMode === 'POLL' ? "Ask a question..." : `What's on your mind, ${currentUser.name.split(' ')[0]}?`}
+                            className="w-full bg-transparent border-none p-0 text-base focus:ring-0 focus:outline-none resize-none min-h-[80px] placeholder-slate-500 text-slate-800 dark:text-white dark:placeholder-slate-400 cursor-text"
+                            autoFocus
+                        />
+                    ) : (
+                        <div 
+                            onClick={() => setIsExpanded(true)}
+                            className="w-full bg-slate-100 dark:bg-slate-700/50 rounded-full px-4 py-2 hover:bg-slate-200/50 transition-all text-slate-500 cursor-pointer h-10 flex items-center text-sm dark:text-slate-400"
+                        >
+                            {`What's on your mind, ${currentUser.name.split(' ')[0]}?`}
+                        </div>
+                    )}
                 </div>
             </div>
 
@@ -620,12 +846,12 @@ const CreatePostWidget: React.FC<{
             {isExpanded && (
                 <div className="mt-3 animate-fade-in">
                     <div className="px-2">
-                        {/* Media Preview */}
+                        {/* Media Preview - Improved for transparent images */}
                         {mediaFiles.length > 0 && activeMode === 'STATUS' && (
                             <div className="flex gap-2 mb-4 overflow-x-auto pb-2 pt-1">
                                 {mediaFiles.map((media, i) => (
                                     <div key={i} className="relative w-24 h-24 rounded-xl overflow-hidden border border-slate-200 shrink-0 shadow-sm bg-white dark:bg-slate-700">
-                                        {media.type === 'VIDEO' ? <div className="bg-black w-full h-full flex items-center justify-center"><Video className="text-white" size={24}/></div> : <img src={media.url} className="w-full h-full object-cover"/>}
+                                        {media.type === 'VIDEO' ? <div className="bg-black w-full h-full flex items-center justify-center"><Video className="text-white" size={24}/></div> : <img src={media.url} className="w-full h-full object-cover" />}
                                         <button onClick={() => setMediaFiles(prev => prev.filter((_, idx) => idx !== i))} className="absolute top-1 right-1 bg-black/50 hover:bg-black/70 text-white p-1 rounded-full backdrop-blur-sm transition-colors"><X size={12}/></button>
                                     </div>
                                 ))}

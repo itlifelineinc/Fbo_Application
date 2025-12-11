@@ -295,7 +295,12 @@ export interface Cohort {
   name: string;
   description: string;
   mentorHandle: string;
-  coverImage?: string; // Added field for Facebook-style banner
+  coverImage?: string; 
+  // Settings fields
+  privacy?: 'PUBLIC' | 'PRIVATE';
+  isHidden?: boolean; // "Hide Group"
+  location?: string;
+  introEnabled?: boolean; // "New Member Intro"
 }
 
 export interface MentorshipTemplate {

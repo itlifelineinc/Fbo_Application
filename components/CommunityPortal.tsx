@@ -6,7 +6,7 @@ import {
   Globe, Users, Hash, Search, Image as ImageIcon, Video, BarChart2, 
   Send, MoreHorizontal, Heart, MessageCircle, Share2, Pin, Trash2, 
   Slash, Flag, X, Plus, CheckCircle, Smile, Tag, XCircle, Lock, Settings, 
-  Shield, UserPlus, Clock, LayoutList, Info, Calendar, Eye, ArrowLeft, BookOpen, AlertCircle, MapPin, EyeOff, Search as SearchIcon, PlusSquare, Edit3, Menu, LayoutGrid, ChevronLeft, PlusCircle
+  Shield, UserPlus, Clock, LayoutList, Info, Calendar, Eye, ArrowLeft, BookOpen, AlertCircle, MapPin, EyeOff, Search as SearchIcon, PlusSquare, Edit3, Menu, LayoutGrid, ChevronLeft, PlusCircle, Sparkles
 } from 'lucide-react';
 
 interface CommunityPortalProps {
@@ -159,13 +159,13 @@ const CommunityPortal: React.FC<CommunityPortalProps> = ({
   // --- Content Renderers ---
 
   const renderGlobalFeedContent = () => (
-      <div className="space-y-6">
+      <div className="space-y-2 md:space-y-6 bg-slate-100/50 dark:bg-black/20 md:bg-transparent -mx-4 md:mx-0 pb-20 md:pb-0">
           <CreatePostWidget 
             currentUser={currentUser} 
             onPost={(post) => onAddPost({ ...post, cohortId: undefined })}
             activeFeedName="Global Hub"
           />
-          <div className="space-y-6">
+          <div className="space-y-2 md:space-y-6">
             {visiblePosts.length > 0 ? visiblePosts.map(post => (
                 <PostItem 
                     key={post.id} 
@@ -178,7 +178,7 @@ const CommunityPortal: React.FC<CommunityPortalProps> = ({
                     onDeletePost={onDeletePost}
                 />
             )) : (
-                <div className="text-center py-16 text-slate-400 bg-white rounded-2xl border-2 border-dashed border-slate-200 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-500">
+                <div className="text-center py-16 text-slate-400 bg-white rounded-none md:rounded-2xl border-y md:border-2 border-dashed border-slate-200 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-500 mt-2">
                     <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4 dark:bg-slate-700">
                         <MessageCircle size={32} />
                     </div>
@@ -187,14 +187,14 @@ const CommunityPortal: React.FC<CommunityPortalProps> = ({
                 </div>
             )}
           </div>
-          <div className="h-20"></div>
+          <div className="h-20 md:h-0"></div>
       </div>
   );
 
   const renderCohortContent = () => (
-      <div className="space-y-6">
+      <div className="space-y-2 md:space-y-6 bg-slate-100/50 dark:bg-black/20 md:bg-transparent -mx-4 md:mx-0 pb-20 md:pb-0">
           {activeCohortDetails && (
-              <div className="bg-white rounded-b-2xl md:rounded-2xl shadow-sm border-b md:border border-slate-200 overflow-hidden dark:bg-slate-800 dark:border-slate-700 group -mx-4 md:mx-0 -mt-4 md:mt-0">
+              <div className="bg-white rounded-b-2xl md:rounded-2xl shadow-sm border-b md:border border-slate-200 overflow-hidden dark:bg-slate-800 dark:border-slate-700 group -mx-4 md:mx-0 -mt-4 md:mt-0 mb-2 md:mb-0">
                   <div className="h-40 md:h-56 bg-gradient-to-r from-emerald-600 to-teal-500 relative bg-cover bg-center" style={activeCohortDetails.coverImage ? { backgroundImage: `url(${activeCohortDetails.coverImage})` } : {}}>
                       <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent"></div>
                       <div className="absolute bottom-0 left-0 right-0 p-6">
@@ -242,7 +242,7 @@ const CommunityPortal: React.FC<CommunityPortalProps> = ({
             activeFeedName={activeCohortDetails?.name || 'Team Feed'}
           />
 
-          <div className="space-y-6">
+          <div className="space-y-2 md:space-y-6">
             {visiblePosts.length > 0 ? visiblePosts.map(post => (
                 <PostItem 
                     key={post.id} 
@@ -255,7 +255,7 @@ const CommunityPortal: React.FC<CommunityPortalProps> = ({
                     onDeletePost={onDeletePost}
                 />
             )) : (
-                <div className="text-center py-16 text-slate-400 bg-white rounded-2xl border-2 border-dashed border-slate-200 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-500">
+                <div className="text-center py-16 text-slate-400 bg-white rounded-none md:rounded-2xl border-y md:border-2 border-dashed border-slate-200 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-500 mt-2">
                     <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4 dark:bg-slate-700">
                         <MessageCircle size={32} />
                     </div>
@@ -264,7 +264,7 @@ const CommunityPortal: React.FC<CommunityPortalProps> = ({
                 </div>
             )}
           </div>
-          <div className="h-20"></div>
+          <div className="h-20 md:h-0"></div>
       </div>
   );
 
@@ -273,9 +273,10 @@ const CommunityPortal: React.FC<CommunityPortalProps> = ({
       
       {/* 
           MOBILE COHORT OVERLAY 
+          - z-index set to 150 to override the Mobile Dock (z-100) from Layout
       */}
       {activeCohortDetails && (
-          <div className="fixed inset-0 z-[60] bg-slate-50 dark:bg-slate-950 overflow-y-auto md:hidden flex flex-col">
+          <div className="fixed inset-0 z-[150] bg-slate-50 dark:bg-slate-950 overflow-y-auto md:hidden flex flex-col">
               {/* Custom Mobile Header */}
               <div className="flex items-center justify-between px-4 py-3 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 sticky top-0 z-50">
                   <button 
@@ -312,7 +313,7 @@ const CommunityPortal: React.FC<CommunityPortalProps> = ({
                   </div>
               </div>
 
-              <div className="p-4 flex-1">
+              <div className="p-4 flex-1 bg-slate-100/50 dark:bg-black/20">
                   {renderCohortContent()}
               </div>
 
@@ -394,7 +395,7 @@ const CommunityPortal: React.FC<CommunityPortalProps> = ({
                           {/* CHANGED: Hamburger to Widgets icon */}
                           <LayoutGrid size={24} />
                        </button>
-                       <h1 className="text-2xl font-bold font-heading text-slate-900 dark:text-white tracking-tight">For You</h1>
+                       <h1 className="text-2xl font-bold font-heading text-slate-900 dark:text-white tracking-tight">ForYou</h1>
                    </div>
                    <div className="flex items-center gap-4">
                        <button 
@@ -414,7 +415,7 @@ const CommunityPortal: React.FC<CommunityPortalProps> = ({
                           {isPlusMenuOpen && (
                               <>
                                 <div className="fixed inset-0 z-40" onClick={() => setIsPlusMenuOpen(false)}></div>
-                                <div className="absolute right-0 top-12 w-48 bg-white dark:bg-slate-900 shadow-xl rounded-xl border border-slate-200 dark:border-slate-800 py-2 z-50 animate-fade-in origin-top-right">
+                                <div className="absolute right-0 top-12 w-56 bg-white dark:bg-slate-900 shadow-xl rounded-xl border border-slate-200 dark:border-slate-800 py-2 z-50 transition-all duration-200 origin-top-right scale-100 opacity-100 animate-in fade-in zoom-in-95">
                                     <button 
                                         onClick={() => {scrollToTop(); setIsPlusMenuOpen(false);}} 
                                         className="flex items-center gap-3 px-4 py-3 w-full hover:bg-slate-50 dark:hover:bg-slate-800 text-sm font-bold text-slate-700 dark:text-slate-200"
@@ -433,6 +434,19 @@ const CommunityPortal: React.FC<CommunityPortalProps> = ({
                                     >
                                         <ImageIcon size={18} /> Photo/Video
                                     </button>
+                                    
+                                    {/* Create Cohort Item */}
+                                    {canCreateCohort && (
+                                        <>
+                                            <div className="h-px bg-slate-100 my-1 dark:bg-slate-800 mx-2"></div>
+                                            <button 
+                                                onClick={() => { setIsCreateCohortModalOpen(true); setIsPlusMenuOpen(false); }} 
+                                                className="flex items-center gap-3 px-4 py-3 w-full hover:bg-emerald-50 dark:hover:bg-emerald-900/20 text-sm font-bold text-emerald-700 dark:text-emerald-400"
+                                            >
+                                                <PlusCircle size={18} /> Create Cohort
+                                            </button>
+                                        </>
+                                    )}
                                 </div>
                               </>
                           )}
@@ -441,7 +455,7 @@ const CommunityPortal: React.FC<CommunityPortalProps> = ({
               </div>
 
               {/* Feed Content */}
-              <div ref={globalScrollRef} className="flex-1 overflow-y-auto p-4 scroll-smooth bg-slate-50 dark:bg-slate-950">
+              <div ref={globalScrollRef} className="flex-1 overflow-y-auto p-4 scroll-smooth bg-slate-100/50 dark:bg-black/20">
                    {renderGlobalFeedContent()}
               </div>
 
@@ -471,38 +485,34 @@ const CommunityPortal: React.FC<CommunityPortalProps> = ({
       {/* Mobile Sidebar Overlay (Standard) */}
       {isSidebarOpen && (
         <div 
-          className="fixed inset-0 bg-black/50 z-[80] md:hidden backdrop-blur-sm transition-opacity"
+          className="fixed inset-0 bg-black/50 z-[140] md:hidden backdrop-blur-sm transition-opacity"
           onClick={() => setIsSidebarOpen(false)}
         />
       )}
 
-      {/* Sidebar Navigation - Full Screen on Mobile */}
+      {/* 
+          Sidebar Navigation - Full Screen on Mobile 
+          - z-index increased to 150 to override layout dock (z-100)
+      */}
       <div className={`
-          fixed inset-0 z-[90] bg-white border-r border-slate-200 flex flex-col shadow-2xl transition-transform duration-300 ease-in-out
+          fixed inset-0 z-[150] bg-white border-r border-slate-200 flex flex-col shadow-2xl transition-transform duration-300 ease-in-out
           md:translate-x-0 md:static md:z-0 md:shadow-none md:border-0 md:bg-transparent md:w-64 md:h-[calc(100vh-6rem)] md:sticky md:top-4 dark:bg-slate-900 dark:border-slate-800
           ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}
       `}>
         {/* NEW: Custom Mobile Sidebar Header */}
-        <div className="p-4 border-b border-slate-100 md:hidden flex justify-between items-center bg-white dark:bg-slate-900 dark:border-slate-800">
+        <div className="p-4 border-b border-slate-100 md:hidden flex items-center gap-3 bg-white dark:bg-slate-900 dark:border-slate-800">
              <button 
                 onClick={() => { setIsSidebarOpen(false); navigate(-1); }} 
                 className="p-2 -ml-2 text-slate-600 dark:text-slate-300 hover:bg-slate-100 rounded-full"
              >
                 <ChevronLeft size={28} />
              </button>
-             <h2 className="font-bold text-2xl text-slate-900 font-heading dark:text-white">
+             <h2 className="font-bold text-xl text-slate-900 font-heading dark:text-white mr-auto">
                 Community
              </h2>
-             <div className="flex items-center gap-2">
-                {canCreateCohort && (
-                    <button onClick={() => { setIsCreateCohortModalOpen(true); setIsSidebarOpen(false); }} className="text-emerald-600 hover:bg-emerald-50 p-2 rounded-full dark:text-emerald-400 dark:hover:bg-emerald-900/30">
-                        <PlusCircle size={24} />
-                    </button>
-                )}
-                <button onClick={() => setIsSidebarOpen(false)} className="text-slate-400 hover:text-slate-600 p-2 rounded-full dark:text-slate-500 dark:hover:text-slate-300">
-                    <X size={24} />
-                </button>
-             </div>
+             <button onClick={() => setIsSidebarOpen(false)} className="text-slate-400 hover:text-slate-600 p-2 rounded-full dark:text-slate-500 dark:hover:text-slate-300">
+                <X size={24} />
+             </button>
         </div>
 
         {/* Sidebar Content */}
@@ -566,7 +576,7 @@ const CommunityPortal: React.FC<CommunityPortalProps> = ({
                                 activeTab === 'GLOBAL' ? 'bg-emerald-50 text-emerald-700 border border-emerald-100 dark:bg-emerald-900/30 dark:text-emerald-400 dark:border-emerald-800' : 'text-slate-600 hover:bg-slate-50 dark:text-slate-400 dark:hover:bg-slate-700/50'
                             }`}
                         >
-                            <div className="w-8 h-8 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center shrink-0 dark:bg-blue-900/30 dark:text-blue-400"><Hash size={16} /></div>
+                            <div className="w-8 h-8 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center shrink-0 dark:bg-blue-900/30 dark:text-blue-400"><Sparkles size={16} /></div>
                             <span className="truncate font-bold">For You</span>
                         </button>
 
@@ -588,7 +598,13 @@ const CommunityPortal: React.FC<CommunityPortalProps> = ({
                                 onClick={() => { setActiveTab(myCohort.id); setIsSidebarOpen(false); }}
                                 className="w-full text-left px-3 py-3 rounded-lg text-sm font-medium transition-all flex items-center gap-3 text-slate-600 hover:bg-slate-50 dark:text-slate-400 dark:hover:bg-slate-700/50"
                             >
-                                <div className="w-8 h-8 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center shrink-0 dark:bg-emerald-900/30 dark:text-emerald-400"><Users size={16} /></div>
+                                <div className="w-8 h-8 rounded-full flex items-center justify-center shrink-0 overflow-hidden border border-slate-100 dark:border-slate-700">
+                                    {myCohort.coverImage ? (
+                                        <img src={myCohort.coverImage} alt={myCohort.name} className="w-full h-full object-cover" />
+                                    ) : (
+                                        <div className="w-full h-full bg-emerald-100 text-emerald-600 flex items-center justify-center dark:bg-emerald-900/30 dark:text-emerald-400"><Users size={16} /></div>
+                                    )}
+                                </div>
                                 <div className="min-w-0">
                                     <div className="truncate font-bold">{myCohort.name}</div>
                                     <div className="text-[10px] text-slate-400 font-normal truncate dark:text-slate-500">Mentor: {myCohort.mentorHandle}</div>
@@ -608,7 +624,13 @@ const CommunityPortal: React.FC<CommunityPortalProps> = ({
                                         onClick={() => { setActiveTab(c.id); setIsSidebarOpen(false); }}
                                         className="w-full text-left px-3 py-2.5 rounded-lg text-sm font-medium transition-all flex items-center gap-3 text-slate-600 hover:bg-slate-50 dark:text-slate-400 dark:hover:bg-slate-700/50"
                                     >
-                                        <div className="w-8 h-8 bg-indigo-50 text-indigo-500 rounded-full flex items-center justify-center shrink-0 dark:bg-indigo-900/20 dark:text-indigo-400"><Globe size={14} /></div>
+                                        <div className="w-8 h-8 rounded-full flex items-center justify-center shrink-0 overflow-hidden border border-slate-100 dark:border-slate-700">
+                                            {c.coverImage ? (
+                                                <img src={c.coverImage} alt={c.name} className="w-full h-full object-cover" />
+                                            ) : (
+                                                <div className="w-full h-full bg-indigo-50 text-indigo-500 flex items-center justify-center dark:bg-indigo-900/20 dark:text-indigo-400"><Globe size={14} /></div>
+                                            )}
+                                        </div>
                                         <div className="min-w-0">
                                             <div className="truncate font-bold text-xs">{c.name}</div>
                                             <div className="text-[9px] text-slate-400 truncate">{c.description}</div>
@@ -628,7 +650,13 @@ const CommunityPortal: React.FC<CommunityPortalProps> = ({
                                         onClick={() => { setActiveTab(c.id); setIsSidebarOpen(false); }}
                                         className="w-full text-left px-3 py-2.5 rounded-lg text-sm font-medium transition-all flex items-center gap-3 text-slate-600 hover:bg-slate-50 dark:text-slate-400 dark:hover:bg-slate-700/50"
                                     >
-                                        <div className="w-6 h-6 bg-slate-100 text-slate-500 rounded-full flex items-center justify-center shrink-0 dark:bg-slate-700 dark:text-slate-400"><Users size={12} /></div>
+                                        <div className="w-6 h-6 rounded-full flex items-center justify-center shrink-0 overflow-hidden border border-slate-100 dark:border-slate-700">
+                                            {c.coverImage ? (
+                                                <img src={c.coverImage} alt={c.name} className="w-full h-full object-cover" />
+                                            ) : (
+                                                <div className="w-full h-full bg-slate-100 text-slate-500 flex items-center justify-center dark:bg-slate-700 dark:text-slate-400"><Users size={12} /></div>
+                                            )}
+                                        </div>
                                         <div className="truncate text-xs">{c.name}</div>
                                     </button>
                                 ))}
@@ -720,97 +748,92 @@ const CommunityPortal: React.FC<CommunityPortalProps> = ({
           </div>
       </div>
 
-      {/* Create Cohort Modal */}
-      {isCreateCohortModalOpen && (
-          <div className="fixed inset-0 z-50 bg-black/50 flex items-end md:items-center justify-center p-0 md:p-4 animate-fade-in" onClick={() => setIsCreateCohortModalOpen(false)}>
-              <div 
-                className="bg-white dark:bg-slate-800 w-full md:max-w-lg rounded-t-3xl md:rounded-2xl shadow-2xl overflow-hidden flex flex-col h-[90vh] md:h-auto md:max-h-[90vh] animate-slide-up border-t md:border border-slate-200 dark:border-slate-700"
-                onClick={e => e.stopPropagation()}
-              >
-                  <div className="px-6 py-4 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-slate-50 dark:bg-slate-900">
-                      <h3 className="font-bold text-xl text-slate-900 dark:text-white">Create New Cohort</h3>
-                      <button onClick={() => setIsCreateCohortModalOpen(false)} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300">
-                          <X size={20} />
-                      </button>
-                  </div>
-                  <div className="p-6 overflow-y-auto">
-                      <form onSubmit={handleCreateSubmit} className="space-y-6">
-                          {/* Cover Image Upload */}
-                          <div>
-                              <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Cover Image</label>
-                              <div 
-                                onClick={() => coverInputRef.current?.click()}
-                                className={`relative w-full h-32 rounded-xl border-2 border-dashed flex flex-col items-center justify-center cursor-pointer transition-all overflow-hidden ${newCohortCover ? 'border-transparent' : 'border-slate-300 hover:border-emerald-400 hover:bg-slate-50 dark:border-slate-600 dark:hover:bg-slate-700'}`}
-                              >
-                                  {newCohortCover ? (
-                                      <>
-                                        <img src={newCohortCover} alt="Cover" className="w-full h-full object-cover" />
-                                        <div className="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
-                                            <span className="text-white text-xs font-bold">Change Image</span>
-                                        </div>
-                                      </>
-                                  ) : (
-                                      <div className="text-center text-slate-400 dark:text-slate-500">
-                                          <ImageIcon className="mx-auto mb-1" />
-                                          <span className="text-xs font-bold">Upload Cover</span>
-                                      </div>
-                                  )}
-                                  <input type="file" ref={coverInputRef} className="hidden" accept="image/*" onChange={handleCoverUpload} />
-                              </div>
-                              <p className="text-[10px] text-slate-400 mt-1">Recommended: 820px x 312px</p>
+      {/* Create Cohort Drawer (Right Side) */}
+      <div className={`fixed inset-0 z-[100] transition-opacity duration-300 ${isCreateCohortModalOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}>
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setIsCreateCohortModalOpen(false)}></div>
+          <div className={`absolute inset-y-0 right-0 w-full md:max-w-md bg-white dark:bg-slate-900 shadow-2xl transform transition-transform duration-300 ease-out flex flex-col ${isCreateCohortModalOpen ? 'translate-x-0' : 'translate-x-full'}`}>
+              <div className="px-6 py-4 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-slate-50 dark:bg-slate-900">
+                  <h3 className="font-bold text-xl text-slate-900 dark:text-white">Create New Cohort</h3>
+                  <button onClick={() => setIsCreateCohortModalOpen(false)} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300">
+                      <X size={20} />
+                  </button>
+              </div>
+              <div className="p-6 overflow-y-auto flex-1">
+                  <form onSubmit={handleCreateSubmit} className="space-y-6">
+                      {/* Cover Image Upload */}
+                      <div>
+                          <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Cover Image</label>
+                          <div 
+                            onClick={() => coverInputRef.current?.click()}
+                            className={`relative w-full h-32 rounded-xl border-2 border-dashed flex flex-col items-center justify-center cursor-pointer transition-all overflow-hidden ${newCohortCover ? 'border-transparent' : 'border-slate-300 hover:border-emerald-400 hover:bg-slate-50 dark:border-slate-600 dark:hover:bg-slate-700'}`}
+                          >
+                              {newCohortCover ? (
+                                  <>
+                                    <img src={newCohortCover} alt="Cover" className="w-full h-full object-cover" />
+                                    <div className="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
+                                        <span className="text-white text-xs font-bold">Change Image</span>
+                                    </div>
+                                  </>
+                              ) : (
+                                  <div className="text-center text-slate-400 dark:text-slate-500">
+                                      <ImageIcon className="mx-auto mb-1" />
+                                      <span className="text-xs font-bold">Upload Cover</span>
+                                  </div>
+                              )}
+                              <input type="file" ref={coverInputRef} className="hidden" accept="image/*" onChange={handleCoverUpload} />
                           </div>
+                          <p className="text-[10px] text-slate-400 mt-1">Recommended: 820px x 312px</p>
+                      </div>
 
-                          <div>
-                              <div className="flex justify-between items-center mb-1">
-                                <label className="block text-sm font-bold text-slate-700 dark:text-slate-300">Cohort Name</label>
-                                <span className={`text-[10px] font-bold ${newCohortName.length === 50 ? 'text-red-500' : 'text-slate-400'}`}>{newCohortName.length}/50</span>
-                              </div>
-                              <input 
-                                  type="text" 
-                                  value={newCohortName}
-                                  maxLength={50}
-                                  onChange={(e) => setNewCohortName(e.target.value)}
-                                  placeholder="e.g. June Achievers 2025"
-                                  className="w-full p-3 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-emerald-500 bg-white dark:bg-slate-700 dark:border-slate-600 dark:text-white"
-                                  required
-                              />
+                      <div>
+                          <div className="flex justify-between items-center mb-1">
+                            <label className="block text-sm font-bold text-slate-700 dark:text-slate-300">Cohort Name</label>
+                            <span className={`text-[10px] font-bold ${newCohortName.length === 50 ? 'text-red-500' : 'text-slate-400'}`}>{newCohortName.length}/50</span>
                           </div>
-                          
-                          <div>
-                              <div className="flex justify-between items-center mb-1">
-                                <label className="block text-sm font-bold text-slate-700 dark:text-slate-300">Description</label>
-                                <span className={`text-[10px] font-bold ${newCohortDesc.length === 100 ? 'text-red-500' : 'text-slate-400'}`}>{newCohortDesc.length}/100</span>
-                              </div>
-                              <textarea 
-                                  value={newCohortDesc}
-                                  maxLength={100}
-                                  onChange={(e) => setNewCohortDesc(e.target.value)}
-                                  placeholder="What is this group about?"
-                                  className="w-full p-3 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-emerald-500 h-24 resize-none bg-white dark:bg-slate-700 dark:border-slate-600 dark:text-white"
-                              />
+                          <input 
+                              type="text" 
+                              value={newCohortName}
+                              maxLength={50}
+                              onChange={(e) => setNewCohortName(e.target.value)}
+                              placeholder="e.g. June Achievers 2025"
+                              className="w-full p-3 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-emerald-500 bg-white dark:bg-slate-700 dark:border-slate-600 dark:text-white"
+                              required
+                          />
+                      </div>
+                      
+                      <div>
+                          <div className="flex justify-between items-center mb-1">
+                            <label className="block text-sm font-bold text-slate-700 dark:text-slate-300">Description</label>
+                            <span className={`text-[10px] font-bold ${newCohortDesc.length === 100 ? 'text-red-500' : 'text-slate-400'}`}>{newCohortDesc.length}/100</span>
                           </div>
-
-                          <div className="flex justify-end gap-3 pt-2 pb-6 md:pb-0">
-                              <button 
-                                  type="button" 
-                                  onClick={() => setIsCreateCohortModalOpen(false)}
-                                  className="px-4 py-2 text-slate-600 font-bold hover:bg-slate-100 rounded-lg transition-colors dark:text-slate-300 dark:hover:bg-slate-700"
-                              >
-                                  Cancel
-                              </button>
-                              <button 
-                                  type="submit"
-                                  disabled={!newCohortName.trim()}
-                                  className="px-6 py-2 bg-emerald-600 text-white font-bold rounded-lg hover:bg-emerald-700 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
-                              >
-                                  Create Group
-                              </button>
-                          </div>
-                      </form>
-                  </div>
+                          <textarea 
+                              value={newCohortDesc}
+                              maxLength={100}
+                              onChange={(e) => setNewCohortDesc(e.target.value)}
+                              placeholder="What is this group about?"
+                              className="w-full p-3 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-emerald-500 h-24 resize-none bg-white dark:bg-slate-700 dark:border-slate-600 dark:text-white"
+                          />
+                      </div>
+                  </form>
+              </div>
+              <div className="p-6 border-t border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 flex justify-end gap-3">
+                  <button 
+                      type="button" 
+                      onClick={() => setIsCreateCohortModalOpen(false)}
+                      className="px-4 py-2 text-slate-600 font-bold hover:bg-slate-100 rounded-lg transition-colors dark:text-slate-300 dark:hover:bg-slate-700"
+                  >
+                      Cancel
+                  </button>
+                  <button 
+                      onClick={handleCreateSubmit}
+                      disabled={!newCohortName.trim()}
+                      className="px-6 py-2 bg-emerald-600 text-white font-bold rounded-lg hover:bg-emerald-700 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                      Create Group
+                  </button>
               </div>
           </div>
-      )}
+      </div>
 
       {/* Group Settings Modal */}
       {isSettingsModalOpen && activeCohortDetails && (
@@ -1081,7 +1104,7 @@ const CreatePostWidget: React.FC<{
     };
 
     return (
-        <div ref={widgetRef} className={`bg-white rounded-2xl shadow-sm border border-slate-200 p-4 dark:bg-slate-800 dark:border-slate-700 transition-all duration-300`}>
+        <div ref={widgetRef} className={`bg-white md:rounded-2xl shadow-sm border-b md:border border-slate-200 p-4 dark:bg-slate-800 dark:border-slate-700 transition-all duration-300`}>
             {/* Top Area: Avatar + Input */}
             <div className="flex gap-3 items-start">
                 <div className="w-10 h-10 rounded-full bg-emerald-100 text-emerald-800 flex items-center justify-center font-bold text-sm flex-shrink-0 border border-slate-100 shadow-sm dark:bg-emerald-900 dark:text-emerald-300 dark:border-slate-600 overflow-hidden">
@@ -1267,7 +1290,7 @@ const PostItem: React.FC<{
     };
 
     return (
-        <div className={`bg-white rounded-2xl shadow-sm border border-slate-200 p-5 dark:bg-slate-800 dark:border-slate-700 transition-all hover:shadow-md ${post.isPinned ? 'ring-2 ring-emerald-500/20 bg-emerald-50/10' : ''}`}>
+        <div className={`bg-white md:rounded-2xl shadow-sm md:border border-slate-200 p-4 md:p-5 dark:bg-slate-800 dark:border-slate-700 transition-all hover:shadow-md mb-2 md:mb-0 last:mb-0 ${post.isPinned ? 'ring-2 ring-emerald-500/20 bg-emerald-50/10' : ''}`}>
             
             {/* Header */}
             <div className="flex justify-between items-start mb-3">

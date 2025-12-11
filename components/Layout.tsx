@@ -954,7 +954,7 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
         
         {mobileNavMode === 'dock' ? (
             /* MODE 1: Standard Dock */
-            <div ref={dockRef} className={`lg:hidden fixed left-1/2 -translate-x-1/2 z-50 transition-all duration-500 ease-out ${isDockExpanded ? 'bottom-6 w-[92%] max-w-md' : 'bottom-4 w-auto'}`}>
+            <div ref={dockRef} className={`lg:hidden fixed left-1/2 -translate-x-1/2 z-[100] transition-all duration-500 ease-out ${isDockExpanded ? 'bottom-6 w-[92%] max-w-md' : 'bottom-4 w-auto'}`}>
                 <div 
                     onClick={() => !isDockExpanded && setIsDockExpanded(true)}
                     className={`
@@ -1011,7 +1011,7 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
             <>
                 <div 
                     ref={dragRef}
-                    className="lg:hidden fixed z-50 touch-none cursor-move transition-transform active:scale-95"
+                    className="lg:hidden fixed z-[100] touch-none cursor-move transition-transform active:scale-95"
                     style={{ left: bubblePos.x, top: bubblePos.y }}
                     onTouchStart={handleBubbleTouchStart}
                     onTouchMove={handleBubbleTouchMove}
@@ -1027,7 +1027,7 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
 
                 {/* Circular Menu Overlay */}
                 {isBubbleOpen && (
-                    <div className="fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm flex items-center justify-center animate-fade-in" onClick={() => setIsBubbleOpen(false)}>
+                    <div className="fixed inset-0 z-[90] bg-black/60 backdrop-blur-sm flex items-center justify-center animate-fade-in" onClick={() => setIsBubbleOpen(false)}>
                         {/* Circular Container */}
                         <div 
                             className="relative w-80 h-80 rounded-full" 

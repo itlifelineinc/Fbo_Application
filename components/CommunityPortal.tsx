@@ -5,7 +5,7 @@ import {
   Globe, Users, Hash, Search, Image as ImageIcon, Video, BarChart2, 
   Send, MoreHorizontal, Heart, MessageCircle, Share2, Pin, Trash2, 
   Slash, Flag, X, Plus, CheckCircle, Smile, Tag, XCircle, Lock, Settings, 
-  Shield, UserPlus, Clock, LayoutList, Info, Calendar, Eye, ArrowLeft, BookOpen, AlertCircle, MapPin, EyeOff, Search as SearchIcon
+  Shield, UserPlus, Clock, LayoutList, Info, Calendar, Eye, ArrowLeft, BookOpen, AlertCircle, MapPin, EyeOff, Search as SearchIcon, PlusSquare, Edit3, Menu
 } from 'lucide-react';
 
 interface CommunityPortalProps {
@@ -45,6 +45,12 @@ const CommunityPortal: React.FC<CommunityPortalProps> = ({
 
   // Mobile Admin Sheet State
   const [isMobileAdminSheetOpen, setIsMobileAdminSheetOpen] = useState(false);
+
+  // Global Feed Mobile States
+  const [isGlobalSearchOpen, setIsGlobalSearchOpen] = useState(false);
+  const [isCohortSearchOpen, setIsCohortSearchOpen] = useState(false); // Added for Cohort Search
+  const [isPlusMenuOpen, setIsPlusMenuOpen] = useState(false);
+  const globalScrollRef = useRef<HTMLDivElement>(null);
 
   // Create Modal State
   const [newCohortName, setNewCohortName] = useState('');
@@ -123,11 +129,7 @@ const CommunityPortal: React.FC<CommunityPortalProps> = ({
   };
 
   const handleSaveSettings = () => {
-      // In a real app, this would dispatch an update action to the parent/backend
-      // For this demo, we'll manually update the local state array reference (mock)
       const updatedCohort = { ...activeCohortDetails, ...settingsForm } as Cohort;
-      
-      // MOCK UPDATE: Locate in array and mutate (simulated)
       const idx = cohorts.findIndex(c => c.id === updatedCohort.id);
       if (idx !== -1) {
           cohorts[idx] = updatedCohort; 
@@ -137,22 +139,58 @@ const CommunityPortal: React.FC<CommunityPortalProps> = ({
   };
 
   const handleDeleteGroup = () => {
-      // Mock delete
       alert("Group deleted successfully.");
       setIsDeleteConfirmOpen(false);
       setIsSettingsModalOpen(false);
       setActiveTab('GLOBAL');
-      // In real app: onCreateCohort (or onDeleteCohort) would propagate up
   };
 
-  // Content Renderer to reuse between Mobile Full Screen and Desktop Split Screen
+  const scrollToTop = () => {
+      if (globalScrollRef.current) {
+          globalScrollRef.current.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+  };
+
+  // --- Content Renderers ---
+
+  const renderGlobalFeedContent = () => (
+      <div className="space-y-6">
+          <CreatePostWidget 
+            currentUser={currentUser} 
+            onPost={(post) => onAddPost({ ...post, cohortId: undefined })}
+            activeFeedName="Global Hub"
+          />
+          <div className="space-y-6">
+            {visiblePosts.length > 0 ? visiblePosts.map(post => (
+                <PostItem 
+                    key={post.id} 
+                    post={post} 
+                    currentUser={currentUser} 
+                    onAddComment={onAddComment} 
+                    onLikePost={onLikePost}
+                    isModerator={isModerator}
+                    onUpdatePost={onUpdatePost}
+                    onDeletePost={onDeletePost}
+                />
+            )) : (
+                <div className="text-center py-16 text-slate-400 bg-white rounded-2xl border-2 border-dashed border-slate-200 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-500">
+                    <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4 dark:bg-slate-700">
+                        <MessageCircle size={32} />
+                    </div>
+                    <p className="font-medium">No posts yet.</p>
+                    <p className="text-sm mt-1">Share a win or ask a question to start!</p>
+                </div>
+            )}
+          </div>
+          <div className="h-20"></div>
+      </div>
+  );
+
   const renderCohortContent = () => (
       <div className="space-y-6">
-          {/* Cohort Group Header (Facebook Style) */}
           {activeCohortDetails && (
               <div className="bg-white rounded-b-2xl md:rounded-2xl shadow-sm border-b md:border border-slate-200 overflow-hidden dark:bg-slate-800 dark:border-slate-700 group -mx-4 md:mx-0 -mt-4 md:mt-0">
                   <div className="h-40 md:h-56 bg-gradient-to-r from-emerald-600 to-teal-500 relative bg-cover bg-center" style={activeCohortDetails.coverImage ? { backgroundImage: `url(${activeCohortDetails.coverImage})` } : {}}>
-                      {/* Gradient Overlay for Text Readability */}
                       <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent"></div>
                       <div className="absolute bottom-0 left-0 right-0 p-6">
                           <h1 className="text-2xl md:text-3xl font-bold text-white font-heading shadow-sm">{activeCohortDetails.name}</h1>
@@ -175,7 +213,6 @@ const CommunityPortal: React.FC<CommunityPortalProps> = ({
                       </div>
                       
                       <div className="flex -space-x-2">
-                          {/* Avatar Stack Mockup */}
                           {[1,2,3].map(i => (
                               <div key={i} className="w-8 h-8 rounded-full bg-slate-200 border-2 border-white dark:border-slate-800 dark:bg-slate-700"></div>
                           ))}
@@ -185,7 +222,6 @@ const CommunityPortal: React.FC<CommunityPortalProps> = ({
                       </div>
                   </div>
                   
-                  {/* Cohort Tabs (Discussion, Members, etc.) */}
                   <div className="px-4 pb-2 flex gap-4 border-t border-slate-100 dark:border-slate-700 pt-3 overflow-x-auto no-scrollbar">
                       <button className="text-sm font-bold text-emerald-600 border-b-2 border-emerald-600 pb-2 dark:text-emerald-400">Discussion</button>
                       <button className="text-sm font-medium text-slate-500 hover:bg-slate-50 px-3 py-1 rounded-lg transition-colors pb-2 dark:text-slate-400 dark:hover:bg-slate-700">Members</button>
@@ -195,14 +231,12 @@ const CommunityPortal: React.FC<CommunityPortalProps> = ({
               </div>
           )}
 
-          {/* Create Post Widget */}
           <CreatePostWidget 
             currentUser={currentUser} 
-            onPost={(post) => onAddPost({ ...post, cohortId: activeTab === 'GLOBAL' ? undefined : activeTab })}
-            activeFeedName={activeTab === 'GLOBAL' ? 'Global Hub' : 'Team Feed'}
+            onPost={(post) => onAddPost({ ...post, cohortId: activeTab })}
+            activeFeedName={activeCohortDetails?.name || 'Team Feed'}
           />
 
-          {/* Feed */}
           <div className="space-y-6">
             {visiblePosts.length > 0 ? visiblePosts.map(post => (
                 <PostItem 
@@ -225,7 +259,6 @@ const CommunityPortal: React.FC<CommunityPortalProps> = ({
                 </div>
             )}
           </div>
-          
           <div className="h-20"></div>
       </div>
   );
@@ -235,8 +268,6 @@ const CommunityPortal: React.FC<CommunityPortalProps> = ({
       
       {/* 
           MOBILE COHORT OVERLAY 
-          - Only visible on mobile when a cohort is active.
-          - Covers the main layout header (app name, logo, bell) via fixed positioning.
       */}
       {activeCohortDetails && (
           <div className="fixed inset-0 z-[60] bg-slate-50 dark:bg-slate-950 overflow-y-auto md:hidden flex flex-col">
@@ -249,14 +280,15 @@ const CommunityPortal: React.FC<CommunityPortalProps> = ({
                       <ArrowLeft size={24} />
                   </button>
                   
-                  {/* Right Actions */}
                   <div className="flex items-center gap-3">
-                      <button className="p-2 text-slate-600 dark:text-slate-300 hover:bg-slate-100 rounded-full">
+                      <button 
+                          onClick={() => setIsCohortSearchOpen(true)}
+                          className="p-2 text-slate-600 dark:text-slate-300 hover:bg-slate-100 rounded-full"
+                      >
                           <SearchIcon size={24} />
                       </button>
                       
                       {isCohortAdmin ? (
-                          /* Admin Badge (Star Shield) */
                           <button 
                               onClick={() => setIsMobileAdminSheetOpen(true)}
                               className="relative p-2 text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 rounded-full"
@@ -268,7 +300,6 @@ const CommunityPortal: React.FC<CommunityPortalProps> = ({
                               </div>
                           </button>
                       ) : (
-                          /* Member Menu */
                           <button className="p-2 text-slate-600 dark:text-slate-300 hover:bg-slate-100 rounded-full">
                               <MoreHorizontal size={24} />
                           </button>
@@ -276,12 +307,31 @@ const CommunityPortal: React.FC<CommunityPortalProps> = ({
                   </div>
               </div>
 
-              {/* Feed Content Area */}
               <div className="p-4 flex-1">
                   {renderCohortContent()}
               </div>
 
-              {/* Mobile Admin Bottom Sheet */}
+              {/* Slide Left Drawer (Search) - Cohort Specific */}
+              <div className={`fixed inset-0 z-[70] transition-transform duration-300 ${isCohortSearchOpen ? 'translate-x-0' : 'translate-x-full'}`}>
+                   <div className="absolute inset-0 bg-white dark:bg-slate-950 flex flex-col">
+                       <div className="flex items-center gap-3 p-4 border-b border-slate-200 dark:border-slate-800">
+                           <button onClick={() => setIsCohortSearchOpen(false)} className="p-2 -ml-2 text-slate-600 dark:text-slate-300">
+                               <ArrowLeft size={24}/>
+                           </button>
+                           <input 
+                              type="text" 
+                              placeholder={`Search in ${activeCohortDetails.name}...`}
+                              autoFocus 
+                              className="flex-1 bg-transparent outline-none text-lg text-slate-900 dark:text-white placeholder-slate-400" 
+                           />
+                       </div>
+                       <div className="flex-1 p-8 text-center text-slate-400 dark:text-slate-500">
+                           <SearchIcon size={48} className="mx-auto mb-4 opacity-20" />
+                           <p>Start typing to search this group...</p>
+                       </div>
+                   </div>
+              </div>
+
               {isMobileAdminSheetOpen && (
                   <div className="fixed inset-0 z-[70]">
                       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setIsMobileAdminSheetOpen(false)}></div>
@@ -325,17 +375,104 @@ const CommunityPortal: React.FC<CommunityPortalProps> = ({
           </div>
       )}
 
+      {/* 
+          MOBILE GLOBAL FEED OVERLAY 
+          - Only visible on mobile when 'GLOBAL' is active.
+          - Replaces standard header with custom "For You" Facebook-style header.
+      */}
+      {activeTab === 'GLOBAL' && (
+          <div className="fixed inset-0 z-[60] bg-slate-50 dark:bg-slate-950 flex flex-col md:hidden">
+              {/* Custom Header */}
+              <div className="flex justify-between items-center px-4 py-3 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 shrink-0">
+                   <div className="flex items-center gap-3">
+                       <button onClick={() => setIsSidebarOpen(true)} className="p-1">
+                          <Menu size={24} className="text-slate-900 dark:text-white" />
+                       </button>
+                       <h1 className="text-2xl font-bold font-heading text-slate-900 dark:text-white tracking-tight">For You</h1>
+                   </div>
+                   <div className="flex items-center gap-4">
+                       <button 
+                          onClick={() => setIsGlobalSearchOpen(true)} 
+                          className="p-2 bg-slate-100 dark:bg-slate-800 rounded-full text-slate-900 dark:text-white"
+                       >
+                          <SearchIcon size={20} />
+                       </button>
+                       <div className="relative">
+                          <button 
+                              onClick={() => setIsPlusMenuOpen(!isPlusMenuOpen)} 
+                              className="p-2 bg-slate-100 dark:bg-slate-800 rounded-full text-slate-900 dark:text-white transition-transform active:scale-95"
+                          >
+                              <PlusSquare size={20} />
+                          </button>
+                          {/* Plus Menu Popover */}
+                          {isPlusMenuOpen && (
+                              <>
+                                <div className="fixed inset-0 z-40" onClick={() => setIsPlusMenuOpen(false)}></div>
+                                <div className="absolute right-0 top-12 w-48 bg-white dark:bg-slate-900 shadow-xl rounded-xl border border-slate-200 dark:border-slate-800 py-2 z-50 animate-fade-in origin-top-right">
+                                    <button 
+                                        onClick={() => {scrollToTop(); setIsPlusMenuOpen(false);}} 
+                                        className="flex items-center gap-3 px-4 py-3 w-full hover:bg-slate-50 dark:hover:bg-slate-800 text-sm font-bold text-slate-700 dark:text-slate-200"
+                                    >
+                                        <Edit3 size={18} /> Post
+                                    </button>
+                                    <button 
+                                        onClick={() => {scrollToTop(); setIsPlusMenuOpen(false);}} 
+                                        className="flex items-center gap-3 px-4 py-3 w-full hover:bg-slate-50 dark:hover:bg-slate-800 text-sm font-bold text-slate-700 dark:text-slate-200"
+                                    >
+                                        <BarChart2 size={18} /> Poll
+                                    </button>
+                                    <button 
+                                        onClick={() => {scrollToTop(); setIsPlusMenuOpen(false);}} 
+                                        className="flex items-center gap-3 px-4 py-3 w-full hover:bg-slate-50 dark:hover:bg-slate-800 text-sm font-bold text-slate-700 dark:text-slate-200"
+                                    >
+                                        <ImageIcon size={18} /> Photo/Video
+                                    </button>
+                                </div>
+                              </>
+                          )}
+                       </div>
+                   </div>
+              </div>
+
+              {/* Feed Content */}
+              <div ref={globalScrollRef} className="flex-1 overflow-y-auto p-4 scroll-smooth bg-slate-50 dark:bg-slate-950">
+                   {renderGlobalFeedContent()}
+              </div>
+
+              {/* Slide Left Drawer (Search) */}
+              <div className={`fixed inset-0 z-[70] transition-transform duration-300 ${isGlobalSearchOpen ? 'translate-x-0' : 'translate-x-full'}`}>
+                   <div className="absolute inset-0 bg-white dark:bg-slate-950 flex flex-col">
+                       <div className="flex items-center gap-3 p-4 border-b border-slate-200 dark:border-slate-800">
+                           <button onClick={() => setIsGlobalSearchOpen(false)} className="p-2 -ml-2 text-slate-600 dark:text-slate-300">
+                               <ArrowLeft size={24}/>
+                           </button>
+                           <input 
+                              type="text" 
+                              placeholder="Search posts..." 
+                              autoFocus 
+                              className="flex-1 bg-transparent outline-none text-lg text-slate-900 dark:text-white placeholder-slate-400" 
+                           />
+                       </div>
+                       <div className="flex-1 p-8 text-center text-slate-400 dark:text-slate-500">
+                           <SearchIcon size={48} className="mx-auto mb-4 opacity-20" />
+                           <p>Start typing to search...</p>
+                       </div>
+                   </div>
+              </div>
+          </div>
+      )}
+
       {/* Mobile Sidebar Overlay (Standard) */}
       {isSidebarOpen && (
         <div 
-          className="fixed inset-0 bg-black/50 z-40 md:hidden backdrop-blur-sm transition-opacity"
+          className="fixed inset-0 bg-black/50 z-[80] md:hidden backdrop-blur-sm transition-opacity"
           onClick={() => setIsSidebarOpen(false)}
         />
       )}
 
       {/* Sidebar Navigation */}
       <div className={`
-          fixed inset-y-0 left-0 z-50 w-72 bg-white border-r border-slate-200 flex flex-col shadow-2xl transition-transform duration-300 ease-in-out
+          fixed inset-y-0 left-0 z-[90] w-72 bg-white border-r border-slate-200 flex flex-col shadow-2xl transition-transform duration-300 ease-in-out
           md:translate-x-0 md:static md:z-0 md:shadow-none md:border-0 md:bg-transparent md:w-64 md:h-[calc(100vh-6rem)] md:sticky md:top-4 dark:bg-slate-900 dark:border-slate-800
           ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}
       `}>
@@ -350,7 +487,6 @@ const CommunityPortal: React.FC<CommunityPortalProps> = ({
 
         {/* Sidebar Content */}
         <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden flex-1 flex flex-col dark:bg-slate-800 dark:border-slate-700">
-            
             {/* Logic: If inside a Cohort (Desktop), show Back Button & Admin Tools. Else show Global Nav */}
             {activeTab !== 'GLOBAL' && activeCohortDetails ? (
                 <>
@@ -465,21 +601,8 @@ const CommunityPortal: React.FC<CommunityPortalProps> = ({
       </div>
 
       {/* Main Feed Area (Standard / Desktop View) */}
-      <div className={`flex-1 min-w-0 max-w-3xl ${activeCohortDetails ? 'hidden md:block' : ''}`}>
-          {/* Mobile Header (For You View) */}
-          <div className="md:hidden mb-4 flex items-center justify-between bg-white p-4 rounded-xl shadow-sm border border-slate-200 dark:bg-slate-800 dark:border-slate-700">
-             <div>
-                <h2 className="font-bold text-slate-800 font-heading dark:text-slate-100">
-                    {activeTab === 'GLOBAL' ? 'For You' : activeCohortDetails?.name || 'My Team'}
-                </h2>
-                <p className="text-xs text-slate-500 dark:text-slate-400">Tap to switch</p>
-             </div>
-             <button onClick={() => setIsSidebarOpen(true)} className="p-2 bg-slate-100 rounded-lg text-slate-600 dark:bg-slate-700 dark:text-slate-300">
-                 <Users size={20} />
-             </button>
-          </div>
-
-          {renderCohortContent()}
+      <div className={`hidden md:block flex-1 min-w-0 max-w-3xl`}>
+          {activeTab === 'GLOBAL' ? renderGlobalFeedContent() : renderCohortContent()}
       </div>
 
       {/* Right Column (Desktop Only) - Context Aware */}

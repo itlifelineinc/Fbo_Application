@@ -4,7 +4,7 @@ import { Student, CommunityPost, Cohort, UserRole, CommunityComment, Poll, PostM
 import { 
   Globe, Users, Hash, Search, Image as ImageIcon, Video, BarChart2, 
   Send, MoreHorizontal, Heart, MessageCircle, Share2, Pin, Trash2, 
-  Slash, Flag, X, Plus, CheckCircle, Smile 
+  Slash, Flag, X, Plus, CheckCircle, Smile, Tag, XCircle 
 } from 'lucide-react';
 
 interface CommunityPortalProps {
@@ -228,10 +228,12 @@ const CreatePostWidget: React.FC<{
     activeFeedName: string;
 }> = ({ currentUser, onPost, activeFeedName }) => {
     const [content, setContent] = useState('');
-    const [activeMode, setActiveMode] = useState<'STATUS' | 'MEDIA' | 'POLL'>('STATUS');
+    const [activeMode, setActiveMode] = useState<'STATUS' | 'POLL'>('STATUS'); // Poll mode toggles the view
     const [postType, setPostType] = useState<CommunityPost['type']>('DISCUSSION');
     const [mediaFiles, setMediaFiles] = useState<PostMedia[]>([]);
     const [pollOptions, setPollOptions] = useState<string[]>(['', '']);
+    const [showTypeSelector, setShowTypeSelector] = useState(false);
+    
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -244,9 +246,29 @@ const CreatePostWidget: React.FC<{
                         type: file.type.startsWith('video') ? 'VIDEO' : 'IMAGE',
                         url: ev.target!.result as string
                     }]);
+                    setActiveMode('STATUS'); // Ensure we are in status mode to see preview
                 }
             };
             reader.readAsDataURL(file);
+        }
+    };
+
+    const togglePollMode = () => {
+        if (activeMode === 'POLL') {
+            setActiveMode('STATUS');
+        } else {
+            setActiveMode('POLL');
+            setMediaFiles([]); // Clear media if switching to poll
+        }
+    };
+
+    const getTypeColor = (type: string) => {
+        switch(type) {
+            case 'WIN': return 'text-yellow-600 bg-yellow-50 border-yellow-200';
+            case 'CHALLENGE': return 'text-red-600 bg-red-50 border-red-200';
+            case 'QUESTION': return 'text-orange-600 bg-orange-50 border-orange-200';
+            case 'MOTIVATION': return 'text-purple-600 bg-purple-50 border-purple-200';
+            default: return 'text-slate-600 bg-slate-100 border-slate-200';
         }
     };
 
@@ -254,7 +276,7 @@ const CreatePostWidget: React.FC<{
         if (!content.trim() && mediaFiles.length === 0 && activeMode !== 'POLL') return;
         if (activeMode === 'POLL' && (!content.trim() || pollOptions.some(o => !o.trim()))) return;
 
-        const newPost: any = { // Using any to bypass partial type creation complexity
+        const newPost: any = { 
             id: `post_${Date.now()}`,
             authorHandle: currentUser.handle,
             authorName: currentUser.name,
@@ -272,11 +294,11 @@ const CreatePostWidget: React.FC<{
 
         if (activeMode === 'POLL') {
             newPost.poll = {
-                question: content, // Content acts as question
+                question: content, 
                 options: pollOptions.map((text, i) => ({ id: `opt_${i}`, text, votes: [] })),
                 isOpen: true
             };
-            newPost.type = 'QUESTION'; // Force type
+            newPost.type = 'QUESTION'; 
         }
 
         onPost(newPost);
@@ -287,109 +309,127 @@ const CreatePostWidget: React.FC<{
         setPollOptions(['', '']);
         setActiveMode('STATUS');
         setPostType('DISCUSSION');
+        setShowTypeSelector(false);
     };
 
     return (
         <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 dark:bg-slate-800 dark:border-slate-700">
-            {/* Header Tabs */}
-            <div className="flex gap-4 mb-4 border-b border-slate-100 pb-2 dark:border-slate-700">
-                <button 
-                    onClick={() => setActiveMode('STATUS')}
-                    className={`pb-2 text-sm font-bold transition-colors ${activeMode === 'STATUS' ? 'text-emerald-600 border-b-2 border-emerald-600' : 'text-slate-500 hover:text-slate-800 dark:text-slate-400'}`}
-                >
-                    Write Post
-                </button>
-                <button 
-                    onClick={() => setActiveMode('MEDIA')}
-                    className={`pb-2 text-sm font-bold transition-colors ${activeMode === 'MEDIA' ? 'text-emerald-600 border-b-2 border-emerald-600' : 'text-slate-500 hover:text-slate-800 dark:text-slate-400'}`}
-                >
-                    Photo/Video
-                </button>
-                <button 
-                    onClick={() => setActiveMode('POLL')}
-                    className={`pb-2 text-sm font-bold transition-colors ${activeMode === 'POLL' ? 'text-emerald-600 border-b-2 border-emerald-600' : 'text-slate-500 hover:text-slate-800 dark:text-slate-400'}`}
-                >
-                    Poll
-                </button>
-            </div>
-
-            <div className="flex gap-4">
-                <div className="w-10 h-10 rounded-full bg-emerald-100 text-emerald-800 flex items-center justify-center font-bold text-sm flex-shrink-0 border-2 border-white shadow-sm dark:bg-emerald-900 dark:text-emerald-300 dark:border-slate-600 overflow-hidden">
+            {/* Top Area: Avatar + Input */}
+            <div className="flex gap-3 mb-3">
+                <div className="w-10 h-10 rounded-full bg-emerald-100 text-emerald-800 flex items-center justify-center font-bold text-sm flex-shrink-0 border border-slate-100 shadow-sm dark:bg-emerald-900 dark:text-emerald-300 dark:border-slate-600 overflow-hidden">
                     {currentUser.avatarUrl ? <img src={currentUser.avatarUrl} className="w-full h-full object-cover"/> : currentUser.name.charAt(0)}
                 </div>
                 
-                <div className="flex-1">
+                <div className="flex-1 bg-slate-100 dark:bg-slate-700/50 rounded-2xl px-4 py-2 hover:bg-slate-200/50 transition-colors dark:hover:bg-slate-700 cursor-text">
                     <textarea 
                         value={content}
                         onChange={(e) => setContent(e.target.value)}
-                        placeholder={activeMode === 'POLL' ? "Ask a question..." : `Share something with ${activeFeedName}...`}
-                        className="w-full bg-transparent border-none p-0 text-base focus:ring-0 resize-none h-20 placeholder-slate-400 text-slate-800 dark:text-white dark:placeholder-slate-600"
+                        placeholder={activeMode === 'POLL' ? "Ask a question..." : `What's on your mind, ${currentUser.name.split(' ')[0]}?`}
+                        className="w-full bg-transparent border-none p-0 text-base focus:ring-0 resize-none h-10 min-h-[40px] placeholder-slate-500 text-slate-800 dark:text-white dark:placeholder-slate-400 focus:h-20 transition-all"
                     />
-
-                    {/* Media Preview */}
-                    {mediaFiles.length > 0 && (
-                        <div className="flex gap-2 mb-4 overflow-x-auto pb-2">
-                            {mediaFiles.map((media, i) => (
-                                <div key={i} className="relative w-20 h-20 rounded-lg overflow-hidden border border-slate-200 shrink-0">
-                                    {media.type === 'VIDEO' ? <div className="bg-black w-full h-full flex items-center justify-center"><Video className="text-white" size={20}/></div> : <img src={media.url} className="w-full h-full object-cover"/>}
-                                    <button onClick={() => setMediaFiles(prev => prev.filter((_, idx) => idx !== i))} className="absolute top-0 right-0 bg-black/50 text-white p-0.5 rounded-bl"><X size={12}/></button>
-                                </div>
-                            ))}
-                            <button onClick={() => fileInputRef.current?.click()} className="w-20 h-20 rounded-lg border-2 border-dashed border-slate-300 flex items-center justify-center text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700"><Plus size={20}/></button>
-                        </div>
-                    )}
-
-                    {/* Poll Options */}
-                    {activeMode === 'POLL' && (
-                        <div className="space-y-2 mb-4 bg-slate-50 p-3 rounded-xl dark:bg-slate-900/50">
-                            {pollOptions.map((opt, i) => (
-                                <input 
-                                    key={i}
-                                    value={opt}
-                                    onChange={(e) => {
-                                        const newOpts = [...pollOptions];
-                                        newOpts[i] = e.target.value;
-                                        setPollOptions(newOpts);
-                                    }}
-                                    placeholder={`Option ${i + 1}`}
-                                    className="w-full p-2 text-sm border border-slate-200 rounded-lg dark:bg-slate-800 dark:border-slate-700 dark:text-white"
-                                />
-                            ))}
-                            <button onClick={() => setPollOptions([...pollOptions, ''])} className="text-xs font-bold text-emerald-600 hover:underline">+ Add Option</button>
-                        </div>
-                    )}
-
-                    <div className="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-slate-700 mt-2">
-                        {/* Category Pills */}
-                        <div className="flex gap-2 overflow-x-auto no-scrollbar max-w-[200px] md:max-w-none">
-                            {activeMode === 'MEDIA' && (
-                                <button onClick={() => fileInputRef.current?.click()} className="p-2 text-emerald-600 bg-emerald-50 rounded-lg hover:bg-emerald-100 transition-colors dark:bg-emerald-900/20 dark:text-emerald-400"><ImageIcon size={20} /></button>
-                            )}
-                            {activeMode !== 'POLL' && ['DISCUSSION', 'WIN', 'CHALLENGE', 'QUESTION', 'MOTIVATION'].map(type => (
-                                <button 
-                                    key={type}
-                                    onClick={() => setPostType(type as any)}
-                                    className={`px-3 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-colors border ${
-                                        postType === type 
-                                        ? 'bg-slate-800 text-white border-slate-800 dark:bg-white dark:text-slate-900' 
-                                        : 'bg-white text-slate-500 border-slate-200 hover:bg-slate-50 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-600'
-                                    }`}
-                                >
-                                    {type}
-                                </button>
-                            ))}
-                        </div>
-
-                        <button 
-                            onClick={handleSubmit}
-                            disabled={!content && mediaFiles.length === 0 && activeMode !== 'POLL'}
-                            className="bg-emerald-600 text-white px-6 py-2 rounded-full font-bold text-sm hover:bg-emerald-700 transition-all shadow-md disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-                        >
-                            Post <Send size={14} />
-                        </button>
-                    </div>
                 </div>
             </div>
+
+            {/* Middle: Content Previews / Poll Editor */}
+            <div className="px-2">
+                {/* Media Preview */}
+                {mediaFiles.length > 0 && activeMode === 'STATUS' && (
+                    <div className="flex gap-2 mb-4 overflow-x-auto pb-2 pt-1">
+                        {mediaFiles.map((media, i) => (
+                            <div key={i} className="relative w-24 h-24 rounded-xl overflow-hidden border border-slate-200 shrink-0 shadow-sm">
+                                {media.type === 'VIDEO' ? <div className="bg-black w-full h-full flex items-center justify-center"><Video className="text-white" size={24}/></div> : <img src={media.url} className="w-full h-full object-cover"/>}
+                                <button onClick={() => setMediaFiles(prev => prev.filter((_, idx) => idx !== i))} className="absolute top-1 right-1 bg-black/50 hover:bg-black/70 text-white p-1 rounded-full backdrop-blur-sm transition-colors"><X size={12}/></button>
+                            </div>
+                        ))}
+                        <button onClick={() => fileInputRef.current?.click()} className="w-24 h-24 rounded-xl border-2 border-dashed border-slate-300 flex flex-col items-center justify-center text-slate-400 hover:bg-slate-50 hover:border-emerald-400 hover:text-emerald-500 transition-all dark:hover:bg-slate-700"><Plus size={24}/><span className="text-xs font-bold mt-1">Add</span></button>
+                    </div>
+                )}
+
+                {/* Poll Editor */}
+                {activeMode === 'POLL' && (
+                    <div className="space-y-2 mb-4 bg-slate-50 p-4 rounded-xl border border-slate-100 dark:bg-slate-900/50 dark:border-slate-700 animate-fade-in">
+                        <div className="flex justify-between items-center mb-1">
+                            <span className="text-xs font-bold text-slate-400 uppercase">Poll Options</span>
+                            <button onClick={togglePollMode} className="text-slate-400 hover:text-red-500"><XCircle size={16}/></button>
+                        </div>
+                        {pollOptions.map((opt, i) => (
+                            <input 
+                                key={i}
+                                value={opt}
+                                onChange={(e) => {
+                                    const newOpts = [...pollOptions];
+                                    newOpts[i] = e.target.value;
+                                    setPollOptions(newOpts);
+                                }}
+                                placeholder={`Option ${i + 1}`}
+                                className="w-full p-2.5 text-sm border border-slate-200 rounded-lg dark:bg-slate-800 dark:border-slate-700 dark:text-white focus:ring-1 focus:ring-emerald-500 outline-none"
+                            />
+                        ))}
+                        <button onClick={() => setPollOptions([...pollOptions, ''])} className="text-xs font-bold text-emerald-600 hover:underline flex items-center gap-1"><Plus size={14} /> Add Option</button>
+                    </div>
+                )}
+
+                {/* Type Selector (Category) */}
+                {showTypeSelector && (
+                    <div className="flex flex-wrap gap-2 mb-4 pt-2 animate-fade-in border-t border-slate-100 dark:border-slate-700">
+                        {['DISCUSSION', 'WIN', 'CHALLENGE', 'QUESTION', 'MOTIVATION'].map(type => (
+                            <button 
+                                key={type}
+                                onClick={() => { setPostType(type as any); setShowTypeSelector(false); }}
+                                className={`px-3 py-1.5 rounded-full text-xs font-bold border transition-all ${
+                                    postType === type 
+                                    ? getTypeColor(type) + ' shadow-sm'
+                                    : 'bg-white text-slate-500 border-slate-200 hover:bg-slate-50 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-600'
+                                }`}
+                            >
+                                {type}
+                            </button>
+                        ))}
+                    </div>
+                )}
+            </div>
+
+            {/* Divider */}
+            <div className="h-px bg-slate-100 w-full mb-3 dark:bg-slate-700"></div>
+
+            {/* Bottom Actions Bar */}
+            <div className="flex items-center justify-between px-1">
+                <div className="flex gap-1 md:gap-2">
+                    <button 
+                        onClick={() => fileInputRef.current?.click()} 
+                        className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-slate-100 text-slate-500 font-semibold text-sm transition-colors dark:hover:bg-slate-700 dark:text-slate-400"
+                    >
+                        <ImageIcon size={20} className="text-green-500" />
+                        <span className="hidden sm:inline">Photo/Video</span>
+                    </button>
+                    
+                    <button 
+                        onClick={togglePollMode}
+                        className={`flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-slate-100 font-semibold text-sm transition-colors ${activeMode === 'POLL' ? 'bg-orange-50 text-orange-600' : 'text-slate-500 dark:hover:bg-slate-700 dark:text-slate-400'}`}
+                    >
+                        <BarChart2 size={20} className="text-orange-500" />
+                        <span className="hidden sm:inline">Poll</span>
+                    </button>
+
+                    <button 
+                        onClick={() => setShowTypeSelector(!showTypeSelector)}
+                        className={`flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-slate-100 font-semibold text-sm transition-colors ${showTypeSelector ? 'bg-yellow-50 text-yellow-700' : 'text-slate-500 dark:hover:bg-slate-700 dark:text-slate-400'}`}
+                    >
+                        <Tag size={20} className="text-yellow-500" />
+                        <span className="hidden sm:inline">{postType === 'DISCUSSION' ? 'Topic' : postType}</span>
+                        {postType !== 'DISCUSSION' && <span className="sm:hidden font-bold text-xs uppercase">{postType}</span>}
+                    </button>
+                </div>
+
+                <button 
+                    onClick={handleSubmit}
+                    disabled={!content && mediaFiles.length === 0 && activeMode !== 'POLL'}
+                    className="bg-emerald-600 text-white px-6 py-2 rounded-lg font-bold text-sm hover:bg-emerald-700 transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                >
+                    Post <Send size={14} className="opacity-80" />
+                </button>
+            </div>
+            
             <input type="file" ref={fileInputRef} className="hidden" accept="image/*,video/*" onChange={handleFileSelect} />
         </div>
     );

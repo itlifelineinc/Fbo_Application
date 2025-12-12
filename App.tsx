@@ -217,7 +217,17 @@ const App: React.FC = () => {
         
         <Route path="/dashboard" element={
             <ProtectedRoute currentUser={currentUser} onLogout={handleLogout} theme={theme} onToggleTheme={toggleTheme} courses={courses} notifications={notifications} templates={templates} broadcasts={broadcasts}>
-                <Dashboard students={students} currentUser={currentUser!} courses={courses} templates={templates} broadcasts={broadcasts} />
+                <Dashboard 
+                    students={students} 
+                    currentUser={currentUser!} 
+                    courses={courses} 
+                    templates={templates} 
+                    broadcasts={broadcasts}
+                    notifications={notifications}
+                    onLogout={handleLogout}
+                    theme={theme}
+                    onToggleTheme={toggleTheme}
+                />
             </ProtectedRoute>
         } />
 

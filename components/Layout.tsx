@@ -171,10 +171,10 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
   const isStudentsPage = location.pathname === '/students';
   
   // Routes that should use full width (no padding on mobile)
-  const isFullWidthPage = isChatPage || isClassroomPage || isCurriculumPage || isPlayerPage || isSalesPage || isSalesBuilderPage || isCourseBuilderPage || isStudentsPage;
+  const isFullWidthPage = isDashboard || isChatPage || isClassroomPage || isCurriculumPage || isPlayerPage || isSalesPage || isSalesBuilderPage || isCourseBuilderPage || isStudentsPage;
   
   // Routes where default mobile header should be hidden
-  const shouldHideMobileHeader = isChatPage || isClassroomPage || isCurriculumPage || isPlayerPage || isSalesPage || isSalesBuilderPage || isCourseBuilderPage || isStudentsPage;
+  const shouldHideMobileHeader = isDashboard || isChatPage || isClassroomPage || isCurriculumPage || isPlayerPage || isSalesPage || isSalesBuilderPage || isCourseBuilderPage || isStudentsPage;
 
   // Set initial bubble position safely
   useEffect(() => {
@@ -599,7 +599,7 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
       </aside>
 
       {/* Main Content - Adjusted for Builders */}
-      <div className="flex-1 flex flex-col h-full overflow-hidden dark:bg-slate-950 relative">
+      <div className="flex-1 flex flex-col h-full overflow-hidden dark:bg-slate-900 relative">
         
         {/* Desktop Navbar */}
         <header ref={navbarRef} className={headerClass}>

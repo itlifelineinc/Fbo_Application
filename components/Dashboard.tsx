@@ -2,8 +2,8 @@
 import React, { useState, useEffect } from 'react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Brush } from 'recharts';
 import { Link, useNavigate } from 'react-router-dom';
-import { Student, UserRole, Course, CourseTrack, CourseStatus, MentorshipTemplate, Broadcast } from '../types';
-import { Edit, ExternalLink, Plus, Minus, ChevronLeft, ChevronRight, User, Users, TrendingUp, Calendar, MessageCircle, ShoppingBag, Globe, Bell, ArrowUpRight, CheckCircle, Lightbulb, Inbox, ClipboardCheck, Megaphone, LayoutGrid } from 'lucide-react';
+import { Student, UserRole, Course, CourseTrack, CourseStatus, MentorshipTemplate, Broadcast, AppNotification } from '../types';
+import { Edit, ExternalLink, Plus, Minus, ChevronLeft, ChevronRight, User, Users, TrendingUp, Calendar, MessageCircle, ShoppingBag, Globe, Bell, ArrowUpRight, CheckCircle, Lightbulb, Inbox, ClipboardCheck, Megaphone, LayoutGrid, Sun, Moon, LogOut, Settings, X } from 'lucide-react';
 import { RANKS, RANK_ORDER } from '../constants';
 
 // --- Icons (Defined Before Usage) ---
@@ -61,8 +61,13 @@ interface DashboardProps {
   currentUser: Student;
   courses: Course[];
   templates?: MentorshipTemplate[];
-  broadcasts?: Broadcast[]; // Added
+  broadcasts?: Broadcast[];
+  notifications?: AppNotification[];
   onReviewCourse?: (courseId: string, status: CourseStatus) => void;
+  // Layout Controls passed down
+  onLogout?: () => void;
+  theme?: 'light' | 'dark';
+  onToggleTheme?: () => void;
 }
 
 // Helper to check if rank A is higher or equal to rank B
@@ -74,7 +79,18 @@ const isRankOrHigher = (currentId: string, targetId: string): boolean => {
 
 // --- Main Component ---
 
-const Dashboard: React.FC<DashboardProps> = ({ students, currentUser, courses, onReviewCourse, templates = [], broadcasts = [] }) => {
+const Dashboard: React.FC<DashboardProps> = ({ 
+    students, 
+    currentUser, 
+    courses, 
+    onReviewCourse, 
+    templates = [], 
+    broadcasts = [], 
+    notifications = [],
+    onLogout,
+    theme,
+    onToggleTheme
+}) => {
   if (!currentUser) return null;
 
   const navigate = useNavigate();
@@ -82,6 +98,10 @@ const Dashboard: React.FC<DashboardProps> = ({ students, currentUser, courses, o
   const [graphRange, setGraphRange] = useState<'6M' | 'YEAR' | '30D'>('6M');
   // State for Zoom Indices (Controlled Brush)
   const [zoomIndices, setZoomIndices] = useState<{start: number, end: number} | null>(null);
+
+  // Mobile Header Dropdown States
+  const [isNotificationMenuOpen, setIsNotificationMenuOpen] = useState(false);
+  const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
 
   const isStudent = currentUser.role === UserRole.STUDENT;
   const isSponsor = currentUser.role === UserRole.SPONSOR;
@@ -104,6 +124,9 @@ const Dashboard: React.FC<DashboardProps> = ({ students, currentUser, courses, o
   // Count unread broadcasts (My broadcasts = in recipients OR ALL)
   const myBroadcasts = broadcasts.filter(b => b.recipients.includes(currentUser.handle) || b.audienceType === 'ALL');
   const unreadBroadcastsCount = myBroadcasts.filter(b => !(currentUser.readBroadcasts || []).includes(b.id)).length;
+  
+  // Unread Notifications
+  const unreadNotifCount = notifications.filter(n => !n.isRead).length;
 
   let visibleStudents = students || []; 
   if (isStudent) {
@@ -384,7 +407,7 @@ const Dashboard: React.FC<DashboardProps> = ({ students, currentUser, courses, o
   const welcomeSubtitle = getWelcomeSubtitle();
 
   return (
-    <div className="space-y-8 animate-fade-in pb-12">
+    <div className="animate-fade-in flex flex-col h-full overflow-hidden bg-slate-50 dark:bg-slate-950">
       <style>{`
         @keyframes wave {
             0% { transform: rotate(0.0deg) }
@@ -404,482 +427,588 @@ const Dashboard: React.FC<DashboardProps> = ({ students, currentUser, courses, o
             display: inline-block;
         }
       `}</style>
-      <header className="flex justify-between items-end">
-        <div>
-            <h1 className="text-2xl md:text-3xl font-bold text-emerald-950 font-heading dark:text-emerald-400 flex items-center gap-2">
-                Hi {firstName} <span className="animate-wave text-2xl md:text-3xl">👋</span>
-            </h1>
-            <p className="text-emerald-700 mt-2 text-sm md:text-base dark:text-emerald-300 max-w-md">
-                {welcomeSubtitle}
-            </p>
-        </div>
-        <div className="text-right hidden md:block">
-            <p className="text-xs text-slate-400 font-bold uppercase tracking-wider">Current Cycle</p>
-            <p className="text-slate-700 font-bold dark:text-slate-300">{monthNames[prevMonth.getMonth()]]} - {monthNames[currentDate.getMonth()]}</p>
-        </div>
-      </header>
 
-      {/* Stats Slider / Grid */}
-      <div className="mb-4">
-        {/* Desktop Grid */}
-        <div className="hidden lg:grid grid-cols-4 gap-6">
-            {stats.map((stat) => (
-                <StatCard 
-                    key={stat.id}
-                    title={stat.title}
-                    value={stat.value}
-                    icon={stat.icon}
-                    trend={stat.trend}
-                    color={stat.color}
-                />
-            ))}
-        </div>
+      {/* 
+          MOBILE HEADER (Sticky, Full Width)
+          This replicates the layout header but locally within Dashboard to work in full-width mode.
+      */}
+      <div className="md:hidden shrink-0 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-4 py-3 flex justify-between items-center z-50 shadow-sm sticky top-0">
+          <h1 className="text-3xl font-extrabold tracking-tighter text-emerald-950 dark:text-white font-heading">
+              Nexu
+          </h1>
+          <div className="flex items-center gap-4 relative">
+             {/* Bell */}
+             <button 
+                onClick={() => setIsNotificationMenuOpen(!isNotificationMenuOpen)}
+                className="relative text-slate-600 dark:text-slate-300"
+             >
+                <Bell size={24} />
+                {unreadNotifCount > 0 && (
+                    <span className="absolute -top-1 -right-1 min-w-[1.25rem] h-5 px-1 bg-red-500 text-white text-[10px] font-bold flex items-center justify-center rounded-full border border-white dark:border-slate-900 shadow-sm">
+                        {unreadNotifCount}
+                    </span>
+                )}
+             </button>
 
-        {/* Mobile Slider */}
-        <div className="lg:hidden relative group">
-            <div className="overflow-hidden rounded-2xl">
-                <div 
-                    className="flex transition-transform duration-500 ease-in-out" 
-                    style={{ transform: `translateX(-${currentStatIndex * 100}%)` }}
-                >
-                    {stats.map((stat) => (
-                        <div key={stat.id} className="min-w-full px-1">
-                            <StatCard 
-                                title={stat.title}
-                                value={stat.value}
-                                icon={stat.icon}
-                                trend={stat.trend}
-                                color={stat.color}
-                            />
-                        </div>
-                    ))}
+             {/* Profile */}
+             <button 
+                onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
+                className="w-9 h-9 rounded-full bg-slate-200 overflow-hidden border border-slate-300 focus:outline-none dark:border-slate-700"
+             >
+                {currentUser.avatarUrl ? (
+                    <img src={currentUser.avatarUrl} alt={currentUser.name} className="w-full h-full object-cover" />
+                ) : (
+                    <div className="w-full h-full bg-emerald-100 flex items-center justify-center text-emerald-800 font-bold text-xs">
+                        {currentUser.name.charAt(0)}
+                    </div>
+                )}
+             </button>
+
+             {/* Mobile Notification Dropdown */}
+             {isNotificationMenuOpen && (
+                <div className="absolute right-0 top-12 w-80 bg-white dark:bg-slate-900 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-700 py-2 z-[100] animate-fade-in max-h-[60vh] overflow-y-auto">
+                    <div className="px-4 py-3 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center">
+                        <h3 className="font-bold text-sm text-slate-800 dark:text-white">Notifications</h3>
+                        {unreadNotifCount > 0 && <span className="text-xs text-emerald-600 dark:text-emerald-400 font-medium">{unreadNotifCount} new</span>}
+                    </div>
+                    {notifications.length > 0 ? (
+                        notifications.map((notification) => (
+                            <Link 
+                                key={notification.id}
+                                to={notification.link}
+                                className={`block px-4 py-3 border-b border-slate-50 dark:border-slate-800/50 ${!notification.isRead ? 'bg-emerald-50/30 dark:bg-emerald-900/10' : ''}`}
+                            >
+                                <p className="text-sm font-semibold text-slate-800 dark:text-slate-200 truncate">{notification.title}</p>
+                                <p className="text-xs text-slate-500 dark:text-slate-400 truncate">{notification.subtitle}</p>
+                            </Link>
+                        ))
+                    ) : (
+                        <div className="p-8 text-center text-slate-400 text-sm">No notifications</div>
+                    )}
                 </div>
-            </div>
-            
-            {/* Arrows */}
-            <button 
-                onClick={prevStat}
-                className="absolute left-2 top-1/2 -translate-y-1/2 p-2 rounded-full bg-white/60 dark:bg-black/40 backdrop-blur-md border border-white/20 shadow-sm text-slate-700 dark:text-slate-200 hover:bg-white dark:hover:bg-black/60 transition-all z-10"
-            >
-                <ChevronLeft size={20} />
-            </button>
-            <button 
-                onClick={nextStat}
-                className="absolute right-2 top-1/2 -translate-y-1/2 p-2 rounded-full bg-white/60 dark:bg-black/40 backdrop-blur-md border border-white/20 shadow-sm text-slate-700 dark:text-slate-200 hover:bg-white dark:hover:bg-black/60 transition-all z-10"
-            >
-                <ChevronRight size={20} />
-            </button>
+             )}
 
-            {/* Dots */}
-            <div className="flex justify-center gap-2 mt-4">
-                {stats.map((_, idx) => (
-                    <button 
-                        key={idx}
-                        onClick={() => setCurrentStatIndex(idx)}
-                        className={`h-1.5 rounded-full transition-all duration-300 ${idx === currentStatIndex ? 'w-6 bg-emerald-500' : 'w-2 bg-slate-300 dark:bg-slate-700'}`}
+             {/* Mobile Profile Dropdown */}
+             {isProfileMenuOpen && (
+                <div className="absolute right-0 top-12 w-56 bg-white/95 backdrop-blur-xl rounded-2xl shadow-xl border border-slate-100 py-2 z-[100] animate-fade-in dark:bg-slate-900/95 dark:border-slate-700">
+                    <div className="px-4 py-3 border-b border-slate-100 dark:border-slate-700">
+                        <p className="text-sm font-bold text-slate-800 dark:text-white">Signed in as</p>
+                        <p className="text-xs text-slate-500 truncate dark:text-slate-400 mt-0.5">{currentUser.email}</p>
+                    </div>
+                    <div className="py-2">
+                        {onToggleTheme && (
+                            <div 
+                                onClick={(e) => { e.stopPropagation(); onToggleTheme(); }}
+                                className="w-full text-left px-4 py-2.5 text-sm text-slate-600 hover:bg-slate-50 flex items-center justify-between cursor-pointer transition-colors group dark:text-slate-300 dark:hover:bg-slate-800"
+                            >
+                                <div className="flex items-center gap-3">
+                                    {theme === 'light' ? <Sun size={16} /> : <Moon size={16} />}
+                                    <span>Dark Mode</span>
+                                </div>
+                            </div>
+                        )}
+                        <Link 
+                            to={`/students/${currentUser.id}`}
+                            className="w-full text-left px-4 py-2.5 text-sm text-slate-600 hover:bg-slate-50 flex items-center gap-3 transition-colors dark:text-slate-300 dark:hover:bg-slate-800"
+                        >
+                            <Settings size={16} />
+                            <span>Profile</span>
+                        </Link>
+                    </div>
+                    <div className="border-t border-slate-100 pt-2 dark:border-slate-700">
+                        <button 
+                            onClick={onLogout}
+                            className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2 transition-colors dark:hover:bg-red-900/20"
+                        >
+                            <LogOut size={16} />
+                            <span>Sign Out</span>
+                        </button>
+                    </div>
+                </div>
+             )}
+          </div>
+      </div>
+
+      <div className="flex-1 overflow-y-auto p-4 md:p-8 space-y-8 pb-32 md:pb-12 scroll-smooth">
+        
+        {/* Desktop Header Greeting (Only hidden if custom header replaces it? No, this is content header) */}
+        <header className="flex justify-between items-end">
+            <div>
+                <h1 className="text-2xl md:text-3xl font-bold text-emerald-950 font-heading dark:text-emerald-400 flex items-center gap-2">
+                    Hi {firstName} <span className="animate-wave text-2xl md:text-3xl">👋</span>
+                </h1>
+                <p className="text-emerald-700 mt-2 text-sm md:text-base dark:text-emerald-300 max-w-md">
+                    {welcomeSubtitle}
+                </p>
+            </div>
+            <div className="text-right hidden md:block">
+                <p className="text-xs text-slate-400 font-bold uppercase tracking-wider">Current Cycle</p>
+                <p className="text-slate-700 font-bold dark:text-slate-300">{monthNames[prevMonth.getMonth()]} - {monthNames[currentDate.getMonth()]}</p>
+            </div>
+        </header>
+
+        {/* Stats Slider / Grid */}
+        <div className="mb-4">
+            {/* Desktop Grid */}
+            <div className="hidden lg:grid grid-cols-4 gap-6">
+                {stats.map((stat) => (
+                    <StatCard 
+                        key={stat.id}
+                        title={stat.title}
+                        value={stat.value}
+                        icon={stat.icon}
+                        trend={stat.trend}
+                        color={stat.color}
                     />
                 ))}
             </div>
-        </div>
-      </div>
 
-      {/* Main Content Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
-          
-          {/* Left Column (2/3 width) */}
-          <div className="lg:col-span-2 space-y-8 min-w-0">
-            
-            {/* AI Suggestions Widget */}
-            <div className="bg-gradient-to-r from-violet-100 to-fuchsia-50 p-6 rounded-2xl border border-violet-100 dark:bg-slate-800 dark:from-slate-800 dark:to-slate-800 dark:border-slate-700 relative overflow-hidden">
-                <div className="absolute top-0 right-0 p-4 opacity-10 pointer-events-none">
-                    <SparklesIcon />
-                </div>
-                <div className="flex items-center gap-3 mb-4 relative z-10">
-                    <div className="p-2 bg-white rounded-lg shadow-sm text-violet-600 dark:bg-slate-700 dark:text-violet-400">
-                        <Lightbulb size={20} />
+            {/* Mobile Slider */}
+            <div className="lg:hidden relative group">
+                <div className="overflow-hidden rounded-2xl">
+                    <div 
+                        className="flex transition-transform duration-500 ease-in-out" 
+                        style={{ transform: `translateX(-${currentStatIndex * 100}%)` }}
+                    >
+                        {stats.map((stat) => (
+                            <div key={stat.id} className="min-w-full px-1">
+                                <StatCard 
+                                    title={stat.title}
+                                    value={stat.value}
+                                    icon={stat.icon}
+                                    trend={stat.trend}
+                                    color={stat.color}
+                                />
+                            </div>
+                        ))}
                     </div>
-                    <h3 className="font-bold text-slate-800 text-lg dark:text-white font-heading">AI Coach Insights</h3>
                 </div>
                 
-                <div className="space-y-3 relative z-10">
-                    {aiSuggestions.map((suggestion, idx) => (
-                        <div key={idx} className="flex gap-3 items-start bg-white/60 p-3 rounded-xl border border-white/50 dark:bg-slate-700/50 dark:border-slate-600">
-                            <div className="mt-0.5 text-violet-600 dark:text-violet-400">
-                                {suggestion.type === 'goal' ? <ArrowUpRight size={16} /> : suggestion.type === 'team' ? <Users size={16} /> : <CheckCircle size={16} />}
-                            </div>
-                            <p className="text-sm text-slate-700 font-medium dark:text-slate-200">{suggestion.text}</p>
-                        </div>
+                {/* Arrows */}
+                <button 
+                    onClick={prevStat}
+                    className="absolute left-2 top-1/2 -translate-y-1/2 p-2 rounded-full bg-white/60 dark:bg-black/40 backdrop-blur-md border border-white/20 shadow-sm text-slate-700 dark:text-slate-200 hover:bg-white dark:hover:bg-black/60 transition-all z-10"
+                >
+                    <ChevronLeft size={20} />
+                </button>
+                <button 
+                    onClick={nextStat}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 p-2 rounded-full bg-white/60 dark:bg-black/40 backdrop-blur-md border border-white/20 shadow-sm text-slate-700 dark:text-slate-200 hover:bg-white dark:hover:bg-black/60 transition-all z-10"
+                >
+                    <ChevronRight size={20} />
+                </button>
+
+                {/* Dots */}
+                <div className="flex justify-center gap-2 mt-4">
+                    {stats.map((_, idx) => (
+                        <button 
+                            key={idx}
+                            onClick={() => setCurrentStatIndex(idx)}
+                            className={`h-1.5 rounded-full transition-all duration-300 ${idx === currentStatIndex ? 'w-6 bg-emerald-500' : 'w-2 bg-slate-300 dark:bg-slate-700'}`}
+                        />
                     ))}
                 </div>
             </div>
+        </div>
 
-            {/* 3-Month Timeline Tracker */}
-            <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 dark:bg-slate-800 dark:border-slate-700">
-                <div className="flex items-center gap-3 mb-6">
-                    <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-600 shrink-0 dark:bg-emerald-900/20 dark:text-emerald-400">
-                        <Calendar size={20} />
-                    </div>
-                    <div>
-                        {/* Mobile View: Concise */}
-                        <h3 className="font-bold text-slate-800 dark:text-slate-100 text-base md:hidden">
-                            Activity Cycle
-                        </h3>
-                        {/* Desktop View: Full Detail */}
-                        <h3 className="hidden md:block font-bold text-slate-800 dark:text-slate-100 text-base">
-                            3-Month Activity Tracker
-                        </h3>
-                        <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                            {currentRankDef.targetCC > 0 
-                                ? `Rank Accumulation (${rankProgress.currentCycleCC.toFixed(2)} / ${rankProgress.targetCC} CC)`
-                                : `Leadership Progress (${progressText} Managers Needed)`
-                            }
-                        </p>
-                    </div>
-                </div>
+        {/* Main Content Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+            
+            {/* Left Column (2/3 width) */}
+            <div className="lg:col-span-2 space-y-8 min-w-0">
                 
-                <div className="relative pt-4 pb-2">
-                    {/* Progress Bar Background */}
-                    <div className="absolute top-1/2 left-0 w-full h-1 bg-slate-100 -translate-y-1/2 rounded-full dark:bg-slate-700"></div>
-                    {/* Active Progress - Dynamic Width */}
-                    <div 
-                        className="absolute top-1/2 left-0 h-1 bg-emerald-500 -translate-y-1/2 rounded-full shadow-[0_0_10px_rgba(16,185,129,0.4)] transition-all duration-700" 
-                        style={{ width: `${progressPercent}%` }}
-                    ></div>
-
-                    <div className="relative flex justify-between">
-                        {/* Month 1 (Past) */}
-                        <div className="flex flex-col items-center gap-3">
-                            <div className="w-8 h-8 rounded-full bg-emerald-100 border-2 border-emerald-500 flex items-center justify-center text-emerald-700 font-bold text-xs z-10 dark:bg-emerald-900 dark:text-emerald-300">
-                                ✓
-                            </div>
-                            <div className="text-center">
-                                <p className="text-xs font-bold text-slate-600 dark:text-slate-300">{monthNames[prevMonth.getMonth()]}</p>
-                                <p className="text-[10px] text-slate-400">Closed</p>
-                            </div>
-                        </div>
-
-                        {/* Month 2 (Current) */}
-                        <div className="flex flex-col items-center gap-3">
-                            <div className="w-10 h-10 rounded-full bg-emerald-600 border-4 border-white shadow-lg flex items-center justify-center text-white font-bold text-sm z-10 dark:border-slate-800 relative">
-                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-20"></span>
-                                {rankProgress.currentCycleCC.toFixed(1)}
-                            </div>
-                            <div className="text-center">
-                                <p className="text-xs font-bold text-emerald-600 dark:text-emerald-400">{monthNames[currentDate.getMonth()]}</p>
-                                <p className="text-[10px] text-emerald-600 font-medium dark:text-emerald-500">Active Cycle</p>
-                            </div>
-                        </div>
-
-                        {/* Month 3 (Future) */}
-                        <div className="flex flex-col items-center gap-3">
-                            <div className="w-8 h-8 rounded-full bg-white border-2 border-slate-200 flex items-center justify-center text-slate-400 font-bold text-xs z-10 dark:bg-slate-800 dark:border-slate-600">
-                                {nextRankDef ? nextRankDef.targetCC > 0 ? nextRankDef.targetCC : 'Next' : 'Max'}
-                            </div>
-                            <div className="text-center">
-                                <p className="text-xs font-bold text-slate-400 dark:text-slate-500">{monthNames[nextMonth.getMonth()]}</p>
-                                <p className="text-xs text-slate-400">Projected</p>
-                            </div>
-                        </div>
+                {/* AI Suggestions Widget */}
+                <div className="bg-gradient-to-r from-violet-100 to-fuchsia-50 p-6 rounded-2xl border border-violet-100 dark:bg-slate-800 dark:from-slate-800 dark:to-slate-800 dark:border-slate-700 relative overflow-hidden">
+                    <div className="absolute top-0 right-0 p-4 opacity-10 pointer-events-none">
+                        <SparklesIcon />
                     </div>
-                </div>
-            </div>
-
-            {/* Monthly Performance Graph */}
-            <div className="bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-slate-100 dark:bg-slate-800 dark:border-slate-700">
-                <div className="flex justify-between items-center mb-6">
-                    <h2 className="text-lg font-bold text-slate-800 dark:text-slate-100">
-                        {graphRange === '30D' ? 'Daily Activity' : 'Growth Trends'}
-                    </h2>
-                    <select 
-                        value={graphRange}
-                        onChange={(e) => setGraphRange(e.target.value as any)}
-                        className="bg-slate-50 border border-slate-200 text-xs rounded-lg px-2 py-1 outline-none dark:bg-slate-700 dark:border-slate-600 dark:text-slate-300"
-                    >
-                        <option value="6M">Last 6 Months</option>
-                        <option value="YEAR">This Year</option>
-                        <option value="30D">Last 30 Days</option>
-                    </select>
-                </div>
-                
-                <div className="h-64 w-full min-w-0 relative group">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <AreaChart data={performanceData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                      <defs>
-                        <linearGradient id="colorCc" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="#10b981" stopOpacity={0.2}/>
-                          <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
-                        </linearGradient>
-                      </defs>
-                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                      <XAxis dataKey="name" axisLine={false} tickLine={false} dy={10} tick={{fill: '#94a3b8', fontSize: 12}} />
-                      <YAxis axisLine={false} tickLine={false} tick={{fill: '#94a3b8', fontSize: 12}} />
-                      <Tooltip 
-                        contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)', padding: '12px', backgroundColor: '#fff' }}
-                        cursor={{ stroke: '#10b981', strokeWidth: 1, strokeDasharray: '4 4' }}
-                      />
-                      <Area type="monotone" dataKey="cc" stroke="#10b981" strokeWidth={3} fillOpacity={1} fill="url(#colorCc)" />
-                      <Brush 
-                        dataKey="name" 
-                        height={30} 
-                        stroke="#10b981"
-                        startIndex={zoomIndices?.start}
-                        endIndex={zoomIndices?.end}
-                        onChange={(e: any) => setZoomIndices({ start: e.startIndex, end: e.endIndex })}
-                        tickFormatter={(value) => value}
-                        alwaysShowText={false}
-                      />
-                    </AreaChart>
-                  </ResponsiveContainer>
-
-                  {/* Google Maps style Zoom Controls */}
-                  <div className="absolute right-4 bottom-12 flex flex-col bg-white dark:bg-slate-700 rounded-lg shadow-lg border border-slate-200 dark:border-slate-600 overflow-hidden opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10">
-                      <button 
-                        onClick={() => handleZoom('in')}
-                        className="p-2 hover:bg-slate-50 dark:hover:bg-slate-600 text-slate-600 dark:text-slate-300 border-b border-slate-100 dark:border-slate-600 transition-colors"
-                        title="Zoom In"
-                      >
-                          <Plus size={16} />
-                      </button>
-                      <button 
-                        onClick={() => handleZoom('out')}
-                        className="p-2 hover:bg-slate-50 dark:hover:bg-slate-600 text-slate-600 dark:text-slate-300 transition-colors"
-                        title="Zoom Out"
-                      >
-                          <Minus size={16} />
-                      </button>
-                  </div>
-                </div>
-            </div>
-
-            {/* Quick Actions Grid */}
-            <div>
-                <h2 className="text-lg font-bold text-slate-800 mb-4 dark:text-slate-100">Quick Actions</h2>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    {hasSponsor ? (
-                        <>
-                            <Link to="/mentorship/inbox" className="relative bg-white p-4 rounded-xl border border-slate-100 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all flex flex-col items-center gap-3 text-center dark:bg-slate-800 dark:border-slate-700">
-                                <div className="w-10 h-10 bg-indigo-50 text-indigo-600 rounded-full flex items-center justify-center dark:bg-indigo-900/30 dark:text-indigo-400 relative">
-                                    <Inbox size={20} />
-                                    {unreadTemplatesCount > 0 && (
-                                        <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white ring-2 ring-white dark:ring-slate-800 animate-pulse">
-                                            {unreadTemplatesCount > 9 ? '9+' : unreadTemplatesCount}
-                                        </span>
-                                    )}
-                                </div>
-                                <span className="text-sm font-bold text-slate-700 dark:text-slate-300">Mentorship Inbox</span>
-                            </Link>
-                            <Link to="/assignments" className="relative bg-white p-4 rounded-xl border border-slate-100 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all flex flex-col items-center gap-3 text-center dark:bg-slate-800 dark:border-slate-700">
-                                <div className="w-10 h-10 bg-orange-50 text-orange-600 rounded-full flex items-center justify-center dark:bg-orange-900/30 dark:text-orange-400 relative">
-                                    <ClipboardCheck size={20} />
-                                    {pendingAssignments > 0 && (
-                                        <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white ring-2 ring-white dark:ring-slate-800">
-                                            {pendingAssignments > 9 ? '9+' : pendingAssignments}
-                                        </span>
-                                    )}
-                                </div>
-                                <span className="text-sm font-bold text-slate-700 dark:text-slate-300">My Assignments</span>
-                            </Link>
-                        </>
-                    ) : (
-                        <>
-                            <Link to="/chat" className="bg-white p-4 rounded-xl border border-slate-100 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all flex flex-col items-center gap-3 text-center dark:bg-slate-800 dark:border-slate-700">
-                                <div className="w-10 h-10 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center dark:bg-blue-900/30 dark:text-blue-400"><MessageCircle size={20} /></div>
-                                <span className="text-sm font-bold text-slate-700 dark:text-slate-300">Team Chat</span>
-                            </Link>
-                            <Link to="/sales-builder" className="bg-white p-4 rounded-xl border border-slate-100 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all flex flex-col items-center gap-3 text-center dark:bg-slate-800 dark:border-slate-700">
-                                <div className="w-10 h-10 bg-purple-50 text-purple-600 rounded-full flex items-center justify-center dark:bg-purple-900/30 dark:text-purple-400"><ShoppingBag size={20} /></div>
-                                <span className="text-sm font-bold text-slate-700 dark:text-slate-300">Sales Page</span>
-                            </Link>
-                        </>
-                    )}
-                    
-                    <Link to="/broadcasts" className="relative bg-white p-4 rounded-xl border border-slate-100 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all flex flex-col items-center gap-3 text-center dark:bg-slate-800 dark:border-slate-700">
-                        <div className="w-10 h-10 bg-orange-50 text-orange-600 rounded-full flex items-center justify-center dark:bg-orange-900/30 dark:text-orange-400 relative">
-                            <Megaphone size={20} />
-                            {unreadBroadcastsCount > 0 && (
-                                <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white ring-2 ring-white dark:ring-slate-800 animate-pulse">
-                                    {unreadBroadcastsCount > 9 ? '9+' : unreadBroadcastsCount}
-                                </span>
-                            )}
+                    <div className="flex items-center gap-3 mb-4 relative z-10">
+                        <div className="p-2 bg-white rounded-lg shadow-sm text-violet-600 dark:bg-slate-700 dark:text-violet-400">
+                            <Lightbulb size={20} />
                         </div>
-                        <span className="text-sm font-bold text-slate-700 dark:text-slate-300">Broadcast Inbox</span>
-                    </Link>
-                    
-                    {!isDistributor ? (
-                        <Link to="/mentorship-tools" className="bg-white p-4 rounded-xl border border-slate-100 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all flex flex-col items-center gap-3 text-center dark:bg-slate-800 dark:border-slate-700">
-                            <div className="w-10 h-10 bg-violet-50 text-violet-600 rounded-full flex items-center justify-center dark:bg-violet-900/30 dark:text-violet-400">
-                                <LayoutGrid size={20} />
-                            </div>
-                            <span className="text-sm font-bold text-slate-700 dark:text-slate-300">Mentorship Tools</span>
-                        </Link>
-                    ) : (
-                        <Link to="/sales" className="bg-white p-4 rounded-xl border border-slate-100 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all flex flex-col items-center gap-3 text-center dark:bg-slate-800 dark:border-slate-700">
-                            <div className="w-10 h-10 bg-emerald-50 text-emerald-600 rounded-full flex items-center justify-center dark:bg-emerald-900/30 dark:text-emerald-400"><Plus size={20} /></div>
-                            <span className="text-sm font-bold text-slate-700 dark:text-slate-300">Log Sale</span>
-                        </Link>
-                    )}
-                </div>
-            </div>
-
-            {/* Course Recommendations */}
-            {newCourses.length > 0 && (
-                <div className="bg-gradient-to-r from-indigo-900 to-slate-900 rounded-2xl p-6 text-white relative overflow-hidden shadow-lg">
-                    <div className="relative z-10 flex justify-between items-center mb-4">
-                        <h3 className="font-bold text-lg flex items-center gap-2"><Bell size={18} className="text-yellow-400" /> New Courses Available</h3>
-                        <Link to="/training/global" className="text-xs bg-white/10 hover:bg-white/20 px-3 py-1.5 rounded-lg transition-colors">View All</Link>
+                        <h3 className="font-bold text-slate-800 text-lg dark:text-white font-heading">AI Coach Insights</h3>
                     </div>
+                    
                     <div className="space-y-3 relative z-10">
-                        {newCourses.map(c => (
-                            <Link key={c.id} to={`/training/preview/${c.id}`} className="block bg-white/10 hover:bg-white/20 p-3 rounded-xl transition-colors border border-white/5">
-                                <div className="flex items-center gap-3">
-                                    <img src={c.thumbnailUrl} className="w-12 h-12 rounded-lg object-cover" alt="" />
-                                    <div>
-                                        <p className="font-bold text-sm">{c.title}</p>
-                                        <p className="text-xs text-indigo-200">{c.modules.length} Modules • {c.level}</p>
-                                    </div>
+                        {aiSuggestions.map((suggestion, idx) => (
+                            <div key={idx} className="flex gap-3 items-start bg-white/60 p-3 rounded-xl border border-white/50 dark:bg-slate-700/50 dark:border-slate-600">
+                                <div className="mt-0.5 text-violet-600 dark:text-violet-400">
+                                    {suggestion.type === 'goal' ? <ArrowUpRight size={16} /> : suggestion.type === 'team' ? <Users size={16} /> : <CheckCircle size={16} />}
                                 </div>
-                            </Link>
+                                <p className="text-sm text-slate-700 font-medium dark:text-slate-200">{suggestion.text}</p>
+                            </div>
                         ))}
                     </div>
-                    {/* Background decoration */}
-                    <div className="absolute -bottom-10 -right-10 w-40 h-40 bg-indigo-500/30 rounded-full blur-3xl"></div>
                 </div>
-            )}
 
-            {/* Creator Studio (Admin Only) - Preserved */}
-            {!isStudent && (
-              <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 dark:bg-slate-800 dark:border-slate-700">
-                  <div className="flex justify-between items-center mb-4">
-                      <h2 className="text-lg font-bold text-slate-800 dark:text-slate-100">Creator Studio</h2>
-                      <Link to="/builder/new" className="bg-emerald-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-emerald-700 transition-colors flex items-center gap-1">
-                          <Plus size={14} /> Course
-                      </Link>
-                  </div>
-                  <div className="space-y-3">
-                      {authoredCourses.slice(0, 3).map(course => (
-                          <div key={course.id} className="flex items-center justify-between p-3 bg-slate-50 rounded-xl border border-slate-100 dark:bg-slate-900/50 dark:border-slate-700">
-                              <div className="flex items-center gap-3">
-                                  <div className="w-8 h-8 rounded-lg bg-slate-200 overflow-hidden shrink-0 dark:bg-slate-700">
-                                      <img src={course.thumbnailUrl} className="w-full h-full object-cover" alt="" />
-                                  </div>
-                                  <div>
-                                      <p className="font-bold text-slate-800 text-xs dark:text-slate-200">{course.title}</p>
-                                      <p className="text-[10px] text-slate-500">{course.status}</p>
-                                  </div>
-                              </div>
-                              <Link to={`/builder/${course.id}`} className="text-slate-400 hover:text-emerald-600"><Edit size={14} /></Link>
-                          </div>
-                      ))}
-                      {authoredCourses.length === 0 && <p className="text-xs text-slate-400 italic">No courses created yet.</p>}
-                  </div>
-              </div>
-            )}
-          </div>
-
-          {/* Right Column (1/3 width) - Widgets */}
-          <div className="space-y-6 min-w-0">
-            
-            {/* Enrollment Widget */}
-            {!isStudent && (
-                <div className="bg-gradient-to-br from-emerald-600 to-teal-700 rounded-2xl shadow-lg shadow-emerald-600/20 p-6 text-white relative overflow-hidden group">
-                    <div className="relative z-10">
-                        <div className="flex items-center justify-between mb-4">
-                            <h2 className="text-lg font-bold">Grow Team</h2>
-                            <div className="bg-white/20 p-2 rounded-lg backdrop-blur-sm"><ShareIcon /></div>
-                        </div>
-                        <p className="text-emerald-50 text-xs mb-4 opacity-90">Share your invite link to build your downline.</p>
-                        
-                        <div className="bg-black/20 rounded-xl p-1 text-xs font-mono text-white w-full border border-white/10 pl-3 flex items-center justify-between">
-                            <span className="truncate mr-2">{inviteLink}</span>
-                            <button onClick={copyToClipboard} className="bg-white text-emerald-700 p-1.5 rounded-lg hover:bg-emerald-50"><ClipboardIcon /></button>
-                        </div>
-                    </div>
-                    <div className="absolute -right-6 -bottom-6 text-white/10 pointer-events-none">
-                        <Users size={120} />
-                    </div>
-                </div>
-            )}
-
-            {/* Top Performing Team (For Sponsors) */}
-            {!isStudent && visibleStudents.length > 1 && (
-                <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 dark:bg-slate-800 dark:border-slate-700">
-                    <div className="flex justify-between items-center mb-4">
-                        <h3 className="font-bold text-slate-800 dark:text-white">Top Performers</h3>
-                        <Link to="/students" className="text-xs text-emerald-600 font-bold hover:underline dark:text-emerald-400">View All</Link>
-                    </div>
-                    <div className="space-y-4">
-                        {visibleStudents
-                            .filter(s => s.id !== currentUser.id)
-                            .sort((a,b) => b.caseCredits - a.caseCredits)
-                            .slice(0, 5)
-                            .map((s, i) => (
-                                <div key={s.id} className="flex items-center justify-between">
-                                    <div className="flex items-center gap-3">
-                                        <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${i === 0 ? 'bg-yellow-100 text-yellow-700' : i === 1 ? 'bg-slate-200 text-slate-600' : i === 2 ? 'bg-orange-100 text-orange-700' : 'bg-slate-50 text-slate-400'}`}>
-                                            {i + 1}
-                                        </div>
-                                        <div>
-                                            <p className="text-sm font-bold text-slate-700 dark:text-slate-200">{s.name.split(' ')[0]}</p>
-                                            <p className="text-[10px] text-slate-400">{s.role}</p>
-                                        </div>
-                                    </div>
-                                    <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400">{s.caseCredits.toFixed(1)} CC</span>
-                                </div>
-                            ))
-                        }
-                    </div>
-                </div>
-            )}
-
-            {/* AI Tutor Stats */}
-            <div className="bg-slate-900 rounded-2xl shadow-lg p-6 text-white relative overflow-hidden">
-                 <div className="relative z-10">
-                   <div className="flex justify-between items-start mb-6">
-                       <div>
-                            <h3 className="font-bold text-lg font-heading">AI Tutor Stats</h3>
-                            <p className="text-slate-400 text-xs mt-1">Weekly Activity</p>
-                       </div>
-                       <div className="bg-white/10 p-2 rounded-lg backdrop-blur-sm">
-                           <SparklesIcon />
-                       </div>
-                   </div>
-                   
-                   <div className="space-y-4">
-                     <div className="flex justify-between items-center text-sm border-b border-white/10 pb-3">
-                        <span className="text-slate-300 font-medium">Questions Asked</span>
-                        <span className="font-bold text-xl">{currentUser.learningStats?.questionsAsked || 0}</span>
-                     </div>
-                     <div className="flex justify-between items-center text-sm pt-1">
-                        <span className="text-slate-300 font-medium">Learning Streak</span>
-                        <span className="font-bold text-yellow-400 flex items-center gap-1">{currentUser.learningStats?.learningStreak || 0} Days <span className="text-lg">🔥</span></span>
-                     </div>
-                   </div>
-                 </div>
-            </div>
-
-            {/* Mentor Access Card (Student View) */}
-            {isStudent && (
-                <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 dark:bg-slate-800 dark:border-slate-700">
-                    <h3 className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-4">Your Team Leader</h3>
-                    <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center text-emerald-800 font-bold dark:bg-emerald-900 dark:text-emerald-200">
-                            <User />
+                {/* 3-Month Timeline Tracker */}
+                <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 dark:bg-slate-800 dark:border-slate-700">
+                    <div className="flex items-center gap-3 mb-6">
+                        <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-600 shrink-0 dark:bg-emerald-900/20 dark:text-emerald-400">
+                            <Calendar size={20} />
                         </div>
                         <div>
-                            <p className="font-bold text-slate-800 dark:text-slate-100">My Sponsor</p>
-                            <p className="text-xs text-slate-500 dark:text-slate-400">{currentUser.sponsorId}</p>
+                            {/* Mobile View: Concise */}
+                            <h3 className="font-bold text-slate-800 dark:text-slate-100 text-base md:hidden">
+                                Activity Cycle
+                            </h3>
+                            {/* Desktop View: Full Detail */}
+                            <h3 className="hidden md:block font-bold text-slate-800 dark:text-slate-100 text-base">
+                                3-Month Activity Tracker
+                            </h3>
+                            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                                {currentRankDef.targetCC > 0 
+                                    ? `Rank Accumulation (${rankProgress.currentCycleCC.toFixed(2)} / ${rankProgress.targetCC} CC)`
+                                    : `Leadership Progress (${progressText} Managers Needed)`
+                                }
+                            </p>
                         </div>
                     </div>
-                    <Link 
-                        to="/chat" 
-                        className="mt-4 w-full bg-slate-50 hover:bg-slate-100 text-slate-600 font-medium py-2 rounded-xl transition-colors flex items-center justify-center gap-2 text-sm dark:bg-slate-700 dark:text-slate-300 dark:hover:bg-slate-600"
-                    >
-                        Message Sponsor
-                    </Link>
-                </div>
-            )}
+                    
+                    <div className="relative pt-4 pb-2">
+                        {/* Progress Bar Background */}
+                        <div className="absolute top-1/2 left-0 w-full h-1 bg-slate-100 -translate-y-1/2 rounded-full dark:bg-slate-700"></div>
+                        {/* Active Progress - Dynamic Width */}
+                        <div 
+                            className="absolute top-1/2 left-0 h-1 bg-emerald-500 -translate-y-1/2 rounded-full shadow-[0_0_10px_rgba(16,185,129,0.4)] transition-all duration-700" 
+                            style={{ width: `${progressPercent}%` }}
+                        ></div>
 
-          </div>
+                        <div className="relative flex justify-between">
+                            {/* Month 1 (Past) */}
+                            <div className="flex flex-col items-center gap-3">
+                                <div className="w-8 h-8 rounded-full bg-emerald-100 border-2 border-emerald-500 flex items-center justify-center text-emerald-700 font-bold text-xs z-10 dark:bg-emerald-900 dark:text-emerald-300">
+                                    ✓
+                                </div>
+                                <div className="text-center">
+                                    <p className="text-xs font-bold text-slate-600 dark:text-slate-300">{monthNames[prevMonth.getMonth()]}</p>
+                                    <p className="text-[10px] text-slate-400">Closed</p>
+                                </div>
+                            </div>
+
+                            {/* Month 2 (Current) */}
+                            <div className="flex flex-col items-center gap-3">
+                                <div className="w-10 h-10 rounded-full bg-emerald-600 border-4 border-white shadow-lg flex items-center justify-center text-white font-bold text-sm z-10 dark:border-slate-800 relative">
+                                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-20"></span>
+                                    {rankProgress.currentCycleCC.toFixed(1)}
+                                </div>
+                                <div className="text-center">
+                                    <p className="text-xs font-bold text-emerald-600 dark:text-emerald-400">{monthNames[currentDate.getMonth()]}</p>
+                                    <p className="text-[10px] text-emerald-600 font-medium dark:text-emerald-500">Active Cycle</p>
+                                </div>
+                            </div>
+
+                            {/* Month 3 (Future) */}
+                            <div className="flex flex-col items-center gap-3">
+                                <div className="w-8 h-8 rounded-full bg-white border-2 border-slate-200 flex items-center justify-center text-slate-400 font-bold text-xs z-10 dark:bg-slate-800 dark:border-slate-600">
+                                    {nextRankDef ? nextRankDef.targetCC > 0 ? nextRankDef.targetCC : 'Next' : 'Max'}
+                                </div>
+                                <div className="text-center">
+                                    <p className="text-xs font-bold text-slate-400 dark:text-slate-500">{monthNames[nextMonth.getMonth()]}</p>
+                                    <p className="text-xs text-slate-400">Projected</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Monthly Performance Graph */}
+                <div className="bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-slate-100 dark:bg-slate-800 dark:border-slate-700">
+                    <div className="flex justify-between items-center mb-6">
+                        <h2 className="text-lg font-bold text-slate-800 dark:text-slate-100">
+                            {graphRange === '30D' ? 'Daily Activity' : 'Growth Trends'}
+                        </h2>
+                        <select 
+                            value={graphRange}
+                            onChange={(e) => setGraphRange(e.target.value as any)}
+                            className="bg-slate-50 border border-slate-200 text-xs rounded-lg px-2 py-1 outline-none dark:bg-slate-700 dark:border-slate-600 dark:text-slate-300"
+                        >
+                            <option value="6M">Last 6 Months</option>
+                            <option value="YEAR">This Year</option>
+                            <option value="30D">Last 30 Days</option>
+                        </select>
+                    </div>
+                    
+                    <div className="h-64 w-full min-w-0 relative group">
+                        <ResponsiveContainer width="100%" height="100%">
+                            <AreaChart data={performanceData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                            <defs>
+                                <linearGradient id="colorCc" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="5%" stopColor="#10b981" stopOpacity={0.2}/>
+                                <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
+                                </linearGradient>
+                            </defs>
+                            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                            <XAxis dataKey="name" axisLine={false} tickLine={false} dy={10} tick={{fill: '#94a3b8', fontSize: 12}} />
+                            <YAxis axisLine={false} tickLine={false} tick={{fill: '#94a3b8', fontSize: 12}} />
+                            <Tooltip 
+                                contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)', padding: '12px', backgroundColor: '#fff' }}
+                                cursor={{ stroke: '#10b981', strokeWidth: 1, strokeDasharray: '4 4' }}
+                            />
+                            <Area type="monotone" dataKey="cc" stroke="#10b981" strokeWidth={3} fillOpacity={1} fill="url(#colorCc)" />
+                            <Brush 
+                                dataKey="name" 
+                                height={30} 
+                                stroke="#10b981"
+                                startIndex={zoomIndices?.start}
+                                endIndex={zoomIndices?.end}
+                                onChange={(e: any) => setZoomIndices({ start: e.startIndex, end: e.endIndex })}
+                                tickFormatter={(value) => value}
+                                alwaysShowText={false}
+                            />
+                            </AreaChart>
+                        </ResponsiveContainer>
+
+                        {/* Google Maps style Zoom Controls */}
+                        <div className="absolute right-4 bottom-12 flex flex-col bg-white dark:bg-slate-700 rounded-lg shadow-lg border border-slate-200 dark:border-slate-600 overflow-hidden opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10">
+                            <button 
+                                onClick={() => handleZoom('in')}
+                                className="p-2 hover:bg-slate-50 dark:hover:bg-slate-600 text-slate-600 dark:text-slate-300 border-b border-slate-100 dark:border-slate-600 transition-colors"
+                                title="Zoom In"
+                            >
+                                <Plus size={16} />
+                            </button>
+                            <button 
+                                onClick={() => handleZoom('out')}
+                                className="p-2 hover:bg-slate-50 dark:hover:bg-slate-600 text-slate-600 dark:text-slate-300 transition-colors"
+                                title="Zoom Out"
+                            >
+                                <Minus size={16} />
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Quick Actions Grid */}
+                <div>
+                    <h2 className="text-lg font-bold text-slate-800 mb-4 dark:text-slate-100">Quick Actions</h2>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        {hasSponsor ? (
+                            <>
+                                <Link to="/mentorship/inbox" className="relative bg-white p-4 rounded-xl border border-slate-100 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all flex flex-col items-center gap-3 text-center dark:bg-slate-800 dark:border-slate-700">
+                                    <div className="w-10 h-10 bg-indigo-50 text-indigo-600 rounded-full flex items-center justify-center dark:bg-indigo-900/30 dark:text-indigo-400 relative">
+                                        <Inbox size={20} />
+                                        {unreadTemplatesCount > 0 && (
+                                            <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white ring-2 ring-white dark:ring-slate-800 animate-pulse">
+                                                {unreadTemplatesCount > 9 ? '9+' : unreadTemplatesCount}
+                                            </span>
+                                        )}
+                                    </div>
+                                    <span className="text-sm font-bold text-slate-700 dark:text-slate-300">Mentorship Inbox</span>
+                                </Link>
+                                <Link to="/assignments" className="relative bg-white p-4 rounded-xl border border-slate-100 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all flex flex-col items-center gap-3 text-center dark:bg-slate-800 dark:border-slate-700">
+                                    <div className="w-10 h-10 bg-orange-50 text-orange-600 rounded-full flex items-center justify-center dark:bg-orange-900/30 dark:text-orange-400 relative">
+                                        <ClipboardCheck size={20} />
+                                        {pendingAssignments > 0 && (
+                                            <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white ring-2 ring-white dark:ring-slate-800">
+                                                {pendingAssignments > 9 ? '9+' : pendingAssignments}
+                                            </span>
+                                        )}
+                                    </div>
+                                    <span className="text-sm font-bold text-slate-700 dark:text-slate-300">My Assignments</span>
+                                </Link>
+                            </>
+                        ) : (
+                            <>
+                                <Link to="/chat" className="bg-white p-4 rounded-xl border border-slate-100 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all flex flex-col items-center gap-3 text-center dark:bg-slate-800 dark:border-slate-700">
+                                    <div className="w-10 h-10 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center dark:bg-blue-900/30 dark:text-blue-400"><MessageCircle size={20} /></div>
+                                    <span className="text-sm font-bold text-slate-700 dark:text-slate-300">Team Chat</span>
+                                </Link>
+                                <Link to="/sales-builder" className="bg-white p-4 rounded-xl border border-slate-100 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all flex flex-col items-center gap-3 text-center dark:bg-slate-800 dark:border-slate-700">
+                                    <div className="w-10 h-10 bg-purple-50 text-purple-600 rounded-full flex items-center justify-center dark:bg-purple-900/30 dark:text-purple-400"><ShoppingBag size={20} /></div>
+                                    <span className="text-sm font-bold text-slate-700 dark:text-slate-300">Sales Page</span>
+                                </Link>
+                            </>
+                        )}
+                        
+                        <Link to="/broadcasts" className="relative bg-white p-4 rounded-xl border border-slate-100 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all flex flex-col items-center gap-3 text-center dark:bg-slate-800 dark:border-slate-700">
+                            <div className="w-10 h-10 bg-orange-50 text-orange-600 rounded-full flex items-center justify-center dark:bg-orange-900/30 dark:text-orange-400 relative">
+                                <Megaphone size={20} />
+                                {unreadBroadcastsCount > 0 && (
+                                    <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white ring-2 ring-white dark:ring-slate-800 animate-pulse">
+                                        {unreadBroadcastsCount > 9 ? '9+' : unreadBroadcastsCount}
+                                    </span>
+                                )}
+                            </div>
+                            <span className="text-sm font-bold text-slate-700 dark:text-slate-300">Broadcast Inbox</span>
+                        </Link>
+                        
+                        {!isDistributor ? (
+                            <Link to="/mentorship-tools" className="bg-white p-4 rounded-xl border border-slate-100 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all flex flex-col items-center gap-3 text-center dark:bg-slate-800 dark:border-slate-700">
+                                <div className="w-10 h-10 bg-violet-50 text-violet-600 rounded-full flex items-center justify-center dark:bg-violet-900/30 dark:text-violet-400">
+                                    <LayoutGrid size={20} />
+                                </div>
+                                <span className="text-sm font-bold text-slate-700 dark:text-slate-300">Mentorship Tools</span>
+                            </Link>
+                        ) : (
+                            <Link to="/sales" className="bg-white p-4 rounded-xl border border-slate-100 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all flex flex-col items-center gap-3 text-center dark:bg-slate-800 dark:border-slate-700">
+                                <div className="w-10 h-10 bg-emerald-50 text-emerald-600 rounded-full flex items-center justify-center dark:bg-emerald-900/30 dark:text-emerald-400"><Plus size={20} /></div>
+                                <span className="text-sm font-bold text-slate-700 dark:text-slate-300">Log Sale</span>
+                            </Link>
+                        )}
+                    </div>
+                </div>
+
+                {/* Course Recommendations */}
+                {newCourses.length > 0 && (
+                    <div className="bg-gradient-to-r from-indigo-900 to-slate-900 rounded-2xl p-6 text-white relative overflow-hidden shadow-lg">
+                        <div className="relative z-10 flex justify-between items-center mb-4">
+                            <h3 className="font-bold text-lg flex items-center gap-2"><Bell size={18} className="text-yellow-400" /> New Courses Available</h3>
+                            <Link to="/training/global" className="text-xs bg-white/10 hover:bg-white/20 px-3 py-1.5 rounded-lg transition-colors">View All</Link>
+                        </div>
+                        <div className="space-y-3 relative z-10">
+                            {newCourses.map(c => (
+                                <Link key={c.id} to={`/training/preview/${c.id}`} className="block bg-white/10 hover:bg-white/20 p-3 rounded-xl transition-colors border border-white/5">
+                                    <div className="flex items-center gap-3">
+                                        <img src={c.thumbnailUrl} className="w-12 h-12 rounded-lg object-cover" alt="" />
+                                        <div>
+                                            <p className="font-bold text-sm">{c.title}</p>
+                                            <p className="text-xs text-indigo-200">{c.modules.length} Modules • {c.level}</p>
+                                        </div>
+                                    </div>
+                                </Link>
+                            ))}
+                        </div>
+                        {/* Background decoration */}
+                        <div className="absolute -bottom-10 -right-10 w-40 h-40 bg-indigo-500/30 rounded-full blur-3xl"></div>
+                    </div>
+                )}
+
+                {/* Creator Studio (Admin Only) - Preserved */}
+                {!isStudent && (
+                <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 dark:bg-slate-800 dark:border-slate-700">
+                    <div className="flex justify-between items-center mb-4">
+                        <h2 className="text-lg font-bold text-slate-800 dark:text-slate-100">Creator Studio</h2>
+                        <Link to="/builder/new" className="bg-emerald-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-emerald-700 transition-colors flex items-center gap-1">
+                            <Plus size={14} /> Course
+                        </Link>
+                    </div>
+                    <div className="space-y-3">
+                        {authoredCourses.slice(0, 3).map(course => (
+                            <div key={course.id} className="flex items-center justify-between p-3 bg-slate-50 rounded-xl border border-slate-100 dark:bg-slate-900/50 dark:border-slate-700">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-8 h-8 rounded-lg bg-slate-200 overflow-hidden shrink-0 dark:bg-slate-700">
+                                        <img src={course.thumbnailUrl} className="w-full h-full object-cover" alt="" />
+                                    </div>
+                                    <div>
+                                        <p className="font-bold text-slate-800 text-xs dark:text-slate-200">{course.title}</p>
+                                        <p className="text-[10px] text-slate-500">{course.status}</p>
+                                    </div>
+                                </div>
+                                <Link to={`/builder/${course.id}`} className="text-slate-400 hover:text-emerald-600"><Edit size={14} /></Link>
+                            </div>
+                        ))}
+                        {authoredCourses.length === 0 && <p className="text-xs text-slate-400 italic">No courses created yet.</p>}
+                    </div>
+                </div>
+                )}
+            </div>
+
+            {/* Right Column (1/3 width) - Widgets */}
+            <div className="space-y-6 min-w-0">
+                
+                {/* Enrollment Widget */}
+                {!isStudent && (
+                    <div className="bg-gradient-to-br from-emerald-600 to-teal-700 rounded-2xl shadow-lg shadow-emerald-600/20 p-6 text-white relative overflow-hidden group">
+                        <div className="relative z-10">
+                            <div className="flex items-center justify-between mb-4">
+                                <h2 className="text-lg font-bold">Grow Team</h2>
+                                <div className="bg-white/20 p-2 rounded-lg backdrop-blur-sm"><ShareIcon /></div>
+                            </div>
+                            <p className="text-emerald-50 text-xs mb-4 opacity-90">Share your invite link to build your downline.</p>
+                            
+                            <div className="bg-black/20 rounded-xl p-1 text-xs font-mono text-white w-full border border-white/10 pl-3 flex items-center justify-between">
+                                <span className="truncate mr-2">{inviteLink}</span>
+                                <button onClick={copyToClipboard} className="bg-white text-emerald-700 p-1.5 rounded-lg hover:bg-emerald-50"><ClipboardIcon /></button>
+                            </div>
+                        </div>
+                        <div className="absolute -right-6 -bottom-6 text-white/10 pointer-events-none">
+                            <Users size={120} />
+                        </div>
+                    </div>
+                )}
+
+                {/* Top Performing Team (For Sponsors) */}
+                {!isStudent && visibleStudents.length > 1 && (
+                    <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 dark:bg-slate-800 dark:border-slate-700">
+                        <div className="flex justify-between items-center mb-4">
+                            <h3 className="font-bold text-slate-800 dark:text-white">Top Performers</h3>
+                            <Link to="/students" className="text-xs text-emerald-600 font-bold hover:underline dark:text-emerald-400">View All</Link>
+                        </div>
+                        <div className="space-y-4">
+                            {visibleStudents
+                                .filter(s => s.id !== currentUser.id)
+                                .sort((a,b) => b.caseCredits - a.caseCredits)
+                                .slice(0, 5)
+                                .map((s, i) => (
+                                    <div key={s.id} className="flex items-center justify-between">
+                                        <div className="flex items-center gap-3">
+                                            <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${i === 0 ? 'bg-yellow-100 text-yellow-700' : i === 1 ? 'bg-slate-200 text-slate-600' : i === 2 ? 'bg-orange-100 text-orange-700' : 'bg-slate-50 text-slate-400'}`}>
+                                                {i + 1}
+                                            </div>
+                                            <div>
+                                                <p className="text-sm font-bold text-slate-700 dark:text-slate-200">{s.name.split(' ')[0]}</p>
+                                                <p className="text-[10px] text-slate-400">{s.role}</p>
+                                            </div>
+                                        </div>
+                                        <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400">{s.caseCredits.toFixed(1)} CC</span>
+                                    </div>
+                                ))
+                            }
+                        </div>
+                    </div>
+                )}
+
+                {/* AI Tutor Stats */}
+                <div className="bg-slate-900 rounded-2xl shadow-lg p-6 text-white relative overflow-hidden">
+                    <div className="relative z-10">
+                    <div className="flex justify-between items-start mb-6">
+                        <div>
+                                <h3 className="font-bold text-lg font-heading">AI Tutor Stats</h3>
+                                <p className="text-slate-400 text-xs mt-1">Weekly Activity</p>
+                        </div>
+                        <div className="bg-white/10 p-2 rounded-lg backdrop-blur-sm">
+                            <SparklesIcon />
+                        </div>
+                    </div>
+                    
+                    <div className="space-y-4">
+                        <div className="flex justify-between items-center text-sm border-b border-white/10 pb-3">
+                            <span className="text-slate-300 font-medium">Questions Asked</span>
+                            <span className="font-bold text-xl">{currentUser.learningStats?.questionsAsked || 0}</span>
+                        </div>
+                        <div className="flex justify-between items-center text-sm pt-1">
+                            <span className="text-slate-300 font-medium">Learning Streak</span>
+                            <span className="font-bold text-yellow-400 flex items-center gap-1">{currentUser.learningStats?.learningStreak || 0} Days <span className="text-lg">🔥</span></span>
+                        </div>
+                    </div>
+                    </div>
+                </div>
+
+                {/* Mentor Access Card (Student View) */}
+                {isStudent && (
+                    <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 dark:bg-slate-800 dark:border-slate-700">
+                        <h3 className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-4">Your Team Leader</h3>
+                        <div className="flex items-center gap-4">
+                            <div className="w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center text-emerald-800 font-bold dark:bg-emerald-900 dark:text-emerald-200">
+                                <User />
+                            </div>
+                            <div>
+                                <p className="font-bold text-slate-800 dark:text-slate-100">My Sponsor</p>
+                                <p className="text-xs text-slate-500 dark:text-slate-400">{currentUser.sponsorId}</p>
+                            </div>
+                        </div>
+                        <Link 
+                            to="/chat" 
+                            className="mt-4 w-full bg-slate-50 hover:bg-slate-100 text-slate-600 font-medium py-2 rounded-xl transition-colors flex items-center justify-center gap-2 text-sm dark:bg-slate-700 dark:text-slate-300 dark:hover:bg-slate-600"
+                        >
+                            Message Sponsor
+                        </Link>
+                    </div>
+                )}
+
+            </div>
+        </div>
       </div>
     </div>
   );

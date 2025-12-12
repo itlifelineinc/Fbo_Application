@@ -1149,7 +1149,7 @@ const MentorshipTools: React.FC<MentorshipToolsProps> = ({
                 else if (activeView === 'TEMPLATES_LIST') setActiveView('MENU');
                 else if (activeView === 'ASSIGNMENT_EDITOR') setActiveView('ASSIGNMENTS_LIST');
                 else if (activeView === 'ASSIGNMENTS_LIST') setActiveView('MENU');
-                else if (activeView === 'BROADCAST_HISTORY') setActiveView('MENU');
+                else if (activeView === 'BROADCAST_SECTION') setActiveView('MENU');
                 else navigate(-1); // Go back to dashboard/previous route
             }}
             className="flex items-center gap-2 text-slate-500 hover:text-emerald-600 mb-4 transition-colors font-medium text-sm dark:text-slate-400 dark:hover:text-emerald-400"

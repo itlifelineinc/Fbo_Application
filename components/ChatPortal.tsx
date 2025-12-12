@@ -53,6 +53,7 @@ const ChatPortal: React.FC<ChatPortalProps> = ({ currentUser, students, messages
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [showAttachMenu, setShowAttachMenu] = useState(false);
   const [attachmentView, setAttachmentView] = useState<'MAIN' | 'TEMPLATES' | 'ASSIGNMENTS' | 'ANNOUNCEMENTS'>('MAIN');
+  const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
   
   // Attachment Logic State
   const [pendingAttachment, setPendingAttachment] = useState<Attachment | null>(null);
@@ -527,8 +528,61 @@ const ChatPortal: React.FC<ChatPortalProps> = ({ currentUser, students, messages
       {/* Sidebar List */}
       <div className={`w-full md:w-96 bg-white border-r border-slate-200 flex flex-col ${activeChatHandle && !isBroadcastMode ? 'hidden md:flex' : 'flex'} dark:bg-[#111b21] dark:border-slate-800`}>
         
-        {/* Modern Sidebar Header with Search */}
-        <div className="bg-[#f0f2f5] dark:bg-[#202c33] dark:border-[#202c33] border-b border-slate-200 flex flex-col shrink-0">
+        {/* Custom Mobile Header */}
+        <div className="md:hidden shrink-0 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-4 py-3 flex justify-between items-center z-50 shadow-sm">
+            {!isMobileSearchOpen ? (
+                <>
+                    <h1 className="text-2xl font-extrabold tracking-tight text-slate-900 dark:text-white font-heading">
+                        Chats
+                    </h1>
+                    <div className="flex items-center gap-2">
+                        <button 
+                            onClick={() => setIsMobileSearchOpen(true)} 
+                            className="w-10 h-10 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center text-slate-700 dark:text-slate-200 transition-colors active:scale-95"
+                        >
+                            <Search size={20} />
+                        </button>
+                        <button 
+                            onClick={handleCreateTopic}
+                            className="w-10 h-10 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center text-slate-700 dark:text-slate-200 transition-colors active:scale-95"
+                        >
+                            <MessageSquarePlus size={20} />
+                        </button>
+                        {hasMentorshipAccess && (
+                            <button 
+                                onClick={() => navigate('/mentorship-tools')}
+                                className="w-10 h-10 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center text-slate-700 dark:text-slate-200 transition-colors active:scale-95"
+                            >
+                                <LayoutGrid size={20} />
+                            </button>
+                        )}
+                    </div>
+                </>
+            ) : (
+                <div className="flex items-center gap-3 w-full animate-fade-in">
+                    <div className="relative flex-1">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={18} />
+                        <input 
+                            type="text" 
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            placeholder="Search chats..."
+                            autoFocus
+                            className="w-full pl-10 pr-4 py-2 bg-slate-100 border-none rounded-full text-slate-900 dark:bg-slate-800 dark:text-white focus:ring-2 focus:ring-emerald-500 outline-none text-base"
+                        />
+                    </div>
+                    <button 
+                        onClick={() => { setIsMobileSearchOpen(false); setSearchQuery(''); }}
+                        className="text-slate-600 dark:text-slate-300 font-bold text-sm px-2"
+                    >
+                        Cancel
+                    </button>
+                </div>
+            )}
+        </div>
+
+        {/* Modern Sidebar Header with Search (Desktop Only) */}
+        <div className="hidden md:flex bg-[#f0f2f5] dark:bg-[#202c33] dark:border-[#202c33] border-b border-slate-200 flex-col shrink-0">
             {/* Top Row: Title & Actions */}
             <div className="px-4 py-3 flex justify-between items-center">
                 <h2 className="font-bold text-xl text-slate-800 dark:text-[#e9edef]">Chats</h2>

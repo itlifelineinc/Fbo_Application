@@ -170,7 +170,7 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
   const isFullWidthPage = isChatPage || isClassroomPage || isCurriculumPage || isPlayerPage;
   
   // Routes where default mobile header should be hidden
-  const shouldHideMobileHeader = isClassroomPage || isCurriculumPage || isPlayerPage;
+  const shouldHideMobileHeader = isChatPage || isClassroomPage || isCurriculumPage || isPlayerPage;
 
   // Set initial bubble position safely
   useEffect(() => {

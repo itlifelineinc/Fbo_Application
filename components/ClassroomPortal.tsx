@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Course, CourseStatus, Student, UserRole } from '../types';
 import CourseCard from './CourseCard';
-import { Search, Lock, Filter } from 'lucide-react';
+import { Search, Lock, Filter, ArrowLeft, X } from 'lucide-react';
 
 interface ClassroomPortalProps {
   courses: Course[];
@@ -18,6 +18,7 @@ const ClassroomPortal: React.FC<ClassroomPortalProps> = ({ courses, currentUser,
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<TabType>('ALL');
   const [searchQuery, setSearchQuery] = useState('');
+  const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
 
   // --- Utility: Check Completion ---
   const getProgress = (course: Course) => {
@@ -110,10 +111,50 @@ const ClassroomPortal: React.FC<ClassroomPortalProps> = ({ courses, currentUser,
   ];
 
   return (
-    <div className="space-y-6 animate-fade-in pb-20">
-      
-      {/* Header with Inline Search */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+    <div className="animate-fade-in pb-20 md:pb-24">
+      {/* 
+          1. MOBILE CUSTOM HEADER (Facebook Style)
+          Visible only on mobile. Sticky at top.
+      */}
+      <div className="md:hidden sticky top-0 z-40 bg-white dark:bg-slate-950 border-b border-slate-100 dark:border-slate-800 px-4 py-3 flex justify-between items-center transition-all duration-300">
+         {!isMobileSearchOpen ? (
+           <>
+             <h1 className="text-2xl font-bold text-slate-900 dark:text-white font-heading tracking-tight">Classroom</h1>
+             <button 
+                onClick={() => setIsMobileSearchOpen(true)} 
+                className="w-10 h-10 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center text-slate-900 dark:text-white transition-colors active:scale-95"
+             >
+               <Search size={20} />
+             </button>
+           </>
+         ) : (
+           <div className="flex items-center gap-2 w-full animate-fade-in">
+              <div className="relative flex-1">
+                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={18} />
+                 <input 
+                    type="text" 
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="Search classroom..."
+                    autoFocus
+                    className="w-full pl-10 pr-4 py-2 bg-slate-100 border-none rounded-full text-slate-900 dark:bg-slate-800 dark:text-white focus:ring-0 outline-none text-base"
+                 />
+              </div>
+              <button 
+                onClick={() => { setIsMobileSearchOpen(false); setSearchQuery(''); }}
+                className="text-slate-900 dark:text-white font-bold text-sm px-2"
+              >
+                Cancel
+              </button>
+           </div>
+         )}
+      </div>
+
+      {/* 
+          2. DESKTOP HEADER 
+          Hidden on mobile.
+      */}
+      <div className="hidden md:flex flex-col md:flex-row md:items-end justify-between gap-4 mb-6">
           <div>
             <h1 className="text-3xl font-bold text-slate-900 font-heading dark:text-white">Classroom</h1>
             <p className="text-slate-500 mt-1 text-lg dark:text-slate-400">
@@ -134,8 +175,11 @@ const ClassroomPortal: React.FC<ClassroomPortalProps> = ({ courses, currentUser,
           </div>
       </div>
 
-      {/* Sticky Tabs Navigation */}
-      <div className="sticky top-0 z-30 bg-slate-50/95 backdrop-blur-md pt-2 pb-4 -mx-4 px-4 md:-mx-8 md:px-8 border-b border-slate-200/50 dark:bg-slate-950/95 dark:border-slate-800">
+      {/* 
+          3. STICKY TABS
+          Adjusted 'top' for mobile to account for new header height (~64px).
+      */}
+      <div className="sticky top-[64px] md:top-0 z-30 bg-slate-50/95 backdrop-blur-md pt-2 pb-4 -mx-4 px-4 md:-mx-8 md:px-8 border-b border-slate-200/50 dark:bg-slate-950/95 dark:border-slate-800 transition-all duration-300">
           <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
               {tabs.map(tab => (
                   <button
@@ -154,43 +198,48 @@ const ClassroomPortal: React.FC<ClassroomPortalProps> = ({ courses, currentUser,
           </div>
       </div>
 
-      {/* Course Grid */}
-      {filteredCourses.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-24 bg-white rounded-3xl border-2 border-dashed border-slate-200 dark:bg-slate-800 dark:border-slate-700">
-                <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mb-4 dark:bg-slate-700">
-                    <Filter className="text-slate-400" />
-                </div>
-                <p className="text-slate-500 font-medium text-lg dark:text-slate-400">No courses found in this view.</p>
-                {activeTab === 'SAVED' && <p className="text-sm text-slate-400 mt-2">Bookmark courses to see them here.</p>}
-          </div>
-      ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {filteredCourses.map(course => {
-                  const isEnrolled = currentUser.enrolledCourses.includes(course.id);
-                  const progress = isEnrolled ? getProgress(course) : undefined;
-                  const isSaved = currentUser.savedCourses?.includes(course.id);
+      {/* 
+          4. CONTENT GRID 
+          Add padding back for mobile content since layout padding was removed.
+      */}
+      <div className="mt-6 px-4 md:px-0">
+        {filteredCourses.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-24 bg-white rounded-3xl border-2 border-dashed border-slate-200 dark:bg-slate-800 dark:border-slate-700">
+                  <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mb-4 dark:bg-slate-700">
+                      <Filter className="text-slate-400" />
+                  </div>
+                  <p className="text-slate-500 font-medium text-lg dark:text-slate-400">No courses found in this view.</p>
+                  {activeTab === 'SAVED' && <p className="text-sm text-slate-400 mt-2">Bookmark courses to see them here.</p>}
+            </div>
+        ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
+                {filteredCourses.map(course => {
+                    const isEnrolled = currentUser.enrolledCourses.includes(course.id);
+                    const progress = isEnrolled ? getProgress(course) : undefined;
+                    const isSaved = currentUser.savedCourses?.includes(course.id);
 
-                  // Determine label based on tab context or enrollment
-                  let actionLabel = "View Details";
-                  if (activeTab === 'COMPLETED') actionLabel = "Review Course";
-                  else if (activeTab === 'STARTED' || (isEnrolled && progress! > 0)) actionLabel = "Continue";
-                  else if (isEnrolled) actionLabel = "Start Learning";
+                    // Determine label based on tab context or enrollment
+                    let actionLabel = "View Details";
+                    if (activeTab === 'COMPLETED') actionLabel = "Review Course";
+                    else if (activeTab === 'STARTED' || (isEnrolled && progress! > 0)) actionLabel = "Continue";
+                    else if (isEnrolled) actionLabel = "Start Learning";
 
-                  return (
-                      <CourseCard 
-                          key={course.id}
-                          course={course}
-                          onClick={() => handleCourseClick(course)}
-                          progress={progress}
-                          actionLabel={actionLabel}
-                          isSaved={isSaved}
-                          onToggleSave={onToggleSave}
-                          showTrackBadge={activeTab === 'ALL' || activeTab === 'GLOBAL'} // Hide badge if context implies it
-                      />
-                  );
-              })}
-          </div>
-      )}
+                    return (
+                        <CourseCard 
+                            key={course.id}
+                            course={course}
+                            onClick={() => handleCourseClick(course)}
+                            progress={progress}
+                            actionLabel={actionLabel}
+                            isSaved={isSaved}
+                            onToggleSave={onToggleSave}
+                            showTrackBadge={activeTab === 'ALL' || activeTab === 'GLOBAL'} // Hide badge if context implies it
+                        />
+                    );
+                })}
+            </div>
+        )}
+      </div>
     </div>
   );
 };

@@ -160,6 +160,10 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
   const isActive = (path: string) => location.pathname === path;
   const isDashboard = location.pathname === '/dashboard';
   const isChatPage = location.pathname === '/chat';
+  const isClassroomPage = location.pathname === '/classroom';
+  
+  // Routes that should use full width (no padding on mobile)
+  const isFullWidthPage = isChatPage || isClassroomPage;
 
   // Set initial bubble position safely
   useEffect(() => {
@@ -199,12 +203,12 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
     return () => document.removeEventListener('touchend', handleTouchEnd);
   }, []);
 
-  // Ensure header shows when leaving chat or resizing
+  // Ensure header shows when leaving chat/classroom or resizing
   useEffect(() => {
-      if (!isChatPage) {
+      if (!isChatPage && !isClassroomPage) {
           setShowMobileHeader(true);
       }
-  }, [isChatPage]);
+  }, [isChatPage, isClassroomPage]);
 
   // Click outside handler for Profile Menu
   useEffect(() => {
@@ -773,7 +777,7 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
         )}
 
         {/* Mobile Header - With Auto-Hide Logic & Dynamic Content */}
-        <header className={`lg:hidden bg-white border-b border-slate-200 p-4 flex justify-between items-center z-40 shadow-sm dark:bg-slate-900 dark:border-slate-800 shrink-0 transition-transform duration-300 ease-in-out ${showMobileHeader ? 'translate-y-0' : '-translate-y-full absolute w-full'}`}>
+        <header className={`lg:hidden bg-white border-b border-slate-200 p-4 flex justify-between items-center z-40 shadow-sm dark:bg-slate-900 dark:border-slate-800 shrink-0 transition-transform duration-300 ease-in-out ${showMobileHeader && !isClassroomPage ? 'translate-y-0' : '-translate-y-full absolute w-full'}`}>
            <div className="flex-1 flex items-center min-w-0 mr-2">
                <h1 className="text-3xl font-extrabold tracking-tighter text-emerald-950 dark:text-white font-heading">
                    Nexu
@@ -920,8 +924,8 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
           </main>
         ) : (
           // Standard Layout - Adjusted for Chat Portal specific requirement
-          <main className={`flex-1 dark:bg-slate-950 transition-all ${isChatPage ? 'overflow-hidden p-0' : 'overflow-y-auto scroll-smooth pb-32 lg:pb-0'}`}>
-            <div className={`${isChatPage ? 'h-full w-full' : 'max-w-7xl mx-auto p-4 md:p-8'}`}>
+          <main className={`flex-1 dark:bg-slate-950 transition-all ${isFullWidthPage ? 'overflow-hidden p-0' : 'overflow-y-auto scroll-smooth pb-32 lg:pb-0'}`}>
+            <div className={`${isFullWidthPage ? 'h-full w-full' : 'max-w-7xl mx-auto p-4 md:p-8'}`}>
               {children}
             </div>
           </main>

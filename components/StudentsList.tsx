@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Student, UserRole } from '../types';
-import { Search, X } from 'lucide-react';
+import { Search, X, ChevronRight } from 'lucide-react';
 
 interface StudentsListProps {
   students: Student[];
@@ -15,15 +15,15 @@ interface StudentsListProps {
 // Custom Icon: Filled Square with White Plus
 const FilledPlusIcon = ({ size = 24, className = "" }: { size?: number, className?: string }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className={className}>
-    <rect x="2" y="2" width="20" height="20" rx="6" fill="currentColor" />
-    <path d="M12 8V16" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
-    <path d="M8 12H16" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+    <rect x="3" y="3" width="18" height="18" rx="5" fill="currentColor" />
+    <path d="M12 8V16" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+    <path d="M8 12H16" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
   </svg>
 );
 
 // Standardized Input Style (Facebook-like: Flat, No Ring, Thin Border)
-const INPUT_CLASS = "w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-xl px-4 py-3 text-base text-slate-900 dark:text-white placeholder-slate-400 focus:border-slate-500 dark:focus:border-slate-400 focus:outline-none transition-colors";
-const LABEL_CLASS = "block text-sm font-bold text-slate-500 dark:text-slate-400 mb-1.5 ml-1";
+const INPUT_CLASS = "w-full bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-xl px-4 py-3.5 text-base text-slate-900 dark:text-white placeholder-slate-500 focus:border-slate-500 dark:focus:border-slate-400 focus:bg-white dark:focus:bg-slate-900 focus:outline-none focus:ring-0 transition-all duration-200";
+const LABEL_CLASS = "block text-xs font-bold text-slate-500 dark:text-slate-400 mb-1.5 ml-1 uppercase tracking-wider";
 
 const StudentsList: React.FC<StudentsListProps> = ({ students, onAddStudent, currentUser, onUpdateStudent, onDeleteStudent }) => {
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -107,6 +107,28 @@ const StudentsList: React.FC<StudentsListProps> = ({ students, onAddStudent, cur
 
   return (
     <div className="h-full flex flex-col bg-slate-50 dark:bg-slate-950 animate-fade-in relative">
+       
+       {/* Inject Custom Styles for Drawer/Modal Animations */}
+       <style>{`
+         @keyframes slideInRight {
+           from { transform: translateX(100%); }
+           to { transform: translateX(0); }
+         }
+         @keyframes fadeInModal {
+           from { opacity: 0; transform: scale(0.95); }
+           to { opacity: 1; transform: scale(1); }
+         }
+         .drawer-animation {
+           animation: slideInRight 0.3s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+         }
+         /* Desktop overrides */
+         @media (min-width: 768px) {
+           .drawer-animation {
+             animation: fadeInModal 0.2s ease-out forwards;
+           }
+         }
+       `}</style>
+
        {/* 
           MOBILE CUSTOM HEADER 
        */}
@@ -141,7 +163,7 @@ const StudentsList: React.FC<StudentsListProps> = ({ students, onAddStudent, cur
                      onChange={(e) => setSearchTerm(e.target.value)}
                      placeholder="Search team members..."
                      autoFocus
-                     className={INPUT_CLASS + " pl-10 py-2 rounded-full"}
+                     className="w-full bg-slate-100 border-none rounded-full px-10 py-2 text-slate-900 focus:ring-0 outline-none"
                   />
                </div>
                <button 
@@ -204,31 +226,29 @@ const StudentsList: React.FC<StudentsListProps> = ({ students, onAddStudent, cur
             )}
         </div>
 
-        {/* FULL PAGE DRAWER (Mobile & Desktop) */}
+        {/* 
+            MODAL / DRAWER SYSTEM
+            Desktop: Centered Modal with Backdrop
+            Mobile: Full Screen Drawer sliding from Right
+        */}
         {isFormOpen && (
-            <div className="fixed inset-0 z-[100] flex justify-end">
-                <style>{`
-                  @keyframes slideInRight {
-                    from { transform: translateX(100%); }
-                    to { transform: translateX(0); }
-                  }
-                  .animate-slide-in {
-                    animation: slideInRight 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-                  }
-                `}</style>
-                
-                {/* Backdrop - Covers everything */}
+            <div className="fixed inset-0 z-[100] flex justify-end md:items-center md:justify-center">
+                {/* Backdrop - Visible on both */}
                 <div 
                     className="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity" 
                     onClick={() => setIsFormOpen(false)}
                 ></div>
 
-                {/* Drawer Content - Full height, slides from right */}
-                <div className="relative w-full md:max-w-md h-full bg-white dark:bg-slate-900 shadow-2xl animate-slide-in flex flex-col border-l border-slate-100 dark:border-slate-800">
+                {/* 
+                    Container
+                    Mobile: Fixed full screen, slides in from right via custom animation
+                    Desktop: Auto width/height, max-w-lg, centered via flex parent, fades in
+                */}
+                <div className="relative w-full h-full md:h-auto md:max-w-lg md:rounded-2xl bg-white dark:bg-slate-900 shadow-2xl flex flex-col drawer-animation overflow-hidden">
                     
                     {/* Header */}
                     <div className="flex items-center justify-between p-5 border-b border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 shrink-0">
-                        <h2 className="text-2xl font-bold text-slate-900 dark:text-white font-heading">Enroll New FBO</h2>
+                        <h2 className="text-xl md:text-2xl font-bold text-slate-900 dark:text-white font-heading">Enroll New FBO</h2>
                         <button 
                             onClick={() => setIsFormOpen(false)} 
                             className="p-2 -mr-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full dark:hover:bg-slate-800 transition-colors"
@@ -249,6 +269,7 @@ const StudentsList: React.FC<StudentsListProps> = ({ students, onAddStudent, cur
                                     onChange={(e) => setNewStudentName(e.target.value)}
                                     className={INPUT_CLASS}
                                     placeholder="Jane Doe"
+                                    autoFocus
                                 />
                             </div>
                             <div>
@@ -263,23 +284,23 @@ const StudentsList: React.FC<StudentsListProps> = ({ students, onAddStudent, cur
                                 />
                             </div>
                             
-                            <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 dark:bg-slate-800 dark:border-slate-700">
-                                <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
-                                    New user will be added to <strong>{currentUser.handle}</strong>'s downline. A temporary password <span className="font-mono bg-slate-200 dark:bg-slate-700 px-1 rounded">password123</span> will be assigned.
+                            <div className="p-4 bg-blue-50 rounded-xl border border-blue-100 dark:bg-blue-900/20 dark:border-blue-800">
+                                <p className="text-xs text-blue-700 dark:text-blue-300 leading-relaxed">
+                                    New user will be added to <strong>{currentUser.handle}</strong>'s downline. A temporary password <span className="font-mono bg-blue-100 dark:bg-blue-800 px-1 rounded">password123</span> will be assigned.
                                 </p>
                             </div>
 
                             <div className="pt-4 flex flex-col gap-3">
                                 <button 
                                     type="submit"
-                                    className="w-full py-4 bg-emerald-600 text-white font-bold rounded-xl hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-900/20 active:scale-[0.98]"
+                                    className="w-full py-3.5 bg-emerald-600 text-white font-bold rounded-xl hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-900/20 active:scale-[0.98] text-base"
                                 >
                                     Confirm Enrollment
                                 </button>
                                 <button 
                                     type="button" 
                                     onClick={() => setIsFormOpen(false)}
-                                    className="w-full py-4 text-slate-500 font-bold hover:bg-slate-50 rounded-xl transition-colors dark:text-slate-400 dark:hover:bg-slate-800"
+                                    className="w-full py-3.5 text-slate-500 font-bold hover:bg-slate-50 rounded-xl transition-colors dark:text-slate-400 dark:hover:bg-slate-800"
                                 >
                                     Cancel
                                 </button>
@@ -290,7 +311,7 @@ const StudentsList: React.FC<StudentsListProps> = ({ students, onAddStudent, cur
             </div>
         )}
 
-        {/* Students Table - Responsive Container */}
+        {/* Students Table */}
         <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden dark:bg-slate-800 dark:border-slate-700">
             <div className="overflow-x-auto">
                 <table className="w-full min-w-[800px]">
@@ -306,9 +327,9 @@ const StudentsList: React.FC<StudentsListProps> = ({ students, onAddStudent, cur
                     </thead>
                     <tbody className="divide-y divide-slate-100 dark:divide-slate-700">
                         {filteredStudents.map(student => (
-                            <tr key={student.id} className="hover:bg-slate-50/50 transition-colors dark:hover:bg-slate-700/50">
+                            <tr key={student.id} className="hover:bg-slate-50/50 transition-colors dark:hover:bg-slate-700/50 group">
                                 <td className="px-6 py-4">
-                                    <Link to={`/students/${student.id}`} className="flex items-center gap-3 group cursor-pointer">
+                                    <Link to={`/students/${student.id}`} className="flex items-center gap-3 cursor-pointer">
                                         <div className="w-10 h-10 rounded-full bg-emerald-100 text-emerald-700 group-hover:bg-emerald-200 flex items-center justify-center text-sm font-bold transition-colors font-heading overflow-hidden dark:bg-emerald-900 dark:text-emerald-300">
                                             {student.avatarUrl ? (
                                                 <img src={student.avatarUrl} alt={student.name} className="w-full h-full object-cover" />
@@ -329,7 +350,7 @@ const StudentsList: React.FC<StudentsListProps> = ({ students, onAddStudent, cur
                                         student.role === UserRole.SUPER_ADMIN ? 'bg-red-50 text-red-700 border-red-200 dark:bg-red-900/30 dark:text-red-300 dark:border-red-800' :
                                         'bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-700 dark:text-slate-300 dark:border-slate-600'
                                     }`}>
-                                        {student.role} ({student.caseCredits} CC)
+                                        {student.role} ({student.caseCredits.toFixed(2)} CC)
                                     </span>
                                 </td>
                                 
@@ -344,7 +365,7 @@ const StudentsList: React.FC<StudentsListProps> = ({ students, onAddStudent, cur
                                 <td className="px-6 py-4 text-sm font-mono text-emerald-600 dark:text-emerald-400">{student.sponsorId || '-'}</td>
                                 <td className="px-6 py-4">
                                     <div className="flex items-center gap-3">
-                                        <div className="flex-1 w-24 bg-slate-100 rounded-full h-1.5 dark:bg-slate-700">
+                                        <div className="flex-1 w-24 bg-slate-100 rounded-full h-1.5 dark:bg-slate-700 overflow-hidden">
                                             <div 
                                                 className="bg-emerald-500 h-1.5 rounded-full" 
                                                 style={{ width: `${student.progress}%` }}
@@ -355,7 +376,7 @@ const StudentsList: React.FC<StudentsListProps> = ({ students, onAddStudent, cur
                                 </td>
                                 {isAdmin && (
                                     <td className="px-6 py-4">
-                                        <div className="flex gap-2 items-center">
+                                        <div className="flex gap-2 items-center opacity-0 group-hover:opacity-100 transition-opacity">
                                             {isSuperAdmin && (
                                                 <>
                                                     <button 

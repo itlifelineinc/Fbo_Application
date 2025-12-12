@@ -3,6 +3,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { Course, ChatMessage, Chapter, QuizQuestion, ContentBlock } from '../types';
 import { askAITutor } from '../services/geminiService';
+import { ChevronLeft } from 'lucide-react';
 
 interface ClassroomProps {
   courses: Course[];
@@ -67,10 +68,12 @@ const Classroom: React.FC<ClassroomProps> = ({ courses, onCompleteLesson, onUpda
           nextLink = `/classroom/${course.id}/${next.modId}/${next.chap.id}`;
       }
 
-      return { next: nextLink, prev: prevLink };
+      return { next: nextLink, prev: prevLink, currentIndex, total: allChapters.length };
   };
 
-  const navLinks = getNavigation();
+  const navInfo = getNavigation();
+  const navLinks = { next: navInfo.next, prev: navInfo.prev };
+  const displayChapterNumber = `Chapter ${navInfo.currentIndex !== undefined ? navInfo.currentIndex + 1 : '?'}`;
 
   // -- Effects --
 
@@ -163,11 +166,24 @@ const Classroom: React.FC<ClassroomProps> = ({ courses, onCompleteLesson, onUpda
   if (!course || !module || !chapter) return <div>Loading...</div>;
 
   return (
-    <div className="flex flex-col lg:flex-row h-[calc(100vh-4rem)] gap-0 bg-slate-50 dark:bg-slate-950">
+    <div className="flex flex-col lg:flex-row h-full gap-0 bg-slate-50 dark:bg-slate-950">
       
       {/* LEFT: Main Content Area */}
       <div className="flex-1 flex flex-col h-full relative overflow-hidden">
          
+         {/* Mobile Custom Header */}
+         <div className="md:hidden shrink-0 bg-white dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800 px-4 py-3 flex items-center gap-3 z-50">
+            <button 
+                onClick={() => navigate(`/training/course/${course.id}`)} 
+                className="w-10 h-10 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center text-slate-700 dark:text-slate-200 transition-colors active:scale-95"
+            >
+                <ChevronLeft size={24} />
+            </button>
+            <h1 className="text-xl font-extrabold tracking-tight text-slate-900 dark:text-white font-heading">
+                {displayChapterNumber}
+            </h1>
+         </div>
+
          {/* 1. Chapter Header / Hero */}
          <div className="bg-slate-900 text-white p-6 md:p-10 shrink-0 relative overflow-hidden">
              {/* Blurred Background Thumbnail */}
@@ -178,7 +194,7 @@ const Classroom: React.FC<ClassroomProps> = ({ courses, onCompleteLesson, onUpda
                  <div className="flex items-center gap-2 text-emerald-400 font-bold text-xs uppercase tracking-widest mb-3">
                      <span>{module.title}</span>
                      <span>/</span>
-                     <span>Chapter {course.modules.flatMap(m => m.chapters).findIndex(c => c.id === chapter.id) + 1}</span>
+                     <span>{displayChapterNumber}</span>
                  </div>
                  <h1 className="text-3xl md:text-4xl font-heading font-bold mb-4 leading-tight">{chapter.title}</h1>
                  <div className="flex items-center gap-4 text-sm text-slate-300">

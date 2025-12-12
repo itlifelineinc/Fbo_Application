@@ -162,8 +162,15 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
   const isChatPage = location.pathname === '/chat';
   const isClassroomPage = location.pathname === '/classroom';
   
+  // Custom pages check
+  const isCurriculumPage = /^\/training\/course\/[^/]+$/.test(location.pathname);
+  const isPlayerPage = /^\/classroom\/[^/]+\/[^/]+\/[^/]+$/.test(location.pathname);
+  
   // Routes that should use full width (no padding on mobile)
-  const isFullWidthPage = isChatPage || isClassroomPage;
+  const isFullWidthPage = isChatPage || isClassroomPage || isCurriculumPage || isPlayerPage;
+  
+  // Routes where default mobile header should be hidden
+  const shouldHideMobileHeader = isClassroomPage || isCurriculumPage || isPlayerPage;
 
   // Set initial bubble position safely
   useEffect(() => {
@@ -205,10 +212,10 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
 
   // Ensure header shows when leaving chat/classroom or resizing
   useEffect(() => {
-      if (!isChatPage && !isClassroomPage) {
+      if (!isChatPage && !isClassroomPage && !isCurriculumPage && !isPlayerPage) {
           setShowMobileHeader(true);
       }
-  }, [isChatPage, isClassroomPage]);
+  }, [isChatPage, isClassroomPage, isCurriculumPage, isPlayerPage]);
 
   // Click outside handler for Profile Menu
   useEffect(() => {
@@ -359,7 +366,6 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
 
   // Breadcrumb Generation
   const getBreadcrumbs = () => {
-    // ... (keeping existing breadcrumb logic) ...
     const path = location.pathname;
     const classroomMatch = path.match(/^\/classroom\/([^/]+)\/([^/]+)\/([^/]+)/);
     if (classroomMatch) {
@@ -777,7 +783,7 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
         )}
 
         {/* Mobile Header - With Auto-Hide Logic & Dynamic Content */}
-        <header className={`lg:hidden bg-white border-b border-slate-200 p-4 flex justify-between items-center z-40 shadow-sm dark:bg-slate-900 dark:border-slate-800 shrink-0 transition-transform duration-300 ease-in-out ${showMobileHeader && !isClassroomPage ? 'translate-y-0' : '-translate-y-full absolute w-full'}`}>
+        <header className={`lg:hidden bg-white border-b border-slate-200 p-4 flex justify-between items-center z-40 shadow-sm dark:bg-slate-900 dark:border-slate-800 shrink-0 transition-transform duration-300 ease-in-out ${showMobileHeader && !shouldHideMobileHeader ? 'translate-y-0' : '-translate-y-full absolute w-full'}`}>
            <div className="flex-1 flex items-center min-w-0 mr-2">
                <h1 className="text-3xl font-extrabold tracking-tighter text-emerald-950 dark:text-white font-heading">
                    Nexu

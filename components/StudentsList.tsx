@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Student, UserRole } from '../types';
-import { Search, X, ChevronRight, User, Shield, Key, Trash2, Award } from 'lucide-react';
+import { Search, X, ChevronRight, ChevronUp, User, Shield, Key, Trash2, Award } from 'lucide-react';
 
 interface StudentsListProps {
   students: Student[];
@@ -333,8 +333,8 @@ const StudentsList: React.FC<StudentsListProps> = ({ students, onAddStudent, cur
                             <h3 className="font-bold text-slate-900 text-base truncate dark:text-white">{student.name}</h3>
                             <p className="text-sm text-slate-500 truncate dark:text-slate-400">{student.handle}</p>
                         </div>
-                        {/* Chevron */}
-                        <ChevronRight className="text-slate-300" size={20} />
+                        {/* Chevron - Updated to ChevronUp to indicate drawer slide up */}
+                        <ChevronUp className="text-slate-300" size={20} />
                     </div>
                 ))}
             </div>

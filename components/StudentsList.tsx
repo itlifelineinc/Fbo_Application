@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Student, UserRole } from '../types';
-import { Search, X, ChevronRight } from 'lucide-react';
+import { Search, X, ChevronRight, User, Shield, Key, Trash2, Award } from 'lucide-react';
 
 interface StudentsListProps {
   students: Student[];
@@ -29,6 +29,9 @@ const StudentsList: React.FC<StudentsListProps> = ({ students, onAddStudent, cur
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [newStudentName, setNewStudentName] = useState('');
   const [newStudentEmail, setNewStudentEmail] = useState('');
+  
+  // Mobile Details Drawer State
+  const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
   
   // Search & Filter State
   const [searchTerm, setSearchTerm] = useState('');
@@ -102,6 +105,7 @@ const StudentsList: React.FC<StudentsListProps> = ({ students, onAddStudent, cur
     e.stopPropagation(); // Prevent navigation to profile
     if (window.confirm(`Are you sure you want to delete ${student.name} (${student.handle})? This action cannot be undone.`)) {
         onDeleteStudent(student.id);
+        if (selectedStudent?.id === student.id) setSelectedStudent(null);
     }
   };
 
@@ -117,6 +121,10 @@ const StudentsList: React.FC<StudentsListProps> = ({ students, onAddStudent, cur
          @keyframes fadeInModal {
            from { opacity: 0; transform: scale(0.95); }
            to { opacity: 1; transform: scale(1); }
+         }
+         @keyframes slideUpBottom {
+           from { transform: translateY(100%); }
+           to { transform: translateY(0); }
          }
          .drawer-animation {
            animation: slideInRight 0.3s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
@@ -176,7 +184,7 @@ const StudentsList: React.FC<StudentsListProps> = ({ students, onAddStudent, cur
           )}
        </div>
 
-       <div className="flex-1 overflow-y-auto p-4 md:p-8 space-y-6">
+       <div className="flex-1 overflow-y-auto p-0 md:p-8 space-y-6">
         {/* Desktop Header */}
         <div className="hidden md:flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div>
@@ -227,26 +235,15 @@ const StudentsList: React.FC<StudentsListProps> = ({ students, onAddStudent, cur
         </div>
 
         {/* 
-            MODAL / DRAWER SYSTEM
-            Desktop: Centered Modal with Backdrop
-            Mobile: Full Screen Drawer sliding from Right
+            MODAL / DRAWER SYSTEM (Enrollment)
         */}
         {isFormOpen && (
-            <div className="fixed inset-0 z-[100] flex justify-end md:items-center md:justify-center">
-                {/* Backdrop - Visible on both */}
+            <div className="fixed inset-0 z-[200] flex justify-end md:items-center md:justify-center">
                 <div 
                     className="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity" 
                     onClick={() => setIsFormOpen(false)}
                 ></div>
-
-                {/* 
-                    Container
-                    Mobile: Fixed full screen, slides in from right via custom animation
-                    Desktop: Auto width/height, max-w-lg, centered via flex parent, fades in
-                */}
                 <div className="relative w-full h-full md:h-auto md:max-w-lg md:rounded-2xl bg-white dark:bg-slate-900 shadow-2xl flex flex-col drawer-animation overflow-hidden">
-                    
-                    {/* Header */}
                     <div className="flex items-center justify-between p-5 border-b border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 shrink-0">
                         <h2 className="text-xl md:text-2xl font-bold text-slate-900 dark:text-white font-heading">Enroll New FBO</h2>
                         <button 
@@ -256,8 +253,6 @@ const StudentsList: React.FC<StudentsListProps> = ({ students, onAddStudent, cur
                             <X size={24} />
                         </button>
                     </div>
-
-                    {/* Form Content */}
                     <div className="p-6 md:p-8 overflow-y-auto flex-1 bg-white dark:bg-slate-900">
                         <form onSubmit={handleSubmit} className="space-y-6">
                             <div>
@@ -283,13 +278,11 @@ const StudentsList: React.FC<StudentsListProps> = ({ students, onAddStudent, cur
                                     placeholder="jane@example.com"
                                 />
                             </div>
-                            
                             <div className="p-4 bg-blue-50 rounded-xl border border-blue-100 dark:bg-blue-900/20 dark:border-blue-800">
                                 <p className="text-xs text-blue-700 dark:text-blue-300 leading-relaxed">
                                     New user will be added to <strong>{currentUser.handle}</strong>'s downline. A temporary password <span className="font-mono bg-blue-100 dark:bg-blue-800 px-1 rounded">password123</span> will be assigned.
                                 </p>
                             </div>
-
                             <div className="pt-4 flex flex-col gap-3">
                                 <button 
                                     type="submit"
@@ -311,8 +304,159 @@ const StudentsList: React.FC<StudentsListProps> = ({ students, onAddStudent, cur
             </div>
         )}
 
-        {/* Students Table */}
-        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden dark:bg-slate-800 dark:border-slate-700">
+        {/* 
+            MOBILE LIST VIEW (Replaces Table on Mobile)
+        */}
+        <div className="md:hidden">
+            {filteredStudents.length === 0 && (
+                <div className="p-12 text-center text-slate-400">
+                    <p>No team members found.</p>
+                </div>
+            )}
+            <div className="divide-y divide-slate-100 dark:divide-slate-800">
+                {filteredStudents.map(student => (
+                    <div 
+                        key={student.id} 
+                        onClick={() => setSelectedStudent(student)}
+                        className="flex items-center gap-4 p-4 bg-white active:bg-slate-50 transition-colors cursor-pointer dark:bg-slate-950 dark:active:bg-slate-900"
+                    >
+                        {/* Avatar */}
+                        <div className="w-12 h-12 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center text-lg font-bold shrink-0 overflow-hidden dark:bg-emerald-900 dark:text-emerald-300">
+                            {student.avatarUrl ? (
+                                <img src={student.avatarUrl} alt={student.name} className="w-full h-full object-cover" />
+                            ) : (
+                                student.name.charAt(0)
+                            )}
+                        </div>
+                        {/* Info */}
+                        <div className="flex-1 min-w-0">
+                            <h3 className="font-bold text-slate-900 text-base truncate dark:text-white">{student.name}</h3>
+                            <p className="text-sm text-slate-500 truncate dark:text-slate-400">{student.handle}</p>
+                        </div>
+                        {/* Chevron */}
+                        <ChevronRight className="text-slate-300" size={20} />
+                    </div>
+                ))}
+            </div>
+        </div>
+
+        {/* 
+            MOBILE STUDENT DETAIL DRAWER (Full Page Slide Up)
+        */}
+        <div className={`md:hidden fixed inset-0 z-[150] bg-white dark:bg-slate-950 transition-transform duration-300 ease-out flex flex-col ${selectedStudent ? 'translate-y-0' : 'translate-y-full'}`}>
+            {selectedStudent && (
+                <>
+                    {/* Header */}
+                    <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 shrink-0 shadow-sm">
+                        <h2 className="text-xl font-bold text-slate-900 dark:text-white truncate pr-4">{selectedStudent.name}</h2>
+                        <button 
+                            onClick={() => setSelectedStudent(null)} 
+                            className="p-2 bg-slate-100 dark:bg-slate-800 rounded-full text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white transition-colors"
+                        >
+                            <X size={24} />
+                        </button>
+                    </div>
+
+                    {/* Content */}
+                    <div className="flex-1 overflow-y-auto p-5 space-y-6">
+                        {/* Avatar & Handle */}
+                        <div className="flex flex-col items-center pb-6 border-b border-slate-100 dark:border-slate-800">
+                            <div className="w-24 h-24 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center text-3xl font-bold mb-3 overflow-hidden shadow-sm dark:bg-emerald-900 dark:text-emerald-300">
+                                {selectedStudent.avatarUrl ? (
+                                    <img src={selectedStudent.avatarUrl} alt={selectedStudent.name} className="w-full h-full object-cover" />
+                                ) : (
+                                    selectedStudent.name.charAt(0)
+                                )}
+                            </div>
+                            <p className="font-mono text-slate-500 bg-slate-100 px-3 py-1 rounded-full text-sm dark:bg-slate-800 dark:text-slate-400">{selectedStudent.handle}</p>
+                        </div>
+
+                        {/* Role & CC */}
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 dark:bg-slate-800 dark:border-slate-700">
+                                <p className="text-xs font-bold text-slate-400 uppercase mb-1">Role</p>
+                                <p className="font-bold text-slate-800 dark:text-white flex items-center gap-2">
+                                    <User size={16} className="text-emerald-500"/> {selectedStudent.role}
+                                </p>
+                            </div>
+                            <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 dark:bg-slate-800 dark:border-slate-700">
+                                <p className="text-xs font-bold text-slate-400 uppercase mb-1">Volume</p>
+                                <p className="font-bold text-slate-800 dark:text-white flex items-center gap-2">
+                                    <Award size={16} className="text-yellow-500"/> {selectedStudent.caseCredits.toFixed(2)} CC
+                                </p>
+                            </div>
+                        </div>
+
+                        {/* Progress */}
+                        <div className="bg-white border border-slate-200 rounded-xl p-5 dark:bg-slate-800 dark:border-slate-700">
+                            <div className="flex justify-between items-center mb-2">
+                                <span className="font-bold text-slate-700 dark:text-slate-200">Training Progress</span>
+                                <span className="text-sm font-bold text-emerald-600 dark:text-emerald-400">{selectedStudent.progress}%</span>
+                            </div>
+                            <div className="w-full bg-slate-100 rounded-full h-2.5 dark:bg-slate-700 overflow-hidden">
+                                <div className="bg-emerald-500 h-2.5 rounded-full" style={{ width: `${selectedStudent.progress}%` }}></div>
+                            </div>
+                        </div>
+
+                        {/* Sponsor Info */}
+                        <div className="flex items-center justify-between p-4 bg-slate-50 rounded-xl dark:bg-slate-800">
+                            <span className="text-sm font-medium text-slate-600 dark:text-slate-400">Sponsor</span>
+                            <span className="font-mono text-sm text-emerald-600 dark:text-emerald-400 font-bold">{selectedStudent.sponsorId || 'N/A'}</span>
+                        </div>
+
+                        {/* Admin Tools */}
+                        {isAdmin && (
+                            <div className="space-y-3 pt-4 border-t border-slate-100 dark:border-slate-800">
+                                <p className="text-xs font-bold text-slate-400 uppercase">Admin Controls</p>
+                                
+                                {isSuperAdmin && (
+                                    <div className="flex items-center justify-between p-3 bg-red-50 border border-red-100 rounded-lg dark:bg-red-900/10 dark:border-red-900/30">
+                                        <div className="flex items-center gap-2 text-red-700 dark:text-red-400">
+                                            <Key size={16} />
+                                            <span className="text-sm font-bold">Password</span>
+                                        </div>
+                                        <span className="font-mono text-sm bg-white px-2 py-1 rounded text-red-600 border border-red-100 dark:bg-slate-900 dark:border-slate-700 dark:text-red-400">
+                                            {selectedStudent.password}
+                                        </span>
+                                    </div>
+                                )}
+
+                                <div className="grid grid-cols-2 gap-3">
+                                    <button 
+                                        onClick={() => handleResetPassword(selectedStudent)}
+                                        className="py-3 px-4 bg-slate-100 text-slate-600 font-bold rounded-xl hover:bg-slate-200 transition-colors text-sm dark:bg-slate-700 dark:text-slate-300"
+                                    >
+                                        Reset Password
+                                    </button>
+                                    <button 
+                                        onClick={(e) => handleDelete(e, selectedStudent)}
+                                        className="py-3 px-4 bg-red-100 text-red-600 font-bold rounded-xl hover:bg-red-200 transition-colors text-sm flex items-center justify-center gap-2 dark:bg-red-900/20 dark:text-red-400"
+                                    >
+                                        <Trash2 size={16} /> Delete User
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* View Full Profile Link */}
+                        <div className="pt-2">
+                            <Link 
+                                to={`/students/${selectedStudent.id}`}
+                                className="block w-full bg-slate-900 text-white text-center py-4 rounded-xl font-bold hover:bg-slate-800 transition-all active:scale-[0.98] dark:bg-emerald-600 dark:hover:bg-emerald-700"
+                            >
+                                View Full Profile
+                            </Link>
+                        </div>
+                    </div>
+                </>
+            )}
+        </div>
+
+        {/* 
+            DESKTOP TABLE VIEW (Original Design)
+            Hidden on Mobile (hidden md:block)
+        */}
+        <div className="hidden md:block bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden dark:bg-slate-800 dark:border-slate-700">
             <div className="overflow-x-auto">
                 <table className="w-full min-w-[800px]">
                     <thead className="bg-slate-50 border-b border-slate-200 dark:bg-slate-900 dark:border-slate-700">

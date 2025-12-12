@@ -21,6 +21,10 @@ const FilledPlusIcon = ({ size = 24, className = "" }: { size?: number, classNam
   </svg>
 );
 
+// Standardized Input Style (Facebook-like: Flat, No Ring, Thin Border)
+const INPUT_CLASS = "w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-xl px-4 py-3 text-base text-slate-900 dark:text-white placeholder-slate-400 focus:border-slate-500 dark:focus:border-slate-400 focus:outline-none transition-colors";
+const LABEL_CLASS = "block text-sm font-bold text-slate-500 dark:text-slate-400 mb-1.5 ml-1";
+
 const StudentsList: React.FC<StudentsListProps> = ({ students, onAddStudent, currentUser, onUpdateStudent, onDeleteStudent }) => {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [newStudentName, setNewStudentName] = useState('');
@@ -86,21 +90,14 @@ const StudentsList: React.FC<StudentsListProps> = ({ students, onAddStudent, cur
     alert(`User created! Default password: 'password123'. Sponsor set to: ${currentUser.handle}`);
   };
 
-  // --- FIX: Ensure password update propagates to parent state correctly ---
   const handleResetPassword = (student: Student) => {
     if (!window.confirm(`Reset password for ${student.name}?`)) return;
     const tempPassword = `reset${Math.floor(1000 + Math.random() * 9000)}`;
-    
-    // Clone and update
     const updatedStudent = { ...student, password: tempPassword };
-    
-    // Trigger parent update
     onUpdateStudent(updatedStudent);
-    
     alert(`Password for ${student.name} reset to: ${tempPassword}`);
   };
 
-  // --- FIX: Stop Propagation for delete ---
   const handleDelete = (e: React.MouseEvent, student: Student) => {
     e.stopPropagation(); // Prevent navigation to profile
     if (window.confirm(`Are you sure you want to delete ${student.name} (${student.handle})? This action cannot be undone.`)) {
@@ -109,10 +106,9 @@ const StudentsList: React.FC<StudentsListProps> = ({ students, onAddStudent, cur
   };
 
   return (
-    <div className="h-full flex flex-col bg-slate-50 dark:bg-slate-950 animate-fade-in">
+    <div className="h-full flex flex-col bg-slate-50 dark:bg-slate-950 animate-fade-in relative">
        {/* 
           MOBILE CUSTOM HEADER 
-          Fixed at top within flex container on mobile.
        */}
        <div className="md:hidden shrink-0 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-4 py-3 flex justify-between items-center z-50 shadow-sm transition-all duration-300 sticky top-0">
           {!isMobileSearchOpen ? (
@@ -123,15 +119,15 @@ const StudentsList: React.FC<StudentsListProps> = ({ students, onAddStudent, cur
               <div className="flex items-center gap-3">
                   <button 
                     onClick={() => setIsFormOpen(true)}
-                    className="text-slate-800 dark:text-white p-1 active:scale-95 transition-transform"
+                    className="text-slate-900 dark:text-white active:scale-95 transition-transform"
                   >
-                    <FilledPlusIcon size={26} className="text-slate-900 dark:text-white" />
+                    <FilledPlusIcon size={28} className="text-slate-900 dark:text-white" />
                   </button>
                   <button 
                     onClick={() => setIsMobileSearchOpen(true)}
-                    className="text-slate-800 dark:text-white p-1 active:scale-95 transition-transform"
+                    className="text-slate-900 dark:text-white p-1 active:scale-95 transition-transform"
                   >
-                    <Search size={24} strokeWidth={3} />
+                    <Search size={24} strokeWidth={2.5} />
                   </button>
               </div>
             </>
@@ -145,7 +141,7 @@ const StudentsList: React.FC<StudentsListProps> = ({ students, onAddStudent, cur
                      onChange={(e) => setSearchTerm(e.target.value)}
                      placeholder="Search team members..."
                      autoFocus
-                     className="w-full pl-10 pr-4 py-2 bg-slate-100 border-none rounded-full text-slate-900 dark:bg-slate-800 dark:text-white focus:ring-2 focus:ring-emerald-500 outline-none text-base"
+                     className={INPUT_CLASS + " pl-10 py-2 rounded-full"}
                   />
                </div>
                <button 
@@ -171,16 +167,14 @@ const StudentsList: React.FC<StudentsListProps> = ({ students, onAddStudent, cur
             </div>
             <button 
                 onClick={() => setIsFormOpen(true)}
-                className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg font-medium shadow-sm transition-colors flex items-center justify-center gap-2 w-full md:w-auto"
+                className="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2.5 rounded-xl font-bold shadow-sm transition-colors flex items-center justify-center gap-2 active:scale-95"
             >
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5">
-                    <path d="M10.75 4.75a.75.75 0 00-1.5 0v4.5h-4.5a.75.75 0 000 1.5h4.5v4.5a.75.75 0 001.5 0v-4.5h4.5a.75.75 0 000-1.5h-4.5v-4.5z" />
-                </svg>
-                Enroll New FBO
+               <FilledPlusIcon size={20} className="text-white" />
+               Enroll New FBO
             </button>
         </div>
 
-        {/* Filter Bar (Desktop only, mobile uses header search) */}
+        {/* Filter Bar (Desktop) */}
         <div className="hidden md:flex bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex-col md:flex-row gap-4 dark:bg-slate-800 dark:border-slate-700">
             <div className="flex-1 relative">
                 <input 
@@ -188,11 +182,9 @@ const StudentsList: React.FC<StudentsListProps> = ({ students, onAddStudent, cur
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     placeholder="Search by name or handle..."
-                    className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-50 bg-white text-slate-900 dark:bg-slate-900 dark:text-slate-100 dark:border-slate-600"
+                    className={INPUT_CLASS + " pl-10"}
                 />
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 absolute left-3 top-2.5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
+                <Search className="absolute left-3 top-3.5 text-slate-400" size={20} />
             </div>
             
             {isAdmin && (
@@ -200,7 +192,7 @@ const StudentsList: React.FC<StudentsListProps> = ({ students, onAddStudent, cur
                     <select 
                         value={filterRole}
                         onChange={(e) => setFilterRole(e.target.value)}
-                        className="w-full p-2 border border-slate-200 rounded-lg focus:outline-none focus:border-emerald-500 bg-white text-slate-900 dark:bg-slate-900 dark:text-slate-100 dark:border-slate-600"
+                        className={INPUT_CLASS}
                     >
                         <option value="ALL">All Roles</option>
                         <option value={UserRole.STUDENT}>Students</option>
@@ -212,85 +204,84 @@ const StudentsList: React.FC<StudentsListProps> = ({ students, onAddStudent, cur
             )}
         </div>
 
-        {/* Enrollment Modal / Drawer */}
+        {/* FULL PAGE DRAWER (Mobile & Desktop) */}
         {isFormOpen && (
-            <div className="fixed inset-0 z-[60] flex justify-end md:items-center md:justify-center">
-                {/* Backdrop */}
+            <div className="fixed inset-0 z-[100] flex justify-end">
+                <style>{`
+                  @keyframes slideInRight {
+                    from { transform: translateX(100%); }
+                    to { transform: translateX(0); }
+                  }
+                  .animate-slide-in {
+                    animation: slideInRight 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+                  }
+                `}</style>
+                
+                {/* Backdrop - Covers everything */}
                 <div 
-                    className="absolute inset-0 bg-black/50 backdrop-blur-sm transition-opacity" 
+                    className="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity" 
                     onClick={() => setIsFormOpen(false)}
                 ></div>
 
-                {/* Content Container: Mobile Drawer / Desktop Modal */}
-                <div className={`
-                    relative bg-white dark:bg-slate-900 w-full shadow-2xl flex flex-col transition-all duration-300 ease-in-out
-                    md:rounded-2xl md:max-w-md md:h-auto md:max-h-[90vh] md:transform-none
-                    h-full animate-in slide-in-from-right md:animate-fade-in
-                `}>
-                    <style>{`
-                      @keyframes slideInRight {
-                        from { transform: translateX(100%); }
-                        to { transform: translateX(0); }
-                      }
-                      .animate-in.slide-in-from-right {
-                        animation: slideInRight 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-                      }
-                    `}</style>
-
-                    {/* Drawer Header (Mobile Only) */}
-                    <div className="flex items-center justify-between p-4 border-b border-slate-100 dark:border-slate-800 md:hidden shrink-0">
-                        <h2 className="text-xl font-bold text-slate-800 dark:text-white font-heading">Enroll New FBO</h2>
+                {/* Drawer Content - Full height, slides from right */}
+                <div className="relative w-full md:max-w-md h-full bg-white dark:bg-slate-900 shadow-2xl animate-slide-in flex flex-col border-l border-slate-100 dark:border-slate-800">
+                    
+                    {/* Header */}
+                    <div className="flex items-center justify-between p-5 border-b border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 shrink-0">
+                        <h2 className="text-2xl font-bold text-slate-900 dark:text-white font-heading">Enroll New FBO</h2>
                         <button 
                             onClick={() => setIsFormOpen(false)} 
-                            className="p-2 -mr-2 text-slate-500 hover:bg-slate-100 rounded-full dark:hover:bg-slate-800"
+                            className="p-2 -mr-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full dark:hover:bg-slate-800 transition-colors"
                         >
                             <X size={24} />
                         </button>
                     </div>
 
-                    <div className="p-6 md:p-8 overflow-y-auto flex-1">
-                        {/* Desktop Header */}
-                        <h2 className="text-xl font-bold text-slate-800 mb-4 font-heading dark:text-white hidden md:block">Enroll New FBO</h2>
-                        
-                        <form onSubmit={handleSubmit} className="space-y-4">
+                    {/* Form Content */}
+                    <div className="p-6 md:p-8 overflow-y-auto flex-1 bg-white dark:bg-slate-900">
+                        <form onSubmit={handleSubmit} className="space-y-6">
                             <div>
-                                <label className="block text-sm font-medium text-slate-700 mb-1 dark:text-slate-300">Full Name</label>
+                                <label className={LABEL_CLASS}>Full Name</label>
                                 <input 
-                                type="text" 
-                                required
-                                value={newStudentName}
-                                onChange={(e) => setNewStudentName(e.target.value)}
-                                className="w-full border border-slate-200 rounded-lg px-3 py-2 focus:ring-2 focus:ring-emerald-500 outline-none bg-white text-slate-900 dark:bg-slate-700 dark:text-white dark:border-slate-600"
-                                placeholder="Jane Doe"
+                                    type="text" 
+                                    required
+                                    value={newStudentName}
+                                    onChange={(e) => setNewStudentName(e.target.value)}
+                                    className={INPUT_CLASS}
+                                    placeholder="Jane Doe"
                                 />
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-slate-700 mb-1 dark:text-slate-300">Email Address</label>
+                                <label className={LABEL_CLASS}>Email Address</label>
                                 <input 
-                                type="email" 
-                                required
-                                value={newStudentEmail}
-                                onChange={(e) => setNewStudentEmail(e.target.value)}
-                                className="w-full border border-slate-200 rounded-lg px-3 py-2 focus:ring-2 focus:ring-emerald-500 outline-none bg-white text-slate-900 dark:bg-slate-700 dark:text-white dark:border-slate-600"
-                                placeholder="jane@example.com"
+                                    type="email" 
+                                    required
+                                    value={newStudentEmail}
+                                    onChange={(e) => setNewStudentEmail(e.target.value)}
+                                    className={INPUT_CLASS}
+                                    placeholder="jane@example.com"
                                 />
                             </div>
-                            <div className="text-xs text-slate-500 bg-slate-50 p-3 rounded dark:bg-slate-700 dark:text-slate-400">
-                                User will be added to <strong>{currentUser.handle}</strong>'s downline with temporary password.
+                            
+                            <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 dark:bg-slate-800 dark:border-slate-700">
+                                <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+                                    New user will be added to <strong>{currentUser.handle}</strong>'s downline. A temporary password <span className="font-mono bg-slate-200 dark:bg-slate-700 px-1 rounded">password123</span> will be assigned.
+                                </p>
                             </div>
-                            <div className="flex gap-3 pt-4">
+
+                            <div className="pt-4 flex flex-col gap-3">
                                 <button 
-                                type="button" 
-                                onClick={() => setIsFormOpen(false)}
-                                className="flex-1 px-4 py-2 text-slate-600 font-medium hover:bg-slate-100 rounded-lg transition-colors dark:text-slate-300 dark:hover:bg-slate-700"
+                                    type="submit"
+                                    className="w-full py-4 bg-emerald-600 text-white font-bold rounded-xl hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-900/20 active:scale-[0.98]"
                                 >
-                                Cancel
+                                    Confirm Enrollment
                                 </button>
                                 <button 
-                                type="submit"
-                                className="flex-1 px-4 py-2 bg-emerald-600 text-white font-medium hover:bg-emerald-700 rounded-lg transition-colors shadow-sm"
+                                    type="button" 
+                                    onClick={() => setIsFormOpen(false)}
+                                    className="w-full py-4 text-slate-500 font-bold hover:bg-slate-50 rounded-xl transition-colors dark:text-slate-400 dark:hover:bg-slate-800"
                                 >
-                                Enroll
+                                    Cancel
                                 </button>
                             </div>
                         </form>
@@ -300,18 +291,17 @@ const StudentsList: React.FC<StudentsListProps> = ({ students, onAddStudent, cur
         )}
 
         {/* Students Table - Responsive Container */}
-        <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden dark:bg-slate-800 dark:border-slate-700">
+        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden dark:bg-slate-800 dark:border-slate-700">
             <div className="overflow-x-auto">
                 <table className="w-full min-w-[800px]">
-                    <thead className="bg-slate-50 border-b border-slate-100 dark:bg-slate-900 dark:border-slate-700">
+                    <thead className="bg-slate-50 border-b border-slate-200 dark:bg-slate-900 dark:border-slate-700">
                         <tr>
-                            <th className="text-left text-xs font-semibold text-slate-500 uppercase tracking-wider px-6 py-4 dark:text-slate-400">FBO Details</th>
-                            <th className="text-left text-xs font-semibold text-slate-500 uppercase tracking-wider px-6 py-4 dark:text-slate-400">Role / CC</th>
-                            {/* Super Admin Password Column */}
-                            {isSuperAdmin && <th className="text-left text-xs font-semibold text-slate-500 uppercase tracking-wider px-6 py-4 dark:text-slate-400">Password</th>}
-                            <th className="text-left text-xs font-semibold text-slate-500 uppercase tracking-wider px-6 py-4 dark:text-slate-400">Sponsor</th>
-                            <th className="text-left text-xs font-semibold text-slate-500 uppercase tracking-wider px-6 py-4 dark:text-slate-400">Training</th>
-                            {isAdmin && <th className="text-left text-xs font-semibold text-slate-500 uppercase tracking-wider px-6 py-4 dark:text-slate-400">Actions</th>}
+                            <th className="text-left text-xs font-bold text-slate-500 uppercase tracking-wider px-6 py-4 dark:text-slate-400">FBO Details</th>
+                            <th className="text-left text-xs font-bold text-slate-500 uppercase tracking-wider px-6 py-4 dark:text-slate-400">Role / CC</th>
+                            {isSuperAdmin && <th className="text-left text-xs font-bold text-slate-500 uppercase tracking-wider px-6 py-4 dark:text-slate-400">Password</th>}
+                            <th className="text-left text-xs font-bold text-slate-500 uppercase tracking-wider px-6 py-4 dark:text-slate-400">Sponsor</th>
+                            <th className="text-left text-xs font-bold text-slate-500 uppercase tracking-wider px-6 py-4 dark:text-slate-400">Training</th>
+                            {isAdmin && <th className="text-left text-xs font-bold text-slate-500 uppercase tracking-wider px-6 py-4 dark:text-slate-400">Actions</th>}
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100 dark:divide-slate-700">
@@ -327,23 +317,22 @@ const StudentsList: React.FC<StudentsListProps> = ({ students, onAddStudent, cur
                                             )}
                                         </div>
                                         <div>
-                                            <span className="block font-medium text-slate-700 group-hover:text-emerald-700 transition-colors dark:text-slate-200 dark:group-hover:text-emerald-400">{student.name}</span>
+                                            <span className="block font-bold text-slate-700 group-hover:text-emerald-700 transition-colors dark:text-slate-200 dark:group-hover:text-emerald-400">{student.name}</span>
                                             <span className="text-xs font-mono text-slate-400">{student.handle}</span>
                                         </div>
                                     </Link>
                                 </td>
                                 <td className="px-6 py-4">
-                                    <span className={`inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-medium border ${
-                                        student.role === UserRole.SPONSOR ? 'bg-yellow-50 text-yellow-700 border-yellow-100 dark:bg-yellow-900/30 dark:text-yellow-300 dark:border-yellow-800' :
-                                        student.role === UserRole.ADMIN ? 'bg-purple-50 text-purple-700 border-purple-100 dark:bg-purple-900/30 dark:text-purple-300 dark:border-purple-800' :
-                                        student.role === UserRole.SUPER_ADMIN ? 'bg-red-50 text-red-700 border-red-100 dark:bg-red-900/30 dark:text-red-300 dark:border-red-800' :
-                                        'bg-slate-50 text-slate-600 border-slate-200 dark:bg-slate-700 dark:text-slate-300 dark:border-slate-600'
+                                    <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-bold border ${
+                                        student.role === UserRole.SPONSOR ? 'bg-yellow-50 text-yellow-700 border-yellow-200 dark:bg-yellow-900/30 dark:text-yellow-300 dark:border-yellow-800' :
+                                        student.role === UserRole.ADMIN ? 'bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-900/30 dark:text-purple-300 dark:border-purple-800' :
+                                        student.role === UserRole.SUPER_ADMIN ? 'bg-red-50 text-red-700 border-red-200 dark:bg-red-900/30 dark:text-red-300 dark:border-red-800' :
+                                        'bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-700 dark:text-slate-300 dark:border-slate-600'
                                     }`}>
                                         {student.role} ({student.caseCredits} CC)
                                     </span>
                                 </td>
                                 
-                                {/* Super Admin Password Display */}
                                 {isSuperAdmin && (
                                     <td className="px-6 py-4">
                                         <span className="font-mono text-xs bg-slate-100 px-2 py-1 rounded text-slate-600 border border-slate-200 dark:bg-slate-700 dark:text-slate-300 dark:border-slate-600">
@@ -355,30 +344,29 @@ const StudentsList: React.FC<StudentsListProps> = ({ students, onAddStudent, cur
                                 <td className="px-6 py-4 text-sm font-mono text-emerald-600 dark:text-emerald-400">{student.sponsorId || '-'}</td>
                                 <td className="px-6 py-4">
                                     <div className="flex items-center gap-3">
-                                        <div className="flex-1 w-24 bg-slate-100 rounded-full h-2 dark:bg-slate-700">
+                                        <div className="flex-1 w-24 bg-slate-100 rounded-full h-1.5 dark:bg-slate-700">
                                             <div 
-                                                className="bg-emerald-500 h-2 rounded-full" 
+                                                className="bg-emerald-500 h-1.5 rounded-full" 
                                                 style={{ width: `${student.progress}%` }}
                                             ></div>
                                         </div>
-                                        <span className="text-xs font-medium text-slate-600 dark:text-slate-400">{student.progress}%</span>
+                                        <span className="text-xs font-bold text-slate-500 dark:text-slate-400">{student.progress}%</span>
                                     </div>
                                 </td>
                                 {isAdmin && (
                                     <td className="px-6 py-4">
                                         <div className="flex gap-2 items-center">
-                                            {/* Only Super Admin can Reset Password and Delete */}
                                             {isSuperAdmin && (
                                                 <>
                                                     <button 
                                                         onClick={() => handleResetPassword(student)}
-                                                        className="text-xs text-slate-500 bg-slate-100 hover:bg-slate-200 px-2 py-1 rounded transition-colors dark:bg-slate-700 dark:text-slate-300 dark:hover:bg-slate-600"
+                                                        className="text-xs font-bold text-slate-500 bg-slate-100 hover:bg-slate-200 px-3 py-1.5 rounded-lg transition-colors dark:bg-slate-700 dark:text-slate-300 dark:hover:bg-slate-600"
                                                     >
                                                         Reset
                                                     </button>
                                                     <button 
                                                         onClick={(e) => handleDelete(e, student)}
-                                                        className="text-xs text-white bg-red-500 hover:bg-red-600 p-1.5 rounded transition-colors"
+                                                        className="text-xs text-white bg-red-500 hover:bg-red-600 p-2 rounded-lg transition-colors shadow-sm"
                                                         title="Delete User"
                                                     >
                                                         <TrashIcon />
@@ -394,7 +382,9 @@ const StudentsList: React.FC<StudentsListProps> = ({ students, onAddStudent, cur
                 </table>
             </div>
             {filteredStudents.length === 0 && (
-                <div className="p-10 text-center text-slate-400">No users found matching your filters.</div>
+                <div className="p-12 text-center text-slate-400 border-t border-slate-100 dark:border-slate-700">
+                    <p>No users found matching your filters.</p>
+                </div>
             )}
         </div>
       </div>
@@ -403,7 +393,7 @@ const StudentsList: React.FC<StudentsListProps> = ({ students, onAddStudent, cur
 };
 
 const TrashIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4">
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4">
         <path strokeLinecap="round" strokeLinejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
     </svg>
 );

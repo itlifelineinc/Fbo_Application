@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Student, UserRole } from '../types';
-import { PlusSquare, Search } from 'lucide-react';
+import { Search, X } from 'lucide-react';
 
 interface StudentsListProps {
   students: Student[];
@@ -11,6 +11,15 @@ interface StudentsListProps {
   onUpdateStudent: (student: Student) => void;
   onDeleteStudent: (studentId: string) => void;
 }
+
+// Custom Icon: Filled Square with White Plus
+const FilledPlusIcon = ({ size = 24, className = "" }: { size?: number, className?: string }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className={className}>
+    <rect x="2" y="2" width="20" height="20" rx="6" fill="currentColor" />
+    <path d="M12 8V16" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+    <path d="M8 12H16" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+  </svg>
+);
 
 const StudentsList: React.FC<StudentsListProps> = ({ students, onAddStudent, currentUser, onUpdateStudent, onDeleteStudent }) => {
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -116,7 +125,7 @@ const StudentsList: React.FC<StudentsListProps> = ({ students, onAddStudent, cur
                     onClick={() => setIsFormOpen(true)}
                     className="text-slate-800 dark:text-white p-1 active:scale-95 transition-transform"
                   >
-                    <PlusSquare size={24} fill="currentColor" className="text-slate-800 dark:text-white" />
+                    <FilledPlusIcon size={26} className="text-slate-900 dark:text-white" />
                   </button>
                   <button 
                     onClick={() => setIsMobileSearchOpen(true)}
@@ -203,54 +212,90 @@ const StudentsList: React.FC<StudentsListProps> = ({ students, onAddStudent, cur
             )}
         </div>
 
-        {/* Enrollment Modal */}
+        {/* Enrollment Modal / Drawer */}
         {isFormOpen && (
-            <div className="fixed inset-0 bg-black/50 z-[60] flex items-center justify-center p-4">
-            <div className="bg-white rounded-2xl p-8 max-w-md w-full shadow-2xl animate-fade-in dark:bg-slate-800">
-                <h2 className="text-xl font-bold text-slate-800 mb-4 font-heading dark:text-white">Enroll New FBO</h2>
-                <form onSubmit={handleSubmit} className="space-y-4">
-                <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1 dark:text-slate-300">Full Name</label>
-                    <input 
-                    type="text" 
-                    required
-                    value={newStudentName}
-                    onChange={(e) => setNewStudentName(e.target.value)}
-                    className="w-full border border-slate-200 rounded-lg px-3 py-2 focus:ring-2 focus:ring-emerald-500 outline-none bg-white text-slate-900 dark:bg-slate-700 dark:text-white dark:border-slate-600"
-                    placeholder="Jane Doe"
-                    />
-                </div>
-                <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1 dark:text-slate-300">Email Address</label>
-                    <input 
-                    type="email" 
-                    required
-                    value={newStudentEmail}
-                    onChange={(e) => setNewStudentEmail(e.target.value)}
-                    className="w-full border border-slate-200 rounded-lg px-3 py-2 focus:ring-2 focus:ring-emerald-500 outline-none bg-white text-slate-900 dark:bg-slate-700 dark:text-white dark:border-slate-600"
-                    placeholder="jane@example.com"
-                    />
-                </div>
-                <div className="text-xs text-slate-500 bg-slate-50 p-3 rounded dark:bg-slate-700 dark:text-slate-400">
-                    User will be added to <strong>{currentUser.handle}</strong>'s downline with temporary password.
-                </div>
-                <div className="flex gap-3 pt-4">
-                    <button 
-                    type="button" 
+            <div className="fixed inset-0 z-[60] flex justify-end md:items-center md:justify-center">
+                {/* Backdrop */}
+                <div 
+                    className="absolute inset-0 bg-black/50 backdrop-blur-sm transition-opacity" 
                     onClick={() => setIsFormOpen(false)}
-                    className="flex-1 px-4 py-2 text-slate-600 font-medium hover:bg-slate-100 rounded-lg transition-colors dark:text-slate-300 dark:hover:bg-slate-700"
-                    >
-                    Cancel
-                    </button>
-                    <button 
-                    type="submit"
-                    className="flex-1 px-4 py-2 bg-emerald-600 text-white font-medium hover:bg-emerald-700 rounded-lg transition-colors shadow-sm"
-                    >
-                    Enroll
-                    </button>
+                ></div>
+
+                {/* Content Container: Mobile Drawer / Desktop Modal */}
+                <div className={`
+                    relative bg-white dark:bg-slate-900 w-full shadow-2xl flex flex-col transition-all duration-300 ease-in-out
+                    md:rounded-2xl md:max-w-md md:h-auto md:max-h-[90vh] md:transform-none
+                    h-full animate-in slide-in-from-right md:animate-fade-in
+                `}>
+                    <style>{`
+                      @keyframes slideInRight {
+                        from { transform: translateX(100%); }
+                        to { transform: translateX(0); }
+                      }
+                      .animate-in.slide-in-from-right {
+                        animation: slideInRight 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+                      }
+                    `}</style>
+
+                    {/* Drawer Header (Mobile Only) */}
+                    <div className="flex items-center justify-between p-4 border-b border-slate-100 dark:border-slate-800 md:hidden shrink-0">
+                        <h2 className="text-xl font-bold text-slate-800 dark:text-white font-heading">Enroll New FBO</h2>
+                        <button 
+                            onClick={() => setIsFormOpen(false)} 
+                            className="p-2 -mr-2 text-slate-500 hover:bg-slate-100 rounded-full dark:hover:bg-slate-800"
+                        >
+                            <X size={24} />
+                        </button>
+                    </div>
+
+                    <div className="p-6 md:p-8 overflow-y-auto flex-1">
+                        {/* Desktop Header */}
+                        <h2 className="text-xl font-bold text-slate-800 mb-4 font-heading dark:text-white hidden md:block">Enroll New FBO</h2>
+                        
+                        <form onSubmit={handleSubmit} className="space-y-4">
+                            <div>
+                                <label className="block text-sm font-medium text-slate-700 mb-1 dark:text-slate-300">Full Name</label>
+                                <input 
+                                type="text" 
+                                required
+                                value={newStudentName}
+                                onChange={(e) => setNewStudentName(e.target.value)}
+                                className="w-full border border-slate-200 rounded-lg px-3 py-2 focus:ring-2 focus:ring-emerald-500 outline-none bg-white text-slate-900 dark:bg-slate-700 dark:text-white dark:border-slate-600"
+                                placeholder="Jane Doe"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-slate-700 mb-1 dark:text-slate-300">Email Address</label>
+                                <input 
+                                type="email" 
+                                required
+                                value={newStudentEmail}
+                                onChange={(e) => setNewStudentEmail(e.target.value)}
+                                className="w-full border border-slate-200 rounded-lg px-3 py-2 focus:ring-2 focus:ring-emerald-500 outline-none bg-white text-slate-900 dark:bg-slate-700 dark:text-white dark:border-slate-600"
+                                placeholder="jane@example.com"
+                                />
+                            </div>
+                            <div className="text-xs text-slate-500 bg-slate-50 p-3 rounded dark:bg-slate-700 dark:text-slate-400">
+                                User will be added to <strong>{currentUser.handle}</strong>'s downline with temporary password.
+                            </div>
+                            <div className="flex gap-3 pt-4">
+                                <button 
+                                type="button" 
+                                onClick={() => setIsFormOpen(false)}
+                                className="flex-1 px-4 py-2 text-slate-600 font-medium hover:bg-slate-100 rounded-lg transition-colors dark:text-slate-300 dark:hover:bg-slate-700"
+                                >
+                                Cancel
+                                </button>
+                                <button 
+                                type="submit"
+                                className="flex-1 px-4 py-2 bg-emerald-600 text-white font-medium hover:bg-emerald-700 rounded-lg transition-colors shadow-sm"
+                                >
+                                Enroll
+                                </button>
+                            </div>
+                        </form>
+                    </div>
                 </div>
-                </form>
-            </div>
             </div>
         )}
 

@@ -161,16 +161,18 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
   const isDashboard = location.pathname === '/dashboard';
   const isChatPage = location.pathname === '/chat';
   const isClassroomPage = location.pathname === '/classroom';
+  const isSalesPage = location.pathname === '/sales';
+  const isSalesBuilderPage = location.pathname === '/sales-builder';
   
   // Custom pages check
   const isCurriculumPage = /^\/training\/course\/[^/]+$/.test(location.pathname);
   const isPlayerPage = /^\/classroom\/[^/]+\/[^/]+\/[^/]+$/.test(location.pathname);
   
   // Routes that should use full width (no padding on mobile)
-  const isFullWidthPage = isChatPage || isClassroomPage || isCurriculumPage || isPlayerPage;
+  const isFullWidthPage = isChatPage || isClassroomPage || isCurriculumPage || isPlayerPage || isSalesPage || isSalesBuilderPage;
   
   // Routes where default mobile header should be hidden
-  const shouldHideMobileHeader = isChatPage || isClassroomPage || isCurriculumPage || isPlayerPage;
+  const shouldHideMobileHeader = isChatPage || isClassroomPage || isCurriculumPage || isPlayerPage || isSalesPage || isSalesBuilderPage;
 
   // Set initial bubble position safely
   useEffect(() => {
@@ -212,10 +214,10 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
 
   // Ensure header shows when leaving chat/classroom or resizing
   useEffect(() => {
-      if (!isChatPage && !isClassroomPage && !isCurriculumPage && !isPlayerPage) {
+      if (!isChatPage && !isClassroomPage && !isCurriculumPage && !isPlayerPage && !isSalesPage && !isSalesBuilderPage) {
           setShowMobileHeader(true);
       }
-  }, [isChatPage, isClassroomPage, isCurriculumPage, isPlayerPage]);
+  }, [isChatPage, isClassroomPage, isCurriculumPage, isPlayerPage, isSalesPage, isSalesBuilderPage]);
 
   // Click outside handler for Profile Menu
   useEffect(() => {

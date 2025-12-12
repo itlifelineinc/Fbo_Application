@@ -1,5 +1,6 @@
+
 import React from 'react';
-import { Save, Smartphone, Monitor, Eye, ArrowLeft, Columns, Maximize } from 'lucide-react';
+import { Save, Smartphone, Monitor, Eye, ArrowLeft, Columns, Maximize, UploadCloud } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 interface EditorToolbarProps {
@@ -26,8 +27,15 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({
   onToggleSplitView
 }) => {
   return (
-    <div className="bg-white border-b border-slate-200 h-16 px-4 flex items-center justify-between sticky top-0 z-40">
-      <div className="flex items-center gap-4">
+    <div className="bg-white border-b border-slate-200 h-14 md:h-16 px-4 flex items-center justify-between sticky top-0 z-40 dark:bg-slate-900 dark:border-slate-800">
+      
+      {/* Mobile Left: Custom Header */}
+      <div className="md:hidden">
+        <h1 className="text-xl font-extrabold text-slate-900 dark:text-white font-heading">Pages</h1>
+      </div>
+
+      {/* Desktop Left: Standard Nav */}
+      <div className="hidden md:flex items-center gap-4">
         <Link to="/dashboard" className="p-2 hover:bg-slate-100 rounded-full text-slate-500">
           <ArrowLeft size={20} />
         </Link>
@@ -82,29 +90,48 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({
             </div>
         )}
 
-        <button 
-          onClick={onTogglePreview}
-          className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-all ${
-            isPreviewMode 
-              ? 'bg-slate-800 text-white' 
-              : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-50'
-          }`}
-        >
-          {isPreviewMode ? (
-            <>Edit Mode</>
-          ) : (
-            <><Eye size={16} /> Preview</>
-          )}
-        </button>
+        {/* Mobile Right: Icons Only */}
+        <div className="md:hidden flex items-center gap-3">
+             <button 
+                onClick={onTogglePreview} 
+                className={`p-2 rounded-full transition-colors ${isPreviewMode ? 'text-emerald-600 bg-emerald-50 dark:bg-emerald-900/30' : 'text-slate-600 dark:text-slate-300'}`}
+             >
+                 <Eye size={22} />
+             </button>
+             <button 
+                onClick={onPublish} 
+                className={`p-2 rounded-full transition-colors ${isPublished ? 'text-emerald-600 bg-emerald-50 dark:bg-emerald-900/30' : 'text-blue-600 bg-blue-50 dark:bg-blue-900/30'}`}
+             >
+                 <UploadCloud size={22} />
+             </button>
+        </div>
 
-        <button 
-          onClick={onPublish}
-          className={`px-5 py-2 rounded-lg text-sm font-bold text-white transition-all shadow-sm ${
-            isPublished ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-blue-600 hover:bg-blue-700'
-          }`}
-        >
-          {isPublished ? 'Update Page' : 'Publish Page'}
-        </button>
+        {/* Desktop Right: Standard Buttons */}
+        <div className="hidden md:flex gap-3">
+            <button 
+            onClick={onTogglePreview}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-all ${
+                isPreviewMode 
+                ? 'bg-slate-800 text-white' 
+                : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-50'
+            }`}
+            >
+            {isPreviewMode ? (
+                <>Edit Mode</>
+            ) : (
+                <><Eye size={16} /> Preview</>
+            )}
+            </button>
+
+            <button 
+            onClick={onPublish}
+            className={`px-5 py-2 rounded-lg text-sm font-bold text-white transition-all shadow-sm ${
+                isPublished ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-blue-600 hover:bg-blue-700'
+            }`}
+            >
+            {isPublished ? 'Update Page' : 'Publish Page'}
+            </button>
+        </div>
       </div>
     </div>
   );

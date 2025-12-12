@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Brush } from 'recharts';
 import { Link, useNavigate } from 'react-router-dom';
 import { Student, UserRole, Course, CourseTrack, CourseStatus, MentorshipTemplate, Broadcast } from '../types';
-import { Edit, ExternalLink, Plus, Minus, ChevronLeft, ChevronRight, User, Users, TrendingUp, Calendar, MessageCircle, ShoppingBag, Globe, Bell, ArrowUpRight, CheckCircle, Lightbulb, Inbox, ClipboardCheck, Megaphone, LayoutGrid } from 'lucide-react';
+import { Edit, ExternalLink, Plus, Minus, ChevronLeft, ChevronRight, User, Users, TrendingUp, Calendar, MessageCircle, ShoppingBag, Globe, Bell, ArrowUpRight, CheckCircle, Lightbulb, Inbox, ClipboardCheck, Megaphone, LayoutGrid, QrCode, Copy } from 'lucide-react';
 import { RANKS, RANK_ORDER } from '../constants';
 
 // --- Icons (Defined Before Usage) ---
@@ -82,6 +82,9 @@ const Dashboard: React.FC<DashboardProps> = ({ students, currentUser, courses, o
   const [graphRange, setGraphRange] = useState<'6M' | 'YEAR' | '30D'>('6M');
   // State for Zoom Indices (Controlled Brush)
   const [zoomIndices, setZoomIndices] = useState<{start: number, end: number} | null>(null);
+  
+  // State for QR Code view in Grow Team widget
+  const [showQR, setShowQR] = useState(false);
 
   const isStudent = currentUser.role === UserRole.STUDENT;
   const isSponsor = currentUser.role === UserRole.SPONSOR;
@@ -415,7 +418,7 @@ const Dashboard: React.FC<DashboardProps> = ({ students, currentUser, courses, o
         </div>
         <div className="text-right hidden md:block">
             <p className="text-xs text-slate-400 font-bold uppercase tracking-wider">Current Cycle</p>
-            <p className="text-slate-700 font-bold dark:text-slate-300">{monthNames[prevMonth.getMonth()]]} - {monthNames[currentDate.getMonth()]}</p>
+            <p className="text-slate-700 font-bold dark:text-slate-300">{monthNames[prevMonth.getMonth()]} - {monthNames[currentDate.getMonth()]}</p>
         </div>
       </header>
 
@@ -779,24 +782,55 @@ const Dashboard: React.FC<DashboardProps> = ({ students, currentUser, courses, o
           {/* Right Column (1/3 width) - Widgets */}
           <div className="space-y-6 min-w-0">
             
-            {/* Enrollment Widget */}
+            {/* Enrollment Widget - RE-DESIGNED TO BE PROMINENT */}
             {!isStudent && (
-                <div className="bg-gradient-to-br from-emerald-600 to-teal-700 rounded-2xl shadow-lg shadow-emerald-600/20 p-6 text-white relative overflow-hidden group">
+                <div className="bg-gradient-to-br from-emerald-600 to-teal-800 rounded-3xl shadow-xl shadow-emerald-900/20 p-6 text-white relative overflow-hidden group hover:scale-[1.02] transition-transform duration-300">
                     <div className="relative z-10">
-                        <div className="flex items-center justify-between mb-4">
-                            <h2 className="text-lg font-bold">Grow Team</h2>
-                            <div className="bg-white/20 p-2 rounded-lg backdrop-blur-sm"><ShareIcon /></div>
+                        <div className="flex items-start justify-between mb-6">
+                            <div>
+                                <h2 className="text-2xl font-heading font-bold text-white drop-shadow-md">Enroll FBO</h2>
+                                <p className="text-emerald-100 text-xs mt-1 font-medium">Build your downline today.</p>
+                            </div>
+                            <div className="bg-white/20 p-2.5 rounded-xl backdrop-blur-md shadow-inner border border-white/20">
+                                <Users size={24} className="text-white" />
+                            </div>
                         </div>
-                        <p className="text-emerald-50 text-xs mb-4 opacity-90">Share your invite link to build your downline.</p>
                         
-                        <div className="bg-black/20 rounded-xl p-1 text-xs font-mono text-white w-full border border-white/10 pl-3 flex items-center justify-between">
-                            <span className="truncate mr-2">{inviteLink}</span>
-                            <button onClick={copyToClipboard} className="bg-white text-emerald-700 p-1.5 rounded-lg hover:bg-emerald-50"><ClipboardIcon /></button>
+                        <div className="space-y-3">
+                            <button 
+                                onClick={() => setShowQR(!showQR)}
+                                className="w-full bg-white text-emerald-800 font-bold py-3 rounded-xl shadow-lg flex items-center justify-center gap-2 hover:bg-emerald-50 transition-colors text-sm"
+                            >
+                                {showQR ? <ShareIcon /> : <QrCode size={18} />}
+                                {showQR ? 'Show Link' : 'Show QR Code'}
+                            </button>
+
+                            {showQR ? (
+                                <div className="bg-white p-4 rounded-xl flex flex-col items-center justify-center animate-fade-in">
+                                    <div className="w-32 h-32 bg-slate-900 rounded-lg flex items-center justify-center text-white/50 mb-2">
+                                        <QrCode size={64} />
+                                    </div>
+                                    <p className="text-xs text-slate-500 font-mono text-center">Scan to Join Team</p>
+                                </div>
+                            ) : (
+                                <div className="bg-black/20 rounded-xl p-1.5 flex items-center justify-between border border-white/10 backdrop-blur-sm">
+                                    <div className="flex-1 min-w-0 px-3 py-1.5">
+                                        <p className="text-[10px] text-emerald-200 uppercase font-bold tracking-wider mb-0.5">Invite Link</p>
+                                        <p className="text-xs font-mono text-white truncate">{inviteLink}</p>
+                                    </div>
+                                    <button onClick={copyToClipboard} className="bg-white text-emerald-700 p-2 rounded-lg hover:bg-emerald-50 shadow-sm transition-transform active:scale-95" title="Copy Link">
+                                        <Copy size={16} />
+                                    </button>
+                                </div>
+                            )}
                         </div>
                     </div>
-                    <div className="absolute -right-6 -bottom-6 text-white/10 pointer-events-none">
-                        <Users size={120} />
+                    
+                    {/* Decorative Background Elements */}
+                    <div className="absolute -right-6 -bottom-6 text-white/5 pointer-events-none transform rotate-12">
+                        <Users size={160} />
                     </div>
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-400/20 rounded-full blur-3xl pointer-events-none"></div>
                 </div>
             )}
 

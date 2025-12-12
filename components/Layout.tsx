@@ -167,12 +167,14 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
   // Custom pages check
   const isCurriculumPage = /^\/training\/course\/[^/]+$/.test(location.pathname);
   const isPlayerPage = /^\/classroom\/[^/]+\/[^/]+\/[^/]+$/.test(location.pathname);
+  const isCourseBuilderPage = location.pathname.startsWith('/builder');
+  const isStudentsPage = location.pathname === '/students';
   
   // Routes that should use full width (no padding on mobile)
-  const isFullWidthPage = isChatPage || isClassroomPage || isCurriculumPage || isPlayerPage || isSalesPage || isSalesBuilderPage;
+  const isFullWidthPage = isChatPage || isClassroomPage || isCurriculumPage || isPlayerPage || isSalesPage || isSalesBuilderPage || isCourseBuilderPage || isStudentsPage;
   
   // Routes where default mobile header should be hidden
-  const shouldHideMobileHeader = isChatPage || isClassroomPage || isCurriculumPage || isPlayerPage || isSalesPage || isSalesBuilderPage;
+  const shouldHideMobileHeader = isChatPage || isClassroomPage || isCurriculumPage || isPlayerPage || isSalesPage || isSalesBuilderPage || isCourseBuilderPage || isStudentsPage;
 
   // Set initial bubble position safely
   useEffect(() => {
@@ -214,10 +216,10 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
 
   // Ensure header shows when leaving chat/classroom or resizing
   useEffect(() => {
-      if (!isChatPage && !isClassroomPage && !isCurriculumPage && !isPlayerPage && !isSalesPage && !isSalesBuilderPage) {
+      if (!isChatPage && !isClassroomPage && !isCurriculumPage && !isPlayerPage && !isSalesPage && !isSalesBuilderPage && !isCourseBuilderPage && !isStudentsPage) {
           setShowMobileHeader(true);
       }
-  }, [isChatPage, isClassroomPage, isCurriculumPage, isPlayerPage, isSalesPage, isSalesBuilderPage]);
+  }, [isChatPage, isClassroomPage, isCurriculumPage, isPlayerPage, isSalesPage, isSalesBuilderPage, isCourseBuilderPage, isStudentsPage]);
 
   // Click outside handler for Profile Menu
   useEffect(() => {

@@ -2,7 +2,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Course, Module, Chapter, CourseTrack, CourseLevel, CourseStatus, ContentBlock, BlockType, CourseTestimonial, Student } from '../types';
-import { Eye, X, PlayCircle, FileText, HelpCircle, ChevronDown, ChevronRight, CheckCircle, Menu, BookOpen, Clock, Plus, Trash2, ArrowUp, ArrowDown, LayoutTemplate, Type, Image as ImageIcon, List, Quote, AlertCircle, ArrowLeft, ShoppingBag, Users, Sparkles, Save, Search, Check, Wand2, Loader2, MessageSquare, Settings, Rocket, BarChart, Edit, Maximize2, MoreHorizontal, Eraser, AlertTriangle, Lock } from 'lucide-react';
+import { Eye, X, PlayCircle, FileText, HelpCircle, ChevronDown, ChevronRight, CheckCircle, Menu, BookOpen, Clock, Plus, Trash2, ArrowUp, ArrowDown, LayoutTemplate, Type, Image as ImageIcon, List, Quote, AlertCircle, ArrowLeft, ShoppingBag, Users, Sparkles, Save, Search, Check, Wand2, Loader2, MessageSquare, Settings, Rocket, BarChart, Edit, Maximize2, MoreHorizontal, Eraser, AlertTriangle, Lock, ChevronLeft } from 'lucide-react';
 import { generateModuleContent } from '../services/geminiService';
 
 // --- HELPER COMPONENTS (Defined Top-Level to avoid Reference Errors) ---
@@ -510,7 +510,7 @@ const CourseBuilder: React.FC<CourseBuilderProps> = ({ currentUserHandle, course
         durationMinutes: 10, 
         actionSteps: [], 
         isPublished: true, 
-        allowComments: true,
+        allowComments: true, 
         type: 'TEXT' // Add this
     };
     setCourse(prev => ({ ...prev, modules: prev.modules.map(m => m.id === moduleId ? { ...m, chapters: [...m.chapters, newChapter] } : m) }));
@@ -659,14 +659,14 @@ const CourseBuilder: React.FC<CourseBuilderProps> = ({ currentUserHandle, course
   );
 
   const renderStep2_Curriculum = () => (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full relative">
       <div className="flex justify-between items-center mb-4 px-2 shrink-0">
         <div><h2 className="text-lg md:text-xl font-bold text-slate-800 dark:text-slate-100 font-heading">Curriculum</h2><p className="text-sm text-slate-500 dark:text-slate-400">Structure your course.</p></div>
         <div className="flex gap-2">
             <button 
                 onClick={handleAIGenerate} 
                 disabled={isGeneratingAI} 
-                className="bg-indigo-600 text-white p-3 sm:px-4 sm:py-2.5 rounded-xl font-bold hover:bg-indigo-700 transition-colors shadow-lg shadow-indigo-200 dark:shadow-none flex items-center gap-2 disabled:opacity-70"
+                className="hidden md:flex bg-indigo-600 text-white p-3 sm:px-4 sm:py-2.5 rounded-xl font-bold hover:bg-indigo-700 transition-colors shadow-lg shadow-indigo-200 dark:shadow-none items-center gap-2 disabled:opacity-70"
                 title="AI Generate"
             >
                 {isGeneratingAI ? <Loader2 className="animate-spin" size={18} /> : <Wand2 size={18} />} 
@@ -702,6 +702,14 @@ const CourseBuilder: React.FC<CourseBuilderProps> = ({ currentUserHandle, course
           </div>
         ))}
       </div>
+      {/* Floating AI Button Mobile - Fix not movable */}
+      <button 
+          onClick={handleAIGenerate}
+          disabled={isGeneratingAI}
+          className="fixed bottom-24 right-4 z-40 md:hidden bg-indigo-600 text-white p-3 rounded-full shadow-xl shadow-indigo-500/30 hover:bg-indigo-700 transition-all active:scale-95 border border-white/20 disabled:opacity-70 flex items-center justify-center"
+      >
+          {isGeneratingAI ? <Loader2 className="animate-spin" size={24} /> : <Wand2 size={24} />}
+      </button>
     </div>
   );
 
@@ -1118,25 +1126,72 @@ const CourseBuilder: React.FC<CourseBuilderProps> = ({ currentUserHandle, course
         }
       `}</style>
       
-      {/* Modern Header */}
-      <div className="flex items-center justify-between mb-6 md:mb-10 shrink-0">
+      {/* 
+          CUSTOM MOBILE HEADER
+          Hidden on desktop (md:hidden). 
+          Positioned fixed/absolute at top or simply rendered first in flex column.
+          Since Layout is handling container, we put this at top of flex column.
+      */}
+      <div className="md:hidden flex items-center justify-between mb-4 shrink-0 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 -mx-4 -mt-4 p-4 sticky top-0 z-40">
+          <div className="flex items-center gap-3">
+              <button 
+                  onClick={handleBack} 
+                  className="p-1 -ml-1 text-slate-900 dark:text-white font-bold"
+              >
+                  <ChevronLeft strokeWidth={3} size={24} />
+              </button>
+              <h1 className="text-xl font-extrabold text-slate-900 dark:text-white font-heading">
+                  {step === 5 ? 'Analytics' : 'Course Builder'}
+              </h1>
+          </div>
+          
+          <div className="flex items-center gap-3">
+              {/* Step 1 (Info), 2 (Curriculum), 3 (Settings) show Clear Field & Preview */}
+              {[1, 2, 3].includes(step) && (
+                  <>
+                      <button onClick={handleClearClick} className="text-slate-600 dark:text-slate-300 p-1">
+                          <Eraser size={22} />
+                      </button>
+                      <button onClick={() => setIsPreviewMode(true)} className="text-slate-600 dark:text-slate-300 p-1">
+                          <Eye size={22} />
+                      </button>
+                  </>
+              )}
+
+              {/* Step 2 (Curriculum) also shows Add Module */}
+              {step === 2 && (
+                  <button onClick={addModule} className="text-slate-600 dark:text-slate-300 p-1">
+                      <Plus size={24} strokeWidth={2.5} />
+                  </button>
+              )}
+
+              {/* Step 4 (Launch) shows only Preview (Clear field absent per request) */}
+              {step === 4 && (
+                  <button onClick={() => setIsPreviewMode(true)} className="text-slate-600 dark:text-slate-300 p-1">
+                      <Eye size={22} />
+                  </button>
+              )}
+
+              {/* Step 5 (Analytics) shows nothing on right per request */}
+          </div>
+      </div>
+
+      {/* Desktop Header */}
+      <div className="hidden md:flex items-center justify-between mb-6 md:mb-10 shrink-0">
          <div className="flex items-center gap-3 md:gap-6">
             <button onClick={handleBack} className="group flex items-center justify-center w-12 h-12 rounded-full bg-white border border-slate-200 shadow-sm hover:shadow-md hover:border-slate-300 transition-all dark:bg-slate-800 dark:border-slate-700 dark:hover:border-slate-600">
                 <ArrowLeftIcon />
             </button>
             <div>
-                {/* Conditional Title: Analytics on Step 5, Course Builder otherwise */}
                 <h1 className="text-lg md:text-3xl font-bold text-slate-900 font-heading tracking-tight dark:text-white">
                     {step === 5 ? 'Analytics' : 'Course Builder'}
                 </h1>
-                {/* Hide editing subtext on Analytics page to keep it clean */}
                 {step !== 5 && (
                     <p className="text-sm text-slate-500 font-medium mt-1 dark:text-slate-400 hidden sm:block">{courseId !== 'new' ? 'Editing' : 'Crafting'}: <span className="text-emerald-600 dark:text-emerald-400">{course.title || 'Untitled Course'}</span></p>
                 )}
             </div>
          </div>
          <div className="flex gap-3">
-            {/* Clear Button - Steps 1, 2, 3 */}
             {[1, 2, 3].includes(step) && (
                 <button 
                     onClick={handleClearClick} 
@@ -1147,8 +1202,6 @@ const CourseBuilder: React.FC<CourseBuilderProps> = ({ currentUserHandle, course
                     <span className="hidden md:inline">Clear</span>
                 </button>
             )}
-
-            {/* Hide Preview on Analytics step (Step 5) */}
             {step !== 5 && (
                 <button onClick={() => setIsPreviewMode(true)} className="flex items-center gap-2 bg-white text-slate-700 px-3 py-2 md:px-6 md:py-3 rounded-xl text-xs md:text-sm font-bold border border-slate-200 hover:bg-slate-50 hover:border-slate-300 transition-all shadow-sm dark:bg-slate-800 dark:border-slate-700 dark:text-white dark:hover:bg-slate-700">
                     <Eye size={18} /> <span className="hidden sm:inline">Preview</span>

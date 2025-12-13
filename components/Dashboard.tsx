@@ -5,7 +5,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Student, UserRole, Course, CourseTrack, CourseStatus, MentorshipTemplate, Broadcast, AppNotification, Assignment } from '../types';
 import { 
     Users, TrendingUp, Calendar, ArrowUpRight, Award, 
-    BookOpen, DollarSign, Target, MessageSquare, PlusCircle, 
+    BookOpen, DollarSign, CircleDollarSign, Target, MessageSquare, PlusCircle, 
     BarChart2, Zap, ArrowRight, Layout, ArrowLeft, Clock, Globe, UserPlus, Shield,
     ShoppingCart, GraduationCap, Bell, Flag, Store, Lock, CheckCircle
 } from 'lucide-react';
@@ -25,7 +25,7 @@ const InfoCard = ({ title, children, icon: Icon, colorClass, className = "" }: {
     <div className={`bg-white dark:bg-slate-800 rounded-[1.25rem] p-5 shadow-sm border border-slate-100 dark:border-slate-700 flex flex-col gap-3 ${className}`}>
         <div className="flex items-center gap-3 mb-0">
             <div className={`w-8 h-8 rounded-full flex items-center justify-center ${colorClass}`}>
-                <Icon size={16} />
+                <Icon size={18} strokeWidth={2.5} fill="currentColor" className="opacity-90" />
             </div>
             <h3 className="font-bold text-slate-700 dark:text-slate-200 text-xs uppercase tracking-wide">{title}</h3>
         </div>
@@ -432,7 +432,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                     </InfoCard>
 
                     {/* 3. Earnings & Rewards */}
-                    <InfoCard title="Earnings & Rewards" icon={DollarSign} colorClass="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">
+                    <InfoCard title="Earnings & Rewards" icon={CircleDollarSign} colorClass="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">
                         <div className="mb-3">
                             <span className="text-2xl font-bold text-slate-900 dark:text-white font-heading">${monthlyEarnings.toLocaleString()}</span>
                             <p className="text-[10px] text-slate-400 uppercase font-bold mt-0.5">Est. Earnings</p>

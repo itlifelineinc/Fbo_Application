@@ -379,12 +379,27 @@ const Dashboard: React.FC<DashboardProps> = ({
         {/*    MOBILE VIEW (Classic) */}
         {/* ======================= */}
         <div className="md:hidden p-4 space-y-6 pb-32">
-            {/* 1. Welcome Section */}
-            <div>
-                <h1 className="text-2xl font-bold text-slate-900 dark:text-white font-heading">
-                    Hello, {currentUser.name.split(' ')[0]}
-                </h1>
-                <p className="text-sm text-slate-500 dark:text-slate-400">Here's your business at a glance.</p>
+            {/* 1. Welcome Section - Redesigned */}
+            <div className="bg-gradient-to-r from-slate-900 to-slate-800 rounded-[1.5rem] p-6 flex items-center gap-5 shadow-sm relative overflow-hidden">
+                {/* Background Decor */}
+                <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -mr-10 -mt-10 blur-2xl pointer-events-none"></div>
+                <div className="absolute bottom-0 left-10 w-24 h-24 bg-emerald-500/10 rounded-full blur-2xl pointer-events-none"></div>
+
+                {/* Glass Container with Waving Hand */}
+                <div className="bg-white/10 backdrop-blur-md border border-white/10 p-3.5 rounded-2xl shadow-lg flex items-center justify-center shrink-0 z-10">
+                    <span className="material-symbols-outlined text-white select-none animate-wave" style={{ fontSize: '32px', fontWeight: 'bold' }}>
+                        hand_gesture
+                    </span>
+                </div>
+
+                {/* Text & Underline */}
+                <div className="z-10">
+                    <h1 className="text-2xl font-bold text-white font-heading tracking-tight">
+                        Hello, {currentUser.name.split(' ')[0]}
+                    </h1>
+                    {/* Custom Underline */}
+                    <div className="h-1 w-8 bg-emerald-500 mt-2 rounded-full"></div>
+                </div>
             </div>
 
             {/* 2. Stats Carousel (Horizontal Slider of Desktop Cards) */}

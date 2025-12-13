@@ -137,9 +137,9 @@ const InfoCard = ({
         <div className="flex items-center gap-3 mb-0 shrink-0">
             <div className={`w-7 h-7 lg:w-8 lg:h-8 rounded-full flex items-center justify-center shrink-0 ${colorClass}`}>
                 {iconStyle === 'FILLED' ? (
-                    <Icon size={16} strokeWidth={2.5} fill="currentColor" className="opacity-90 lg:w-[18px] lg:h-[18px]" />
+                    <Icon size={16} strokeWidth={3} fill="currentColor" className="opacity-90 lg:w-[18px] lg:h-[18px]" />
                 ) : (
-                    <Icon size={18} strokeWidth={2.5} className="opacity-90 lg:w-[20px] lg:h-[20px]" />
+                    <Icon size={18} strokeWidth={3} className="opacity-90 lg:w-[20px] lg:h-[20px]" />
                 )}
             </div>
             <h3 className="font-bold text-slate-700 dark:text-slate-200 text-[10px] lg:text-xs uppercase tracking-wide truncate">{title}</h3>
@@ -186,7 +186,7 @@ const ShortcutItem = ({
                 ${disabled ? 'text-slate-300' : 'text-slate-600 group-hover:text-slate-800 group-hover:scale-110 dark:text-slate-400 dark:group-hover:text-white'}
             `}>
                 <Icon 
-                    strokeWidth={2.5}
+                    strokeWidth={3}
                     className="w-8 h-8 lg:w-12 lg:h-12 fill-slate-50 dark:fill-slate-700/50"
                 />
                 {disabled && <div className="absolute -top-1 -right-1 bg-slate-200 rounded-full p-1"><Lock size={12} className="text-slate-500" /></div>}
@@ -543,7 +543,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                         onClick={() => setIsBusinessDrawerOpen(false)} 
                         className="p-2 -ml-2 hover:bg-slate-100 rounded-full dark:hover:bg-slate-800 transition-colors"
                       >
-                          <ChevronLeft size={28} className="text-slate-900 dark:text-white" strokeWidth={2.5} />
+                          <ChevronLeft size={28} className="text-slate-900 dark:text-white" strokeWidth={3} />
                       </button>
                       <h1 className="text-xl font-bold text-slate-900 dark:text-white font-heading">My Business</h1>
                   </div>

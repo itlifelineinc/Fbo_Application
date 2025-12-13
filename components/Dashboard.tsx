@@ -6,7 +6,7 @@ import {
     Users, TrendingUp, Calendar, ArrowUpRight, Award, 
     BookOpen, DollarSign, CircleDollarSign, Target, MessageSquare, PlusCircle, 
     BarChart2, Zap, ArrowRight, Layout, ArrowLeft, Clock, Globe, UserPlus, Shield,
-    ShoppingCart, GraduationCap, Bell, Flag, Store, Lock, CheckCircle, X, PieChart as PieChartIcon, Activity, Lightbulb, ChevronLeft, HelpCircle
+    ShoppingCart, GraduationCap, Bell, Flag, Store, Lock, CheckCircle, X, PieChart as PieChartIcon, Activity, Lightbulb, ChevronLeft, HelpCircle, Hand, Medal
 } from 'lucide-react';
 import { RANKS, RANK_ORDER } from '../constants';
 
@@ -704,9 +704,7 @@ const Dashboard: React.FC<DashboardProps> = ({
 
                 {/* Glass Container with Waving Hand */}
                 <div className="bg-white/10 backdrop-blur-md border border-white/10 p-3.5 rounded-2xl shadow-lg flex items-center justify-center shrink-0 z-10">
-                    <span className="material-symbols-outlined text-white select-none animate-wave" style={{ fontSize: '32px', fontWeight: 'bold' }}>
-                        waving_hand
-                    </span>
+                    <Hand size={32} className="text-white animate-wave" strokeWidth={3} />
                 </div>
 
                 {/* Text & Underline */}
@@ -1020,10 +1018,8 @@ const Dashboard: React.FC<DashboardProps> = ({
                             
                             {/* Glass Container with Waving Hand */}
                             <div className="bg-white/10 backdrop-blur-md border border-white/10 p-2 lg:p-3 rounded-2xl shadow-lg flex items-center justify-center">
-                                {/* Using the Waving Hand Icon - Google Font */}
-                                <span className="material-symbols-outlined text-white select-none animate-wave" style={{ fontSize: '28px', fontWeight: 'bold' }}>
-                                    waving_hand
-                                </span>
+                                {/* Using Lucide Hand Icon instead of Font for consistency and reliability */}
+                                <Hand size={28} className="text-white animate-wave" strokeWidth={3} />
                             </div>
 
                             {/* Welcome Text */}
@@ -1034,12 +1030,10 @@ const Dashboard: React.FC<DashboardProps> = ({
                             </div>
                         </div>
 
-                        {/* Right Green Icon (Trophy) - Updated to award_star, increased size, and positioned at bottom to avoid date overlap */}
+                        {/* Right Green Icon (Trophy) - Updated to Medal (Lucide) */}
                         <div className="relative z-10 hidden md:flex items-center justify-center mr-4 lg:mr-8 self-end mb-3">
                             <div className="w-16 h-16 lg:w-20 lg:h-20 bg-gradient-to-br from-emerald-400 to-teal-600 rounded-2xl rotate-3 flex items-center justify-center shadow-2xl shadow-emerald-900/50 border-4 border-white/10">
-                                <span className="material-symbols-outlined text-white" style={{ fontSize: '32px' }}>
-                                    award_star
-                                </span>
+                                <Medal size={32} className="text-white" strokeWidth={3} />
                             </div>
                         </div>
                     </div>

@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { Link, useNavigate } from 'react-router-dom';
 import { Student, UserRole, Course, CourseTrack, CourseStatus, MentorshipTemplate, Broadcast, AppNotification, Assignment } from '../types';
@@ -7,7 +7,7 @@ import {
     Users, TrendingUp, Calendar, ArrowUpRight, Award, 
     BookOpen, DollarSign, CircleDollarSign, Target, MessageSquare, PlusCircle, 
     BarChart2, Zap, ArrowRight, Layout, ArrowLeft, Clock, Globe, UserPlus, Shield,
-    ShoppingCart, GraduationCap, Bell, Flag, Store, Lock, CheckCircle
+    ShoppingCart, GraduationCap, Bell, Flag, Store, Lock, CheckCircle, Hand
 } from 'lucide-react';
 import { RANKS } from '../constants';
 
@@ -169,6 +169,65 @@ const Dashboard: React.FC<DashboardProps> = ({
 }) => {
   const navigate = useNavigate();
   const [viewMode, setViewMode] = useState<'DASHBOARD' | 'GOALS'>('DASHBOARD');
+  
+  // Auto-scroll ref
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+  // --- AUTO SCROLL EFFECT ---
+  useEffect(() => {
+    const scrollContainer = scrollContainerRef.current;
+    if (!scrollContainer) return;
+
+    let scrollInterval: any;
+
+    const startAutoScroll = () => {
+      scrollInterval = setInterval(() => {
+        if (!scrollContainer) return;
+        
+        // Use first child to determine card width + gap (approx)
+        const firstCard = scrollContainer.firstElementChild as HTMLElement;
+        if (!firstCard) return;
+        
+        const itemWidth = firstCard.offsetWidth;
+        const gap = 16; // 1rem = 16px (gap-4)
+        const scrollStep = itemWidth + gap;
+        
+        const maxScroll = scrollContainer.scrollWidth - scrollContainer.clientWidth;
+        
+        // Loop back to start if at end
+        if (scrollContainer.scrollLeft >= maxScroll - 10) {
+           scrollContainer.scrollTo({ left: 0, behavior: 'smooth' });
+        } else {
+           scrollContainer.scrollTo({ left: scrollContainer.scrollLeft + scrollStep, behavior: 'smooth' });
+        }
+      }, 5000); // Scroll every 5 seconds
+    };
+
+    startAutoScroll();
+
+    // Pause functionality on interaction
+    const stopAutoScroll = () => clearInterval(scrollInterval);
+    
+    // Resume functionality
+    const resumeAutoScroll = () => {
+        stopAutoScroll(); // Clear existing to prevent double timers
+        startAutoScroll();
+    };
+
+    // Attach listeners
+    scrollContainer.addEventListener('touchstart', stopAutoScroll);
+    scrollContainer.addEventListener('touchend', resumeAutoScroll);
+    scrollContainer.addEventListener('mouseenter', stopAutoScroll); // Desktop mouse
+    scrollContainer.addEventListener('mouseleave', resumeAutoScroll);
+
+    return () => {
+      clearInterval(scrollInterval);
+      scrollContainer.removeEventListener('touchstart', stopAutoScroll);
+      scrollContainer.removeEventListener('touchend', resumeAutoScroll);
+      scrollContainer.removeEventListener('mouseenter', stopAutoScroll);
+      scrollContainer.removeEventListener('mouseleave', resumeAutoScroll);
+    };
+  }, []);
 
   // --- DERIVED DATA ---
   
@@ -329,7 +388,7 @@ const Dashboard: React.FC<DashboardProps> = ({
             </div>
 
             {/* 2. Stats Carousel (Horizontal Slider of Desktop Cards) */}
-            <div className="flex overflow-x-auto gap-4 pb-4 -mx-4 px-4 snap-x no-scrollbar">
+            <div ref={scrollContainerRef} className="flex overflow-x-auto gap-4 pb-4 -mx-4 px-4 snap-x no-scrollbar">
                 
                 {/* Card 1: Rank Progress */}
                 <div className="min-w-[85vw] snap-center">
@@ -595,30 +654,48 @@ const Dashboard: React.FC<DashboardProps> = ({
                 {/* RIGHT COLUMN: Main Area */}
                 <div className="lg:col-span-3 space-y-4">
                     
-                    {/* A. Welcome Banner (Reduced Height to match Rank Card approx 192px) */}
-                    <div className="h-48 relative bg-gradient-to-r from-slate-900 to-slate-800 rounded-[1.25rem] p-6 overflow-hidden shadow-sm text-white flex flex-col justify-center">
-                        <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -mr-16 -mt-16 blur-3xl"></div>
-                        <div className="absolute bottom-0 left-20 w-48 h-48 bg-emerald-500/20 rounded-full blur-3xl"></div>
+                    {/* A. Welcome Banner (Redesigned) */}
+                    <div className="h-48 relative bg-gradient-to-r from-slate-900 to-slate-800 rounded-[1.25rem] px-8 flex items-center justify-between relative overflow-hidden shadow-sm">
+                        <style>{`
+                            @keyframes wave {
+                                0% { transform: rotate(0deg); }
+                                10% { transform: rotate(14deg); }
+                                20% { transform: rotate(-8deg); }
+                                30% { transform: rotate(14deg); }
+                                40% { transform: rotate(-4deg); }
+                                50% { transform: rotate(10deg); }
+                                60% { transform: rotate(0deg); }
+                                100% { transform: rotate(0deg); }
+                            }
+                            .animate-wave {
+                                animation: wave 2s infinite;
+                                transform-origin: 70% 70%;
+                            }
+                        `}</style>
                         
-                        <div className="relative z-10 flex flex-row justify-between items-center gap-6 h-full">
-                            <div>
-                                <div className="flex items-center gap-3 mb-2">
-                                    <span className="bg-white/20 backdrop-blur-md px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border border-white/10">
-                                        {new Date().toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric' })}
-                                    </span>
-                                </div>
-                                <h1 className="text-2xl font-bold font-heading mb-1">
-                                    Welcome back, {currentUser.name.split(' ')[0]}!
-                                </h1>
-                                <p className="text-slate-300 max-w-lg text-xs font-light leading-relaxed line-clamp-2">
-                                    "Success is not the key to happiness. Happiness is the key to success. If you love what you are doing, you will be successful."
-                                </p>
+                        {/* Background Decor */}
+                        <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -mr-16 -mt-16 blur-3xl pointer-events-none"></div>
+                        <div className="absolute bottom-0 left-20 w-48 h-48 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none"></div>
+
+                        {/* Date Top Right */}
+                        <div className="absolute top-6 right-6 text-slate-400 text-sm font-medium tracking-wide">
+                            {new Date().toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric' })}
+                        </div>
+
+                        {/* Left Container */}
+                        <div className="bg-white/10 backdrop-blur-sm border border-white/5 p-6 rounded-2xl flex items-center gap-5 z-10">
+                            <div className="bg-emerald-500/20 p-3 rounded-xl">
+                                <Hand className="text-emerald-400 animate-wave" size={32} strokeWidth={2.5} />
                             </div>
-                            
-                            <div className="hidden md:block">
-                                <div className="w-20 h-20 bg-gradient-to-br from-emerald-400 to-teal-600 rounded-2xl rotate-3 flex items-center justify-center shadow-2xl shadow-emerald-900/50 border-4 border-white/10">
-                                    <TrophyIcon className="w-10 h-10 text-white" />
-                                </div>
+                            <div>
+                                <h1 className="text-3xl font-bold text-white font-heading tracking-tight">Welcome, {currentUser.name.split(' ')[0]}</h1>
+                            </div>
+                        </div>
+
+                        {/* Right Green Icon (Trophy) */}
+                        <div className="relative z-10 hidden md:flex items-center justify-center mr-12">
+                            <div className="w-20 h-20 bg-gradient-to-br from-emerald-400 to-teal-600 rounded-2xl rotate-3 flex items-center justify-center shadow-2xl shadow-emerald-900/50 border-4 border-white/10">
+                                <TrophyIcon className="w-10 h-10 text-white" />
                             </div>
                         </div>
                     </div>

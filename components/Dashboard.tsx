@@ -7,7 +7,7 @@ import {
     Users, TrendingUp, Calendar, ArrowUpRight, Award, 
     BookOpen, DollarSign, CircleDollarSign, Target, MessageSquare, PlusCircle, 
     BarChart2, Zap, ArrowRight, Layout, ArrowLeft, Clock, Globe, UserPlus, Shield,
-    ShoppingCart, GraduationCap, Bell, Flag, Store, Lock, CheckCircle, Hand
+    ShoppingCart, GraduationCap, Bell, Flag, Store, Lock, CheckCircle
 } from 'lucide-react';
 import { RANKS } from '../constants';
 
@@ -655,7 +655,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                 <div className="lg:col-span-3 space-y-4">
                     
                     {/* A. Welcome Banner (Redesigned) */}
-                    <div className="h-48 relative bg-gradient-to-r from-slate-900 to-slate-800 rounded-[1.25rem] px-8 flex items-center justify-between relative overflow-hidden shadow-sm">
+                    <div className="h-48 relative bg-gradient-to-r from-slate-900 to-slate-800 rounded-[1.25rem] px-8 flex items-center justify-between overflow-hidden shadow-sm">
                         <style>{`
                             @keyframes wave {
                                 0% { transform: rotate(0deg); }
@@ -668,8 +668,9 @@ const Dashboard: React.FC<DashboardProps> = ({
                                 100% { transform: rotate(0deg); }
                             }
                             .animate-wave {
-                                animation: wave 2s infinite;
+                                animation: wave 2.5s infinite;
                                 transform-origin: 70% 70%;
+                                display: inline-block;
                             }
                         `}</style>
                         
@@ -682,17 +683,26 @@ const Dashboard: React.FC<DashboardProps> = ({
                             {new Date().toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric' })}
                         </div>
 
-                        {/* Left Container */}
-                        <div className="bg-white/10 backdrop-blur-sm border border-white/5 p-6 rounded-2xl flex items-center gap-5 z-10">
-                            <div className="bg-emerald-500/20 p-3 rounded-xl">
-                                <Hand className="text-emerald-400 animate-wave" size={32} strokeWidth={2.5} />
+                        {/* Left Group */}
+                        <div className="flex items-center gap-6 z-10">
+                            
+                            {/* Glass Container with Waving Hand */}
+                            <div className="bg-white/10 backdrop-blur-md border border-white/10 p-4 rounded-2xl shadow-lg flex items-center justify-center">
+                                {/* Using the Waving Hand Icon - Google Font */}
+                                <span className="material-symbols-outlined text-white select-none animate-wave" style={{ fontSize: '40px', fontWeight: 'bold' }}>
+                                    hand_gesture
+                                </span>
                             </div>
+
+                            {/* Welcome Text */}
                             <div>
-                                <h1 className="text-3xl font-bold text-white font-heading tracking-tight">Welcome, {currentUser.name.split(' ')[0]}</h1>
+                                <h1 className="text-3xl md:text-4xl font-bold text-white font-heading tracking-tight drop-shadow-md">
+                                    Welcome, {currentUser.name.split(' ')[0]}
+                                </h1>
                             </div>
                         </div>
 
-                        {/* Right Green Icon (Trophy) */}
+                        {/* Right Green Icon (Trophy) - Kept on far right as requested */}
                         <div className="relative z-10 hidden md:flex items-center justify-center mr-12">
                             <div className="w-20 h-20 bg-gradient-to-br from-emerald-400 to-teal-600 rounded-2xl rotate-3 flex items-center justify-center shadow-2xl shadow-emerald-900/50 border-4 border-white/10">
                                 <TrophyIcon className="w-10 h-10 text-white" />

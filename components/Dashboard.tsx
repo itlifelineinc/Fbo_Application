@@ -18,14 +18,54 @@ const TrophyIcon = ({className}:{className?:string}) => (
     </svg>
 );
 
+// Custom Outline Icons (Thick Border)
+const MoneyBagIcon = ({ size, strokeWidth, className }: { size: number, strokeWidth: number, className?: string }) => (
+    <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" className={className}>
+        <path d="M6 9a6 6 0 0 1 12 0v2.3c0 2.6-1.5 4.9-3.9 6-1 .5-2.2.7-3.4.5a7.5 7.5 0 0 1-4.7-2.8c-1.1-1.5-1.7-3.4-1.7-5.3V9Z" />
+        <path d="M6 9h12" />
+        <path d="M10 14h4" />
+        <path d="M12 12v4" />
+        <path d="M10 5a2 2 0 1 1 4 0" />
+    </svg>
+);
+
+const AutoStoriesIcon = ({ size, strokeWidth, className }: { size: number, strokeWidth: number, className?: string }) => (
+    <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" className={className}>
+        <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
+        <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
+        <path d="M6 8h2" />
+        <path d="M6 12h2" />
+        <path d="M16 8h2" />
+        <path d="M16 12h2" />
+    </svg>
+);
+
 // --- SUB-COMPONENTS ---
 
 // A. Left Column Card (Compact)
-const InfoCard = ({ title, children, icon: Icon, colorClass, className = "" }: { title: string, children?: React.ReactNode, icon: any, colorClass: string, className?: string }) => (
+const InfoCard = ({ 
+    title, 
+    children, 
+    icon: Icon, 
+    colorClass, 
+    className = "", 
+    iconStyle = 'FILLED' 
+}: { 
+    title: string, 
+    children?: React.ReactNode, 
+    icon: any, 
+    colorClass: string, 
+    className?: string,
+    iconStyle?: 'FILLED' | 'OUTLINE' 
+}) => (
     <div className={`bg-white dark:bg-slate-800 rounded-[1.25rem] p-5 shadow-sm border border-slate-100 dark:border-slate-700 flex flex-col gap-3 ${className}`}>
         <div className="flex items-center gap-3 mb-0">
             <div className={`w-8 h-8 rounded-full flex items-center justify-center ${colorClass}`}>
-                <Icon size={18} strokeWidth={2.5} fill="currentColor" className="opacity-90" />
+                {iconStyle === 'FILLED' ? (
+                    <Icon size={18} strokeWidth={2.5} fill="currentColor" className="opacity-90" />
+                ) : (
+                    <Icon size={20} strokeWidth={2.5} className="opacity-90" />
+                )}
             </div>
             <h3 className="font-bold text-slate-700 dark:text-slate-200 text-xs uppercase tracking-wide">{title}</h3>
         </div>
@@ -431,8 +471,8 @@ const Dashboard: React.FC<DashboardProps> = ({
                         )}
                     </InfoCard>
 
-                    {/* 3. Earnings & Rewards */}
-                    <InfoCard title="Earnings & Rewards" icon={CircleDollarSign} colorClass="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">
+                    {/* 3. Earnings & Rewards (Updated Icon Style) */}
+                    <InfoCard title="Earnings & Rewards" icon={MoneyBagIcon} iconStyle="OUTLINE" colorClass="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">
                         <div className="mb-3">
                             <span className="text-2xl font-bold text-slate-900 dark:text-white font-heading">${monthlyEarnings.toLocaleString()}</span>
                             <p className="text-[10px] text-slate-400 uppercase font-bold mt-0.5">Est. Earnings</p>
@@ -456,8 +496,8 @@ const Dashboard: React.FC<DashboardProps> = ({
                         </div>
                     </InfoCard>
 
-                    {/* 4. Learning & Activity */}
-                    <InfoCard title="Learning Status" icon={BookOpen} colorClass="bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400">
+                    {/* 4. Learning & Activity (Updated Icon Style) */}
+                    <InfoCard title="Learning Status" icon={AutoStoriesIcon} iconStyle="OUTLINE" colorClass="bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400">
                         <div className="grid grid-cols-3 gap-2 mb-3 text-center">
                             <div className="bg-purple-50 rounded-lg p-2 dark:bg-purple-900/10">
                                 <span className="block text-lg font-bold text-purple-700 dark:text-purple-300">{inProgressCourses}</span>

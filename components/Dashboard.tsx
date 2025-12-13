@@ -310,7 +310,7 @@ const Dashboard: React.FC<DashboardProps> = ({
             <div>
                 <SectionHeader title="Shortcuts" />
                 <div className="bg-white dark:bg-slate-800 rounded-[2rem] p-4 shadow-sm border border-slate-100 dark:border-slate-700">
-                    <div className="grid grid-cols-3 gap-y-6 gap-x-2">
+                    <div className="grid grid-cols-2 gap-y-6 gap-x-6">
                         <ShortcutItem 
                             title="My Business" 
                             desc="Track CC"

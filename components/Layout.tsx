@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Student, UserRole, Course, AppNotification } from '../types';
-import { LogOut, Settings, Moon, Sun, ChevronDown, Award, Bell, LayoutTemplate, Minimize2, X, GripHorizontal, Menu, Home, BookOpen, Globe, Users, MessageCircle, DollarSign, Rocket, Layers, MoreHorizontal } from 'lucide-react';
+import { LogOut, Settings, Moon, Sun, ChevronDown, Award, Bell, LayoutTemplate, Minimize2, X, GripHorizontal, Menu, Home, BookOpen, Globe, Users, MessageCircle, DollarSign, Rocket, Layers, MoreHorizontal, User } from 'lucide-react';
 import { RANKS } from '../constants';
 import { Logo } from './Logo';
 
@@ -189,9 +189,9 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
       <div className="flex-1 flex flex-col h-full overflow-hidden relative">
         
         {/* 
-            2. UNIVERSAL TOP NAVBAR
+            2. UNIVERSAL TOP NAVBAR (Raised with Shadow)
         */}
-        <header className="h-16 md:h-20 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between px-4 md:px-8 shrink-0 z-40 relative">
+        <header className="h-16 md:h-20 bg-white dark:bg-slate-900 flex items-center justify-between px-4 md:px-8 shrink-0 z-40 relative shadow-md">
             <div className="flex items-center gap-4">
                 {/* Desktop Hamburger Only */}
                 <button 
@@ -217,14 +217,6 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
 
             <div className="flex items-center gap-3 md:gap-6">
                 
-                {/* Rank Badge (Desktop) */}
-                <div className="hidden md:flex items-center gap-3 px-4 py-1.5 bg-slate-50 dark:bg-slate-800 rounded-full border border-slate-200 dark:border-slate-700">
-                    <div className="w-6 h-6 rounded-full bg-emerald-100 flex items-center justify-center dark:bg-emerald-900/50">
-                        <Award size={14} className="text-emerald-600 dark:text-emerald-400" />
-                    </div>
-                    <span className="text-sm font-bold text-slate-700 dark:text-slate-200">{currentRankName}</span>
-                </div>
-
                 {/* Notifications */}
                 <div className="relative">
                     <button 
@@ -259,45 +251,72 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
                     )}
                 </div>
 
-                {/* Profile Dropdown */}
+                {/* Profile Dropdown (Only Image) */}
                 <div className="relative">
                     <button 
                         ref={profileBtnRef}
                         onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
-                        className="flex items-center gap-3 pl-1 pr-2 py-1 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-all border border-transparent hover:border-slate-200 dark:hover:border-slate-700"
+                        className="flex items-center justify-center rounded-full hover:ring-4 ring-slate-100 dark:ring-slate-800 transition-all focus:outline-none"
                     >
-                        <div className="w-9 h-9 rounded-full bg-emerald-600 text-white flex items-center justify-center font-bold text-sm shadow-md ring-2 ring-white dark:ring-slate-900 overflow-hidden">
+                        <div className="w-10 h-10 rounded-full bg-emerald-600 text-white flex items-center justify-center font-bold text-sm shadow-md ring-2 ring-white dark:ring-slate-900 overflow-hidden">
                             {currentUser.avatarUrl ? <img src={currentUser.avatarUrl} className="w-full h-full object-cover" /> : currentUser.name.charAt(0)}
                         </div>
-                        <div className="hidden md:block text-left">
-                            <p className="text-sm font-bold text-slate-700 dark:text-slate-200 leading-none">{currentUser.name.split(' ')[0]}</p>
-                            <p className="text-[10px] text-slate-400 font-medium">{currentUser.role}</p>
-                        </div>
-                        <ChevronDown size={14} className="text-slate-400 hidden md:block" />
                     </button>
 
                     {isProfileMenuOpen && (
-                        <div ref={profileMenuRef} className="absolute right-0 top-14 w-56 bg-white dark:bg-slate-900 rounded-2xl shadow-xl border border-slate-100 dark:border-slate-800 z-40 animate-fade-in p-1">
-                            <div className="px-4 py-3 border-b border-slate-50 dark:border-slate-800 mb-1">
-                                <p className="text-sm font-bold text-slate-800 dark:text-white">Signed in as</p>
-                                <p className="text-xs text-slate-500 truncate">{currentUser.email}</p>
-                            </div>
-                            <button 
-                                onClick={onToggleTheme}
-                                className="w-full text-left px-3 py-2 text-sm text-slate-600 hover:bg-slate-50 rounded-xl flex items-center justify-between transition-colors dark:text-slate-300 dark:hover:bg-slate-800"
+                        <div ref={profileMenuRef} className="absolute right-0 top-14 w-72 bg-white dark:bg-slate-900 rounded-2xl shadow-xl border border-slate-100 dark:border-slate-800 z-40 animate-fade-in p-2">
+                            
+                            {/* Appearance Toggle */}
+                            <div 
+                                onClick={(e) => { e.stopPropagation(); onToggleTheme(); }}
+                                className="w-full text-left px-3 py-3 rounded-xl flex items-center justify-between cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors group"
                             >
-                                <div className="flex items-center gap-3">{theme === 'light' ? <Moon size={16} /> : <Sun size={16} />} <span>Appearance</span></div>
-                            </button>
+                                <div className="flex items-center gap-3">
+                                    <div className="w-9 h-9 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-slate-700 dark:text-slate-200 group-hover:bg-slate-300 dark:group-hover:bg-slate-600 transition-colors">
+                                        {theme === 'light' ? <Moon size={20} strokeWidth={2.5} /> : <Sun size={20} strokeWidth={2.5} />}
+                                    </div>
+                                    <span className="text-sm font-bold text-slate-700 dark:text-slate-200">Appearance</span>
+                                </div>
+                                <div className={`w-10 h-5 rounded-full relative transition-colors ${theme === 'dark' ? 'bg-emerald-500' : 'bg-slate-300'}`}>
+                                    <div className={`absolute top-1 w-3 h-3 rounded-full bg-white transition-all shadow-sm ${theme === 'dark' ? 'left-6' : 'left-1'}`}></div>
+                                </div>
+                            </div>
+
+                            {/* Settings */}
                             <Link 
                                 to={`/students/${currentUser.id}`}
                                 onClick={() => setIsProfileMenuOpen(false)}
-                                className="w-full text-left px-3 py-2 text-sm text-slate-600 hover:bg-slate-50 rounded-xl flex items-center gap-3 transition-colors dark:text-slate-300 dark:hover:bg-slate-800"
+                                className="w-full text-left px-3 py-3 rounded-xl flex items-center gap-3 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors group"
                             >
-                                <Settings size={16} /> <span>Settings</span>
+                                <div className="w-9 h-9 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-slate-700 dark:text-slate-200 group-hover:bg-slate-300 dark:group-hover:bg-slate-600 transition-colors">
+                                    <Settings size={20} strokeWidth={2.5} />
+                                </div>
+                                <span className="text-sm font-bold text-slate-700 dark:text-slate-200">Settings</span>
                             </Link>
-                            <div className="h-px bg-slate-100 dark:bg-slate-800 my-1"></div>
-                            <button onClick={onLogout} className="w-full text-left px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-xl flex items-center gap-3 transition-colors dark:hover:bg-red-900/10">
-                                <LogOut size={16} /> <span>Sign Out</span>
+
+                            {/* Profile */}
+                            <Link 
+                                to={`/students/${currentUser.id}`}
+                                onClick={() => setIsProfileMenuOpen(false)}
+                                className="w-full text-left px-3 py-3 rounded-xl flex items-center gap-3 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors group"
+                            >
+                                <div className="w-9 h-9 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-slate-700 dark:text-slate-200 group-hover:bg-slate-300 dark:group-hover:bg-slate-600 transition-colors">
+                                    <User size={20} strokeWidth={2.5} />
+                                </div>
+                                <span className="text-sm font-bold text-slate-700 dark:text-slate-200">Profile</span>
+                            </Link>
+
+                            <div className="h-px bg-slate-100 dark:bg-slate-800 my-2 mx-3"></div>
+
+                            {/* Logout */}
+                            <button 
+                                onClick={onLogout} 
+                                className="w-full text-left px-3 py-3 rounded-xl flex items-center gap-3 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors group"
+                            >
+                                <div className="w-9 h-9 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-slate-700 dark:text-slate-200 group-hover:bg-slate-300 dark:group-hover:bg-slate-600 transition-colors">
+                                    <LogOut size={20} strokeWidth={2.5} />
+                                </div>
+                                <span className="text-sm font-bold text-slate-700 dark:text-slate-200">Log Out</span>
                             </button>
                         </div>
                     )}

@@ -98,6 +98,34 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
       setIsSidebarOpen(!isSidebarOpen);
   }
 
+  // Determine if we should hide the default header on mobile
+  const shouldHideHeaderOnMobile = () => {
+    const path = location.pathname;
+    
+    // Routes that always have their own custom mobile header
+    const fullHidePrefixes = [
+      '/chat', 
+      '/community', 
+      '/builder', 
+      '/sales-builder', 
+      '/sales', 
+      '/classroom'
+    ];
+    
+    if (fullHidePrefixes.some(prefix => path.startsWith(prefix))) return true;
+
+    // Specific cases
+    // Students List has custom header, Profile (/:id) does not
+    if (path === '/students') return true;
+    
+    // Training: Modules & Preview have custom headers/hero, Catalog does not
+    if (path.startsWith('/training/course/') || path.startsWith('/training/preview/')) return true;
+
+    return false;
+  };
+
+  const hideHeaderMobile = shouldHideHeaderOnMobile();
+
   // Nav Items Configuration
   const renderNavLinks = () => (
     <nav className="flex-1 py-6 px-3 space-y-1 overflow-y-auto no-scrollbar">
@@ -190,8 +218,9 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
         
         {/* 
             2. UNIVERSAL TOP NAVBAR (Raised with Shadow)
+            Conditionally hidden on mobile for pages with custom headers
         */}
-        <header className="h-16 md:h-20 bg-white dark:bg-slate-900 flex items-center justify-between px-4 md:px-8 shrink-0 z-40 relative shadow-md">
+        <header className={`${hideHeaderMobile ? 'hidden md:flex' : 'flex'} h-16 md:h-20 bg-white dark:bg-slate-900 items-center justify-between px-4 md:px-8 shrink-0 z-40 relative shadow-md`}>
             <div className="flex items-center gap-4">
                 {/* Desktop Hamburger Only */}
                 <button 

@@ -221,6 +221,7 @@ const App: React.FC = () => {
                     students={students} 
                     currentUser={currentUser!} 
                     courses={courses} 
+                    assignments={assignments}
                     templates={templates} 
                     broadcasts={broadcasts}
                     notifications={notifications}

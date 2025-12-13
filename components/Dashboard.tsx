@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { Link, useNavigate } from 'react-router-dom';
@@ -7,9 +6,58 @@ import {
     Users, TrendingUp, Calendar, ArrowUpRight, Award, 
     BookOpen, DollarSign, CircleDollarSign, Target, MessageSquare, PlusCircle, 
     BarChart2, Zap, ArrowRight, Layout, ArrowLeft, Clock, Globe, UserPlus, Shield,
-    ShoppingCart, GraduationCap, Bell, Flag, Store, Lock, CheckCircle, X, PieChart as PieChartIcon, Activity, Lightbulb, ChevronLeft
+    ShoppingCart, GraduationCap, Bell, Flag, Store, Lock, CheckCircle, X, PieChart as PieChartIcon, Activity, Lightbulb, ChevronLeft, HelpCircle
 } from 'lucide-react';
 import { RANKS, RANK_ORDER } from '../constants';
+
+// --- REUSABLE CUSTOM MODAL ---
+const CustomModal = ({ 
+    isOpen, 
+    onClose, 
+    title, 
+    children,
+    icon: Icon 
+}: { 
+    isOpen: boolean; 
+    onClose: () => void; 
+    title: string; 
+    children?: React.ReactNode;
+    icon?: any;
+}) => {
+    if (!isOpen) return null;
+
+    return (
+        <div className="fixed inset-0 z-[250] flex items-center justify-center p-4 animate-fade-in">
+            {/* Blur Backdrop */}
+            <div 
+                className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" 
+                onClick={onClose}
+            />
+            
+            {/* Modal Content */}
+            <div className="relative w-full max-w-sm bg-white dark:bg-slate-900 rounded-[2rem] shadow-2xl overflow-hidden ring-1 ring-white/10 transform transition-all scale-100 opacity-100">
+                {/* Header */}
+                <div className="px-6 py-4 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-white dark:bg-slate-900">
+                    <div className="flex items-center gap-2">
+                        {Icon && <Icon size={20} className="text-emerald-600 dark:text-emerald-400" />}
+                        <h3 className="font-bold text-lg text-slate-900 dark:text-white font-heading">{title}</h3>
+                    </div>
+                    <button 
+                        onClick={onClose} 
+                        className="p-2 -mr-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full dark:hover:bg-slate-800 transition-colors"
+                    >
+                        <X size={20} />
+                    </button>
+                </div>
+                
+                {/* Body */}
+                <div className="p-6">
+                    {children}
+                </div>
+            </div>
+        </div>
+    );
+};
 
 // --- ICONS ---
 const TrophyIcon = ({className}:{className?:string}) => (
@@ -155,6 +203,7 @@ const Dashboard: React.FC<DashboardProps> = ({
   const navigate = useNavigate();
   const [viewMode, setViewMode] = useState<'DASHBOARD' | 'GOALS'>('DASHBOARD');
   const [isBusinessDrawerOpen, setIsBusinessDrawerOpen] = useState(false);
+  const [activeModal, setActiveModal] = useState<'NONE' | 'OVERVIEW'>('NONE');
   
   // Auto-scroll ref
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -280,6 +329,77 @@ const Dashboard: React.FC<DashboardProps> = ({
       return isAssigned && !isSubmitted;
   }).length;
 
+  // --- RENDER MODALS ---
+  const renderModals = () => {
+      // Logic for Overview Data
+      const qualificationMonths = currentRankDef.monthsAllowed || 2;
+      const start = new Date(rankProgress.cycleStartDate);
+      const now = new Date();
+      // Calculate month difference (1-based index)
+      const monthsPassed = (now.getFullYear() - start.getFullYear()) * 12 + (now.getMonth() - start.getMonth()) + 1;
+      const currentMonthIndex = Math.min(monthsPassed, qualificationMonths);
+      
+      const currentCC = rankProgress.currentCycleCC;
+      const target = rankProgress.targetCC;
+      const pct = target > 0 ? Math.min(100, (currentCC / target) * 100) : 0;
+
+      return (
+          <CustomModal 
+            isOpen={activeModal === 'OVERVIEW'} 
+            onClose={() => setActiveModal('NONE')} 
+            title="Rank Overview"
+            icon={Activity}
+          >
+              <div className="text-center space-y-6">
+                  {/* Current Rank Display */}
+                  <div className="space-y-1">
+                      <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Current Rank</p>
+                      <h2 className="text-2xl font-extrabold text-slate-800 dark:text-white font-heading">
+                          {currentRankDef.name}
+                      </h2>
+                  </div>
+
+                  {/* Stats Grid */}
+                  <div className="grid grid-cols-2 gap-4">
+                      <div className="p-3 bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700">
+                          <p className="text-[10px] font-bold text-slate-400 uppercase mb-1">Qualifying Period</p>
+                          <p className="text-sm font-bold text-slate-700 dark:text-slate-200">
+                              Month {currentMonthIndex} <span className="text-slate-400 font-normal">of {qualificationMonths}</span>
+                          </p>
+                      </div>
+                      <div className="p-3 bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700">
+                          <p className="text-[10px] font-bold text-slate-400 uppercase mb-1">Cycle Volume</p>
+                          <p className="text-sm font-bold text-slate-700 dark:text-slate-200">
+                              {currentCC.toFixed(2)} <span className="text-slate-400 font-normal">/ {target} CC</span>
+                          </p>
+                      </div>
+                  </div>
+
+                  {/* Progress Section */}
+                  <div className="bg-emerald-50 dark:bg-emerald-900/10 p-5 rounded-2xl border border-emerald-100 dark:border-emerald-800/50">
+                      <div className="flex justify-between items-end mb-2">
+                          <span className="text-xs font-bold text-emerald-800 dark:text-emerald-400">Progress to Next Rank</span>
+                          <span className="text-lg font-bold text-emerald-600 dark:text-emerald-400">{pct.toFixed(0)}%</span>
+                      </div>
+                      
+                      <div className="w-full h-3 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
+                          <div 
+                            className="h-full bg-emerald-500 rounded-full transition-all duration-1000 ease-out" 
+                            style={{ width: `${pct}%` }}
+                          />
+                      </div>
+                      
+                      <p className="text-xs text-emerald-700 dark:text-emerald-500 mt-3 font-medium">
+                          {target > 0 && currentCC < target 
+                            ? `You need ${(target - currentCC).toFixed(2)} more CC to level up!` 
+                            : "You're on track! Keep pushing."}
+                      </p>
+                  </div>
+              </div>
+          </CustomModal>
+      );
+  };
+
   // --- DRAWER COMPONENT: BUSINESS OVERVIEW ---
   const renderBusinessDrawer = () => {
       return (
@@ -307,7 +427,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                           title="Overview" 
                           desc="Business Summary" 
                           icon={Activity} 
-                          onClick={() => console.log('Overview')}
+                          onClick={() => setActiveModal('OVERVIEW')}
                       />
                       
                       <ShortcutItem 
@@ -435,6 +555,9 @@ const Dashboard: React.FC<DashboardProps> = ({
         
         {/* Full Screen My Business Drawer */}
         {renderBusinessDrawer()}
+
+        {/* Custom Modal Layer */}
+        {renderModals()}
 
         {/* ======================= */}
         {/*    MOBILE VIEW (Classic) */}

@@ -6,7 +6,8 @@ import { Student, UserRole, Course, CourseTrack, CourseStatus, MentorshipTemplat
 import { 
     Users, TrendingUp, Calendar, ArrowUpRight, Award, 
     BookOpen, DollarSign, Target, MessageSquare, PlusCircle, 
-    BarChart2, Zap, ArrowRight, Layout, ArrowLeft, Clock, Globe, UserPlus, Shield
+    BarChart2, Zap, ArrowRight, Layout, ArrowLeft, Clock, Globe, UserPlus, Shield,
+    ShoppingCart, GraduationCap, Bell, Flag, Store
 } from 'lucide-react';
 import { RANKS } from '../constants';
 
@@ -36,45 +37,30 @@ const InfoCard = ({ title, children, icon: Icon, colorClass }: { title: string, 
 
 // B. Section Title with Custom Underline
 const SectionHeader = ({ title }: { title: string }) => (
-    <div className="mb-4">
+    <div className="mb-6">
         <h3 className="text-lg font-bold text-slate-800 dark:text-white inline-block">{title}</h3>
         <div className="h-1 w-12 bg-slate-800 dark:bg-slate-200 mt-1 rounded-full"></div>
     </div>
 );
 
-// C. Shortcut Item (Inside Large Card)
-const ShortcutItem = ({ title, desc, icon: Icon, color, onClick, to }: { title: string, desc: string, icon: any, color: string, onClick?: () => void, to?: string }) => {
+// C. Shortcut Item (Modern Gray Style)
+const ShortcutItem = ({ title, icon: Icon, onClick, to }: { title: string, icon: any, onClick?: () => void, to?: string }) => {
     const content = (
-        <div className="flex flex-col items-center text-center gap-3 p-4 rounded-2xl hover:bg-slate-50 transition-colors cursor-pointer group dark:hover:bg-slate-700/50">
-            <div className={`w-14 h-14 rounded-2xl flex items-center justify-center text-white shadow-md transition-transform group-hover:scale-110 ${color}`}>
-                <Icon size={24} />
-            </div>
-            <div>
-                <h4 className="font-bold text-sm text-slate-800 dark:text-slate-200">{title}</h4>
-                <p className="text-[10px] text-slate-400 dark:text-slate-500 font-medium leading-tight mt-1">{desc}</p>
-            </div>
+        <div className="flex flex-col items-center justify-center gap-4 p-6 rounded-2xl transition-all duration-300 hover:bg-slate-50 group cursor-pointer dark:hover:bg-slate-700/50 h-full">
+            <Icon 
+                size={48} 
+                strokeWidth={1.5}
+                className="text-slate-400 group-hover:text-slate-600 group-hover:scale-110 transition-all duration-300 dark:text-slate-500 dark:group-hover:text-slate-300" 
+            />
+            <h4 className="font-bold text-sm text-slate-600 text-center group-hover:text-slate-900 transition-colors dark:text-slate-400 dark:group-hover:text-white">{title}</h4>
         </div>
     );
 
-    if (to) return <Link to={to} className="block">{content}</Link>;
-    return <div onClick={onClick}>{content}</div>;
+    if (to) return <Link to={to} className="block h-full">{content}</Link>;
+    return <div onClick={onClick} className="h-full">{content}</div>;
 };
 
-// D. Mobile Action Button (Classic)
-const MobileActionBtn = ({ icon: Icon, label, colorClass, to, onClick }: { icon: any, label: string, colorClass: string, to?: string, onClick?: () => void }) => {
-    const content = (
-        <div className="flex flex-col items-center gap-2 p-4 bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700 active:scale-95 transition-transform">
-            <div className={`w-12 h-12 rounded-full flex items-center justify-center ${colorClass}`}>
-                <Icon size={24} />
-            </div>
-            <span className="text-xs font-bold text-slate-700 dark:text-slate-300 text-center leading-tight">{label}</span>
-        </div>
-    );
-    if (to) return <Link to={to} className="block">{content}</Link>;
-    return <button onClick={onClick} className="block w-full">{content}</button>;
-};
-
-// E. Mobile Stat Card
+// D. Mobile Stat Card
 const MobileStatCard = ({ label, value, subtext, icon: Icon, color }: { label: string, value: string, subtext: string, icon: any, color: string }) => (
     <div className="bg-white dark:bg-slate-800 p-4 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm flex items-center gap-4">
         <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-white ${color}`}>
@@ -287,46 +273,18 @@ const Dashboard: React.FC<DashboardProps> = ({
                 </div>
             </div>
 
-            {/* 3. Quick Actions (Restored "Admission" etc) */}
+            {/* 3. Shortcuts (Updated for Mobile) */}
             <div>
                 <SectionHeader title="Shortcuts" />
-                <div className="grid grid-cols-3 gap-3">
-                    <MobileActionBtn 
-                        icon={UserPlus} 
-                        label="Enroll Student" 
-                        colorClass="bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400" 
-                        to="/students" 
-                    />
-                    <MobileActionBtn 
-                        icon={TrendingUp} 
-                        label="Log Sale" 
-                        colorClass="bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400" 
-                        to="/sales"
-                    />
-                    <MobileActionBtn 
-                        icon={MessageSquare} 
-                        label="Team Chat" 
-                        colorClass="bg-indigo-100 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400" 
-                        to="/chat"
-                    />
-                    <MobileActionBtn 
-                        icon={BookOpen} 
-                        label="Classroom" 
-                        colorClass="bg-purple-100 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400" 
-                        to="/classroom"
-                    />
-                    <MobileActionBtn 
-                        icon={Globe} 
-                        label="Community" 
-                        colorClass="bg-pink-100 text-pink-600 dark:bg-pink-900/30 dark:text-pink-400" 
-                        to="/community"
-                    />
-                    <MobileActionBtn 
-                        icon={Zap} 
-                        label="Sales Page" 
-                        colorClass="bg-orange-100 text-orange-600 dark:bg-orange-900/30 dark:text-orange-400" 
-                        to="/sales-builder"
-                    />
+                <div className="bg-white dark:bg-slate-800 rounded-[2rem] p-4 shadow-sm border border-slate-100 dark:border-slate-700">
+                    <div className="grid grid-cols-3 gap-y-6">
+                        <ShortcutItem title="My Business" icon={TrendingUp} to="/sales" />
+                        <ShortcutItem title="Sales Pages" icon={ShoppingCart} to="/sales-builder" />
+                        <ShortcutItem title="Training Hub" icon={GraduationCap} to="/classroom" />
+                        <ShortcutItem title="My Team" icon={Users} to="/students" />
+                        <ShortcutItem title="Goals" icon={Target} onClick={() => setViewMode('GOALS')} />
+                        <ShortcutItem title="Inbox" icon={Bell} to="/broadcasts" />
+                    </div>
                 </div>
             </div>
 
@@ -447,77 +405,47 @@ const Dashboard: React.FC<DashboardProps> = ({
                         </div>
                     </div>
 
-                    {/* B. Shortcuts Grid (Single Card Container) */}
+                    {/* B. Shortcuts Grid (Clean Modern Gray) */}
                     <div>
                         <SectionHeader title="Shortcuts" />
                         
                         <div className="bg-white dark:bg-slate-800 rounded-[2rem] p-8 shadow-sm border border-slate-100 dark:border-slate-700">
-                            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-y-10 gap-x-6">
+                            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-y-10 gap-x-6">
                                 
                                 <ShortcutItem 
-                                    title="Goal Monitoring" 
-                                    desc="Track Progress"
-                                    icon={Target}
-                                    color="bg-red-500"
-                                    onClick={() => setViewMode('GOALS')}
-                                />
-
-                                <ShortcutItem 
-                                    title="Log Business" 
-                                    desc="Sales & CC"
+                                    title="My Business" 
                                     icon={TrendingUp}
-                                    color="bg-emerald-500"
                                     to="/sales"
                                 />
 
                                 <ShortcutItem 
-                                    title="Community" 
-                                    desc="Updates & Wins"
-                                    icon={Globe}
-                                    color="bg-blue-500"
-                                    to="/community"
+                                    title="Sales Pages" 
+                                    icon={ShoppingCart}
+                                    to="/sales-builder"
                                 />
 
                                 <ShortcutItem 
-                                    title="Messages" 
-                                    desc="Team Chat"
-                                    icon={MessageSquare}
-                                    color="bg-indigo-500"
-                                    to="/chat"
+                                    title="Training Hub" 
+                                    icon={GraduationCap}
+                                    to="/classroom"
                                 />
 
                                 <ShortcutItem 
-                                    title="My Students" 
-                                    desc="Manage Team"
+                                    title="My Team" 
                                     icon={Users}
-                                    color="bg-teal-500"
                                     to="/students"
                                 />
 
-                                {currentUser.role !== UserRole.STUDENT && (
-                                    <ShortcutItem 
-                                        title="Create Course" 
-                                        desc="Build Training"
-                                        icon={PlusCircle}
-                                        color="bg-purple-500"
-                                        to="/builder"
-                                    />
-                                )}
-
                                 <ShortcutItem 
-                                    title="Analytics" 
-                                    desc="Reports"
-                                    icon={BarChart2}
-                                    color="bg-orange-500"
-                                    to="/dashboard"
+                                    title="Goals & Incentives" 
+                                    icon={Target}
+                                    onClick={() => setViewMode('GOALS')}
                                 />
 
                                 <ShortcutItem 
-                                    title="Sales Pages" 
-                                    desc="Funnel Builder"
-                                    icon={Zap}
-                                    color="bg-pink-500"
-                                    to="/sales-builder"
+                                    title="Inbox" 
+                                    icon={Bell}
+                                    to="/broadcasts"
                                 />
 
                             </div>

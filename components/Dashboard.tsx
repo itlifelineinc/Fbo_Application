@@ -7,7 +7,7 @@ import {
     Users, TrendingUp, Calendar, ArrowUpRight, Award, 
     BookOpen, DollarSign, CircleDollarSign, Target, MessageSquare, PlusCircle, 
     BarChart2, Zap, ArrowRight, Layout, ArrowLeft, Clock, Globe, UserPlus, Shield,
-    ShoppingCart, GraduationCap, Bell, Flag, Store, Lock, CheckCircle, X, PieChart as PieChartIcon, Activity, Lightbulb
+    ShoppingCart, GraduationCap, Bell, Flag, Store, Lock, CheckCircle, X, PieChart as PieChartIcon, Activity, Lightbulb, ChevronLeft
 } from 'lucide-react';
 import { RANKS, RANK_ORDER } from '../constants';
 
@@ -104,20 +104,20 @@ const ShortcutItem = ({
             flex flex-col items-center justify-center gap-2 lg:gap-3 p-4 lg:p-6 rounded-3xl transition-all duration-300 h-full border border-transparent
             ${disabled 
                 ? 'opacity-50 grayscale cursor-not-allowed bg-slate-50 dark:bg-slate-800/50' 
-                : 'bg-slate-50 hover:bg-white hover:shadow-2xl hover:border-slate-100 cursor-pointer group dark:bg-slate-800 dark:hover:bg-slate-700'}
+                : 'bg-white hover:bg-white hover:shadow-xl hover:border-slate-100 cursor-pointer group dark:bg-slate-800 dark:hover:bg-slate-750 border border-slate-100 dark:border-slate-700'}
         `}>
             <div className={`
                 p-3 lg:p-5 rounded-2xl transition-all duration-300 relative
                 ${disabled ? 'text-slate-300' : 'text-slate-600 group-hover:text-slate-800 group-hover:scale-110 dark:text-slate-400 dark:group-hover:text-white'}
             `}>
                 <Icon 
-                    strokeWidth={2}
-                    className="w-8 h-8 lg:w-14 lg:h-14 fill-slate-200 dark:fill-slate-700"
+                    strokeWidth={2.5}
+                    className="w-8 h-8 lg:w-12 lg:h-12 fill-slate-50 dark:fill-slate-700/50"
                 />
                 {disabled && <div className="absolute -top-1 -right-1 bg-slate-200 rounded-full p-1"><Lock size={12} className="text-slate-500" /></div>}
             </div>
             <div className="text-center space-y-0.5 lg:space-y-1 w-full">
-                <h4 className="font-extrabold text-xs lg:text-base text-slate-700 dark:text-slate-200 leading-tight truncate px-1">
+                <h4 className="font-extrabold text-sm lg:text-base text-slate-700 dark:text-slate-200 leading-tight truncate px-1">
                     {title}
                 </h4>
                 <p className="text-[10px] lg:text-xs text-slate-400 font-medium leading-tight px-1 truncate">
@@ -282,221 +282,69 @@ const Dashboard: React.FC<DashboardProps> = ({
 
   // --- DRAWER COMPONENT: BUSINESS OVERVIEW ---
   const renderBusinessDrawer = () => {
-      const pieData = [
-          { name: 'Personal', value: monthlyCC, color: '#10b981' },
-          { name: 'Team', value: teamCC, color: '#3b82f6' },
-      ];
-      // If no data, show placeholder
-      const chartData = (monthlyCC + teamCC) > 0 ? pieData : [{ name: 'None', value: 1, color: '#e2e8f0' }];
-
-      const earningsData = [
-          { name: 'Jan', amount: 400 }, { name: 'Feb', amount: 300 }, { name: 'Mar', amount: 550 },
-          { name: 'Apr', amount: 450 }, { name: 'May', amount: 700 }, { name: 'Jun', amount: monthlyEarnings || 800 },
-      ];
-
       return (
           <div className={`fixed inset-0 z-[200] bg-slate-50 dark:bg-slate-950 overflow-y-auto transform transition-transform duration-300 ease-in-out ${isBusinessDrawerOpen ? 'translate-x-0' : '-translate-x-full'}`}>
               
               {/* Sticky Header */}
-              <div className="sticky top-0 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md px-6 py-4 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center z-10">
+              <div className="sticky top-0 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md px-4 py-3 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center z-10">
                   <div className="flex items-center gap-3">
-                      <button onClick={() => setIsBusinessDrawerOpen(false)} className="p-2 -ml-2 hover:bg-slate-100 rounded-full dark:hover:bg-slate-800 transition-colors">
-                          <ArrowLeft size={24} className="text-slate-600 dark:text-slate-300" />
+                      <button 
+                        onClick={() => setIsBusinessDrawerOpen(false)} 
+                        className="p-2 -ml-2 hover:bg-slate-100 rounded-full dark:hover:bg-slate-800 transition-colors"
+                      >
+                          <ChevronLeft size={28} className="text-slate-900 dark:text-white" strokeWidth={2.5} />
                       </button>
                       <h1 className="text-xl font-bold text-slate-900 dark:text-white font-heading">My Business</h1>
                   </div>
-                  <button onClick={() => setIsBusinessDrawerOpen(false)} className="p-2 bg-slate-100 dark:bg-slate-800 rounded-full text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white">
-                      <X size={20} />
-                  </button>
               </div>
 
               <div className="max-w-7xl mx-auto p-4 md:p-8 space-y-6 pb-20">
                   
-                  {/* 1. Business Overview (Top Section - Always Visible) */}
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                      <InfoCard title="Total Volume" icon={TrendingUp} colorClass="bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400">
-                          <span className="text-2xl font-bold text-slate-900 dark:text-white">{(monthlyCC + teamCC).toFixed(2)}</span>
-                          <span className="text-xs text-slate-500">Combined CC</span>
-                      </InfoCard>
-                      <InfoCard title="Active Status" icon={CheckCircle} colorClass="bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400">
-                          <span className={`text-xl font-bold ${monthlyCC >= 4 ? 'text-emerald-600' : 'text-slate-500'}`}>{monthlyCC >= 4 ? 'Active' : 'Not Active'}</span>
-                          <span className="text-xs text-slate-500">{monthlyCC.toFixed(2)} / 4.00 CC</span>
-                      </InfoCard>
-                      <InfoCard title="Current Rank" icon={Award} colorClass="bg-purple-100 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400">
-                          <span className="text-lg font-bold text-slate-900 dark:text-white truncate">{currentRankDef.name}</span>
-                          <span className="text-xs text-slate-500">Next: {nextRankDef?.name || 'Max'}</span>
-                      </InfoCard>
-                      <InfoCard title="Downline" icon={Users} colorClass="bg-orange-100 text-orange-600 dark:bg-orange-900/30 dark:text-orange-400">
-                          <span className="text-2xl font-bold text-slate-900 dark:text-white">{myDownline.length}</span>
-                          <span className="text-xs text-slate-500">{activeDownlines.length} Active</span>
-                      </InfoCard>
-                  </div>
-
-                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                  {/* Grid Layout for Shortcuts */}
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-6">
                       
-                      {/* 2. CC Breakdown */}
-                      <div className="bg-white dark:bg-slate-800 rounded-[2rem] p-6 shadow-sm border border-slate-100 dark:border-slate-700">
-                          <SectionHeader title="CC Breakdown" />
-                          <div className="h-64 relative">
-                              <ResponsiveContainer width="100%" height="100%">
-                                  <PieChart>
-                                      <Pie
-                                          data={chartData}
-                                          innerRadius={60}
-                                          outerRadius={80}
-                                          paddingAngle={5}
-                                          dataKey="value"
-                                      >
-                                          {chartData.map((entry, index) => (
-                                              <Cell key={`cell-${index}`} fill={entry.color} />
-                                          ))}
-                                      </Pie>
-                                      <Tooltip 
-                                          contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-                                      />
-                                  </PieChart>
-                              </ResponsiveContainer>
-                              <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                                  <span className="text-3xl font-bold text-slate-800 dark:text-white">{(monthlyCC + teamCC).toFixed(1)}</span>
-                                  <span className="text-xs text-slate-400 uppercase font-bold">Total CC</span>
-                              </div>
-                          </div>
-                          <div className="flex justify-center gap-6 mt-4">
-                              <div className="flex items-center gap-2">
-                                  <div className="w-3 h-3 rounded-full bg-emerald-500"></div>
-                                  <span className="text-sm text-slate-600 dark:text-slate-300">Personal ({monthlyCC.toFixed(1)})</span>
-                              </div>
-                              <div className="flex items-center gap-2">
-                                  <div className="w-3 h-3 rounded-full bg-blue-500"></div>
-                                  <span className="text-sm text-slate-600 dark:text-slate-300">Team ({teamCC.toFixed(1)})</span>
-                              </div>
-                          </div>
-                      </div>
-
-                      {/* 3. Rank Journey Timeline */}
-                      <div className="bg-white dark:bg-slate-800 rounded-[2rem] p-6 shadow-sm border border-slate-100 dark:border-slate-700 lg:col-span-2">
-                          <SectionHeader title="Rank Journey" />
-                          <div className="flex items-center justify-between relative mt-8 px-4">
-                              {/* Connector Line */}
-                              <div className="absolute top-1/2 left-0 right-0 h-1 bg-slate-100 dark:bg-slate-700 -translate-y-1/2 z-0"></div>
-                              <div 
-                                  className="absolute top-1/2 left-0 h-1 bg-emerald-500 -translate-y-1/2 z-0 transition-all duration-1000"
-                                  style={{ width: `${(RANK_ORDER.indexOf(rankProgress.currentRankId) / (RANK_ORDER.length - 1)) * 100}%` }}
-                              ></div>
-
-                              {/* Steps */}
-                              {['NOVUS', 'AS_SUP', 'SUP', 'AS_MGR', 'MGR'].map((rank, index) => {
-                                  const isAchieved = RANK_ORDER.indexOf(rankProgress.currentRankId) >= RANK_ORDER.indexOf(rank);
-                                  const isCurrent = rankProgress.currentRankId === rank;
-                                  
-                                  return (
-                                      <div key={rank} className="relative z-10 flex flex-col items-center gap-2">
-                                          <div className={`
-                                              w-8 h-8 rounded-full flex items-center justify-center border-4 transition-all duration-500
-                                              ${isCurrent ? 'bg-emerald-600 border-emerald-200 scale-125 shadow-lg' : isAchieved ? 'bg-emerald-500 border-white dark:border-slate-800' : 'bg-slate-200 border-white dark:bg-slate-700 dark:border-slate-800'}
-                                          `}>
-                                              {isAchieved && <CheckCircle size={14} className="text-white" />}
-                                          </div>
-                                          <span className={`text-[10px] font-bold uppercase tracking-wider ${isCurrent ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400'}`}>
-                                              {RANKS[rank].name.split(' ')[0]} {/* Short name */}
-                                          </span>
-                                      </div>
-                                  );
-                              })}
-                          </div>
-                          
-                          <div className="mt-8 bg-slate-50 dark:bg-slate-700/30 p-4 rounded-xl flex items-center justify-between">
-                              <div>
-                                  <p className="text-xs text-slate-500 uppercase font-bold dark:text-slate-400">Next Milestone</p>
-                                  <p className="text-sm font-bold text-slate-800 dark:text-white">{nextRankDef ? nextRankDef.name : 'Top Rank Reached'}</p>
-                              </div>
-                              <div className="text-right">
-                                  <p className="text-xs text-slate-500 uppercase font-bold dark:text-slate-400">Requirement</p>
-                                  <p className="text-sm font-bold text-slate-800 dark:text-white">
-                                      {remainingCC > 0 ? `${remainingCC.toFixed(2)} more CC` : 'Structure Requirements'}
-                                  </p>
-                              </div>
-                          </div>
-                      </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                      <ShortcutItem 
+                          title="Overview" 
+                          desc="Business Summary" 
+                          icon={Activity} 
+                          onClick={() => console.log('Overview')}
+                      />
                       
-                      {/* 4. Earnings Snapshot */}
-                      <div className="bg-white dark:bg-slate-800 rounded-[2rem] p-6 shadow-sm border border-slate-100 dark:border-slate-700">
-                          <SectionHeader title="Earnings Trend" />
-                          <div className="h-64 w-full">
-                              <ResponsiveContainer width="100%" height="100%">
-                                  <AreaChart data={earningsData}>
-                                      <defs>
-                                          <linearGradient id="colorEarnings" x1="0" y1="0" x2="0" y2="1">
-                                              <stop offset="5%" stopColor="#10b981" stopOpacity={0.2}/>
-                                              <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
-                                          </linearGradient>
-                                      </defs>
-                                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                                      <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#94a3b8', fontSize: 12}} />
-                                      <Tooltip contentStyle={{ borderRadius: '12px' }} />
-                                      <Area type="monotone" dataKey="amount" stroke="#10b981" strokeWidth={3} fillOpacity={1} fill="url(#colorEarnings)" />
-                                  </AreaChart>
-                              </ResponsiveContainer>
-                          </div>
-                          <p className="text-center text-xs text-slate-400 mt-2 italic">Estimated earnings based on retail & bonus levels. Not official accounting.</p>
-                      </div>
+                      <ShortcutItem 
+                          title="CC Breakdown" 
+                          desc="Personal vs Team" 
+                          icon={PieChartIcon} 
+                          onClick={() => console.log('CC Breakdown')}
+                      />
+                      
+                      <ShortcutItem 
+                          title="Rank Journey" 
+                          desc="Path to Diamond" 
+                          icon={TrendingUp} 
+                          onClick={() => console.log('Rank Journey')}
+                      />
+                      
+                      <ShortcutItem 
+                          title="Earnings" 
+                          desc="Financial Snapshot" 
+                          icon={DollarSign} 
+                          onClick={() => console.log('Earnings')}
+                      />
+                      
+                      <ShortcutItem 
+                          title="Downline" 
+                          desc="Team Performance" 
+                          icon={Users} 
+                          onClick={() => console.log('Downline')}
+                      />
+                      
+                      <ShortcutItem 
+                          title="Suggestions" 
+                          desc="Smart Actions" 
+                          icon={Lightbulb} 
+                          onClick={() => console.log('Suggestions')}
+                      />
 
-                      <div className="space-y-6">
-                          {/* 5. Action Suggestions */}
-                          <div className="bg-gradient-to-br from-indigo-900 to-slate-900 rounded-[2rem] p-6 text-white shadow-lg relative overflow-hidden">
-                              <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-10 -mt-10 blur-2xl"></div>
-                              <div className="relative z-10">
-                                  <div className="flex items-center gap-2 mb-4">
-                                      <Lightbulb className="text-yellow-400" />
-                                      <h3 className="font-bold text-lg">Smart Coach</h3>
-                                  </div>
-                                  <div className="space-y-3">
-                                      {monthlyCC < 4 && (
-                                          <div className="bg-white/10 p-3 rounded-xl backdrop-blur-sm border border-white/10 flex gap-3 items-center">
-                                              <div className="w-8 h-8 rounded-full bg-red-500/20 flex items-center justify-center text-red-300 font-bold">!</div>
-                                              <div>
-                                                  <p className="font-bold text-sm">Action Required: 4CC Active</p>
-                                                  <p className="text-xs text-slate-300">You need {(4 - monthlyCC).toFixed(2)} CC to unlock team bonuses.</p>
-                                              </div>
-                                          </div>
-                                      )}
-                                      <div className="bg-white/10 p-3 rounded-xl backdrop-blur-sm border border-white/10 flex gap-3 items-center">
-                                          <div className="w-8 h-8 rounded-full bg-blue-500/20 flex items-center justify-center text-blue-300 font-bold"><UserPlus size={16}/></div>
-                                          <div>
-                                              <p className="font-bold text-sm">Recruitment Goal</p>
-                                              <p className="text-xs text-slate-300">Sponsor 1 new FBO this week to maintain momentum.</p>
-                                          </div>
-                                      </div>
-                                  </div>
-                              </div>
-                          </div>
-
-                          {/* 6. Downline Overview */}
-                          <div className="bg-white dark:bg-slate-800 rounded-[2rem] p-6 shadow-sm border border-slate-100 dark:border-slate-700">
-                              <SectionHeader title="Top Movers" />
-                              <div className="space-y-3">
-                                  {myDownline.sort((a,b) => b.caseCredits - a.caseCredits).slice(0, 3).map(student => (
-                                      <div key={student.id} className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-700/50 rounded-xl">
-                                          <div className="flex items-center gap-3">
-                                              <div className="w-8 h-8 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold text-xs dark:bg-emerald-900/30 dark:text-emerald-400">
-                                                  {student.name.charAt(0)}
-                                              </div>
-                                              <div>
-                                                  <p className="text-sm font-bold text-slate-800 dark:text-white">{student.name}</p>
-                                                  <p className="text-[10px] text-slate-500">{student.rankProgress?.currentRankId}</p>
-                                              </div>
-                                          </div>
-                                          <span className="font-bold text-emerald-600 text-sm dark:text-emerald-400">{student.caseCredits.toFixed(2)} CC</span>
-                                      </div>
-                                  ))}
-                                  {myDownline.length === 0 && <p className="text-xs text-slate-400 text-center py-2">No active downline yet.</p>}
-                              </div>
-                              <button onClick={() => navigate('/students')} className="w-full mt-4 text-center text-xs font-bold text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white">View Full Team</button>
-                          </div>
-                      </div>
                   </div>
 
               </div>

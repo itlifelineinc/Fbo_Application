@@ -328,40 +328,113 @@ const Dashboard: React.FC<DashboardProps> = ({
                 <p className="text-sm text-slate-500 dark:text-slate-400">Here's your business at a glance.</p>
             </div>
 
-            {/* 2. Stats Grid (Original Style) */}
-            <div className="space-y-4">
-                <div className="bg-emerald-600 rounded-2xl p-6 text-white shadow-lg shadow-emerald-900/20 relative overflow-hidden">
-                    <div className="absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 bg-white/10 rounded-full blur-xl"></div>
-                    <div className="relative z-10">
-                        <p className="text-emerald-100 text-xs font-bold uppercase tracking-wider mb-1">Total Case Credits</p>
-                        <h2 className="text-4xl font-bold font-heading mb-4">{monthlyCC.toFixed(3)} CC</h2>
-                        
-                        <div className="flex justify-between text-xs text-emerald-100 mb-1">
-                            <span>4CC Active Goal</span>
-                            <span>{Math.round((monthlyCC / 4) * 100)}%</span>
+            {/* 2. Stats Carousel (Horizontal Slider of Desktop Cards) */}
+            <div className="flex overflow-x-auto gap-4 pb-4 -mx-4 px-4 snap-x no-scrollbar">
+                
+                {/* Card 1: Rank Progress */}
+                <div className="min-w-[85vw] snap-center">
+                    <InfoCard title="Rank Progress" icon={Award} colorClass="bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400" className="h-48 justify-between">
+                        <div>
+                            <div className="flex justify-between items-end mb-2">
+                                <span className="text-xl font-bold text-slate-900 dark:text-white font-heading">{currentRankDef.name}</span>
+                                <span className="text-[10px] font-bold bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded dark:bg-yellow-900/50 dark:text-yellow-200">{rankProgress.currentRankId}</span>
+                            </div>
+                            <div className="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden dark:bg-slate-700 mb-3">
+                                <div className="h-full bg-yellow-500 rounded-full" style={{ width: `${progressPercent}%` }}></div>
+                            </div>
                         </div>
-                        <div className="w-full bg-black/20 rounded-full h-1.5">
-                            <div className="bg-white h-1.5 rounded-full" style={{ width: `${Math.min(100, (monthlyCC / 4) * 100)}%` }}></div>
+                        <div className="flex justify-between items-center text-[10px] text-slate-500 dark:text-slate-400 border-t border-slate-100 pt-2 dark:border-slate-700 mt-auto">
+                            <div className="flex flex-col">
+                                <span className="font-bold text-slate-700 dark:text-slate-300">{remainingCC.toFixed(2)} CC</span>
+                                <span>Remaining</span>
+                            </div>
+                            <div className="flex flex-col text-right">
+                                <span className="font-bold text-slate-700 dark:text-slate-300">{daysLeft} Days</span>
+                                <span>Time Left</span>
+                            </div>
                         </div>
-                    </div>
+                    </InfoCard>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
-                    <MobileStatCard 
-                        label="Current Rank" 
-                        value={currentRankDef.name} 
-                        subtext={nextRankDef ? `${daysLeft} days left` : 'Max Rank'}
-                        icon={Award}
-                        color="bg-yellow-500"
-                    />
-                    <MobileStatCard 
-                        label="Active Team" 
-                        value={activeDownlines.length.toString()} 
-                        subtext={`${teamCC.toFixed(1)} Team CC`}
-                        icon={Users}
-                        color="bg-blue-500"
-                    />
+                {/* Card 2: Team Snapshot */}
+                <div className="min-w-[85vw] snap-center">
+                    <InfoCard title="Team Snapshot" icon={Users} colorClass="bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400" className="h-48 justify-between">
+                        <div className="flex justify-between items-center mb-4">
+                            <div>
+                                <span className="text-2xl font-bold text-slate-900 dark:text-white font-heading">{activeDownlines.length}</span>
+                                <span className="text-[10px] text-slate-400 block uppercase font-bold">Active Downlines</span>
+                            </div>
+                            <div className="text-right">
+                                <span className="text-lg font-bold text-blue-600 dark:text-blue-400">{teamCC.toFixed(1)}</span>
+                                <span className="text-[10px] text-slate-400 block uppercase font-bold">Team CC</span>
+                            </div>
+                        </div>
+                        {topPerformer ? (
+                            <div className="bg-slate-50 p-2 rounded-lg flex items-center gap-3 border border-slate-100 dark:bg-slate-700/30 dark:border-slate-700">
+                                <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 text-xs font-bold dark:bg-blue-900/50 dark:text-blue-200">
+                                    {topPerformer.name.charAt(0)}
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                    <p className="text-xs font-bold text-slate-800 truncate dark:text-white">{topPerformer.name}</p>
+                                    <p className="text-[9px] text-emerald-600 font-bold dark:text-emerald-400">Top Performer ({topPerformer.caseCredits.toFixed(1)} CC)</p>
+                                </div>
+                            </div>
+                        ) : (
+                            <div className="text-[10px] text-slate-400 italic text-center py-1">No activity yet</div>
+                        )}
+                    </InfoCard>
                 </div>
+
+                {/* Card 3: Earnings & Rewards */}
+                <div className="min-w-[85vw] snap-center">
+                    <InfoCard title="Earnings & Rewards" icon={MoneyBagIcon} iconStyle="OUTLINE" colorClass="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400" className="h-48 justify-between">
+                        <div className="mb-3">
+                            <span className="text-2xl font-bold text-slate-900 dark:text-white font-heading">${monthlyEarnings.toLocaleString()}</span>
+                            <p className="text-[10px] text-slate-400 uppercase font-bold mt-0.5">Est. Earnings</p>
+                        </div>
+                        <div className="space-y-2">
+                            <div className="flex justify-between items-center text-xs">
+                                <span className="text-slate-600 dark:text-slate-400">Active Bonus</span>
+                                <span className={`font-bold ${monthlyCC >= 4 ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400'}`}>
+                                    {monthlyCC >= 4 ? 'Achieved' : 'Pending'}
+                                </span>
+                            </div>
+                            <div className="flex justify-between items-center text-xs">
+                                <span className="text-slate-600 dark:text-slate-400">Global Rally</span>
+                                <div className="flex items-center gap-2">
+                                    <div className="w-16 bg-slate-200 h-1.5 rounded-full dark:bg-slate-700">
+                                        <div className="bg-purple-500 h-1.5 rounded-full" style={{ width: '15%' }}></div>
+                                    </div>
+                                    <span className="font-bold text-purple-600 dark:text-purple-400">15%</span>
+                                </div>
+                            </div>
+                        </div>
+                    </InfoCard>
+                </div>
+
+                {/* Card 4: Learning Status */}
+                <div className="min-w-[85vw] snap-center">
+                    <InfoCard title="Learning Status" icon={AutoStoriesIcon} iconStyle="OUTLINE" colorClass="bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400" className="h-48 justify-between">
+                        <div className="grid grid-cols-3 gap-2 mb-3 text-center">
+                            <div className="bg-purple-50 rounded-lg p-2 dark:bg-purple-900/10">
+                                <span className="block text-lg font-bold text-purple-700 dark:text-purple-300">{inProgressCourses}</span>
+                                <span className="text-[9px] text-slate-500 font-bold uppercase dark:text-slate-400">Active</span>
+                            </div>
+                            <div className="bg-green-50 rounded-lg p-2 dark:bg-green-900/10">
+                                <span className="block text-lg font-bold text-green-700 dark:text-green-300">{completedCoursesCount}</span>
+                                <span className="text-[9px] text-slate-500 font-bold uppercase dark:text-slate-400">Done</span>
+                            </div>
+                            <div className="bg-orange-50 rounded-lg p-2 dark:bg-orange-900/10">
+                                <span className="block text-lg font-bold text-orange-700 dark:text-orange-300">{myPendingAssignments}</span>
+                                <span className="text-[9px] text-slate-500 font-bold uppercase dark:text-slate-400">Tasks</span>
+                            </div>
+                        </div>
+                        <Link to="/classroom" className="text-[10px] font-bold text-purple-600 hover:text-purple-700 flex items-center justify-center gap-1 dark:text-purple-400 bg-purple-50 py-1.5 rounded-lg dark:bg-purple-900/20 transition-colors">
+                            Go to Classroom <ArrowRight size={10} />
+                        </Link>
+                    </InfoCard>
+                </div>
+
             </div>
 
             {/* 3. Shortcuts (Updated for Mobile) */}

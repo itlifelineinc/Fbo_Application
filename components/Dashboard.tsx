@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { Link, useNavigate } from 'react-router-dom';
@@ -551,53 +552,55 @@ const Dashboard: React.FC<DashboardProps> = ({
 
               <div className="max-w-7xl mx-auto p-4 md:p-8 space-y-6 pb-20">
                   
-                  <SectionHeader title="Shortcuts" />
+                  <SectionHeader title="Sections" />
 
-                  {/* Grid Layout for Shortcuts */}
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-6">
-                      
-                      <ShortcutItem 
-                          title="Overview" 
-                          desc="Business Summary" 
-                          icon={Activity} 
-                          onClick={() => setActiveModal('OVERVIEW')}
-                      />
-                      
-                      <ShortcutItem 
-                          title="CC Breakdown" 
-                          desc="Personal vs Team" 
-                          icon={PieChartIcon} 
-                          onClick={() => setActiveModal('BREAKDOWN')}
-                      />
-                      
-                      <ShortcutItem 
-                          title="Rank Journey" 
-                          desc="Path to Diamond" 
-                          icon={TrendingUp} 
-                          onClick={() => console.log('Rank Journey')}
-                      />
-                      
-                      <ShortcutItem 
-                          title="Earnings" 
-                          desc="Financial Snapshot" 
-                          icon={DollarSign} 
-                          onClick={() => console.log('Earnings')}
-                      />
-                      
-                      <ShortcutItem 
-                          title="Downline" 
-                          desc="Team Performance" 
-                          icon={Users} 
-                          onClick={() => console.log('Downline')}
-                      />
-                      
-                      <ShortcutItem 
-                          title="Suggestions" 
-                          desc="Smart Actions" 
-                          icon={Lightbulb} 
-                          onClick={() => console.log('Suggestions')}
-                      />
+                  {/* Consolidated Card Wrapper */}
+                  <div className="bg-white dark:bg-slate-800 rounded-[2rem] p-6 shadow-sm border border-slate-100 dark:border-slate-700">
+                      <div className="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-6">
+                          
+                          <ShortcutItem 
+                              title="Overview" 
+                              desc="Business Summary" 
+                              icon={Activity} 
+                              onClick={() => setActiveModal('OVERVIEW')}
+                          />
+                          
+                          <ShortcutItem 
+                              title="CC Breakdown" 
+                              desc="Personal vs Team" 
+                              icon={PieChartIcon} 
+                              onClick={() => setActiveModal('BREAKDOWN')}
+                          />
+                          
+                          <ShortcutItem 
+                              title="Rank Journey" 
+                              desc="Path to Diamond" 
+                              icon={TrendingUp} 
+                              onClick={() => console.log('Rank Journey')}
+                          />
+                          
+                          <ShortcutItem 
+                              title="Earnings" 
+                              desc="Financial Snapshot" 
+                              icon={DollarSign} 
+                              onClick={() => console.log('Earnings')}
+                          />
+                          
+                          <ShortcutItem 
+                              title="Downline" 
+                              desc="Team Performance" 
+                              icon={Users} 
+                              onClick={() => console.log('Downline')}
+                          />
+                          
+                          <ShortcutItem 
+                              title="Suggestions" 
+                              desc="Smart Actions" 
+                              icon={Lightbulb} 
+                              onClick={() => console.log('Suggestions')}
+                          />
 
+                      </div>
                   </div>
 
               </div>

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { Link, useNavigate } from 'react-router-dom';
@@ -27,31 +28,58 @@ const CustomModal = ({
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 z-[250] flex items-center justify-center p-4 animate-fade-in">
+        <div className="fixed inset-0 z-[250] flex justify-end md:items-center md:justify-center p-0 md:p-6">
+            <style>{`
+                @keyframes slideInRight {
+                    from { transform: translateX(100%); }
+                    to { transform: translateX(0); }
+                }
+                @keyframes zoomIn {
+                    from { opacity: 0; transform: scale(0.95); }
+                    to { opacity: 1; transform: scale(1); }
+                }
+                .drawer-enter {
+                    animation: slideInRight 0.3s cubic-bezier(0.32, 0.72, 0, 1) forwards;
+                }
+                .modal-enter {
+                    animation: zoomIn 0.2s ease-out forwards;
+                }
+            `}</style>
+
             {/* Blur Backdrop */}
             <div 
-                className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" 
+                className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm transition-opacity animate-fade-in" 
                 onClick={onClose}
             />
             
-            {/* Modal Content */}
-            <div className="relative w-full max-w-sm bg-white dark:bg-slate-900 rounded-[2rem] shadow-2xl overflow-hidden ring-1 ring-white/10 transform transition-all scale-100 opacity-100">
+            {/* Modal Content - Drawer on Mobile, Large Modal on Desktop */}
+            <div className={`
+                relative flex flex-col bg-white dark:bg-slate-900 shadow-2xl overflow-hidden
+                w-full h-full md:h-auto md:max-h-[85vh] md:max-w-5xl md:rounded-[2.5rem]
+                drawer-enter md:modal-enter
+            `}>
                 {/* Header */}
-                <div className="px-6 py-4 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-white dark:bg-slate-900">
-                    <div className="flex items-center gap-2">
-                        {Icon && <Icon size={20} className="text-emerald-600 dark:text-emerald-400" />}
-                        <h3 className="font-bold text-lg text-slate-900 dark:text-white font-heading">{title}</h3>
+                <div className="px-6 py-4 md:py-5 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-white dark:bg-slate-900 shrink-0 z-10">
+                    <div className="flex items-center gap-3">
+                        <button 
+                            onClick={onClose} 
+                            className="md:hidden p-2 -ml-2 text-slate-500 hover:bg-slate-100 rounded-full dark:hover:bg-slate-800 transition-colors"
+                        >
+                            <ChevronLeft size={24} />
+                        </button>
+                        {Icon && <div className="hidden md:flex w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 items-center justify-center text-emerald-600 dark:text-emerald-400"><Icon size={20} /></div>}
+                        <h3 className="font-bold text-xl text-slate-900 dark:text-white font-heading">{title}</h3>
                     </div>
                     <button 
                         onClick={onClose} 
-                        className="p-2 -mr-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full dark:hover:bg-slate-800 transition-colors"
+                        className="hidden md:block p-2 -mr-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full dark:hover:bg-slate-800 transition-colors"
                     >
-                        <X size={20} />
+                        <X size={24} />
                     </button>
                 </div>
                 
                 {/* Body */}
-                <div className="p-6">
+                <div className="flex-1 overflow-y-auto p-6 md:p-8 bg-slate-50/50 dark:bg-black/20">
                     {children}
                 </div>
             </div>
@@ -354,42 +382,42 @@ const Dashboard: React.FC<DashboardProps> = ({
                   {/* Current Rank Display */}
                   <div className="space-y-1">
                       <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Current Rank</p>
-                      <h2 className="text-2xl font-extrabold text-slate-800 dark:text-white font-heading">
+                      <h2 className="text-3xl md:text-4xl font-extrabold text-slate-800 dark:text-white font-heading">
                           {currentRankDef.name}
                       </h2>
                   </div>
 
                   {/* Stats Grid */}
                   <div className="grid grid-cols-2 gap-4">
-                      <div className="p-3 bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700">
-                          <p className="text-[10px] font-bold text-slate-400 uppercase mb-1">Qualifying Period</p>
-                          <p className="text-sm font-bold text-slate-700 dark:text-slate-200">
-                              Month {currentMonthIndex} <span className="text-slate-400 font-normal">of {qualificationMonths}</span>
+                      <div className="p-6 bg-slate-50 dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700">
+                          <p className="text-xs font-bold text-slate-400 uppercase mb-2">Qualifying Period</p>
+                          <p className="text-xl font-bold text-slate-700 dark:text-slate-200">
+                              Month {currentMonthIndex} <span className="text-slate-400 font-normal text-sm">of {qualificationMonths}</span>
                           </p>
                       </div>
-                      <div className="p-3 bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700">
-                          <p className="text-[10px] font-bold text-slate-400 uppercase mb-1">Cycle Volume</p>
-                          <p className="text-sm font-bold text-slate-700 dark:text-slate-200">
-                              {currentCC.toFixed(2)} <span className="text-slate-400 font-normal">/ {target} CC</span>
+                      <div className="p-6 bg-slate-50 dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700">
+                          <p className="text-xs font-bold text-slate-400 uppercase mb-2">Cycle Volume</p>
+                          <p className="text-xl font-bold text-slate-700 dark:text-slate-200">
+                              {currentCC.toFixed(2)} <span className="text-slate-400 font-normal text-sm">/ {target} CC</span>
                           </p>
                       </div>
                   </div>
 
                   {/* Progress Section */}
-                  <div className="bg-emerald-50 dark:bg-emerald-900/10 p-5 rounded-2xl border border-emerald-100 dark:border-emerald-800/50">
-                      <div className="flex justify-between items-end mb-2">
-                          <span className="text-xs font-bold text-emerald-800 dark:text-emerald-400">Progress to Next Rank</span>
-                          <span className="text-lg font-bold text-emerald-600 dark:text-emerald-400">{pct.toFixed(0)}%</span>
+                  <div className="bg-emerald-50 dark:bg-emerald-900/10 p-8 rounded-3xl border border-emerald-100 dark:border-emerald-800/50 text-left">
+                      <div className="flex justify-between items-end mb-3">
+                          <span className="text-sm font-bold text-emerald-800 dark:text-emerald-400 uppercase tracking-wide">Progress to Next Rank</span>
+                          <span className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">{pct.toFixed(0)}%</span>
                       </div>
                       
-                      <div className="w-full h-3 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
+                      <div className="w-full h-4 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden mb-4">
                           <div 
                             className="h-full bg-emerald-500 rounded-full transition-all duration-1000 ease-out" 
                             style={{ width: `${pct}%` }}
                           />
                       </div>
                       
-                      <p className="text-xs text-emerald-700 dark:text-emerald-500 mt-3 font-medium">
+                      <p className="text-sm text-emerald-700 dark:text-emerald-500 font-medium">
                           {target > 0 && currentCC < target 
                             ? `You need ${(target - currentCC).toFixed(2)} more CC to level up!` 
                             : "You're on track! Keep pushing."}

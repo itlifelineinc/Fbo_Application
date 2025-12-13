@@ -42,7 +42,7 @@ const AutoStoriesIcon = ({ size, strokeWidth, className }: { size: number, strok
 
 // --- SUB-COMPONENTS ---
 
-// A. Left Column Card (Compact)
+// A. Left Column Card (Compact & Responsive)
 const InfoCard = ({ 
     title, 
     children, 
@@ -58,18 +58,18 @@ const InfoCard = ({
     className?: string,
     iconStyle?: 'FILLED' | 'OUTLINE' 
 }) => (
-    <div className={`bg-white dark:bg-slate-800 rounded-[1.25rem] p-5 shadow-sm border border-slate-100 dark:border-slate-700 flex flex-col gap-3 ${className}`}>
-        <div className="flex items-center gap-3 mb-0">
-            <div className={`w-8 h-8 rounded-full flex items-center justify-center ${colorClass}`}>
+    <div className={`bg-white dark:bg-slate-800 rounded-[1.25rem] p-4 lg:p-5 shadow-sm border border-slate-100 dark:border-slate-700 flex flex-col gap-2 ${className}`}>
+        <div className="flex items-center gap-3 mb-0 shrink-0">
+            <div className={`w-7 h-7 lg:w-8 lg:h-8 rounded-full flex items-center justify-center shrink-0 ${colorClass}`}>
                 {iconStyle === 'FILLED' ? (
-                    <Icon size={18} strokeWidth={2.5} fill="currentColor" className="opacity-90" />
+                    <Icon size={16} strokeWidth={2.5} fill="currentColor" className="opacity-90 lg:w-[18px] lg:h-[18px]" />
                 ) : (
-                    <Icon size={20} strokeWidth={2.5} className="opacity-90" />
+                    <Icon size={18} strokeWidth={2.5} className="opacity-90 lg:w-[20px] lg:h-[20px]" />
                 )}
             </div>
-            <h3 className="font-bold text-slate-700 dark:text-slate-200 text-xs uppercase tracking-wide">{title}</h3>
+            <h3 className="font-bold text-slate-700 dark:text-slate-200 text-[10px] lg:text-xs uppercase tracking-wide truncate">{title}</h3>
         </div>
-        <div className="pl-1">
+        <div className="pl-1 w-full flex-1 flex flex-col justify-center">
             {children}
         </div>
     </div>
@@ -78,12 +78,12 @@ const InfoCard = ({
 // B. Section Title with Custom Underline
 const SectionHeader = ({ title }: { title: string }) => (
     <div className="mb-4">
-        <h3 className="text-lg font-bold text-slate-800 dark:text-white inline-block">{title}</h3>
+        <h3 className="text-base lg:text-lg font-bold text-slate-800 dark:text-white inline-block">{title}</h3>
         <div className="h-1 w-8 bg-slate-800 dark:bg-slate-200 mt-1 rounded-full"></div>
     </div>
 );
 
-// C. Shortcut Item (Bold, Filled, Modern Gray)
+// C. Shortcut Item (Responsive)
 const ShortcutItem = ({ 
     title, 
     desc,
@@ -101,27 +101,26 @@ const ShortcutItem = ({
 }) => {
     const content = (
         <div className={`
-            flex flex-col items-center justify-center gap-3 p-6 rounded-3xl transition-all duration-300 h-full border border-transparent
+            flex flex-col items-center justify-center gap-2 lg:gap-3 p-4 lg:p-6 rounded-3xl transition-all duration-300 h-full border border-transparent
             ${disabled 
                 ? 'opacity-50 grayscale cursor-not-allowed bg-slate-50 dark:bg-slate-800/50' 
                 : 'bg-slate-50 hover:bg-white hover:shadow-2xl hover:border-slate-100 cursor-pointer group dark:bg-slate-800 dark:hover:bg-slate-700'}
         `}>
             <div className={`
-                p-5 rounded-2xl transition-all duration-300 relative
+                p-3 lg:p-5 rounded-2xl transition-all duration-300 relative
                 ${disabled ? 'text-slate-300' : 'text-slate-600 group-hover:text-slate-800 group-hover:scale-110 dark:text-slate-400 dark:group-hover:text-white'}
             `}>
                 <Icon 
-                    size={56} 
                     strokeWidth={2}
-                    className={disabled ? '' : 'fill-slate-200 dark:fill-slate-700'}
+                    className="w-8 h-8 lg:w-14 lg:h-14 fill-slate-200 dark:fill-slate-700"
                 />
                 {disabled && <div className="absolute -top-1 -right-1 bg-slate-200 rounded-full p-1"><Lock size={12} className="text-slate-500" /></div>}
             </div>
-            <div className="text-center space-y-1">
-                <h4 className="font-extrabold text-base text-slate-700 dark:text-slate-200 leading-tight">
+            <div className="text-center space-y-0.5 lg:space-y-1 w-full">
+                <h4 className="font-extrabold text-xs lg:text-base text-slate-700 dark:text-slate-200 leading-tight truncate px-1">
                     {title}
                 </h4>
-                <p className="text-xs text-slate-400 font-medium leading-tight px-2">
+                <p className="text-[10px] lg:text-xs text-slate-400 font-medium leading-tight px-1 truncate">
                     {desc}
                 </p>
             </div>
@@ -132,20 +131,6 @@ const ShortcutItem = ({
     if (to) return <Link to={to} className="block h-full">{content}</Link>;
     return <div onClick={onClick} className="h-full">{content}</div>;
 };
-
-// D. Mobile Stat Card
-const MobileStatCard = ({ label, value, subtext, icon: Icon, color }: { label: string, value: string, subtext: string, icon: any, color: string }) => (
-    <div className="bg-white dark:bg-slate-800 p-4 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm flex items-center gap-4">
-        <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-white ${color}`}>
-            <Icon size={24} />
-        </div>
-        <div>
-            <p className="text-xs font-bold text-slate-400 uppercase">{label}</p>
-            <p className="text-xl font-bold text-slate-900 dark:text-white font-heading">{value}</p>
-            <p className="text-[10px] text-slate-500 dark:text-slate-400">{subtext}</p>
-        </div>
-    </div>
-);
 
 interface DashboardProps {
   students: Student[];
@@ -303,7 +288,7 @@ const Dashboard: React.FC<DashboardProps> = ({
 
       return (
           <div className="h-full overflow-y-auto no-scrollbar">
-            <div className="max-w-7xl mx-auto p-6 md:p-8 animate-fade-in space-y-8">
+            <div className="max-w-7xl mx-auto p-4 md:p-8 animate-fade-in space-y-6 md:space-y-8">
                 {/* Header */}
                 <div className="flex items-center gap-4 mb-6">
                     <button onClick={() => setViewMode('DASHBOARD')} className="p-2 bg-white rounded-full hover:bg-slate-100 dark:bg-slate-800 dark:hover:bg-slate-700 transition-colors">
@@ -316,7 +301,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                 </div>
 
                 {/* 3-Month Activity Tracker */}
-                <div className="bg-white dark:bg-slate-800 p-8 rounded-[2rem] shadow-sm border border-slate-100 dark:border-slate-700">
+                <div className="bg-white dark:bg-slate-800 p-6 md:p-8 rounded-[2rem] shadow-sm border border-slate-100 dark:border-slate-700">
                     <h3 className="font-bold text-lg text-slate-800 dark:text-white mb-6 flex items-center gap-2">
                         <Calendar className="text-emerald-500" size={20}/> 3-Month Activity Cycle
                     </h3>
@@ -341,7 +326,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                 </div>
 
                 {/* Growth Trends Graph */}
-                <div className="bg-white dark:bg-slate-800 p-8 rounded-[2rem] shadow-sm border border-slate-100 dark:border-slate-700">
+                <div className="bg-white dark:bg-slate-800 p-6 md:p-8 rounded-[2rem] shadow-sm border border-slate-100 dark:border-slate-700">
                     <h3 className="font-bold text-lg text-slate-800 dark:text-white mb-6 flex items-center gap-2">
                         <TrendingUp className="text-blue-500" size={20}/> Growth Trends
                     </h3>
@@ -444,13 +429,13 @@ const Dashboard: React.FC<DashboardProps> = ({
                             </div>
                         </div>
                         {topPerformer ? (
-                            <div className="bg-slate-50 p-2 rounded-lg flex items-center gap-3 border border-slate-100 dark:bg-slate-700/30 dark:border-slate-700">
-                                <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 text-xs font-bold dark:bg-blue-900/50 dark:text-blue-200">
+                            <div className="bg-slate-50 p-2 rounded-lg flex items-center gap-3 border border-slate-100 dark:bg-slate-700/30 dark:border-slate-700 w-full overflow-hidden">
+                                <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 text-xs font-bold dark:bg-blue-900/50 dark:text-blue-200 shrink-0">
                                     {topPerformer.name.charAt(0)}
                                 </div>
                                 <div className="flex-1 min-w-0">
                                     <p className="text-xs font-bold text-slate-800 truncate dark:text-white">{topPerformer.name}</p>
-                                    <p className="text-[9px] text-emerald-600 font-bold dark:text-emerald-400">Top Performer ({topPerformer.caseCredits.toFixed(1)} CC)</p>
+                                    <p className="text-[9px] text-emerald-600 font-bold dark:text-emerald-400 truncate">Top Performer ({topPerformer.caseCredits.toFixed(1)} CC)</p>
                                 </div>
                             </div>
                         ) : (
@@ -562,17 +547,17 @@ const Dashboard: React.FC<DashboardProps> = ({
         {/* ======================= */}
         {/*    DESKTOP VIEW (New)    */}
         {/* ======================= */}
-        <div className="hidden md:block max-w-[1600px] mx-auto p-8">
-            <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 items-start">
+        <div className="hidden md:block max-w-[1600px] mx-auto p-4 lg:p-8">
+            <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 lg:gap-6 items-start">
                 
                 {/* LEFT COLUMN: Summary Stack */}
                 <div className="lg:col-span-1 space-y-4">
                     
                     {/* 1. Rank Card (Height approx 200px) */}
-                    <InfoCard title="Rank Progress" icon={Award} colorClass="bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400" className="h-48 justify-between">
+                    <InfoCard title="Rank Progress" icon={Award} colorClass="bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400" className="h-44 lg:h-48 justify-between">
                         <div>
                             <div className="flex justify-between items-end mb-2">
-                                <span className="text-xl font-bold text-slate-900 dark:text-white font-heading">{currentRankDef.name}</span>
+                                <span className="text-lg lg:text-xl font-bold text-slate-900 dark:text-white font-heading">{currentRankDef.name}</span>
                                 <span className="text-[10px] font-bold bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded dark:bg-yellow-900/50 dark:text-yellow-200">{rankProgress.currentRankId}</span>
                             </div>
                             <div className="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden dark:bg-slate-700 mb-3">
@@ -592,25 +577,25 @@ const Dashboard: React.FC<DashboardProps> = ({
                     </InfoCard>
 
                     {/* 2. Team Performance Snapshot */}
-                    <InfoCard title="Team Snapshot" icon={Users} colorClass="bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">
-                        <div className="flex justify-between items-center mb-4">
+                    <InfoCard title="Team Snapshot" icon={Users} colorClass="bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400" className="h-40 lg:h-44 justify-between">
+                        <div className="flex justify-between items-center mb-2">
                             <div>
-                                <span className="text-2xl font-bold text-slate-900 dark:text-white font-heading">{activeDownlines.length}</span>
-                                <span className="text-[10px] text-slate-400 block uppercase font-bold">Active Downlines</span>
+                                <span className="text-xl lg:text-2xl font-bold text-slate-900 dark:text-white font-heading">{activeDownlines.length}</span>
+                                <span className="text-[9px] lg:text-[10px] text-slate-400 block uppercase font-bold">Active Downlines</span>
                             </div>
                             <div className="text-right">
-                                <span className="text-lg font-bold text-blue-600 dark:text-blue-400">{teamCC.toFixed(1)}</span>
-                                <span className="text-[10px] text-slate-400 block uppercase font-bold">Team CC</span>
+                                <span className="text-base lg:text-lg font-bold text-blue-600 dark:text-blue-400">{teamCC.toFixed(1)}</span>
+                                <span className="text-[9px] lg:text-[10px] text-slate-400 block uppercase font-bold">Team CC</span>
                             </div>
                         </div>
                         {topPerformer ? (
-                            <div className="bg-slate-50 p-2 rounded-lg flex items-center gap-3 border border-slate-100 dark:bg-slate-700/30 dark:border-slate-700">
-                                <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 text-xs font-bold dark:bg-blue-900/50 dark:text-blue-200">
+                            <div className="bg-slate-50 p-1.5 lg:p-2 rounded-lg flex items-center gap-2 lg:gap-3 border border-slate-100 dark:bg-slate-700/30 dark:border-slate-700 w-full overflow-hidden min-w-0">
+                                <div className="w-7 h-7 lg:w-8 lg:h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 text-xs font-bold dark:bg-blue-900/50 dark:text-blue-200 shrink-0">
                                     {topPerformer.name.charAt(0)}
                                 </div>
                                 <div className="flex-1 min-w-0">
                                     <p className="text-xs font-bold text-slate-800 truncate dark:text-white">{topPerformer.name}</p>
-                                    <p className="text-[9px] text-emerald-600 font-bold dark:text-emerald-400">Top Performer ({topPerformer.caseCredits.toFixed(1)} CC)</p>
+                                    <p className="text-[9px] text-emerald-600 font-bold dark:text-emerald-400 truncate">Top: {topPerformer.caseCredits.toFixed(1)} CC</p>
                                 </div>
                             </div>
                         ) : (
@@ -619,12 +604,12 @@ const Dashboard: React.FC<DashboardProps> = ({
                     </InfoCard>
 
                     {/* 3. Earnings & Rewards (Updated Icon Style) */}
-                    <InfoCard title="Earnings & Rewards" icon={MoneyBagIcon} iconStyle="OUTLINE" colorClass="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">
-                        <div className="mb-3">
-                            <span className="text-2xl font-bold text-slate-900 dark:text-white font-heading">${monthlyEarnings.toLocaleString()}</span>
-                            <p className="text-[10px] text-slate-400 uppercase font-bold mt-0.5">Est. Earnings</p>
+                    <InfoCard title="Earnings & Rewards" icon={MoneyBagIcon} iconStyle="OUTLINE" colorClass="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400" className="h-40 lg:h-44 justify-between">
+                        <div className="mb-2 lg:mb-3">
+                            <span className="text-xl lg:text-2xl font-bold text-slate-900 dark:text-white font-heading">${monthlyEarnings.toLocaleString()}</span>
+                            <p className="text-[9px] lg:text-[10px] text-slate-400 uppercase font-bold mt-0.5">Est. Earnings</p>
                         </div>
-                        <div className="space-y-2">
+                        <div className="space-y-1 lg:space-y-2">
                             <div className="flex justify-between items-center text-xs">
                                 <span className="text-slate-600 dark:text-slate-400">Active Bonus</span>
                                 <span className={`font-bold ${monthlyCC >= 4 ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400'}`}>
@@ -634,7 +619,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                             <div className="flex justify-between items-center text-xs">
                                 <span className="text-slate-600 dark:text-slate-400">Global Rally</span>
                                 <div className="flex items-center gap-2">
-                                    <div className="w-16 bg-slate-200 h-1.5 rounded-full dark:bg-slate-700">
+                                    <div className="w-12 lg:w-16 bg-slate-200 h-1.5 rounded-full dark:bg-slate-700">
                                         <div className="bg-purple-500 h-1.5 rounded-full" style={{ width: '15%' }}></div>
                                     </div>
                                     <span className="font-bold text-purple-600 dark:text-purple-400">15%</span>
@@ -644,18 +629,18 @@ const Dashboard: React.FC<DashboardProps> = ({
                     </InfoCard>
 
                     {/* 4. Learning & Activity (Updated Icon Style) */}
-                    <InfoCard title="Learning Status" icon={AutoStoriesIcon} iconStyle="OUTLINE" colorClass="bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400">
-                        <div className="grid grid-cols-3 gap-2 mb-3 text-center">
-                            <div className="bg-purple-50 rounded-lg p-2 dark:bg-purple-900/10">
-                                <span className="block text-lg font-bold text-purple-700 dark:text-purple-300">{inProgressCourses}</span>
+                    <InfoCard title="Learning Status" icon={AutoStoriesIcon} iconStyle="OUTLINE" colorClass="bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400" className="h-40 lg:h-44 justify-between">
+                        <div className="grid grid-cols-3 gap-2 mb-2 lg:mb-3 text-center">
+                            <div className="bg-purple-50 rounded-lg p-1.5 lg:p-2 dark:bg-purple-900/10">
+                                <span className="block text-base lg:text-lg font-bold text-purple-700 dark:text-purple-300">{inProgressCourses}</span>
                                 <span className="text-[9px] text-slate-500 font-bold uppercase dark:text-slate-400">Active</span>
                             </div>
-                            <div className="bg-green-50 rounded-lg p-2 dark:bg-green-900/10">
-                                <span className="block text-lg font-bold text-green-700 dark:text-green-300">{completedCoursesCount}</span>
+                            <div className="bg-green-50 rounded-lg p-1.5 lg:p-2 dark:bg-green-900/10">
+                                <span className="block text-base lg:text-lg font-bold text-green-700 dark:text-green-300">{completedCoursesCount}</span>
                                 <span className="text-[9px] text-slate-500 font-bold uppercase dark:text-slate-400">Done</span>
                             </div>
-                            <div className="bg-orange-50 rounded-lg p-2 dark:bg-orange-900/10">
-                                <span className="block text-lg font-bold text-orange-700 dark:text-orange-300">{myPendingAssignments}</span>
+                            <div className="bg-orange-50 rounded-lg p-1.5 lg:p-2 dark:bg-orange-900/10">
+                                <span className="block text-base lg:text-lg font-bold text-orange-700 dark:text-orange-300">{myPendingAssignments}</span>
                                 <span className="text-[9px] text-slate-500 font-bold uppercase dark:text-slate-400">Tasks</span>
                             </div>
                         </div>
@@ -670,7 +655,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                 <div className="lg:col-span-3 space-y-4">
                     
                     {/* A. Welcome Banner (Redesigned) */}
-                    <div className="h-48 relative bg-gradient-to-r from-slate-900 to-slate-800 rounded-[1.25rem] px-8 flex items-center justify-between overflow-hidden shadow-sm">
+                    <div className="h-28 lg:h-32 relative bg-gradient-to-r from-slate-900 to-slate-800 rounded-[1.25rem] px-6 lg:px-8 flex items-center justify-between overflow-hidden shadow-sm">
                         <style>{`
                             @keyframes wave {
                                 0% { transform: rotate(0deg); }
@@ -694,43 +679,43 @@ const Dashboard: React.FC<DashboardProps> = ({
                         <div className="absolute bottom-0 left-20 w-48 h-48 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none"></div>
 
                         {/* Date Top Right */}
-                        <div className="absolute top-6 right-6 text-slate-400 text-sm font-medium tracking-wide">
+                        <div className="absolute top-4 lg:top-6 right-6 text-slate-400 text-xs lg:text-sm font-medium tracking-wide">
                             {new Date().toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric' })}
                         </div>
 
                         {/* Left Group */}
-                        <div className="flex items-center gap-6 z-10">
+                        <div className="flex items-center gap-4 lg:gap-6 z-10">
                             
                             {/* Glass Container with Waving Hand */}
-                            <div className="bg-white/10 backdrop-blur-md border border-white/10 p-4 rounded-2xl shadow-lg flex items-center justify-center">
+                            <div className="bg-white/10 backdrop-blur-md border border-white/10 p-2 lg:p-3 rounded-2xl shadow-lg flex items-center justify-center">
                                 {/* Using the Waving Hand Icon - Google Font */}
-                                <span className="material-symbols-outlined text-white select-none animate-wave" style={{ fontSize: '40px', fontWeight: 'bold' }}>
+                                <span className="material-symbols-outlined text-white select-none animate-wave" style={{ fontSize: '28px', fontWeight: 'bold' }}>
                                     hand_gesture
                                 </span>
                             </div>
 
                             {/* Welcome Text */}
                             <div>
-                                <h1 className="text-3xl md:text-4xl font-bold text-white font-heading tracking-tight drop-shadow-md">
+                                <h1 className="text-xl lg:text-3xl font-bold text-white font-heading tracking-tight drop-shadow-md">
                                     Welcome, {currentUser.name.split(' ')[0]}
                                 </h1>
                             </div>
                         </div>
 
                         {/* Right Green Icon (Trophy) - Kept on far right as requested */}
-                        <div className="relative z-10 hidden md:flex items-center justify-center mr-12">
-                            <div className="w-20 h-20 bg-gradient-to-br from-emerald-400 to-teal-600 rounded-2xl rotate-3 flex items-center justify-center shadow-2xl shadow-emerald-900/50 border-4 border-white/10">
-                                <TrophyIcon className="w-10 h-10 text-white" />
+                        <div className="relative z-10 hidden md:flex items-center justify-center mr-4 lg:mr-6">
+                            <div className="w-10 h-10 lg:w-12 lg:h-12 bg-gradient-to-br from-emerald-400 to-teal-600 rounded-2xl rotate-3 flex items-center justify-center shadow-2xl shadow-emerald-900/50 border-4 border-white/10">
+                                <TrophyIcon className="w-5 h-5 lg:w-6 lg:h-6 text-white" />
                             </div>
                         </div>
                     </div>
 
-                    {/* B. Shortcuts Grid (Increased Height - approx 2.5x side cards) */}
+                    {/* B. Shortcuts Grid (Increased Height - matches 3 side cards height) */}
                     <div>
                         <SectionHeader title="Shortcuts" />
                         
-                        <div className="bg-white dark:bg-slate-800 rounded-[2rem] p-8 shadow-sm border border-slate-100 dark:border-slate-700 min-h-[500px] flex flex-col justify-center">
-                            <div className="grid grid-cols-3 gap-6 h-full">
+                        <div className="bg-white dark:bg-slate-800 rounded-[2rem] p-6 lg:p-8 shadow-sm border border-slate-100 dark:border-slate-700 h-[30rem] lg:h-[35rem] flex flex-col justify-center">
+                            <div className="grid grid-cols-3 grid-rows-2 gap-4 lg:gap-6 h-full">
                                 
                                 <ShortcutItem 
                                     title="My Business" 

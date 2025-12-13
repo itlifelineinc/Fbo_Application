@@ -101,13 +101,13 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
   // Nav Items Configuration
   const renderNavLinks = () => (
     <nav className="flex-1 py-6 px-3 space-y-1 overflow-y-auto no-scrollbar">
-        <NavItem to="/dashboard" icon={<Home size={20}/>} label="Dashboard" active={isActive('/dashboard')} />
-        <NavItem to="/chat" icon={<MessageCircle size={20}/>} label="Team Chat" active={isActive('/chat')} />
+        <NavItem to="/dashboard" icon={<Home size={20} strokeWidth={3} />} label="Dashboard" active={isActive('/dashboard')} />
+        <NavItem to="/chat" icon={<MessageCircle size={20} strokeWidth={3} />} label="Team Chat" active={isActive('/chat')} />
         
         <div className="my-2 border-t border-slate-200 dark:border-slate-800 mx-4 opacity-50"></div>
         <div className="px-4 py-2 text-xs font-bold text-slate-400 uppercase tracking-wider">Training</div>
         
-        <NavItem to="/classroom" icon={<BookOpen size={20}/>} label="Classroom" active={isActive('/classroom') || location.pathname.startsWith('/training')} />
+        <NavItem to="/classroom" icon={<BookOpen size={20} strokeWidth={3} />} label="Classroom" active={isActive('/classroom') || location.pathname.startsWith('/training')} />
         
         <div className="my-2 border-t border-slate-200 dark:border-slate-800 mx-4 opacity-50"></div>
 
@@ -123,7 +123,7 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
         >
             <div className="flex items-center gap-3">
             <span className={`${location.pathname.startsWith('/sales') ? 'text-emerald-600' : 'text-slate-400 group-hover:text-emerald-500'}`}>
-                <DollarSign size={20}/>
+                <DollarSign size={20} strokeWidth={3} />
             </span>
             <span className="font-medium">Sales & CC</span>
             </div>
@@ -132,20 +132,20 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
 
         <div className={`overflow-hidden transition-all duration-300 ${isSalesMenuOpen ? 'max-h-40 opacity-100 mt-1' : 'max-h-0 opacity-0'}`}>
             <div className="ml-4 pl-3 border-l-2 border-slate-100 dark:border-slate-800 space-y-1">
-            <NavItem to="/sales" icon={<LayoutTemplate size={18}/>} label="Sales Log" active={isActive('/sales')} className="py-2 text-sm" />
-            <NavItem to="/sales-builder" icon={<Rocket size={18}/>} label="Sales Pages" active={isActive('/sales-builder')} className="py-2 text-sm" />
+            <NavItem to="/sales" icon={<LayoutTemplate size={18} strokeWidth={3} />} label="Sales Log" active={isActive('/sales')} className="py-2 text-sm" />
+            <NavItem to="/sales-builder" icon={<Rocket size={18} strokeWidth={3} />} label="Sales Pages" active={isActive('/sales-builder')} className="py-2 text-sm" />
             </div>
         </div>
         </div>
 
-        <NavItem to="/community" icon={<Globe size={20}/>} label="Community" active={isActive('/community')} />
+        <NavItem to="/community" icon={<Globe size={20} strokeWidth={3} />} label="Community" active={isActive('/community')} />
         
         {!isStudent && (
-            <NavItem to="/students" icon={<Users size={20}/>} label={isAdminOrSuper ? "All Students" : "My Team"} active={isActive('/students')} />
+            <NavItem to="/students" icon={<Users size={20} strokeWidth={3} />} label={isAdminOrSuper ? "All Students" : "My Team"} active={isActive('/students')} />
         )}
         
         {canBuildCourses && (
-            <NavItem to="/builder" icon={<Layers size={20}/>} label="Course Builder" active={isActive('/builder')} />
+            <NavItem to="/builder" icon={<Layers size={20} strokeWidth={3} />} label="Course Builder" active={isActive('/builder')} />
         )}
     </nav>
   );
@@ -172,13 +172,13 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
             <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center">
                 <Logo className="w-8 h-8" textClassName="text-xl font-bold" />
                 <button onClick={() => setIsSidebarOpen(false)} className="p-2 hover:bg-slate-100 rounded-full dark:hover:bg-slate-800 transition-colors">
-                    <X size={20} className="text-slate-500" />
+                    <X size={20} className="text-slate-500" strokeWidth={3} />
                 </button>
             </div>
             {renderNavLinks()}
             <div className="p-4 border-t border-slate-100 dark:border-slate-800">
                 <button onClick={onLogout} className="flex items-center gap-3 w-full px-4 py-3 text-red-600 hover:bg-red-50 rounded-xl transition-colors font-medium dark:hover:bg-red-900/10">
-                    <LogOut size={20} /> Sign Out
+                    <LogOut size={20} strokeWidth={3} /> Sign Out
                 </button>
             </div>
          </div>
@@ -198,7 +198,7 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
                     onClick={toggleSidebar}
                     className="hidden md:block p-2.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition-all active:scale-95"
                 >
-                    <Menu size={24} />
+                    <Menu size={28} strokeWidth={3} />
                 </button>
                 
                 {/* Mobile Logo */}
@@ -223,7 +223,7 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
                         onClick={() => setIsNotificationMenuOpen(!isNotificationMenuOpen)}
                         className="p-2.5 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400 transition-colors relative"
                     >
-                        <Bell size={22} />
+                        <Bell size={22} strokeWidth={2.5} />
                         {unreadCount > 0 && (
                             <span className="absolute top-1 right-1.5 w-4 h-4 bg-red-500 border-2 border-white dark:border-slate-900 rounded-full flex items-center justify-center text-[9px] font-bold text-white">
                                 {unreadCount}
@@ -350,16 +350,16 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
             >
                 {isDockExpanded ? (
                     <div className="flex justify-between items-center w-full px-2">
-                        <DockItem to="/dashboard" icon={<Home size={22} />} label="Home" active={isActive('/dashboard')} onClick={resetDockTimer} />
-                        <DockItem to="/classroom" icon={<BookOpen size={22} />} label="Learn" active={isActive('/classroom') || location.pathname.startsWith('/training')} onClick={resetDockTimer} />
-                        <DockItem to="/chat" icon={<MessageCircle size={22} />} label="Chat" active={isActive('/chat')} onClick={resetDockTimer} />
-                        <DockItem to="/community" icon={<Globe size={22} />} label="Social" active={isActive('/community')} onClick={resetDockTimer} />
+                        <DockItem to="/dashboard" icon={<Home size={22} strokeWidth={3} />} label="Home" active={isActive('/dashboard')} onClick={resetDockTimer} />
+                        <DockItem to="/classroom" icon={<BookOpen size={22} strokeWidth={3} />} label="Learn" active={isActive('/classroom') || location.pathname.startsWith('/training')} onClick={resetDockTimer} />
+                        <DockItem to="/chat" icon={<MessageCircle size={22} strokeWidth={3} />} label="Chat" active={isActive('/chat')} onClick={resetDockTimer} />
+                        <DockItem to="/community" icon={<Globe size={22} strokeWidth={3} />} label="Social" active={isActive('/community')} onClick={resetDockTimer} />
                         <button 
                             onClick={(e) => { setIsSidebarOpen(true); resetDockTimer(); }}
                             className="flex flex-col items-center gap-1 min-w-[56px] text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors"
                         >
                             <div className="p-2 rounded-2xl transition-all active:scale-95 hover:bg-slate-100 dark:hover:bg-slate-800">
-                                <Menu size={22} />
+                                <Menu size={22} strokeWidth={3} />
                             </div>
                             <span className="text-[9px] font-bold tracking-tight">Menu</span>
                         </button>
@@ -389,7 +389,7 @@ const NavItem: React.FC<{ to: string; icon: React.ReactNode; label: string; acti
         : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200'
     } ${className || ''}`}
   >
-    {active && <div className="absolute left-0 top-1/2 -translate-y-1/2 h-8 w-1 bg-emerald-500 rounded-r-full"></div>}
+    {active && <div className="absolute left-0 top-1/2 -translate-y-1/2 h-8 w-1 bg-emerald-50 rounded-r-full"></div>}
     <span className={`${active ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400 group-hover:text-slate-600 dark:text-slate-500 dark:group-hover:text-slate-300'}`}>
       {icon}
     </span>

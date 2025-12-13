@@ -50,6 +50,19 @@
       h1, h2, h3, h4, h5, h6 {
         font-family: "Lexend", sans-serif;
       }
+
+      /* Global Scrollbar Hiding - Preserves scrolling but hides UI */
+      * {
+        scrollbar-width: none !important; /* Firefox */
+        -ms-overflow-style: none !important; /* IE 10+ */
+      }
+      
+      *::-webkit-scrollbar {
+        display: none !important; /* Chrome/Safari/Webkit */
+        width: 0 !important;
+        height: 0 !important;
+        background: transparent !important;
+      }
     </style>
   <script type="importmap">
 {

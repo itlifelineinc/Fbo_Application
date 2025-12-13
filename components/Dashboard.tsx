@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { Link, useNavigate } from 'react-router-dom';
@@ -5,7 +6,7 @@ import { Student, UserRole, Course, CourseTrack, CourseStatus, MentorshipTemplat
 import { 
     Users, TrendingUp, Calendar, ArrowUpRight, Award, 
     BookOpen, DollarSign, Target, MessageSquare, PlusCircle, 
-    BarChart2, Zap, ArrowRight, Layout, ArrowLeft, Clock, Globe
+    BarChart2, Zap, ArrowRight, Layout, ArrowLeft, Clock, Globe, UserPlus, Shield
 } from 'lucide-react';
 import { RANKS } from '../constants';
 
@@ -18,7 +19,7 @@ const TrophyIcon = ({className}:{className?:string}) => (
 
 // --- SUB-COMPONENTS ---
 
-// A. Left Column Card
+// A. Left Column Card (Desktop)
 const InfoCard = ({ title, children, icon: Icon, colorClass }: { title: string, children?: React.ReactNode, icon: any, colorClass: string }) => (
     <div className="bg-white dark:bg-slate-800 rounded-[1.5rem] p-6 shadow-sm border border-slate-100 dark:border-slate-700 flex flex-col gap-4">
         <div className="flex items-center gap-3 mb-1">
@@ -33,7 +34,7 @@ const InfoCard = ({ title, children, icon: Icon, colorClass }: { title: string, 
     </div>
 );
 
-// B. Shortcut Card
+// B. Shortcut Card (Desktop)
 const ShortcutCard = ({ title, desc, icon: Icon, color, onClick, to }: { title: string, desc: string, icon: any, color: string, onClick?: () => void, to?: string }) => {
     const content = (
     <div className={`h-full bg-white dark:bg-slate-800 rounded-[2rem] p-6 shadow-sm border border-slate-100 dark:border-slate-700 hover:shadow-lg transition-all duration-300 hover:-translate-y-1 group cursor-pointer flex flex-col items-start justify-between relative overflow-hidden`}>
@@ -59,6 +60,34 @@ const ShortcutCard = ({ title, desc, icon: Icon, color, onClick, to }: { title: 
     if (to) return <Link to={to} className="block h-full">{content}</Link>;
     return <div onClick={onClick} className="h-full">{content}</div>;
 };
+
+// C. Mobile Action Button (Classic)
+const MobileActionBtn = ({ icon: Icon, label, colorClass, to, onClick }: { icon: any, label: string, colorClass: string, to?: string, onClick?: () => void }) => {
+    const content = (
+        <div className="flex flex-col items-center gap-2 p-4 bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700 active:scale-95 transition-transform">
+            <div className={`w-12 h-12 rounded-full flex items-center justify-center ${colorClass}`}>
+                <Icon size={24} />
+            </div>
+            <span className="text-xs font-bold text-slate-700 dark:text-slate-300 text-center leading-tight">{label}</span>
+        </div>
+    );
+    if (to) return <Link to={to} className="block">{content}</Link>;
+    return <button onClick={onClick} className="block w-full">{content}</button>;
+};
+
+// D. Mobile Stat Card
+const MobileStatCard = ({ label, value, subtext, icon: Icon, color }: { label: string, value: string, subtext: string, icon: any, color: string }) => (
+    <div className="bg-white dark:bg-slate-800 p-4 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm flex items-center gap-4">
+        <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-white ${color}`}>
+            <Icon size={24} />
+        </div>
+        <div>
+            <p className="text-xs font-bold text-slate-400 uppercase">{label}</p>
+            <p className="text-xl font-bold text-slate-900 dark:text-white font-heading">{value}</p>
+            <p className="text-[10px] text-slate-500 dark:text-slate-400">{subtext}</p>
+        </div>
+    </div>
+);
 
 interface DashboardProps {
   students: Student[];
@@ -102,7 +131,6 @@ const Dashboard: React.FC<DashboardProps> = ({
           progressPercent = Math.min(100, (rankProgress.currentCycleCC / rankProgress.targetCC) * 100);
           remainingCC = Math.max(0, rankProgress.targetCC - rankProgress.currentCycleCC);
       } else if (currentRankDef.requiredManagersInDownline) {
-          // Simplified logic for structure
           progressPercent = 50; 
       }
   } else {
@@ -110,13 +138,10 @@ const Dashboard: React.FC<DashboardProps> = ({
   }
 
   // 2. Team Stats
-  // Filter students where sponsorId matches current user
   const myDownline = students.filter(s => s.sponsorId === currentUser.handle);
   const activeMembers = myDownline.filter(s => s.caseCredits > 0).length;
-  // const inactiveMembers = myDownline.length - activeMembers; // unused
 
   // 3. Sales Stats
-  // Calculate total CC this month from sales history
   const currentMonth = new Date().toISOString().slice(0, 7); // YYYY-MM
   const monthlyCC = (currentUser.salesHistory || [])
     .filter(s => s.date.startsWith(currentMonth))
@@ -132,9 +157,8 @@ const Dashboard: React.FC<DashboardProps> = ({
   }).length;
   const learningProgress = startedCourses > 0 ? Math.round((completedCoursesCount / startedCourses) * 100) : 0;
 
-  // --- VIEW: GOAL MONITORING (The old graphs) ---
+  // --- VIEW: GOAL MONITORING (Desktop Sub-page) ---
   if (viewMode === 'GOALS') {
-      // Mock Data for Graph
       const performanceData = [
         { name: 'Jan', cc: 2.4 }, { name: 'Feb', cc: 3.1 }, { name: 'Mar', cc: 4.5 },
         { name: 'Apr', cc: 3.8 }, { name: 'May', cc: 5.2 }, { name: 'Jun', cc: 6.0 },
@@ -152,14 +176,13 @@ const Dashboard: React.FC<DashboardProps> = ({
                   </div>
               </div>
 
-              {/* 3-Month Activity Tracker (Reused Concept) */}
+              {/* 3-Month Activity Tracker */}
               <div className="bg-white dark:bg-slate-800 p-8 rounded-[2rem] shadow-sm border border-slate-100 dark:border-slate-700">
                   <h3 className="font-bold text-lg text-slate-800 dark:text-white mb-6 flex items-center gap-2">
                       <Calendar className="text-emerald-500" size={20}/> 3-Month Activity Cycle
                   </h3>
                   
                   <div className="relative pt-8 pb-4 px-4">
-                      {/* Bar */}
                       <div className="absolute top-1/2 left-0 right-0 h-2 bg-slate-100 dark:bg-slate-700 rounded-full -translate-y-1/2"></div>
                       <div className="absolute top-1/2 left-0 h-2 bg-emerald-500 rounded-full -translate-y-1/2 transition-all duration-1000" style={{ width: '60%' }}></div>
 
@@ -210,180 +233,278 @@ const Dashboard: React.FC<DashboardProps> = ({
       );
   }
 
-  // --- VIEW: MAIN DASHBOARD ---
+  // --- RENDER ---
   return (
-    <div className="max-w-[1600px] mx-auto p-4 md:p-8 animate-fade-in">
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+    <div className="animate-fade-in">
+        
+        {/* ======================= */}
+        {/*    MOBILE VIEW (Classic) */}
+        {/* ======================= */}
+        <div className="md:hidden p-4 space-y-6 pb-24">
             
-            {/* LEFT COLUMN: Summary Stack */}
-            <div className="lg:col-span-1 space-y-6">
-                
-                {/* 1. Rank Card */}
-                <InfoCard title="Current Rank" icon={Award} colorClass="bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400">
-                    <div className="flex justify-between items-end mb-2">
-                        <span className="text-2xl font-bold text-slate-900 dark:text-white font-heading">{currentRankDef.name}</span>
-                        <span className="text-xs font-bold bg-yellow-100 text-yellow-800 px-2 py-1 rounded dark:bg-yellow-900/50 dark:text-yellow-200">{rankProgress.currentRankId}</span>
-                    </div>
-                    <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden dark:bg-slate-700 mb-2">
-                        <div className="h-full bg-yellow-500 rounded-full" style={{ width: `${progressPercent}%` }}></div>
-                    </div>
-                    <p className="text-xs text-slate-500 dark:text-slate-400">
-                        {nextRankDef 
-                            ? `${remainingCC.toFixed(2)} CC to ${nextRankDef.name}`
-                            : 'Maximum Rank Achieved'}
-                    </p>
-                </InfoCard>
-
-                {/* 2. Team Card */}
-                <InfoCard title="My Team" icon={Users} colorClass="bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">
-                    <div className="flex justify-between items-center mb-4">
-                        <div>
-                            <span className="text-3xl font-bold text-slate-900 dark:text-white font-heading">{myDownline.length}</span>
-                            <span className="text-xs text-slate-400 block uppercase font-bold">Total Members</span>
-                        </div>
-                        <div className="h-10 w-px bg-slate-100 dark:bg-slate-700"></div>
-                        <div className="text-right">
-                            <span className="text-xl font-bold text-emerald-600 dark:text-emerald-400">{activeMembers}</span>
-                            <span className="text-xs text-slate-400 block uppercase font-bold">Active</span>
-                        </div>
-                    </div>
-                    <div className="flex gap-1">
-                        {[...Array(Math.min(5, myDownline.length))].map((_, i) => (
-                            <div key={i} className="w-8 h-8 rounded-full bg-slate-200 border-2 border-white dark:border-slate-800 dark:bg-slate-700" />
-                        ))}
-                        {myDownline.length > 5 && (
-                            <div className="w-8 h-8 rounded-full bg-slate-100 border-2 border-white flex items-center justify-center text-xs font-bold text-slate-500 dark:bg-slate-800 dark:border-slate-700">
-                                +{myDownline.length - 5}
-                            </div>
-                        )}
-                    </div>
-                </InfoCard>
-
-                {/* 3. Sales Card */}
-                <InfoCard title="Sales Summary" icon={DollarSign} colorClass="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">
-                    <div className="mb-4">
-                        <span className="text-3xl font-bold text-slate-900 dark:text-white font-heading">{monthlyCC.toFixed(2)}</span>
-                        <span className="text-sm font-bold text-emerald-600 ml-2 dark:text-emerald-400">CC</span>
-                        <p className="text-xs text-slate-400 uppercase font-bold mt-1">Earned This Month</p>
-                    </div>
-                    <div className="bg-emerald-50 p-3 rounded-xl dark:bg-emerald-900/20">
-                        <div className="flex justify-between text-xs mb-1">
-                            <span className="text-emerald-800 dark:text-emerald-200 font-medium">Monthly Goal</span>
-                            <span className="text-emerald-600 dark:text-emerald-400 font-bold">4.0 CC</span>
-                        </div>
-                        <div className="w-full bg-emerald-200/50 h-1.5 rounded-full overflow-hidden dark:bg-emerald-900/50">
-                            <div className="h-full bg-emerald-500 rounded-full" style={{ width: `${Math.min(100, (monthlyCC / 4) * 100)}%` }}></div>
-                        </div>
-                    </div>
-                </InfoCard>
-
-                {/* 4. Learning Card */}
-                <InfoCard title="Learning" icon={BookOpen} colorClass="bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400">
-                    <div className="flex justify-between items-center mb-2">
-                        <span className="text-2xl font-bold text-slate-900 dark:text-white font-heading">{learningProgress}%</span>
-                        <span className="text-xs font-bold bg-purple-50 text-purple-700 px-2 py-1 rounded dark:bg-purple-900/20 dark:text-purple-300">In Progress</span>
-                    </div>
-                    <p className="text-xs text-slate-500 mb-3 dark:text-slate-400">
-                        {completedCoursesCount} of {startedCourses} courses completed
-                    </p>
-                    <Link to="/classroom" className="text-xs font-bold text-purple-600 hover:text-purple-700 flex items-center gap-1 dark:text-purple-400">
-                        Continue Learning <ArrowRight size={12} />
-                    </Link>
-                </InfoCard>
-
+            {/* 1. Welcome Section */}
+            <div>
+                <h1 className="text-2xl font-bold text-slate-900 dark:text-white font-heading">
+                    Hello, {currentUser.name.split(' ')[0]}
+                </h1>
+                <p className="text-sm text-slate-500 dark:text-slate-400">Here's your business at a glance.</p>
             </div>
 
-            {/* RIGHT COLUMN: Main Area */}
-            <div className="lg:col-span-3 space-y-6">
+            {/* 2. Stats Grid (Original Style) */}
+            <div className="space-y-4">
+                <div className="bg-emerald-600 rounded-2xl p-6 text-white shadow-lg shadow-emerald-900/20 relative overflow-hidden">
+                    <div className="absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 bg-white/10 rounded-full blur-xl"></div>
+                    <div className="relative z-10">
+                        <p className="text-emerald-100 text-xs font-bold uppercase tracking-wider mb-1">Total Case Credits</p>
+                        <h2 className="text-4xl font-bold font-heading mb-4">{monthlyCC.toFixed(3)} CC</h2>
+                        
+                        <div className="flex justify-between text-xs text-emerald-100 mb-1">
+                            <span>4CC Active Goal</span>
+                            <span>{Math.round((monthlyCC / 4) * 100)}%</span>
+                        </div>
+                        <div className="w-full bg-black/20 rounded-full h-1.5">
+                            <div className="bg-white h-1.5 rounded-full" style={{ width: `${Math.min(100, (monthlyCC / 4) * 100)}%` }}></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                    <MobileStatCard 
+                        label="Current Rank" 
+                        value={currentRankDef.name} 
+                        subtext={nextRankDef ? `Next: ${nextRankDef.name}` : 'Max Rank'}
+                        icon={Award}
+                        color="bg-yellow-500"
+                    />
+                    <MobileStatCard 
+                        label="Active Team" 
+                        value={activeMembers.toString()} 
+                        subtext={`${myDownline.length} Total Members`}
+                        icon={Users}
+                        color="bg-blue-500"
+                    />
+                </div>
+            </div>
+
+            {/* 3. Quick Actions (Restored "Admission" etc) */}
+            <div>
+                <h3 className="font-bold text-slate-800 dark:text-white mb-4 ml-1">Quick Actions</h3>
+                <div className="grid grid-cols-3 gap-3">
+                    <MobileActionBtn 
+                        icon={UserPlus} 
+                        label="Enroll Student" 
+                        colorClass="bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400" 
+                        to="/students" // Or trigger modal logic if moved here
+                    />
+                    <MobileActionBtn 
+                        icon={TrendingUp} 
+                        label="Log Sale" 
+                        colorClass="bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400" 
+                        to="/sales"
+                    />
+                    <MobileActionBtn 
+                        icon={MessageSquare} 
+                        label="Team Chat" 
+                        colorClass="bg-indigo-100 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400" 
+                        to="/chat"
+                    />
+                    <MobileActionBtn 
+                        icon={BookOpen} 
+                        label="Classroom" 
+                        colorClass="bg-purple-100 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400" 
+                        to="/classroom"
+                    />
+                    <MobileActionBtn 
+                        icon={Globe} 
+                        label="Community" 
+                        colorClass="bg-pink-100 text-pink-600 dark:bg-pink-900/30 dark:text-pink-400" 
+                        to="/community"
+                    />
+                    <MobileActionBtn 
+                        icon={Zap} 
+                        label="Sales Page" 
+                        colorClass="bg-orange-100 text-orange-600 dark:bg-orange-900/30 dark:text-orange-400" 
+                        to="/sales-builder"
+                    />
+                </div>
+            </div>
+
+        </div>
+
+        {/* ======================= */}
+        {/*    DESKTOP VIEW (New)    */}
+        {/* ======================= */}
+        <div className="hidden md:block max-w-[1600px] mx-auto p-8">
+            <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
                 
-                {/* A. Welcome Banner */}
-                <div className="relative bg-gradient-to-r from-slate-900 to-slate-800 rounded-[2.5rem] p-8 md:p-12 overflow-hidden shadow-lg text-white">
-                    {/* Abstract Shapes */}
-                    <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -mr-16 -mt-16 blur-3xl"></div>
-                    <div className="absolute bottom-0 left-20 w-48 h-48 bg-emerald-500/20 rounded-full blur-3xl"></div>
+                {/* LEFT COLUMN: Summary Stack */}
+                <div className="lg:col-span-1 space-y-6">
                     
-                    <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
-                        <div>
-                            <div className="flex items-center gap-3 mb-2">
-                                <span className="bg-white/20 backdrop-blur-md px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider border border-white/10">
-                                    {new Date().toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' })}
-                                </span>
-                            </div>
-                            <h1 className="text-3xl md:text-5xl font-bold font-heading mb-4">
-                                Welcome back, {currentUser.name.split(' ')[0]}!
-                            </h1>
-                            <p className="text-slate-300 max-w-lg text-lg font-light leading-relaxed">
-                                "Success is not the key to happiness. Happiness is the key to success. If you love what you are doing, you will be successful."
-                            </p>
+                    {/* 1. Rank Card */}
+                    <InfoCard title="Current Rank" icon={Award} colorClass="bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400">
+                        <div className="flex justify-between items-end mb-2">
+                            <span className="text-2xl font-bold text-slate-900 dark:text-white font-heading">{currentRankDef.name}</span>
+                            <span className="text-xs font-bold bg-yellow-100 text-yellow-800 px-2 py-1 rounded dark:bg-yellow-900/50 dark:text-yellow-200">{rankProgress.currentRankId}</span>
                         </div>
+                        <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden dark:bg-slate-700 mb-2">
+                            <div className="h-full bg-yellow-500 rounded-full" style={{ width: `${progressPercent}%` }}></div>
+                        </div>
+                        <p className="text-xs text-slate-500 dark:text-slate-400">
+                            {nextRankDef 
+                                ? `${remainingCC.toFixed(2)} CC to ${nextRankDef.name}`
+                                : 'Maximum Rank Achieved'}
+                        </p>
+                    </InfoCard>
+
+                    {/* 2. Team Card */}
+                    <InfoCard title="My Team" icon={Users} colorClass="bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">
+                        <div className="flex justify-between items-center mb-4">
+                            <div>
+                                <span className="text-3xl font-bold text-slate-900 dark:text-white font-heading">{myDownline.length}</span>
+                                <span className="text-xs text-slate-400 block uppercase font-bold">Total Members</span>
+                            </div>
+                            <div className="h-10 w-px bg-slate-100 dark:bg-slate-700"></div>
+                            <div className="text-right">
+                                <span className="text-xl font-bold text-emerald-600 dark:text-emerald-400">{activeMembers}</span>
+                                <span className="text-xs text-slate-400 block uppercase font-bold">Active</span>
+                            </div>
+                        </div>
+                        <div className="flex gap-1">
+                            {[...Array(Math.min(5, myDownline.length))].map((_, i) => (
+                                <div key={i} className="w-8 h-8 rounded-full bg-slate-200 border-2 border-white dark:border-slate-800 dark:bg-slate-700" />
+                            ))}
+                            {myDownline.length > 5 && (
+                                <div className="w-8 h-8 rounded-full bg-slate-100 border-2 border-white flex items-center justify-center text-xs font-bold text-slate-500 dark:bg-slate-800 dark:border-slate-700">
+                                    +{myDownline.length - 5}
+                                </div>
+                            )}
+                        </div>
+                    </InfoCard>
+
+                    {/* 3. Sales Card */}
+                    <InfoCard title="Sales Summary" icon={DollarSign} colorClass="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">
+                        <div className="mb-4">
+                            <span className="text-3xl font-bold text-slate-900 dark:text-white font-heading">{monthlyCC.toFixed(2)}</span>
+                            <span className="text-sm font-bold text-emerald-600 ml-2 dark:text-emerald-400">CC</span>
+                            <p className="text-xs text-slate-400 uppercase font-bold mt-1">Earned This Month</p>
+                        </div>
+                        <div className="bg-emerald-50 p-3 rounded-xl dark:bg-emerald-900/20">
+                            <div className="flex justify-between text-xs mb-1">
+                                <span className="text-emerald-800 dark:text-emerald-200 font-medium">Monthly Goal</span>
+                                <span className="text-emerald-600 dark:text-emerald-400 font-bold">4.0 CC</span>
+                            </div>
+                            <div className="w-full bg-emerald-200/50 h-1.5 rounded-full overflow-hidden dark:bg-emerald-900/50">
+                                <div className="h-full bg-emerald-500 rounded-full" style={{ width: `${Math.min(100, (monthlyCC / 4) * 100)}%` }}></div>
+                            </div>
+                        </div>
+                    </InfoCard>
+
+                    {/* 4. Learning Card */}
+                    <InfoCard title="Learning" icon={BookOpen} colorClass="bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400">
+                        <div className="flex justify-between items-center mb-2">
+                            <span className="text-2xl font-bold text-slate-900 dark:text-white font-heading">{learningProgress}%</span>
+                            <span className="text-xs font-bold bg-purple-50 text-purple-700 px-2 py-1 rounded dark:bg-purple-900/20 dark:text-purple-300">In Progress</span>
+                        </div>
+                        <p className="text-xs text-slate-500 mb-3 dark:text-slate-400">
+                            {completedCoursesCount} of {startedCourses} courses completed
+                        </p>
+                        <Link to="/classroom" className="text-xs font-bold text-purple-600 hover:text-purple-700 flex items-center gap-1 dark:text-purple-400">
+                            Continue Learning <ArrowRight size={12} />
+                        </Link>
+                    </InfoCard>
+
+                </div>
+
+                {/* RIGHT COLUMN: Main Area */}
+                <div className="lg:col-span-3 space-y-6">
+                    
+                    {/* A. Welcome Banner */}
+                    <div className="relative bg-gradient-to-r from-slate-900 to-slate-800 rounded-[2.5rem] p-8 md:p-12 overflow-hidden shadow-lg text-white">
+                        <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -mr-16 -mt-16 blur-3xl"></div>
+                        <div className="absolute bottom-0 left-20 w-48 h-48 bg-emerald-500/20 rounded-full blur-3xl"></div>
                         
-                        {/* Trophy / Badge Icon */}
-                        <div className="hidden md:block">
-                            <div className="w-32 h-32 bg-gradient-to-br from-emerald-400 to-teal-600 rounded-3xl rotate-3 flex items-center justify-center shadow-2xl shadow-emerald-900/50 border-4 border-white/10">
-                                <TrophyIcon className="w-16 h-16 text-white" />
+                        <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+                            <div>
+                                <div className="flex items-center gap-3 mb-2">
+                                    <span className="bg-white/20 backdrop-blur-md px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider border border-white/10">
+                                        {new Date().toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' })}
+                                    </span>
+                                </div>
+                                <h1 className="text-3xl md:text-5xl font-bold font-heading mb-4">
+                                    Welcome back, {currentUser.name.split(' ')[0]}!
+                                </h1>
+                                <p className="text-slate-300 max-w-lg text-lg font-light leading-relaxed">
+                                    "Success is not the key to happiness. Happiness is the key to success. If you love what you are doing, you will be successful."
+                                </p>
+                            </div>
+                            
+                            <div className="hidden md:block">
+                                <div className="w-32 h-32 bg-gradient-to-br from-emerald-400 to-teal-600 rounded-3xl rotate-3 flex items-center justify-center shadow-2xl shadow-emerald-900/50 border-4 border-white/10">
+                                    <TrophyIcon className="w-16 h-16 text-white" />
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
 
-                {/* B. Shortcut Grid */}
-                <div>
-                    <h3 className="text-lg font-bold text-slate-800 dark:text-white mb-4 ml-2">Quick Actions</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 auto-rows-[180px]">
-                        
-                        <ShortcutCard 
-                            title="Goal Monitoring" 
-                            desc="Track your CC and activity trends."
-                            icon={Target}
-                            color="bg-red-500"
-                            onClick={() => setViewMode('GOALS')}
-                        />
-
-                        <ShortcutCard 
-                            title="Business Tracking" 
-                            desc="Log sales and view history."
-                            icon={TrendingUp}
-                            color="bg-emerald-500"
-                            to="/sales"
-                        />
-
-                        <ShortcutCard 
-                            title="Community Feed" 
-                            desc="Latest updates from the team."
-                            icon={Globe}
-                            color="bg-blue-500"
-                            to="/community"
-                        />
-
-                        <ShortcutCard 
-                            title="Messages" 
-                            desc="Chat with your sponsor & downline."
-                            icon={MessageSquare}
-                            color="bg-indigo-500"
-                            to="/chat"
-                        />
-
-                        {currentUser.role !== UserRole.STUDENT && (
+                    {/* B. Shortcut Grid */}
+                    <div>
+                        <h3 className="text-lg font-bold text-slate-800 dark:text-white mb-4 ml-2">Quick Actions</h3>
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 auto-rows-[180px]">
+                            
                             <ShortcutCard 
-                                title="Create Course" 
-                                desc="Build training for your team."
-                                icon={PlusCircle}
-                                color="bg-purple-500"
-                                to="/builder"
+                                title="Goal Monitoring" 
+                                desc="Track your CC and activity trends."
+                                icon={Target}
+                                color="bg-red-500"
+                                onClick={() => setViewMode('GOALS')}
                             />
-                        )}
 
-                        <ShortcutCard 
-                            title="Analytics" 
-                            desc="Detailed performance reports."
-                            icon={BarChart2}
-                            color="bg-orange-500"
-                            to="/dashboard" // Placeholder
-                        />
+                            <ShortcutCard 
+                                title="Business Tracking" 
+                                desc="Log sales and view history."
+                                icon={TrendingUp}
+                                color="bg-emerald-500"
+                                to="/sales"
+                            />
 
+                            <ShortcutCard 
+                                title="Community Feed" 
+                                desc="Latest updates from the team."
+                                icon={Globe}
+                                color="bg-blue-500"
+                                to="/community"
+                            />
+
+                            <ShortcutCard 
+                                title="Messages" 
+                                desc="Chat with your sponsor & downline."
+                                icon={MessageSquare}
+                                color="bg-indigo-500"
+                                to="/chat"
+                            />
+
+                            {currentUser.role !== UserRole.STUDENT && (
+                                <ShortcutCard 
+                                    title="Create Course" 
+                                    desc="Build training for your team."
+                                    icon={PlusCircle}
+                                    color="bg-purple-500"
+                                    to="/builder"
+                                />
+                            )}
+
+                            <ShortcutCard 
+                                title="Analytics" 
+                                desc="Detailed performance reports."
+                                icon={BarChart2}
+                                color="bg-orange-500"
+                                to="/dashboard" // Placeholder
+                            />
+
+                        </div>
                     </div>
-                </div>
 
+                </div>
             </div>
         </div>
     </div>

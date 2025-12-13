@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Student, UserRole, Course, AppNotification } from '../types';
-import { LogOut, Settings, Moon, Sun, ChevronDown, Award, Bell, LayoutTemplate, Minimize2, X, GripHorizontal, Menu, Home, BookOpen, Globe, Users, MessageCircle, DollarSign, Rocket, Layers } from 'lucide-react';
+import { LogOut, Settings, Moon, Sun, ChevronDown, Award, Bell, LayoutTemplate, Minimize2, X, GripHorizontal, Menu, Home, BookOpen, Globe, Users, MessageCircle, DollarSign, Rocket, Layers, MoreHorizontal } from 'lucide-react';
 import { RANKS } from '../constants';
 import { Logo } from './Logo';
 
@@ -22,6 +22,10 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const [isNotificationMenuOpen, setIsNotificationMenuOpen] = useState(false);
   const [isSalesMenuOpen, setIsSalesMenuOpen] = useState(false);
+  
+  // Mobile Dock State
+  const [isDockExpanded, setIsDockExpanded] = useState(false);
+  const dockTimeoutRef = useRef<any>(null);
 
   // Refs for Click Outside Logic
   const profileMenuRef = useRef<HTMLDivElement>(null);
@@ -69,6 +73,25 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
   useEffect(() => {
     setIsSidebarOpen(false);
   }, [location.pathname]);
+
+  // Dock Auto-Minimize Logic
+  const resetDockTimer = () => {
+    if (dockTimeoutRef.current) clearTimeout(dockTimeoutRef.current);
+    dockTimeoutRef.current = setTimeout(() => {
+      setIsDockExpanded(false);
+    }, 4000); // Minimize after 4 seconds of no interaction
+  };
+
+  const handleDockInteraction = () => {
+    setIsDockExpanded(true);
+    resetDockTimer();
+  };
+
+  // Initialize dock timer on mount
+  useEffect(() => {
+    resetDockTimer();
+    return () => { if (dockTimeoutRef.current) clearTimeout(dockTimeoutRef.current); };
+  }, []);
 
   const toggleSidebar = (e: React.MouseEvent) => {
       e.stopPropagation();
@@ -132,7 +155,8 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
       
       {/* 
           1. UNIFIED SIDEBAR DRAWER (Desktop & Mobile)
-          Triggered by Hamburger menu. Slide in from left with blur.
+          Triggered by Hamburger menu on desktop, or "More" on mobile dock.
+          Slide in from left with blur.
       */}
       <div 
         className={`fixed inset-0 z-[100] transition-opacity duration-300 ${isSidebarOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}
@@ -165,27 +189,29 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
       <div className="flex-1 flex flex-col h-full overflow-hidden relative">
         
         {/* 
-            2. UNIVERSAL TOP NAVBAR (Desktop & Mobile) 
-            Replaces the old specific headers.
+            2. UNIVERSAL TOP NAVBAR
         */}
         <header className="h-16 md:h-20 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between px-4 md:px-8 shrink-0 z-40 relative">
             <div className="flex items-center gap-4">
+                {/* Desktop Hamburger Only */}
                 <button 
                     onClick={toggleSidebar}
-                    className="p-2.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition-all active:scale-95"
+                    className="hidden md:block p-2.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition-all active:scale-95"
                 >
                     <Menu size={24} />
                 </button>
                 
+                {/* Mobile Logo */}
+                <div className="md:hidden">
+                    <Logo className="w-8 h-8" showText={false} />
+                </div>
+
                 {/* Breadcrumbs / Page Title */}
-                <div className="hidden md:flex flex-col">
-                    <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Nexu Academy</span>
+                <div className="flex flex-col">
+                    <span className="text-[10px] md:text-xs font-bold text-slate-400 uppercase tracking-widest hidden md:block">Nexu Academy</span>
                     <h1 className="text-lg font-bold text-slate-800 dark:text-white capitalize leading-tight">
                         {location.pathname.split('/')[1] || 'Dashboard'}
                     </h1>
-                </div>
-                <div className="md:hidden">
-                    <Logo className="w-8 h-8" showText={false} />
                 </div>
             </div>
 
@@ -280,9 +306,55 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
         </header>
 
         {/* Page Content */}
-        <main className="flex-1 overflow-hidden relative">
+        <main className="flex-1 overflow-hidden relative pb-24 md:pb-0">
             {children}
         </main>
+
+        {/* 
+            3. MOBILE FLOATING DOCK (Animated Interaction)
+            Visible only on mobile. 
+            Behavior:
+            - Idle: Small dots/pill (IOS style)
+            - Active/Click: Expands to show icons and labels
+        */}
+        <div className="md:hidden fixed bottom-6 left-0 right-0 z-50 flex justify-center pointer-events-none">
+            <div 
+                onClick={handleDockInteraction}
+                onTouchStart={handleDockInteraction}
+                className={`
+                    pointer-events-auto transition-all duration-500 cubic-bezier(0.34, 1.56, 0.64, 1) shadow-2xl backdrop-blur-2xl
+                    ${isDockExpanded 
+                        ? 'w-[90%] max-w-sm bg-white/95 dark:bg-slate-900/95 border border-slate-200/50 dark:border-slate-700/50 rounded-3xl p-3 translate-y-0 opacity-100' 
+                        : 'w-14 h-3 bg-slate-400/30 dark:bg-slate-500/30 rounded-full cursor-pointer hover:bg-slate-400/50 active:scale-95 opacity-60 hover:opacity-100 translate-y-4 mb-2'
+                    }
+                `}
+            >
+                {isDockExpanded ? (
+                    <div className="flex justify-between items-center w-full px-2">
+                        <DockItem to="/dashboard" icon={<Home size={22} />} label="Home" active={isActive('/dashboard')} onClick={resetDockTimer} />
+                        <DockItem to="/classroom" icon={<BookOpen size={22} />} label="Learn" active={isActive('/classroom') || location.pathname.startsWith('/training')} onClick={resetDockTimer} />
+                        <DockItem to="/chat" icon={<MessageCircle size={22} />} label="Chat" active={isActive('/chat')} onClick={resetDockTimer} />
+                        <DockItem to="/community" icon={<Globe size={22} />} label="Social" active={isActive('/community')} onClick={resetDockTimer} />
+                        <button 
+                            onClick={(e) => { setIsSidebarOpen(true); resetDockTimer(); }}
+                            className="flex flex-col items-center gap-1 min-w-[56px] text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors"
+                        >
+                            <div className="p-2 rounded-2xl transition-all active:scale-95 hover:bg-slate-100 dark:hover:bg-slate-800">
+                                <Menu size={22} />
+                            </div>
+                            <span className="text-[9px] font-bold tracking-tight">Menu</span>
+                        </button>
+                    </div>
+                ) : (
+                    // Minimized State: iOS Page Indicator Dots look
+                    <div className="w-full h-full flex items-center justify-center gap-1">
+                        <div className="w-1 h-1 bg-white/80 rounded-full"></div>
+                        <div className="w-1 h-1 bg-white/80 rounded-full"></div>
+                        <div className="w-1 h-1 bg-white/80 rounded-full"></div>
+                    </div>
+                )}
+            </div>
+        </div>
 
       </div>
     </div>
@@ -304,6 +376,25 @@ const NavItem: React.FC<{ to: string; icon: React.ReactNode; label: string; acti
     </span>
     <span>{label}</span>
   </Link>
+);
+
+const DockItem: React.FC<{ to: string; icon: React.ReactNode; label: string; active: boolean; onClick?: () => void }> = ({ to, icon, label, active, onClick }) => (
+    <Link 
+        to={to}
+        onClick={onClick}
+        className={`flex flex-col items-center gap-1 min-w-[56px] transition-all group`}
+    >
+        <div className={`p-2 rounded-2xl transition-all duration-300 active:scale-95 ${
+            active 
+            ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/30' 
+            : 'text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200'
+        }`}>
+            {icon}
+        </div>
+        <span className={`text-[9px] font-bold tracking-tight transition-colors ${active ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400 dark:text-slate-500'}`}>
+            {label}
+        </span>
+    </Link>
 );
 
 export default Layout;

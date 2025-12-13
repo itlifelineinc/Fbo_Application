@@ -7,7 +7,7 @@ import {
     Users, TrendingUp, Calendar, ArrowUpRight, Award, 
     BookOpen, DollarSign, Target, MessageSquare, PlusCircle, 
     BarChart2, Zap, ArrowRight, Layout, ArrowLeft, Clock, Globe, UserPlus, Shield,
-    ShoppingCart, GraduationCap, Bell, Flag, Store
+    ShoppingCart, GraduationCap, Bell, Flag, Store, Lock
 } from 'lucide-react';
 import { RANKS } from '../constants';
 
@@ -43,19 +43,52 @@ const SectionHeader = ({ title }: { title: string }) => (
     </div>
 );
 
-// C. Shortcut Item (Modern Gray Style)
-const ShortcutItem = ({ title, icon: Icon, onClick, to }: { title: string, icon: any, onClick?: () => void, to?: string }) => {
+// C. Shortcut Item (Bold, Filled, Modern Gray)
+const ShortcutItem = ({ 
+    title, 
+    desc,
+    icon: Icon, 
+    onClick, 
+    to, 
+    disabled = false 
+}: { 
+    title: string, 
+    desc: string,
+    icon: any, 
+    onClick?: () => void, 
+    to?: string,
+    disabled?: boolean
+}) => {
     const content = (
-        <div className="flex flex-col items-center justify-center gap-4 p-6 rounded-2xl transition-all duration-300 hover:bg-slate-50 group cursor-pointer dark:hover:bg-slate-700/50 h-full">
-            <Icon 
-                size={48} 
-                strokeWidth={1.5}
-                className="text-slate-400 group-hover:text-slate-600 group-hover:scale-110 transition-all duration-300 dark:text-slate-500 dark:group-hover:text-slate-300" 
-            />
-            <h4 className="font-bold text-sm text-slate-600 text-center group-hover:text-slate-900 transition-colors dark:text-slate-400 dark:group-hover:text-white">{title}</h4>
+        <div className={`
+            flex flex-col items-center justify-center gap-3 p-4 rounded-3xl transition-all duration-300 h-full border border-transparent
+            ${disabled 
+                ? 'opacity-50 grayscale cursor-not-allowed bg-slate-50 dark:bg-slate-800/50' 
+                : 'bg-slate-50 hover:bg-white hover:shadow-xl hover:border-slate-100 cursor-pointer group dark:bg-slate-800 dark:hover:bg-slate-700'}
+        `}>
+            <div className={`
+                p-4 rounded-2xl transition-all duration-300 relative
+                ${disabled ? 'text-slate-300' : 'text-slate-600 group-hover:text-slate-800 group-hover:scale-110 dark:text-slate-400 dark:group-hover:text-white'}
+            `}>
+                <Icon 
+                    size={42} 
+                    strokeWidth={2}
+                    className={disabled ? '' : 'fill-slate-200 dark:fill-slate-700'}
+                />
+                {disabled && <div className="absolute -top-1 -right-1 bg-slate-200 rounded-full p-1"><Lock size={12} className="text-slate-500" /></div>}
+            </div>
+            <div className="text-center space-y-1">
+                <h4 className="font-extrabold text-sm text-slate-700 dark:text-slate-200 leading-tight">
+                    {title}
+                </h4>
+                <p className="text-[10px] text-slate-400 font-medium leading-tight px-2">
+                    {desc}
+                </p>
+            </div>
         </div>
     );
 
+    if (disabled) return <div className="h-full">{content}</div>;
     if (to) return <Link to={to} className="block h-full">{content}</Link>;
     return <div onClick={onClick} className="h-full">{content}</div>;
 };
@@ -277,13 +310,44 @@ const Dashboard: React.FC<DashboardProps> = ({
             <div>
                 <SectionHeader title="Shortcuts" />
                 <div className="bg-white dark:bg-slate-800 rounded-[2rem] p-4 shadow-sm border border-slate-100 dark:border-slate-700">
-                    <div className="grid grid-cols-3 gap-y-6">
-                        <ShortcutItem title="My Business" icon={TrendingUp} to="/sales" />
-                        <ShortcutItem title="Sales Pages" icon={ShoppingCart} to="/sales-builder" />
-                        <ShortcutItem title="Training Hub" icon={GraduationCap} to="/classroom" />
-                        <ShortcutItem title="My Team" icon={Users} to="/students" />
-                        <ShortcutItem title="Goals" icon={Target} onClick={() => setViewMode('GOALS')} />
-                        <ShortcutItem title="Inbox" icon={Bell} to="/broadcasts" />
+                    <div className="grid grid-cols-3 gap-y-6 gap-x-2">
+                        <ShortcutItem 
+                            title="My Business" 
+                            desc="Track CC"
+                            icon={TrendingUp} 
+                            to="/sales" 
+                        />
+                        <ShortcutItem 
+                            title="Sales Pages" 
+                            desc="Get Leads"
+                            icon={ShoppingCart} 
+                            to="/sales-builder" 
+                        />
+                        <ShortcutItem 
+                            title="Training" 
+                            desc="Learn Skills"
+                            icon={GraduationCap} 
+                            to="/classroom" 
+                        />
+                        <ShortcutItem 
+                            title="My Team" 
+                            desc="Manage"
+                            icon={Users} 
+                            to="/students"
+                            disabled={!myDownline.length && currentUser.role === UserRole.STUDENT} // Visual disable example
+                        />
+                        <ShortcutItem 
+                            title="Goals" 
+                            desc="Targets"
+                            icon={Target} 
+                            onClick={() => setViewMode('GOALS')} 
+                        />
+                        <ShortcutItem 
+                            title="Inbox" 
+                            desc="Alerts"
+                            icon={Bell} 
+                            to="/broadcasts" 
+                        />
                     </div>
                 </div>
             </div>
@@ -410,40 +474,47 @@ const Dashboard: React.FC<DashboardProps> = ({
                         <SectionHeader title="Shortcuts" />
                         
                         <div className="bg-white dark:bg-slate-800 rounded-[2rem] p-8 shadow-sm border border-slate-100 dark:border-slate-700">
-                            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-y-10 gap-x-6">
+                            <div className="grid grid-cols-3 gap-y-10 gap-x-6">
                                 
                                 <ShortcutItem 
                                     title="My Business" 
+                                    desc="Track volume & growth"
                                     icon={TrendingUp}
                                     to="/sales"
                                 />
 
                                 <ShortcutItem 
                                     title="Sales Pages" 
+                                    desc="Create funnels & leads"
                                     icon={ShoppingCart}
                                     to="/sales-builder"
                                 />
 
                                 <ShortcutItem 
                                     title="Training Hub" 
+                                    desc="Learn skills & products"
                                     icon={GraduationCap}
                                     to="/classroom"
                                 />
 
                                 <ShortcutItem 
                                     title="My Team" 
+                                    desc="Monitor downline progress"
                                     icon={Users}
                                     to="/students"
+                                    disabled={!myDownline.length && currentUser.role === UserRole.STUDENT} 
                                 />
 
                                 <ShortcutItem 
                                     title="Goals & Incentives" 
+                                    desc="Hit next rank target"
                                     icon={Target}
                                     onClick={() => setViewMode('GOALS')}
                                 />
 
                                 <ShortcutItem 
                                     title="Inbox" 
+                                    desc="Alerts & announcements"
                                     icon={Bell}
                                     to="/broadcasts"
                                 />

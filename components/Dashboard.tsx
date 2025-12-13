@@ -55,7 +55,7 @@ const CustomModal = ({
             {/* Modal Content - Drawer on Mobile, Large Modal on Desktop */}
             <div className={`
                 relative flex flex-col bg-white dark:bg-slate-900 shadow-2xl overflow-hidden
-                w-full h-full md:h-auto md:max-h-[85vh] md:max-w-5xl md:rounded-[2.5rem]
+                w-full h-full md:h-[85vh] md:w-[90vw] md:max-w-6xl md:rounded-[2.5rem]
                 drawer-enter md:modal-enter
             `}>
                 {/* Header */}

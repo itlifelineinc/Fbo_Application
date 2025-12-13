@@ -373,7 +373,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                 {/* Glass Container with Waving Hand */}
                 <div className="bg-white/10 backdrop-blur-md border border-white/10 p-3.5 rounded-2xl shadow-lg flex items-center justify-center shrink-0 z-10">
                     <span className="material-symbols-outlined text-white select-none animate-wave" style={{ fontSize: '32px', fontWeight: 'bold' }}>
-                        hand_gesture
+                        waving_hand
                     </span>
                 </div>
 
@@ -690,7 +690,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                             <div className="bg-white/10 backdrop-blur-md border border-white/10 p-2 lg:p-3 rounded-2xl shadow-lg flex items-center justify-center">
                                 {/* Using the Waving Hand Icon - Google Font */}
                                 <span className="material-symbols-outlined text-white select-none animate-wave" style={{ fontSize: '28px', fontWeight: 'bold' }}>
-                                    hand_gesture
+                                    waving_hand
                                 </span>
                             </div>
 
@@ -702,10 +702,12 @@ const Dashboard: React.FC<DashboardProps> = ({
                             </div>
                         </div>
 
-                        {/* Right Green Icon (Trophy) - Kept on far right as requested */}
-                        <div className="relative z-10 hidden md:flex items-center justify-center mr-4 lg:mr-6">
-                            <div className="w-10 h-10 lg:w-12 lg:h-12 bg-gradient-to-br from-emerald-400 to-teal-600 rounded-2xl rotate-3 flex items-center justify-center shadow-2xl shadow-emerald-900/50 border-4 border-white/10">
-                                <TrophyIcon className="w-5 h-5 lg:w-6 lg:h-6 text-white" />
+                        {/* Right Green Icon (Trophy) - Updated to award_star, increased size, and positioned at bottom to avoid date overlap */}
+                        <div className="relative z-10 hidden md:flex items-center justify-center mr-4 lg:mr-8 self-end mb-3">
+                            <div className="w-16 h-16 lg:w-20 lg:h-20 bg-gradient-to-br from-emerald-400 to-teal-600 rounded-2xl rotate-3 flex items-center justify-center shadow-2xl shadow-emerald-900/50 border-4 border-white/10">
+                                <span className="material-symbols-outlined text-white" style={{ fontSize: '32px' }}>
+                                    award_star
+                                </span>
                             </div>
                         </div>
                     </div>

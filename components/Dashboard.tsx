@@ -61,27 +61,27 @@ const ShortcutItem = ({
 }) => {
     const content = (
         <div className={`
-            flex flex-col items-center justify-center gap-3 p-4 rounded-3xl transition-all duration-300 h-full border border-transparent
+            flex flex-col items-center justify-center gap-3 p-6 rounded-3xl transition-all duration-300 h-full border border-transparent
             ${disabled 
                 ? 'opacity-50 grayscale cursor-not-allowed bg-slate-50 dark:bg-slate-800/50' 
-                : 'bg-slate-50 hover:bg-white hover:shadow-xl hover:border-slate-100 cursor-pointer group dark:bg-slate-800 dark:hover:bg-slate-700'}
+                : 'bg-slate-50 hover:bg-white hover:shadow-2xl hover:border-slate-100 cursor-pointer group dark:bg-slate-800 dark:hover:bg-slate-700'}
         `}>
             <div className={`
-                p-4 rounded-2xl transition-all duration-300 relative
+                p-5 rounded-2xl transition-all duration-300 relative
                 ${disabled ? 'text-slate-300' : 'text-slate-600 group-hover:text-slate-800 group-hover:scale-110 dark:text-slate-400 dark:group-hover:text-white'}
             `}>
                 <Icon 
-                    size={42} 
+                    size={56} 
                     strokeWidth={2}
                     className={disabled ? '' : 'fill-slate-200 dark:fill-slate-700'}
                 />
                 {disabled && <div className="absolute -top-1 -right-1 bg-slate-200 rounded-full p-1"><Lock size={12} className="text-slate-500" /></div>}
             </div>
             <div className="text-center space-y-1">
-                <h4 className="font-extrabold text-sm text-slate-700 dark:text-slate-200 leading-tight">
+                <h4 className="font-extrabold text-base text-slate-700 dark:text-slate-200 leading-tight">
                     {title}
                 </h4>
-                <p className="text-[10px] text-slate-400 font-medium leading-tight px-2">
+                <p className="text-xs text-slate-400 font-medium leading-tight px-2">
                     {desc}
                 </p>
             </div>
@@ -515,7 +515,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                         <SectionHeader title="Shortcuts" />
                         
                         <div className="bg-white dark:bg-slate-800 rounded-[2rem] p-8 shadow-sm border border-slate-100 dark:border-slate-700 min-h-[500px] flex flex-col justify-center">
-                            <div className="grid grid-cols-3 gap-y-12 gap-x-8 h-full">
+                            <div className="grid grid-cols-3 gap-6 h-full">
                                 
                                 <ShortcutItem 
                                     title="My Business" 

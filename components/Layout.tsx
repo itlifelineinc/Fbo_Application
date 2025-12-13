@@ -325,7 +325,7 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
         </header>
 
         {/* Page Content */}
-        <main className="flex-1 overflow-hidden relative pb-24 md:pb-0">
+        <main className="flex-1 overflow-hidden relative pb-8 md:pb-0">
             {children}
         </main>
 

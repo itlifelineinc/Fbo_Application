@@ -21,8 +21,8 @@ const TrophyIcon = ({className}:{className?:string}) => (
 // --- SUB-COMPONENTS ---
 
 // A. Left Column Card (Compact)
-const InfoCard = ({ title, children, icon: Icon, colorClass }: { title: string, children?: React.ReactNode, icon: any, colorClass: string }) => (
-    <div className="bg-white dark:bg-slate-800 rounded-[1.25rem] p-5 shadow-sm border border-slate-100 dark:border-slate-700 flex flex-col gap-3">
+const InfoCard = ({ title, children, icon: Icon, colorClass, className = "" }: { title: string, children?: React.ReactNode, icon: any, colorClass: string, className?: string }) => (
+    <div className={`bg-white dark:bg-slate-800 rounded-[1.25rem] p-5 shadow-sm border border-slate-100 dark:border-slate-700 flex flex-col gap-3 ${className}`}>
         <div className="flex items-center gap-3 mb-0">
             <div className={`w-8 h-8 rounded-full flex items-center justify-center ${colorClass}`}>
                 <Icon size={16} />
@@ -37,9 +37,9 @@ const InfoCard = ({ title, children, icon: Icon, colorClass }: { title: string, 
 
 // B. Section Title with Custom Underline
 const SectionHeader = ({ title }: { title: string }) => (
-    <div className="mb-6">
+    <div className="mb-4">
         <h3 className="text-lg font-bold text-slate-800 dark:text-white inline-block">{title}</h3>
-        <div className="h-1 w-12 bg-slate-800 dark:bg-slate-200 mt-1 rounded-full"></div>
+        <div className="h-1 w-8 bg-slate-800 dark:bg-slate-200 mt-1 rounded-full"></div>
     </div>
 );
 
@@ -189,7 +189,6 @@ const Dashboard: React.FC<DashboardProps> = ({
   const inProgressCourses = startedCourses - completedCoursesCount;
   
   // Calculate Pending Assignments
-  // Find assignments assigned to current user, check if submission exists
   const myPendingAssignments = assignments.filter(a => {
       const isAssigned = a.assignedTo.includes(currentUser.handle);
       const isSubmitted = currentUser.assignmentSubmissions?.some(s => s.assignmentId === a.id);
@@ -198,7 +197,6 @@ const Dashboard: React.FC<DashboardProps> = ({
 
   // --- VIEW: GOAL MONITORING (Desktop Sub-page) ---
   if (viewMode === 'GOALS') {
-      // ... (Goal Monitoring Code remains same, ensuring scroll wrapper)
       const performanceData = [
         { name: 'Jan', cc: 2.4 }, { name: 'Feb', cc: 3.1 }, { name: 'Mar', cc: 4.5 },
         { name: 'Apr', cc: 3.8 }, { name: 'May', cc: 5.2 }, { name: 'Jun', cc: 6.0 },
@@ -282,7 +280,6 @@ const Dashboard: React.FC<DashboardProps> = ({
         {/*    MOBILE VIEW (Classic) */}
         {/* ======================= */}
         <div className="md:hidden p-4 space-y-6 pb-32">
-            
             {/* 1. Welcome Section */}
             <div>
                 <h1 className="text-2xl font-bold text-slate-900 dark:text-white font-heading">
@@ -384,16 +381,18 @@ const Dashboard: React.FC<DashboardProps> = ({
                 {/* LEFT COLUMN: Summary Stack */}
                 <div className="lg:col-span-1 space-y-4">
                     
-                    {/* 1. Rank Card */}
-                    <InfoCard title="Rank Progress" icon={Award} colorClass="bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400">
-                        <div className="flex justify-between items-end mb-2">
-                            <span className="text-xl font-bold text-slate-900 dark:text-white font-heading">{currentRankDef.name}</span>
-                            <span className="text-[10px] font-bold bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded dark:bg-yellow-900/50 dark:text-yellow-200">{rankProgress.currentRankId}</span>
+                    {/* 1. Rank Card (Height approx 200px) */}
+                    <InfoCard title="Rank Progress" icon={Award} colorClass="bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400" className="h-48 justify-between">
+                        <div>
+                            <div className="flex justify-between items-end mb-2">
+                                <span className="text-xl font-bold text-slate-900 dark:text-white font-heading">{currentRankDef.name}</span>
+                                <span className="text-[10px] font-bold bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded dark:bg-yellow-900/50 dark:text-yellow-200">{rankProgress.currentRankId}</span>
+                            </div>
+                            <div className="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden dark:bg-slate-700 mb-3">
+                                <div className="h-full bg-yellow-500 rounded-full" style={{ width: `${progressPercent}%` }}></div>
+                            </div>
                         </div>
-                        <div className="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden dark:bg-slate-700 mb-3">
-                            <div className="h-full bg-yellow-500 rounded-full" style={{ width: `${progressPercent}%` }}></div>
-                        </div>
-                        <div className="flex justify-between items-center text-[10px] text-slate-500 dark:text-slate-400 border-t border-slate-100 pt-2 dark:border-slate-700">
+                        <div className="flex justify-between items-center text-[10px] text-slate-500 dark:text-slate-400 border-t border-slate-100 pt-2 dark:border-slate-700 mt-auto">
                             <div className="flex flex-col">
                                 <span className="font-bold text-slate-700 dark:text-slate-300">{remainingCC.toFixed(2)} CC</span>
                                 <span>Remaining</span>
@@ -481,42 +480,42 @@ const Dashboard: React.FC<DashboardProps> = ({
                 </div>
 
                 {/* RIGHT COLUMN: Main Area */}
-                <div className="lg:col-span-3 space-y-8">
+                <div className="lg:col-span-3 space-y-4">
                     
-                    {/* A. Welcome Banner */}
-                    <div className="relative bg-gradient-to-r from-slate-900 to-slate-800 rounded-[2rem] p-8 md:p-10 overflow-hidden shadow-sm text-white">
+                    {/* A. Welcome Banner (Reduced Height to match Rank Card approx 192px) */}
+                    <div className="h-48 relative bg-gradient-to-r from-slate-900 to-slate-800 rounded-[1.25rem] p-6 overflow-hidden shadow-sm text-white flex flex-col justify-center">
                         <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -mr-16 -mt-16 blur-3xl"></div>
                         <div className="absolute bottom-0 left-20 w-48 h-48 bg-emerald-500/20 rounded-full blur-3xl"></div>
                         
-                        <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+                        <div className="relative z-10 flex flex-row justify-between items-center gap-6 h-full">
                             <div>
                                 <div className="flex items-center gap-3 mb-2">
-                                    <span className="bg-white/20 backdrop-blur-md px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border border-white/10">
-                                        {new Date().toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' })}
+                                    <span className="bg-white/20 backdrop-blur-md px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border border-white/10">
+                                        {new Date().toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric' })}
                                     </span>
                                 </div>
-                                <h1 className="text-3xl md:text-4xl font-bold font-heading mb-3">
+                                <h1 className="text-2xl font-bold font-heading mb-1">
                                     Welcome back, {currentUser.name.split(' ')[0]}!
                                 </h1>
-                                <p className="text-slate-300 max-w-lg text-sm font-light leading-relaxed">
+                                <p className="text-slate-300 max-w-lg text-xs font-light leading-relaxed line-clamp-2">
                                     "Success is not the key to happiness. Happiness is the key to success. If you love what you are doing, you will be successful."
                                 </p>
                             </div>
                             
                             <div className="hidden md:block">
-                                <div className="w-24 h-24 bg-gradient-to-br from-emerald-400 to-teal-600 rounded-2xl rotate-3 flex items-center justify-center shadow-2xl shadow-emerald-900/50 border-4 border-white/10">
-                                    <TrophyIcon className="w-12 h-12 text-white" />
+                                <div className="w-20 h-20 bg-gradient-to-br from-emerald-400 to-teal-600 rounded-2xl rotate-3 flex items-center justify-center shadow-2xl shadow-emerald-900/50 border-4 border-white/10">
+                                    <TrophyIcon className="w-10 h-10 text-white" />
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    {/* B. Shortcuts Grid (Clean Modern Gray) */}
+                    {/* B. Shortcuts Grid (Increased Height - approx 2.5x side cards) */}
                     <div>
                         <SectionHeader title="Shortcuts" />
                         
-                        <div className="bg-white dark:bg-slate-800 rounded-[2rem] p-8 shadow-sm border border-slate-100 dark:border-slate-700">
-                            <div className="grid grid-cols-3 gap-y-10 gap-x-6">
+                        <div className="bg-white dark:bg-slate-800 rounded-[2rem] p-8 shadow-sm border border-slate-100 dark:border-slate-700 min-h-[500px] flex flex-col justify-center">
+                            <div className="grid grid-cols-3 gap-y-12 gap-x-8 h-full">
                                 
                                 <ShortcutItem 
                                     title="My Business" 

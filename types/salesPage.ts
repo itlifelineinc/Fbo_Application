@@ -1,6 +1,7 @@
 
 export type CurrencyCode = 'USD' | 'EUR' | 'GBP' | 'GHS' | 'NGN' | 'ZAR' | 'KES' | 'AED' | 'INR' | 'CAD' | 'AUD' | 'PHP' | 'MYR' | 'TZS' | 'UGX';
 export type LayoutStyle = 'classic' | 'modern' | 'minimal';
+export type PageType = 'product' | 'bundle' | 'problem' | 'capture' | 'brand' | 'recruit';
 
 export interface Product {
   id: string;
@@ -53,6 +54,7 @@ export interface Testimonial {
 
 export interface SalesPage {
   id: string;
+  type: PageType; // New field
   // Metadata
   title: string;
   subtitle: string;

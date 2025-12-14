@@ -1,5 +1,5 @@
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { SalesPage } from '../../types/salesPage';
 import MetaForm from './MetaForm';
 import MediaUploader from './MediaUploader';
@@ -12,7 +12,8 @@ import ContactSettings from './ContactSettings';
 import ThemeSelector from './ThemeSelector';
 import CTAButtonsEditor from './CTAButtonsEditor';
 import SEOSettings from './SEOSettings';
-import { Layout, Type, Image as ImageIcon, ShoppingBag, Package, FileText, MousePointerClick, Star, Phone, Search, ChevronLeft, ChevronRight } from 'lucide-react';
+import { PAGE_TAB_CONFIG, PlaceholderTab } from './TabConfiguration';
+import { Type, ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface EditorLayoutProps {
   data: SalesPage;
@@ -20,11 +21,17 @@ interface EditorLayoutProps {
   isPreviewMode: boolean;
 }
 
-type TabId = 'DETAILS' | 'THEME' | 'MEDIA' | 'PRODUCTS' | 'PACKAGES' | 'CONTENT' | 'CTA' | 'SOCIAL' | 'CONTACT' | 'SEO';
-
 const EditorLayout: React.FC<EditorLayoutProps> = ({ data, updateField, isPreviewMode }) => {
-  const [activeTab, setActiveTab] = useState<TabId>('DETAILS');
+  // Get the tabs for the current page type
+  const tabs = PAGE_TAB_CONFIG[data.type] || PAGE_TAB_CONFIG['product'];
+  
+  const [activeTabId, setActiveTabId] = useState<string>(tabs[0].id);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+  // Reset active tab if type changes
+  useEffect(() => {
+      setActiveTabId(tabs[0].id);
+  }, [data.type]);
 
   if (isPreviewMode) return null;
 
@@ -38,18 +45,75 @@ const EditorLayout: React.FC<EditorLayoutProps> = ({ data, updateField, isPrevie
     }
   };
 
-  const tabs: { id: TabId; label: string; icon: any }[] = [
-    { id: 'DETAILS', label: 'Details', icon: Type },
-    { id: 'THEME', label: 'Theme', icon: Layout },
-    { id: 'MEDIA', label: 'Visuals', icon: ImageIcon },
-    { id: 'PRODUCTS', label: 'Products', icon: ShoppingBag },
-    { id: 'PACKAGES', label: 'Bundles', icon: Package },
-    { id: 'CONTENT', label: 'Content', icon: FileText },
-    { id: 'CTA', label: 'Actions', icon: MousePointerClick },
-    { id: 'SOCIAL', label: 'Reviews', icon: Star },
-    { id: 'CONTACT', label: 'Contact', icon: Phone },
-    { id: 'SEO', label: 'SEO', icon: Search },
-  ];
+  // Content Renderer Switch
+  const renderContent = () => {
+      switch (activeTabId) {
+          // --- PRODUCT SALES TYPE ---
+          case 'OVERVIEW':
+              return <MetaForm data={data} onChange={updateField} />;
+          case 'PRODUCTS':
+              return <ProductSectionEditor data={data} onChange={updateField} />;
+          case 'CONTENT':
+              return (
+                  <div className="space-y-8">
+                      <RichTextEditor value={data.description} onChange={(val) => updateField('description', val)} />
+                      <div className="border-t border-slate-100 dark:border-slate-800 pt-6">
+                          <FeaturesList data={data} onChange={updateField} />
+                      </div>
+                  </div>
+              );
+          case 'DESIGN':
+              return <ThemeSelector data={data} onChange={updateField} />;
+          case 'TRUST_PROOF':
+          case 'PROOF': // Problem Solver
+          case 'TRUST_BUILDER': // Bundle
+              return <TestimonialsEditor data={data} onChange={updateField} />;
+          case 'CTA_SETUP':
+              return (
+                  <div className="space-y-8">
+                      <ContactSettings data={data} onChange={updateField} />
+                      <div className="border-t border-slate-100 dark:border-slate-800 pt-6">
+                          <CTAButtonsEditor data={data} onChange={updateField} />
+                      </div>
+                  </div>
+              );
+          
+          // --- BUNDLE TYPE ---
+          case 'PKG_BASICS':
+              return <MetaForm data={data} onChange={updateField} />;
+          case 'PKG_PRODUCTS':
+              return (
+                  <div className="space-y-8">
+                      <ProductSectionEditor data={data} onChange={updateField} />
+                      <div className="border-t border-slate-100 dark:border-slate-800 pt-6">
+                          <PackageSectionEditor data={data} onChange={updateField} />
+                      </div>
+                  </div>
+              );
+          
+          // --- PROBLEM SOLVER TYPE ---
+          case 'PAGE_BASICS':
+              return <MetaForm data={data} onChange={updateField} />;
+          case 'SOLUTION':
+              return <ProductSectionEditor data={data} onChange={updateField} />;
+
+          // --- GENERIC / NEW FEATURES (Placeholders) ---
+          case 'CHECKOUT':
+          case 'PUBLISH':
+          case 'EDUCATION':
+          case 'PRICING':
+          case 'PROBLEM_EDU':
+          case 'MISTAKES':
+          case 'LIFESTYLE':
+          case 'COMPLIANCE':
+              return <PlaceholderTab label={tabs.find(t => t.id === activeTabId)?.label || 'Feature'} />;
+          
+          default:
+              return <PlaceholderTab label="Under Construction" />;
+      }
+  };
+
+  const ActiveIcon = tabs.find(t => t.id === activeTabId)?.icon || Type;
 
   return (
     <div className="flex flex-col h-full bg-white dark:bg-slate-900">
@@ -58,8 +122,8 @@ const EditorLayout: React.FC<EditorLayoutProps> = ({ data, updateField, isPrevie
           display: none;
         }
         .no-scrollbar {
-          -ms-overflow-style: none;  /* IE and Edge */
-          scrollbar-width: none;  /* Firefox */
+          -ms-overflow-style: none;
+          scrollbar-width: none;
         }
       `}</style>
 
@@ -80,11 +144,11 @@ const EditorLayout: React.FC<EditorLayoutProps> = ({ data, updateField, isPrevie
         <div ref={scrollContainerRef} className="flex overflow-x-auto no-scrollbar py-3 px-4 gap-2 scroll-smooth">
           {tabs.map((tab) => {
             const Icon = tab.icon;
-            const isActive = activeTab === tab.id;
+            const isActive = activeTabId === tab.id;
             return (
               <button
                 key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
+                onClick={() => setActiveTabId(tab.id)}
                 className={`
                   flex items-center gap-2 px-4 py-2 rounded-full text-sm font-bold whitespace-nowrap transition-all
                   ${isActive 
@@ -117,28 +181,12 @@ const EditorLayout: React.FC<EditorLayoutProps> = ({ data, updateField, isPrevie
         <div className="max-w-2xl mx-auto space-y-6 animate-fade-in">
             <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800">
                 <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-6 font-heading border-b border-slate-100 dark:border-slate-800 pb-4 flex items-center gap-2">
-                    {React.createElement(tabs.find(t => t.id === activeTab)?.icon || Type, { size: 20, className: "text-emerald-500" })}
-                    {tabs.find(t => t.id === activeTab)?.label} Settings
+                    <ActiveIcon size={20} className="text-emerald-500" />
+                    {tabs.find(t => t.id === activeTabId)?.label} Settings
                 </h2>
                 
                 <div className="min-h-[300px]">
-                    {activeTab === 'DETAILS' && <MetaForm data={data} onChange={updateField} />}
-                    {activeTab === 'THEME' && <ThemeSelector data={data} onChange={updateField} />}
-                    {activeTab === 'MEDIA' && <MediaUploader data={data} onChange={updateField} />}
-                    {activeTab === 'PRODUCTS' && <ProductSectionEditor data={data} onChange={updateField} />}
-                    {activeTab === 'PACKAGES' && <PackageSectionEditor data={data} onChange={updateField} />}
-                    {activeTab === 'CONTENT' && (
-                        <div className="space-y-8">
-                            <RichTextEditor value={data.description} onChange={(val) => updateField('description', val)} />
-                            <div className="border-t border-slate-100 dark:border-slate-800 pt-6">
-                                <FeaturesList data={data} onChange={updateField} />
-                            </div>
-                        </div>
-                    )}
-                    {activeTab === 'CTA' && <CTAButtonsEditor data={data} onChange={updateField} />}
-                    {activeTab === 'SOCIAL' && <TestimonialsEditor data={data} onChange={updateField} />}
-                    {activeTab === 'CONTACT' && <ContactSettings data={data} onChange={updateField} />}
-                    {activeTab === 'SEO' && <SEOSettings data={data} onChange={updateField} />}
+                    {renderContent()}
                 </div>
             </div>
         </div>

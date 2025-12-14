@@ -1,11 +1,12 @@
 
 import React, { useState } from 'react';
 import { useLocalDraft } from '../hooks/useLocalDraft';
+import { PageType } from '../types/salesPage';
 import EditorToolbar from '../components/SalesEditor/EditorToolbar';
 import EditorLayout from '../components/SalesEditor/Layout';
 import PreviewPanel from '../components/SalesEditor/PreviewPanel';
 import { ResponsiveModal } from '../components/Shared/ResponsiveModal';
-import { LayoutTemplate, ShoppingBag, Package, Heart, MessageCircle, User, Briefcase, Check } from 'lucide-react';
+import { LayoutTemplate, ShoppingBag, Package, Heart, MessageCircle, User, Briefcase, Check, Lock } from 'lucide-react';
 
 const SalesPageBuilder: React.FC = () => {
   const { page, updateField, publish, lastSaved } = useLocalDraft();
@@ -17,50 +18,68 @@ const SalesPageBuilder: React.FC = () => {
   const [showTypeSelection, setShowTypeSelection] = useState(true);
   const [selectedType, setSelectedType] = useState<string | null>(null);
 
-  const pageTypes = [
+  const pageTypes: { 
+      id: PageType; 
+      title: string; 
+      description: string; 
+      icon: any; 
+      badge?: string; 
+      active: boolean 
+  }[] = [
     {
       id: 'product',
       title: 'Product Sales',
       description: 'Single product conversion page',
       icon: ShoppingBag,
-      badge: 'Popular'
+      badge: 'Popular',
+      active: true
     },
     {
       id: 'bundle',
       title: 'Package Bundle',
       description: 'Sell multiple products together',
       icon: Package,
+      active: true
     },
     {
       id: 'problem',
       title: 'Problem Solver',
       description: 'Focus on health solution',
       icon: Heart,
+      active: true
     },
     {
       id: 'capture',
       title: 'Lead Capture',
       description: 'Get WhatsApp leads fast',
       icon: MessageCircle,
+      active: false
     },
     {
       id: 'brand',
       title: 'Personal Brand',
       description: 'Your mini website profile',
       icon: User,
+      active: false
     },
     {
       id: 'recruit',
       title: 'Recruitment',
       description: 'Join the business opportunity',
       icon: Briefcase,
+      active: false
     }
   ];
 
-  const handleSelectType = (id: string) => {
+  const handleSelectType = (id: PageType, active: boolean) => {
+      if (!active) return;
+      
       setSelectedType(id);
-      // In a real app, this would initialize the template logic
-      // For now, we simulate a selection delay before closing
+      
+      // Update the draft with the selected type so EditorLayout knows what tabs to show
+      updateField('type', id);
+
+      // Close modal after delay
       setTimeout(() => {
           setShowTypeSelection(false);
       }, 400);
@@ -93,17 +112,19 @@ const SalesPageBuilder: React.FC = () => {
                   {pageTypes.map((type) => (
                       <button 
                           key={type.id}
-                          onClick={() => handleSelectType(type.id)}
+                          onClick={() => handleSelectType(type.id, type.active)}
                           className={`
                               flex flex-col items-center justify-center gap-3 p-4 py-6 rounded-3xl transition-all duration-300 h-full border text-center group relative
-                              ${selectedType === type.id 
-                                  ? 'bg-emerald-50 border-emerald-500 shadow-xl ring-1 ring-emerald-500 dark:bg-emerald-900/20 dark:border-emerald-500 scale-105' 
-                                  : 'bg-white hover:shadow-xl hover:border-slate-200 border-slate-100 dark:bg-slate-800 dark:border-slate-700 dark:hover:bg-slate-750'
+                              ${type.active 
+                                  ? selectedType === type.id 
+                                      ? 'bg-emerald-50 border-emerald-500 shadow-xl ring-1 ring-emerald-500 dark:bg-emerald-900/20 dark:border-emerald-500 scale-105' 
+                                      : 'bg-white hover:shadow-xl hover:border-slate-200 border-slate-100 dark:bg-slate-800 dark:border-slate-700 dark:hover:bg-slate-750'
+                                  : 'bg-slate-50 border-slate-100 opacity-60 cursor-not-allowed grayscale dark:bg-slate-800/50 dark:border-slate-700'
                               }
                           `}
                       >
                           {/* Badge if exists */}
-                          {type.badge && (
+                          {type.badge && type.active && (
                               <span className="absolute top-3 right-3 bg-emerald-100 text-emerald-800 text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider dark:bg-emerald-900 dark:text-emerald-300">
                                   {type.badge}
                               </span>
@@ -111,16 +132,22 @@ const SalesPageBuilder: React.FC = () => {
 
                           <div className={`
                               p-4 rounded-2xl transition-all duration-300 relative mb-1
-                              ${selectedType === type.id 
-                                  ? 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/50 dark:text-emerald-400' 
-                                  : 'text-slate-500 group-hover:text-slate-800 group-hover:scale-110 dark:text-slate-400 dark:group-hover:text-white bg-slate-50 dark:bg-slate-700/30'
+                              ${type.active 
+                                  ? selectedType === type.id 
+                                      ? 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/50 dark:text-emerald-400' 
+                                      : 'text-slate-500 group-hover:text-slate-800 group-hover:scale-110 dark:text-slate-400 dark:group-hover:text-white bg-slate-50 dark:bg-slate-700/30'
+                                  : 'bg-slate-200 text-slate-400 dark:bg-slate-700 dark:text-slate-500'
                               }
                           `}>
-                              <type.icon 
-                                  strokeWidth={2.5}
-                                  size={32}
-                                  className={selectedType === type.id ? 'fill-emerald-200/50' : 'fill-slate-100 dark:fill-slate-800'}
-                              />
+                              {type.active ? (
+                                <type.icon 
+                                    strokeWidth={2.5}
+                                    size={32}
+                                    className={selectedType === type.id ? 'fill-emerald-200/50' : 'fill-slate-100 dark:fill-slate-800'}
+                                />
+                              ) : (
+                                <Lock size={32} className="opacity-50" />
+                              )}
                           </div>
                           
                           <div className="space-y-1 w-full px-1">
@@ -128,7 +155,7 @@ const SalesPageBuilder: React.FC = () => {
                                   {type.title}
                               </h4>
                               <p className="text-[10px] md:text-xs text-slate-400 font-medium leading-snug">
-                                  {type.description}
+                                  {type.active ? type.description : 'Coming Soon'}
                               </p>
                           </div>
                           

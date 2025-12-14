@@ -4,6 +4,7 @@ import { SalesPage } from '../types/salesPage';
 
 const EMPTY_PAGE: SalesPage = {
   id: 'draft-new',
+  type: 'product',
   title: '',
   subtitle: '',
   slug: '',

@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, LayoutTemplate, ClipboardCheck, Megaphone, Plus, Save, Trash2, X, ChevronDown, List, Type, AlertCircle, FileText, Upload, Video, Mic, Calendar, Users, CheckCircle, Clock, Link as LinkIcon, Paperclip, Play, Pause, Image as ImageIcon, StopCircle, Edit, Download, Radio, Send, Youtube } from 'lucide-react';
@@ -1140,29 +1139,27 @@ const MentorshipTools: React.FC<MentorshipToolsProps> = ({
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 animate-fade-in p-4 md:p-8">
-      {/* Header */}
-      {activeView !== 'BROADCAST_SECTION' && (
-        <div className="max-w-4xl mx-auto mb-8">
-            <button 
-            onClick={() => {
-                if (activeView === 'TEMPLATE_EDITOR') setActiveView('TEMPLATES_LIST');
-                else if (activeView === 'TEMPLATES_LIST') setActiveView('MENU');
-                else if (activeView === 'ASSIGNMENT_EDITOR') setActiveView('ASSIGNMENTS_LIST');
-                else if (activeView === 'ASSIGNMENTS_LIST') setActiveView('MENU');
-                else if (activeView === 'BROADCAST_SECTION') setActiveView('MENU');
-                else navigate(-1); // Go back to dashboard/previous route
-            }}
-            className="flex items-center gap-2 text-slate-500 hover:text-emerald-600 mb-4 transition-colors font-medium text-sm dark:text-slate-400 dark:hover:text-emerald-400"
-            >
-            <ArrowLeft size={16} /> {activeView === 'MENU' ? 'Back' : 'Back'}
-            </button>
-            <h1 className="text-3xl font-bold text-slate-900 dark:text-white font-heading">Mentorship Tools</h1>
-            <p className="text-slate-500 dark:text-slate-400 mt-1">Empower your team with advanced management features.</p>
-        </div>
-      )}
+      {/* Header - Always visible to ensure Back button access */}
+      <div className="max-w-4xl mx-auto mb-8">
+          <button 
+          onClick={() => {
+              if (activeView === 'TEMPLATE_EDITOR') setActiveView('TEMPLATES_LIST');
+              else if (activeView === 'TEMPLATES_LIST') setActiveView('MENU');
+              else if (activeView === 'ASSIGNMENT_EDITOR') setActiveView('ASSIGNMENTS_LIST');
+              else if (activeView === 'ASSIGNMENTS_LIST') setActiveView('MENU');
+              else if (activeView === 'BROADCAST_SECTION') setActiveView('MENU');
+              else navigate(-1); // Go back to dashboard/previous route
+          }}
+          className="flex items-center gap-2 text-slate-500 hover:text-emerald-600 mb-4 transition-colors font-medium text-sm dark:text-slate-400 dark:hover:text-emerald-400"
+          >
+          <ArrowLeft size={16} /> {activeView === 'MENU' ? 'Back' : 'Back to Menu'}
+          </button>
+          <h1 className="text-3xl font-bold text-slate-900 dark:text-white font-heading">Mentorship Tools</h1>
+          <p className="text-slate-500 dark:text-slate-400 mt-1">Empower your team with advanced management features.</p>
+      </div>
 
       {/* View Switcher */}
-      <div className={`mx-auto ${activeView === 'BROADCAST_SECTION' ? 'h-[calc(100vh-4rem)] max-w-5xl' : 'max-w-4xl'}`}>
+      <div className={`mx-auto ${activeView === 'BROADCAST_SECTION' ? 'h-[calc(100vh-12rem)] max-w-5xl' : 'max-w-4xl'}`}>
           {activeView === 'MENU' && renderMenu()}
           {activeView === 'TEMPLATES_LIST' && renderTemplatesList()}
           {activeView === 'TEMPLATE_EDITOR' && renderTemplateEditor()}

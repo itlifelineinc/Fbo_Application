@@ -7,7 +7,7 @@ import {
     Users, TrendingUp, Calendar, ArrowUpRight, Award, 
     BookOpen, DollarSign, CircleDollarSign, Target, MessageSquare, PlusCircle, 
     BarChart2, Zap, ArrowRight, Layout, ArrowLeft, Clock, Globe, UserPlus, Shield,
-    ShoppingCart, GraduationCap, Bell, Flag, Store, Lock, CheckCircle, X, PieChart as PieChartIcon, Activity, Lightbulb, ChevronLeft, HelpCircle, Hand, Medal, Gift, Hourglass, Megaphone, MessageCircle, Sparkles, Rocket, UserCheck
+    ShoppingCart, GraduationCap, Bell, Flag, Store, Lock, CheckCircle, X, PieChart as PieChartIcon, Activity, Lightbulb, ChevronLeft, HelpCircle, Hand, Medal, Gift, Hourglass, Megaphone, MessageCircle, Sparkles, Rocket, UserCheck, LayoutTemplate, CreditCard, Phone, MousePointerClick, Smartphone, Eye
 } from 'lucide-react';
 import { RANKS, RANK_ORDER } from '../constants';
 
@@ -230,8 +230,20 @@ const Dashboard: React.FC<DashboardProps> = ({
 }) => {
   const navigate = useNavigate();
   const [viewMode, setViewMode] = useState<'DASHBOARD' | 'GOALS'>('DASHBOARD');
+  
+  // Drawer States
   const [isBusinessDrawerOpen, setIsBusinessDrawerOpen] = useState(false);
-  const [activeModal, setActiveModal] = useState<'NONE' | 'OVERVIEW' | 'BREAKDOWN' | 'RANK_JOURNEY' | 'MOMENTUM' | 'DOWNLINE' | 'SUGGESTIONS'>('NONE');
+  const [isSalesDrawerOpen, setIsSalesDrawerOpen] = useState(false); // NEW: Sales Drawer
+
+  // Combined Modal States
+  const [activeModal, setActiveModal] = useState<
+    'NONE' | 
+    // Business Section
+    'OVERVIEW' | 'BREAKDOWN' | 'RANK_JOURNEY' | 'MOMENTUM' | 'DOWNLINE' | 'SUGGESTIONS' |
+    // Sales Section
+    'MY_PAGES' | 'CREATE_PAGE' | 'LEADS' | 'ORDERS' | 'PAYMENTS' | 'SALES_ANALYTICS'
+  >('NONE');
+  
   const [supportMenuOpen, setSupportMenuOpen] = useState<string | null>(null); // Stores ID of user whose menu is open
   
   // Auto-scroll ref
@@ -360,7 +372,218 @@ const Dashboard: React.FC<DashboardProps> = ({
 
   // --- RENDER MODALS ---
   const renderModals = () => {
-      // SMART COACHING (Suggestions)
+      // ----------------------------
+      // SALES MODALS
+      // ----------------------------
+      
+      if (activeModal === 'MY_PAGES') {
+          return (
+              <CustomModal
+                  isOpen={true}
+                  onClose={() => setActiveModal('NONE')}
+                  title="My Sales Pages"
+                  icon={LayoutTemplate}
+              >
+                  <div className="space-y-6">
+                      <div className="flex justify-between items-center">
+                          <p className="text-sm text-slate-500">Manage your active landing pages.</p>
+                          <button onClick={() => navigate('/sales-builder')} className="text-xs bg-emerald-600 text-white px-3 py-2 rounded-lg font-bold">Create New</button>
+                      </div>
+                      
+                      <div className="grid gap-4">
+                          {[1, 2].map(i => (
+                              <div key={i} className="bg-white p-4 rounded-xl border border-slate-200 flex flex-col md:flex-row gap-4 items-start md:items-center dark:bg-slate-800 dark:border-slate-700">
+                                  <div className="w-16 h-16 bg-slate-100 rounded-lg flex items-center justify-center shrink-0 dark:bg-slate-700">
+                                      <Rocket size={24} className="text-slate-400" />
+                                  </div>
+                                  <div className="flex-1">
+                                      <div className="flex items-center gap-2">
+                                          <h4 className="font-bold text-slate-800 dark:text-white">Clean 9 Detox Offer</h4>
+                                          <span className="text-[10px] bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-bold uppercase">Published</span>
+                                      </div>
+                                      <p className="text-xs text-slate-500 mt-1">fbo.com/p/c9-detox-{currentUser.handle.replace('@','')}</p>
+                                      <div className="flex gap-4 mt-2 text-xs font-bold text-slate-400">
+                                          <span className="flex items-center gap-1"><Eye size={12}/> 124 Views</span>
+                                          <span className="flex items-center gap-1"><MousePointerClick size={12}/> 18 Clicks</span>
+                                      </div>
+                                  </div>
+                                  <div className="flex gap-2 w-full md:w-auto">
+                                      <button className="flex-1 md:flex-none px-4 py-2 border border-slate-200 rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-50 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-700">Edit</button>
+                                      <button className="flex-1 md:flex-none px-4 py-2 bg-emerald-50 text-emerald-700 rounded-lg text-xs font-bold hover:bg-emerald-100 dark:bg-emerald-900/30 dark:text-emerald-400">Share</button>
+                                  </div>
+                              </div>
+                          ))}
+                      </div>
+                  </div>
+              </CustomModal>
+          );
+      }
+
+      if (activeModal === 'CREATE_PAGE') {
+          return (
+              <CustomModal
+                  isOpen={true}
+                  onClose={() => setActiveModal('NONE')}
+                  title="Create Sales Page"
+                  icon={PlusCircle}
+              >
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <button onClick={() => navigate('/sales-builder')} className="p-6 rounded-2xl border-2 border-dashed border-slate-300 hover:border-emerald-500 hover:bg-emerald-50 transition-all group text-center dark:border-slate-700 dark:hover:bg-emerald-900/10">
+                          <div className="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
+                              <PlusCircle size={32} />
+                          </div>
+                          <h3 className="font-bold text-lg text-slate-800 dark:text-white">Start from Scratch</h3>
+                          <p className="text-sm text-slate-500 mt-2">Build a custom page with our easy editor.</p>
+                      </button>
+
+                      <button onClick={() => navigate('/sales-builder')} className="p-6 rounded-2xl border-2 border-slate-200 hover:border-blue-500 hover:bg-blue-50 transition-all group text-center dark:border-slate-700 dark:hover:bg-blue-900/10">
+                          <div className="w-16 h-16 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
+                              <LayoutTemplate size={32} />
+                          </div>
+                          <h3 className="font-bold text-lg text-slate-800 dark:text-white">Use a Template</h3>
+                          <p className="text-sm text-slate-500 mt-2">Choose from high-converting pre-built layouts.</p>
+                      </button>
+                  </div>
+              </CustomModal>
+          );
+      }
+
+      if (activeModal === 'LEADS') {
+          return (
+              <CustomModal
+                  isOpen={true}
+                  onClose={() => setActiveModal('NONE')}
+                  title="Leads & Conversations"
+                  icon={MessageCircle}
+              >
+                  <div className="space-y-4">
+                      <div className="bg-blue-50 p-4 rounded-xl flex items-start gap-3 border border-blue-100 dark:bg-blue-900/20 dark:border-blue-800">
+                          <Smartphone size={20} className="text-blue-600 dark:text-blue-400 mt-0.5" />
+                          <div>
+                              <h4 className="font-bold text-sm text-blue-900 dark:text-blue-300">WhatsApp Integration</h4>
+                              <p className="text-xs text-blue-700 mt-1 dark:text-blue-400">These leads clicked "Chat on WhatsApp" from your sales pages.</p>
+                          </div>
+                      </div>
+
+                      <div className="divide-y divide-slate-100 dark:divide-slate-800">
+                          {[1, 2, 3].map((i) => (
+                              <div key={i} className="py-4 flex items-center justify-between">
+                                  <div className="flex items-center gap-3">
+                                      <div className="w-10 h-10 bg-green-100 text-green-600 rounded-full flex items-center justify-center">
+                                          <MessageCircle size={20} />
+                                      </div>
+                                      <div>
+                                          <p className="font-bold text-slate-800 text-sm dark:text-white">+233 54 123 4567</p>
+                                          <p className="text-xs text-slate-500">Interested in Clean 9 • 2h ago</p>
+                                      </div>
+                                  </div>
+                                  <button className="text-xs font-bold text-emerald-600 border border-emerald-200 px-3 py-1.5 rounded-lg hover:bg-emerald-50 dark:border-emerald-800 dark:hover:bg-emerald-900/30">
+                                      Chat
+                                  </button>
+                              </div>
+                          ))}
+                      </div>
+                  </div>
+              </CustomModal>
+          );
+      }
+
+      if (activeModal === 'ORDERS') {
+          return (
+              <CustomModal
+                  isOpen={true}
+                  onClose={() => setActiveModal('NONE')}
+                  title="Orders & Checkout"
+                  icon={ShoppingCart}
+              >
+                  <div className="text-center py-12">
+                      <div className="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4 dark:bg-slate-800">
+                          <ShoppingCart size={32} className="text-slate-400" />
+                      </div>
+                      <h3 className="font-bold text-lg text-slate-800 dark:text-white">No Orders Yet</h3>
+                      <p className="text-sm text-slate-500 mt-2 max-w-xs mx-auto">Share your sales pages to start generating orders. They will appear here.</p>
+                  </div>
+              </CustomModal>
+          );
+      }
+
+      if (activeModal === 'PAYMENTS') {
+          return (
+              <CustomModal
+                  isOpen={true}
+                  onClose={() => setActiveModal('NONE')}
+                  title="Payment Setup"
+                  icon={CreditCard}
+              >
+                  <div className="space-y-6">
+                      <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 dark:bg-slate-800 dark:border-slate-700">
+                          <h4 className="font-bold text-sm text-slate-700 mb-4 dark:text-white">Active Methods</h4>
+                          <div className="flex items-center gap-3 p-3 bg-white rounded-lg border border-slate-200 dark:bg-slate-900 dark:border-slate-700">
+                              <div className="w-10 h-10 bg-yellow-400 rounded flex items-center justify-center font-bold text-xs">MTN</div>
+                              <div className="flex-1">
+                                  <p className="font-bold text-sm text-slate-800 dark:text-white">Mobile Money</p>
+                                  <p className="text-xs text-slate-500">Ending in **89</p>
+                              </div>
+                              <span className="text-xs text-green-600 font-bold bg-green-50 px-2 py-1 rounded">Active</span>
+                          </div>
+                      </div>
+
+                      <button className="w-full py-3 border-2 border-dashed border-slate-300 rounded-xl text-slate-500 font-bold text-sm hover:border-emerald-500 hover:text-emerald-600 transition-colors flex items-center justify-center gap-2 dark:border-slate-600 dark:hover:border-emerald-400">
+                          <PlusCircle size={16} /> Add Bank Account
+                      </button>
+                  </div>
+              </CustomModal>
+          );
+      }
+
+      if (activeModal === 'SALES_ANALYTICS') {
+          const data = [
+              { name: 'Mon', value: 12 }, { name: 'Tue', value: 19 }, { name: 'Wed', value: 3 },
+              { name: 'Thu', value: 5 }, { name: 'Fri', value: 2 }, { name: 'Sat', value: 30 }, { name: 'Sun', value: 45 }
+          ];
+          return (
+              <CustomModal
+                  isOpen={true}
+                  onClose={() => setActiveModal('NONE')}
+                  title="Sales Performance"
+                  icon={BarChart2}
+              >
+                  <div className="space-y-6">
+                      <div className="grid grid-cols-2 gap-4">
+                          <div className="bg-slate-50 p-4 rounded-xl dark:bg-slate-800">
+                              <p className="text-xs text-slate-500 font-bold uppercase">Total Views</p>
+                              <p className="text-2xl font-bold text-slate-900 dark:text-white">1,240</p>
+                          </div>
+                          <div className="bg-emerald-50 p-4 rounded-xl dark:bg-emerald-900/20">
+                              <p className="text-xs text-emerald-600 font-bold uppercase">Conversions</p>
+                              <p className="text-2xl font-bold text-emerald-700 dark:text-emerald-400">4.2%</p>
+                          </div>
+                      </div>
+
+                      <div className="h-64 w-full bg-white p-4 rounded-xl border border-slate-100 dark:bg-slate-800 dark:border-slate-700">
+                          <h4 className="text-xs font-bold text-slate-400 uppercase mb-4">Traffic (Last 7 Days)</h4>
+                          <ResponsiveContainer width="100%" height="100%">
+                              <AreaChart data={data}>
+                                  <defs>
+                                      <linearGradient id="colorTraffic" x1="0" y1="0" x2="0" y2="1">
+                                          <stop offset="5%" stopColor="#10b981" stopOpacity={0.3}/>
+                                          <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
+                                      </linearGradient>
+                                  </defs>
+                                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fontSize: 10}} />
+                                  <Tooltip />
+                                  <Area type="monotone" dataKey="value" stroke="#10b981" fill="url(#colorTraffic)" strokeWidth={3} />
+                              </AreaChart>
+                          </ResponsiveContainer>
+                      </div>
+                  </div>
+              </CustomModal>
+          );
+      }
+
+      // ----------------------------
+      // EXISTING BUSINESS MODALS
+      // ----------------------------
       if (activeModal === 'SUGGESTIONS') {
         const nextRankTarget = rankProgress.targetCC > 0 ? rankProgress.targetCC : null;
         const closeToRankTeam = myDownline.filter(s => {
@@ -482,7 +705,6 @@ const Dashboard: React.FC<DashboardProps> = ({
         );
       }
 
-      // CC BREAKDOWN
       if (activeModal === 'BREAKDOWN') {
         // 1. Calculate Personal CC based on Cycle Start Date
         const cycleStart = new Date(rankProgress.cycleStartDate);
@@ -1229,6 +1451,82 @@ const Dashboard: React.FC<DashboardProps> = ({
       );
   };
 
+  // --- DRAWER COMPONENT: SALES PAGES ---
+  const renderSalesDrawer = () => {
+      return (
+          <div className={`fixed inset-0 z-[200] bg-slate-50 dark:bg-slate-950 overflow-y-auto transform transition-transform duration-300 ease-in-out ${isSalesDrawerOpen ? 'translate-x-0' : 'translate-x-full'}`}>
+              
+              {/* Sticky Header */}
+              <div className="sticky top-0 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md px-4 py-3 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center z-10">
+                  <div className="flex items-center gap-3">
+                      <button 
+                        onClick={() => setIsSalesDrawerOpen(false)} 
+                        className="p-2 -ml-2 hover:bg-slate-100 rounded-full dark:hover:bg-slate-800 transition-colors"
+                      >
+                          <ChevronLeft size={28} className="text-slate-900 dark:text-white" strokeWidth={3} />
+                      </button>
+                      <h1 className="text-xl font-bold text-slate-900 dark:text-white font-heading">Sales & Marketing</h1>
+                  </div>
+              </div>
+
+              <div className="max-w-7xl mx-auto p-4 md:p-8 space-y-6 pb-20">
+                  
+                  <SectionHeader title="Tools" />
+
+                  {/* Consolidated Card Wrapper */}
+                  <div className="bg-white dark:bg-slate-800 rounded-[2rem] p-6 shadow-sm border border-slate-100 dark:border-slate-700">
+                      <div className="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-6">
+                          
+                          <ShortcutItem 
+                              title="My Sales Pages" 
+                              desc="Manage Landing Pages" 
+                              icon={LayoutTemplate} 
+                              onClick={() => setActiveModal('MY_PAGES')}
+                          />
+                          
+                          <ShortcutItem 
+                              title="Create Page" 
+                              desc="New Funnel" 
+                              icon={PlusCircle} 
+                              onClick={() => setActiveModal('CREATE_PAGE')}
+                          />
+                          
+                          <ShortcutItem 
+                              title="Leads" 
+                              desc="WhatsApp Chats" 
+                              icon={MessageCircle} 
+                              onClick={() => setActiveModal('LEADS')}
+                          />
+                          
+                          <ShortcutItem 
+                              title="Orders" 
+                              desc="Track Sales" 
+                              icon={ShoppingCart} 
+                              onClick={() => setActiveModal('ORDERS')}
+                          />
+                          
+                          <ShortcutItem 
+                              title="Payments" 
+                              desc="Payout Setup" 
+                              icon={CreditCard} 
+                              onClick={() => setActiveModal('PAYMENTS')}
+                          />
+                          
+                          <ShortcutItem 
+                              title="Analytics" 
+                              desc="Performance" 
+                              icon={BarChart2} 
+                              onClick={() => setActiveModal('SALES_ANALYTICS')}
+                          />
+
+                      </div>
+                  </div>
+
+              </div>
+          </div>
+      );
+  };
+
   // --- VIEW: GOAL MONITORING (Desktop Sub-page) ---
   if (viewMode === 'GOALS') {
       const performanceData = [
@@ -1310,8 +1608,9 @@ const Dashboard: React.FC<DashboardProps> = ({
   return (
     <div className="h-full overflow-y-auto no-scrollbar animate-fade-in relative">
         
-        {/* Full Screen My Business Drawer */}
+        {/* Full Screen Drawers */}
         {renderBusinessDrawer()}
+        {renderSalesDrawer()}
 
         {/* Custom Modal Layer */}
         {renderModals()}
@@ -1465,7 +1764,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                             title="Sales Pages" 
                             desc="Get Leads"
                             icon={ShoppingCart} 
-                            to="/sales-builder" 
+                            onClick={() => setIsSalesDrawerOpen(true)}
                         />
                         <ShortcutItem 
                             title="Training" 
@@ -1680,7 +1979,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                                     title="Sales Pages" 
                                     desc="Create funnels & leads"
                                     icon={ShoppingCart}
-                                    to="/sales-builder"
+                                    onClick={() => setIsSalesDrawerOpen(true)}
                                 />
 
                                 <ShortcutItem 

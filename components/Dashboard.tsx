@@ -7,7 +7,7 @@ import {
     Users, TrendingUp, Calendar, ArrowUpRight, Award, 
     BookOpen, DollarSign, CircleDollarSign, Target, MessageSquare, PlusCircle, 
     BarChart2, Zap, ArrowRight, Layout, ArrowLeft, Clock, Globe, UserPlus, Shield,
-    ShoppingCart, GraduationCap, Bell, Flag, Store, Lock, CheckCircle, X, PieChart as PieChartIcon, Activity, Lightbulb, ChevronLeft, HelpCircle, Hand, Medal
+    ShoppingCart, GraduationCap, Bell, Flag, Store, Lock, CheckCircle, X, PieChart as PieChartIcon, Activity, Lightbulb, ChevronLeft, HelpCircle, Hand, Medal, Gift, Hourglass, Megaphone, MessageCircle, Sparkles, Rocket
 } from 'lucide-react';
 import { RANKS, RANK_ORDER } from '../constants';
 
@@ -231,7 +231,8 @@ const Dashboard: React.FC<DashboardProps> = ({
   const navigate = useNavigate();
   const [viewMode, setViewMode] = useState<'DASHBOARD' | 'GOALS'>('DASHBOARD');
   const [isBusinessDrawerOpen, setIsBusinessDrawerOpen] = useState(false);
-  const [activeModal, setActiveModal] = useState<'NONE' | 'OVERVIEW' | 'BREAKDOWN'>('NONE');
+  const [activeModal, setActiveModal] = useState<'NONE' | 'OVERVIEW' | 'BREAKDOWN' | 'RANK_JOURNEY' | 'MOMENTUM' | 'DOWNLINE' | 'SUGGESTIONS'>('NONE');
+  const [supportMenuOpen, setSupportMenuOpen] = useState<string | null>(null); // Stores ID of user whose menu is open
   
   // Auto-scroll ref
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -359,6 +360,128 @@ const Dashboard: React.FC<DashboardProps> = ({
 
   // --- RENDER MODALS ---
   const renderModals = () => {
+      // SMART COACHING (Suggestions)
+      if (activeModal === 'SUGGESTIONS') {
+        const nextRankTarget = rankProgress.targetCC > 0 ? rankProgress.targetCC : null;
+        const closeToRankTeam = myDownline.filter(s => {
+            const target = s.rankProgress?.targetCC || 0;
+            const current = s.rankProgress?.currentCycleCC || 0;
+            return target > 0 && (target - current <= 0.5) && (target - current > 0);
+        });
+        const isSponsor = currentUser.role === UserRole.SPONSOR || currentUser.role === UserRole.ADMIN;
+
+        return (
+            <CustomModal
+                isOpen={true}
+                onClose={() => setActiveModal('NONE')}
+                title="Smart Coaching"
+                icon={Sparkles}
+            >
+                <div className="space-y-6 pb-8">
+                    <p className="text-slate-500 dark:text-slate-400">Small actions that move you forward today.</p>
+                    
+                    <div className="grid grid-cols-1 gap-4">
+                        
+                        {/* 1. Rank Progress Card */}
+                        {nextRankTarget && remainingCC > 0 && (
+                            <div className="p-6 rounded-2xl bg-blue-50 border border-blue-200 text-blue-900 flex flex-col gap-4 shadow-sm dark:bg-blue-900/20 dark:border-blue-800 dark:text-blue-100">
+                                <div className="flex items-start gap-4">
+                                    <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 shrink-0 dark:bg-blue-900/50 dark:text-blue-300">
+                                        <TrophyIcon className="w-5 h-5"/>
+                                    </div>
+                                    <div>
+                                        <h3 className="font-bold text-lg mb-1">Almost There</h3>
+                                        <p className="text-sm opacity-90 leading-relaxed">
+                                            You need <strong>{remainingCC.toFixed(2)} CC</strong> to reach <span className="font-bold">{nextRankDef?.name}</span>.
+                                        </p>
+                                        <p className="text-xs text-blue-600/80 mt-2 font-medium dark:text-blue-300/80">Completing this rank unlocks new bonuses.</p>
+                                    </div>
+                                </div>
+                                <button 
+                                    onClick={() => setActiveModal('RANK_JOURNEY')}
+                                    className="w-full bg-blue-600 text-white py-3 rounded-xl font-bold text-sm hover:bg-blue-700 transition-colors shadow-sm dark:bg-blue-500 dark:hover:bg-blue-600"
+                                >
+                                    View CC Breakdown
+                                </button>
+                            </div>
+                        )}
+
+                        {/* 2. Team Growth Card */}
+                        {closeToRankTeam.length > 0 && (
+                            <div className="p-6 rounded-2xl bg-amber-50 border border-amber-200 text-amber-900 flex flex-col gap-4 shadow-sm dark:bg-amber-900/20 dark:border-amber-800 dark:text-amber-100">
+                                <div className="flex items-start gap-4">
+                                    <div className="w-10 h-10 bg-amber-100 rounded-full flex items-center justify-center text-amber-600 shrink-0 dark:bg-amber-900/50 dark:text-amber-300">
+                                        <Users size={20}/>
+                                    </div>
+                                    <div>
+                                        <h3 className="font-bold text-lg mb-1">Support Your Team</h3>
+                                        <p className="text-sm opacity-90 leading-relaxed">
+                                            <span className="font-bold">{closeToRankTeam[0].name}</span> is close to leveling up.
+                                        </p>
+                                        <p className="text-xs text-amber-700/80 mt-2 font-medium dark:text-amber-300/80">Helping them succeed boosts your team volume.</p>
+                                    </div>
+                                </div>
+                                <button 
+                                    onClick={() => setActiveModal('DOWNLINE')}
+                                    className="w-full bg-amber-500 text-white py-3 rounded-xl font-bold text-sm hover:bg-amber-600 transition-colors shadow-sm"
+                                >
+                                    Send Encouragement
+                                </button>
+                            </div>
+                        )}
+
+                        {/* 3. Sales Optimization Card (Generic suggestion) */}
+                        <div className="p-6 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-900 flex flex-col gap-4 shadow-sm dark:bg-emerald-900/20 dark:border-emerald-800 dark:text-emerald-100">
+                            <div className="flex items-start gap-4">
+                                <div className="w-10 h-10 bg-emerald-100 rounded-full flex items-center justify-center text-emerald-600 shrink-0 dark:bg-emerald-900/50 dark:text-emerald-300">
+                                    <TrendingUp size={20}/>
+                                </div>
+                                <div>
+                                    <h3 className="font-bold text-lg mb-1">Increase Your CC Faster</h3>
+                                    <p className="text-sm opacity-90 leading-relaxed">
+                                        Create a sales page to attract more customers automatically.
+                                    </p>
+                                    <p className="text-xs text-emerald-700/80 mt-2 font-medium dark:text-emerald-300/80">FBOs with sales pages grow 2x faster.</p>
+                                </div>
+                            </div>
+                            <Link 
+                                to="/sales-builder"
+                                className="block w-full text-center bg-emerald-600 text-white py-3 rounded-xl font-bold text-sm hover:bg-emerald-700 transition-colors shadow-sm"
+                            >
+                                Create Sales Page
+                            </Link>
+                        </div>
+
+                        {/* 4. Leadership Action Card */}
+                        {isSponsor && (
+                            <div className="p-6 rounded-2xl bg-purple-50 border border-purple-200 text-purple-900 flex flex-col gap-4 shadow-sm dark:bg-purple-900/20 dark:border-purple-800 dark:text-purple-100">
+                                <div className="flex items-start gap-4">
+                                    <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center text-purple-600 shrink-0 dark:bg-purple-900/50 dark:text-purple-300">
+                                        <GraduationCap size={20}/>
+                                    </div>
+                                    <div>
+                                        <h3 className="font-bold text-lg mb-1">Build Your Team’s Skills</h3>
+                                        <p className="text-sm opacity-90 leading-relaxed">
+                                            Assign a specific training course to your downline.
+                                        </p>
+                                        <p className="text-xs text-purple-700/80 mt-2 font-medium dark:text-purple-300/80">Trained teams perform better and rank up faster.</p>
+                                    </div>
+                                </div>
+                                <Link 
+                                    to="/assignments"
+                                    className="block w-full text-center bg-purple-600 text-white py-3 rounded-xl font-bold text-sm hover:bg-purple-700 transition-colors shadow-sm"
+                                >
+                                    Assign Course
+                                </Link>
+                            </div>
+                        )}
+
+                    </div>
+                </div>
+            </CustomModal>
+        );
+      }
+
       if (activeModal === 'BREAKDOWN') {
         // 1. Calculate Personal CC based on Cycle Start Date
         const cycleStart = new Date(rankProgress.cycleStartDate);
@@ -458,6 +581,387 @@ const Dashboard: React.FC<DashboardProps> = ({
                             )}
                         </div>
                     </div>
+                </div>
+            </CustomModal>
+        );
+      }
+
+      if (activeModal === 'RANK_JOURNEY') {
+        const currentRankIndex = RANK_ORDER.indexOf(rankProgress.currentRankId);
+        
+        return (
+            <CustomModal
+                isOpen={true}
+                onClose={() => setActiveModal('NONE')}
+                title="Rank Journey"
+                icon={TrendingUp}
+            >
+                <div className="relative border-l-2 border-slate-200 dark:border-slate-700 ml-4 space-y-8 py-4">
+                    {RANK_ORDER.map((rankId, index) => {
+                        const rankDef = RANKS[rankId];
+                        if (!rankDef) return null;
+                        
+                        let status: 'COMPLETED' | 'CURRENT' | 'NEXT' | 'LOCKED' = 'LOCKED';
+                        if (index < currentRankIndex) status = 'COMPLETED';
+                        else if (index === currentRankIndex) status = 'CURRENT';
+                        else if (index === currentRankIndex + 1) status = 'NEXT';
+                        
+                        return (
+                            <div key={rankId} className="relative pl-8">
+                                {/* Icon / Bullet */}
+                                <div className={`absolute -left-[9px] top-0 w-5 h-5 rounded-full border-2 flex items-center justify-center bg-white dark:bg-slate-900 ${
+                                    status === 'COMPLETED' ? 'border-emerald-500 text-emerald-500' :
+                                    status === 'CURRENT' ? 'border-blue-500 text-blue-500' :
+                                    status === 'NEXT' ? 'border-amber-500 text-amber-500' :
+                                    'border-slate-300 text-slate-300 dark:border-slate-600 dark:text-slate-600'
+                                }`}>
+                                    {status === 'COMPLETED' && <CheckCircle size={12} strokeWidth={4} />}
+                                    {status === 'CURRENT' && <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse" />}
+                                    {status === 'NEXT' && <Target size={12} strokeWidth={3} />}
+                                    {status === 'LOCKED' && <Lock size={10} />}
+                                </div>
+                                
+                                {/* Content */}
+                                <div>
+                                    <h4 className={`text-sm font-bold ${
+                                        status === 'CURRENT' ? 'text-slate-900 dark:text-white text-lg' : 
+                                        status === 'COMPLETED' ? 'text-slate-500 dark:text-slate-400' : 
+                                        'text-slate-400 dark:text-slate-600'
+                                    }`}>
+                                        {rankDef.name}
+                                    </h4>
+                                    
+                                    {/* Current Rank Details */}
+                                    {status === 'CURRENT' && (
+                                        <div className="mt-2 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-xl border border-blue-100 dark:border-blue-800">
+                                            <p className="text-xs text-blue-700 dark:text-blue-300 mb-2">
+                                                Current Status
+                                            </p>
+                                            <div className="flex justify-between items-end text-sm font-bold text-slate-700 dark:text-slate-200 mb-1">
+                                                <span>{rankProgress.currentCycleCC.toFixed(2)} CC</span>
+                                                {rankDef.nextRankId && (
+                                                    <span className="text-slate-400">/ {RANKS[rankDef.nextRankId]?.targetCC || '?'} CC</span>
+                                                )}
+                                            </div>
+                                            {/* Progress Bar if next rank exists and has CC target */}
+                                            {nextRankDef && nextRankDef.targetCC > 0 && (
+                                                <div className="w-full bg-blue-200 dark:bg-blue-800 h-1.5 rounded-full overflow-hidden">
+                                                    <div 
+                                                        className="bg-blue-500 h-full rounded-full transition-all duration-500" 
+                                                        style={{ width: `${Math.min(100, (rankProgress.currentCycleCC / nextRankDef.targetCC) * 100)}%` }}
+                                                    ></div>
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
+                                    
+                                    {/* Next Rank Requirements Hint */}
+                                    {status === 'NEXT' && (
+                                        <p className="text-xs text-amber-600 dark:text-amber-500 mt-1 font-medium">
+                                            Target: {rankDef.targetCC > 0 ? `${rankDef.targetCC} CC` : 'Leadership Requirements'}
+                                        </p>
+                                    )}
+                                </div>
+                            </div>
+                        );
+                    })}
+                </div>
+            </CustomModal>
+        );
+      }
+
+      if (activeModal === 'MOMENTUM') {
+        const momentumData = [
+            { name: 'Month 1', value: 2.0 },
+            { name: 'Month 2', value: 2.5 },
+            { name: 'Month 3', value: 3.8 },
+            { name: 'Month 4', value: 3.2 },
+            { name: 'Month 5', value: 4.5 },
+            { name: 'Current', value: monthlyCC },
+        ];
+
+        // Bonus Logic
+        let unlockedBonus = 'None';
+        if (currentRankDef.id !== 'NOVUS') unlockedBonus = 'Volume Bonus & Discount';
+        
+        let pendingBonus = 'None';
+        if (nextRankDef) {
+            if (nextRankDef.id === 'AS_SUP') pendingBonus = '30% Discount';
+            else if (nextRankDef.id === 'SUP') pendingBonus = 'Volume Bonus (3%)';
+            else if (nextRankDef.id === 'AS_MGR') pendingBonus = 'Volume Bonus (5%)';
+            else if (nextRankDef.id === 'MGR') pendingBonus = 'Leadership Bonus';
+        }
+
+        const ringData = [
+            { name: 'Completed', value: progressPercent, color: '#10b981' },
+            { name: 'Remaining', value: 100 - progressPercent, color: '#e2e8f0' },
+        ];
+
+        return (
+            <CustomModal
+                isOpen={true}
+                onClose={() => setActiveModal('NONE')}
+                title="Business Momentum"
+                icon={Zap}
+            >
+                <div className="space-y-6">
+                    {/* Main Card */}
+                    <div className="bg-gradient-to-r from-blue-600 to-emerald-500 rounded-3xl p-6 text-white shadow-lg relative overflow-hidden">
+                        <div className="relative z-10">
+                            <div className="flex justify-between items-start mb-4">
+                                <div>
+                                    <p className="text-blue-100 font-bold text-xs uppercase tracking-wider mb-1">Estimated Earnings (This Month)</p>
+                                    <h3 className="text-3xl md:text-4xl font-bold font-heading">GHS {monthlyEarnings.toLocaleString()}</h3>
+                                </div>
+                                <div className="bg-white/20 backdrop-blur-md p-2 rounded-lg text-xs font-bold text-white flex items-center gap-1">
+                                    <TrendingUp size={14} /> +18%
+                                </div>
+                            </div>
+                            
+                            <div className="space-y-2">
+                                <div className="flex justify-between text-xs font-bold text-blue-100">
+                                    <span>Rank Progress (Effort)</span>
+                                    <span>{progressPercent.toFixed(0)}%</span>
+                                </div>
+                                <div className="h-2 bg-black/20 rounded-full overflow-hidden backdrop-blur-sm">
+                                    <div className="h-full bg-white rounded-full transition-all duration-1000 ease-out" style={{ width: `${progressPercent}%` }}></div>
+                                </div>
+                            </div>
+                        </div>
+                        {/* Decor */}
+                        <div className="absolute -bottom-10 -right-10 w-48 h-48 bg-white opacity-10 rounded-full blur-3xl pointer-events-none"></div>
+                    </div>
+
+                    {/* Mini Cards Grid */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div className="bg-white dark:bg-slate-800 p-4 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm relative overflow-hidden group">
+                            <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity"><Gift size={40} className="text-emerald-500" /></div>
+                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wide mb-1">Bonus Unlocked</p>
+                            <p className="font-bold text-emerald-600 dark:text-emerald-400 text-sm leading-tight">{unlockedBonus}</p>
+                            {unlockedBonus !== 'None' && <div className="absolute inset-0 border-2 border-emerald-500/20 rounded-2xl pointer-events-none animate-pulse"></div>}
+                        </div>
+
+                        <div className="bg-white dark:bg-slate-800 p-4 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm relative overflow-hidden">
+                            <div className="absolute top-0 right-0 p-3 opacity-10"><Hourglass size={40} className="text-slate-500" /></div>
+                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wide mb-1">Pending Bonus</p>
+                            <p className="font-bold text-slate-700 dark:text-slate-300 text-sm leading-tight">{pendingBonus}</p>
+                            <p className="text-[10px] text-slate-400 mt-1">Unlocks at {nextRankDef?.name || 'Top Rank'}</p>
+                        </div>
+
+                        <div className="bg-white dark:bg-slate-800 p-4 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm relative overflow-hidden flex items-center justify-between">
+                            <div>
+                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wide mb-1">Next Goal</p>
+                                <p className="font-bold text-indigo-600 dark:text-indigo-400 text-lg leading-tight">{nextRankDef?.name || 'Diamond'}</p>
+                                <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-1">{remainingCC.toFixed(2)} CC Left</p>
+                            </div>
+                            <div className="w-12 h-12 relative">
+                                {/* Progress Ring using PieChart */}
+                                <ResponsiveContainer width="100%" height="100%">
+                                    <PieChart>
+                                        <Pie
+                                            data={ringData}
+                                            innerRadius={16}
+                                            outerRadius={22}
+                                            startAngle={90}
+                                            endAngle={-270}
+                                            dataKey="value"
+                                            stroke="none"
+                                        >
+                                            {ringData.map((entry, index) => (
+                                                <Cell key={`cell-${index}`} fill={entry.color} />
+                                            ))}
+                                        </Pie>
+                                    </PieChart>
+                                </ResponsiveContainer>
+                                <div className="absolute inset-0 flex items-center justify-center text-[10px] font-bold text-slate-400">
+                                    {progressPercent}%
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Graph Section */}
+                    <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm">
+                        <h4 className="text-sm font-bold text-slate-800 dark:text-white mb-4 flex items-center gap-2">
+                            <Activity size={16} className="text-blue-500"/> Monthly Growth Trend (Activity)
+                        </h4>
+                        <div className="h-48 w-full">
+                            <ResponsiveContainer width="100%" height="100%">
+                                <AreaChart data={momentumData} margin={{ top: 5, right: 0, left: -20, bottom: 0 }}>
+                                    <defs>
+                                        <linearGradient id="colorMomentum" x1="0" y1="0" x2="0" y2="1">
+                                            <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.2}/>
+                                            <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
+                                        </linearGradient>
+                                    </defs>
+                                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                                    <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#94a3b8', fontSize: 10}} />
+                                    <YAxis axisLine={false} tickLine={false} tick={{fill: '#94a3b8', fontSize: 10}} />
+                                    <Tooltip 
+                                        contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)', fontSize: '12px' }}
+                                    />
+                                    <Area type="monotone" dataKey="value" stroke="#3b82f6" strokeWidth={2} fillOpacity={1} fill="url(#colorMomentum)" />
+                                </AreaChart>
+                            </ResponsiveContainer>
+                        </div>
+                    </div>
+                </div>
+            </CustomModal>
+        );
+      }
+
+      // DOWNLINE PERFORMANCE OVERVIEW
+      if (activeModal === 'DOWNLINE') {
+        const newRecruits = myDownline.filter(s => {
+            const joinedDate = new Date(s.enrolledDate);
+            const now = new Date();
+            return joinedDate.getMonth() === now.getMonth() && joinedDate.getFullYear() === now.getFullYear();
+        });
+
+        // Filter users close to rank (e.g., needing <= 0.5 CC OR having >= 80% progress)
+        const closeToRankUsers = myDownline.filter(s => {
+            if (!s.rankProgress) return false;
+            const target = s.rankProgress.targetCC;
+            const current = s.rankProgress.currentCycleCC;
+            if (target <= 0) return false; // No target (e.g., Manager structure req)
+            
+            const remaining = target - current;
+            return remaining <= 0.5 && remaining > 0;
+        }).map(s => {
+            const target = s.rankProgress!.targetCC;
+            const current = s.rankProgress!.currentCycleCC;
+            const progress = (current / target) * 100;
+            return { ...s, progress, remaining: target - current };
+        }).sort((a, b) => b.progress - a.progress);
+
+        return (
+            <CustomModal
+                isOpen={true}
+                onClose={() => setActiveModal('NONE')}
+                title="Downline Performance Overview"
+                icon={Users}
+            >
+                <div className="space-y-8">
+                    
+                    {/* Smart Hint Banner */}
+                    {closeToRankUsers.length > 0 && (
+                        <div className="bg-yellow-50 border border-yellow-200 rounded-2xl p-4 flex items-start gap-4 dark:bg-yellow-900/20 dark:border-yellow-900/50">
+                            <div className="p-2 bg-yellow-100 rounded-full text-yellow-700 dark:bg-yellow-900/50 dark:text-yellow-400 shrink-0">
+                                <Lightbulb size={20} fill="currentColor" className="opacity-80"/>
+                            </div>
+                            <div>
+                                <h4 className="font-bold text-slate-800 text-sm dark:text-slate-200">Opportunity Alert</h4>
+                                <p className="text-xs text-slate-600 mt-1 dark:text-slate-400 leading-relaxed">
+                                    {closeToRankUsers.length} of your downlines are close to their next rank. A small push could promote them this week.
+                                </p>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Summary Cards */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm flex items-center justify-between dark:bg-slate-800 dark:border-slate-700">
+                            <div>
+                                <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Active Downlines</p>
+                                <h3 className="text-2xl font-bold text-slate-900 dark:text-white">{activeDownlines.length}</h3>
+                                <p className="text-[10px] text-slate-400 mt-1">With CC activity this month</p>
+                            </div>
+                            <div className="p-3 bg-blue-50 text-blue-600 rounded-xl dark:bg-blue-900/20 dark:text-blue-400">
+                                <Users size={24} />
+                            </div>
+                        </div>
+
+                        <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm flex items-center justify-between dark:bg-slate-800 dark:border-slate-700">
+                            <div>
+                                <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">New Recruits</p>
+                                <h3 className="text-2xl font-bold text-slate-900 dark:text-white">{newRecruits.length}</h3>
+                                <p className="text-[10px] text-slate-400 mt-1">Joined this month</p>
+                            </div>
+                            <div className="p-3 bg-emerald-50 text-emerald-600 rounded-xl dark:bg-emerald-900/20 dark:text-emerald-400">
+                                <UserPlus size={24} />
+                            </div>
+                        </div>
+
+                        <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm flex items-center justify-between dark:bg-slate-800 dark:border-slate-700">
+                            <div>
+                                <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Close to Rank</p>
+                                <h3 className="text-2xl font-bold text-slate-900 dark:text-white">{closeToRankUsers.length}</h3>
+                                <p className="text-[10px] text-slate-400 mt-1">Need ≤ 0.5 CC</p>
+                            </div>
+                            <div className="p-3 bg-orange-50 text-orange-600 rounded-xl dark:bg-orange-900/20 dark:text-orange-400">
+                                <Target size={24} />
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Who to Support Next */}
+                    <div>
+                        <SectionHeader title="Who to Support Next" />
+                        <div className="space-y-3">
+                            {closeToRankUsers.length > 0 ? closeToRankUsers.map(user => (
+                                <div key={user.id} className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex flex-col md:flex-row md:items-center gap-4 dark:bg-slate-800 dark:border-slate-700 relative">
+                                    {/* User Info */}
+                                    <div className="flex items-center gap-3 flex-1">
+                                        <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center font-bold text-slate-500 dark:bg-slate-700 dark:text-slate-300 shrink-0">
+                                            {user.avatarUrl ? <img src={user.avatarUrl} className="w-full h-full rounded-full object-cover"/> : user.name.charAt(0)}
+                                        </div>
+                                        <div className="min-w-0">
+                                            <h4 className="font-bold text-sm text-slate-900 dark:text-white truncate">{user.name}</h4>
+                                            <div className="flex items-center gap-2 text-xs">
+                                                <span className="text-slate-500 dark:text-slate-400">{user.caseCredits.toFixed(2)} CC</span>
+                                                <span className="w-1 h-1 bg-slate-300 rounded-full"></span>
+                                                <span className="text-orange-500 font-medium">Needs {user.remaining.toFixed(2)} CC</span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Progress Bar (Visual) */}
+                                    <div className="flex-1 md:max-w-[200px]">
+                                        <div className="flex justify-between text-[10px] font-bold text-slate-400 mb-1">
+                                            <span>Progress</span>
+                                            <span>{user.progress.toFixed(0)}%</span>
+                                        </div>
+                                        <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden dark:bg-slate-700">
+                                            <div className="h-full bg-gradient-to-r from-orange-400 to-red-500 rounded-full" style={{ width: `${user.progress}%` }}></div>
+                                        </div>
+                                    </div>
+
+                                    {/* Action Button */}
+                                    <div className="relative">
+                                        <button 
+                                            onClick={() => setSupportMenuOpen(supportMenuOpen === user.id ? null : user.id)}
+                                            className="w-full md:w-auto px-4 py-2 bg-slate-900 text-white text-xs font-bold rounded-lg hover:bg-slate-800 transition-colors flex items-center justify-center gap-2 dark:bg-emerald-600 dark:hover:bg-emerald-700 shadow-sm"
+                                        >
+                                            Send Support <ChevronLeft className={`rotate-[-90deg] transition-transform ${supportMenuOpen === user.id ? 'rotate-[90deg]' : ''}`} size={12} />
+                                        </button>
+
+                                        {/* Dropdown Menu */}
+                                        {supportMenuOpen === user.id && (
+                                            <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-xl shadow-xl border border-slate-100 z-20 overflow-hidden dark:bg-slate-800 dark:border-slate-700 animate-fade-in">
+                                                <button onClick={() => navigate('/broadcasts')} className="w-full text-left px-4 py-3 hover:bg-slate-50 text-xs font-bold text-slate-600 flex items-center gap-2 dark:text-slate-300 dark:hover:bg-slate-700">
+                                                    <Megaphone size={14} /> Send Broadcast
+                                                </button>
+                                                <button onClick={() => navigate('/chat')} className="w-full text-left px-4 py-3 hover:bg-slate-50 text-xs font-bold text-slate-600 flex items-center gap-2 dark:text-slate-300 dark:hover:bg-slate-700">
+                                                    <MessageCircle size={14} /> Send Message
+                                                </button>
+                                                <button onClick={() => navigate('/assignments')} className="w-full text-left px-4 py-3 hover:bg-slate-50 text-xs font-bold text-slate-600 flex items-center gap-2 dark:text-slate-300 dark:hover:bg-slate-700">
+                                                    <BookOpen size={14} /> Assign Course
+                                                </button>
+                                                <button onClick={() => navigate('/chat')} className="w-full text-left px-4 py-3 hover:bg-slate-50 text-xs font-bold text-slate-600 flex items-center gap-2 dark:text-slate-300 dark:hover:bg-slate-700">
+                                                    <Flag size={14} /> Suggest Goal
+                                                </button>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            )) : (
+                                <div className="text-center py-10 border-2 border-dashed border-slate-200 rounded-2xl bg-slate-50/50 dark:border-slate-700 dark:bg-slate-900/30">
+                                    <p className="text-slate-400 text-sm">Everyone is currently far from their next rank.</p>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+
                 </div>
             </CustomModal>
         );
@@ -576,28 +1080,28 @@ const Dashboard: React.FC<DashboardProps> = ({
                               title="Rank Journey" 
                               desc="Path to Diamond" 
                               icon={TrendingUp} 
-                              onClick={() => console.log('Rank Journey')}
+                              onClick={() => setActiveModal('RANK_JOURNEY')}
                           />
                           
                           <ShortcutItem 
-                              title="Earnings" 
+                              title="Business Momentum" 
                               desc="Financial Snapshot" 
-                              icon={DollarSign} 
-                              onClick={() => console.log('Earnings')}
+                              icon={Zap} 
+                              onClick={() => setActiveModal('MOMENTUM')}
                           />
                           
                           <ShortcutItem 
                               title="Downline" 
                               desc="Team Performance" 
                               icon={Users} 
-                              onClick={() => console.log('Downline')}
+                              onClick={() => setActiveModal('DOWNLINE')}
                           />
                           
                           <ShortcutItem 
-                              title="Suggestions" 
-                              desc="Smart Actions" 
-                              icon={Lightbulb} 
-                              onClick={() => console.log('Suggestions')}
+                              title="Smart Coaching" 
+                              desc="Next Best Actions" 
+                              icon={Sparkles} 
+                              onClick={() => setActiveModal('SUGGESTIONS')}
                           />
 
                       </div>

@@ -126,6 +126,9 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
 
   const hideHeaderMobile = shouldHideHeaderOnMobile();
 
+  // New: Hide header entirely on Desktop for Builders (Full screen apps)
+  const hideHeaderTotal = location.pathname.startsWith('/sales-builder') || location.pathname.startsWith('/builder');
+
   // Nav Items Configuration
   const renderNavLinks = () => (
     <nav className="flex-1 py-6 px-3 space-y-1 overflow-y-auto no-scrollbar">
@@ -218,9 +221,11 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
         
         {/* 
             2. UNIVERSAL TOP NAVBAR (Raised with Shadow)
-            Conditionally hidden on mobile for pages with custom headers
+            Conditionally hidden on mobile for pages with custom headers.
+            Also hidden on desktop for full-screen tools like Builders.
         */}
-        <header className={`${hideHeaderMobile ? 'hidden md:flex' : 'flex'} h-16 md:h-20 bg-white dark:bg-slate-900 items-center justify-between px-4 md:px-8 shrink-0 z-40 relative shadow-md`}>
+        <header className={`${hideHeaderTotal ? 'hidden' : (hideHeaderMobile ? 'hidden md:flex' : 'flex')} h-16 md:h-20 bg-white dark:bg-slate-900 items-center justify-between px-4 md:px-8 shrink-0 z-40 relative shadow-md`}>
+            {/* ... Rest of the header content remains the same ... */}
             <div className="flex items-center gap-4">
                 {/* Desktop Hamburger Only */}
                 <button 

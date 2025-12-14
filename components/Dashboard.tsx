@@ -7,7 +7,7 @@ import {
     Users, TrendingUp, Calendar, ArrowUpRight, Award, 
     BookOpen, DollarSign, CircleDollarSign, Target, MessageSquare, PlusCircle, 
     BarChart2, Zap, ArrowRight, Layout, ArrowLeft, Clock, Globe, UserPlus, Shield,
-    ShoppingCart, GraduationCap, Bell, Flag, Store, Lock, CheckCircle, X, PieChart as PieChartIcon, Activity, Lightbulb, ChevronLeft, HelpCircle, Hand, Medal, Gift, Hourglass, Megaphone, MessageCircle, Sparkles, Rocket
+    ShoppingCart, GraduationCap, Bell, Flag, Store, Lock, CheckCircle, X, PieChart as PieChartIcon, Activity, Lightbulb, ChevronLeft, HelpCircle, Hand, Medal, Gift, Hourglass, Megaphone, MessageCircle, Sparkles, Rocket, UserCheck
 } from 'lucide-react';
 import { RANKS, RANK_ORDER } from '../constants';
 
@@ -399,7 +399,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                                 </div>
                                 <button 
                                     onClick={() => setActiveModal('RANK_JOURNEY')}
-                                    className="w-full bg-blue-600 text-white py-3 rounded-xl font-bold text-sm hover:bg-blue-700 transition-colors shadow-sm dark:bg-blue-500 dark:hover:bg-blue-600"
+                                    className="w-full bg-blue-600 text-white py-3 rounded-xl font-bold text-sm hover:bg-blue-700 transition-colors shadow-sm dark:bg-blue-50 dark:hover:bg-blue-600"
                                 >
                                     View CC Breakdown
                                 </button>
@@ -482,6 +482,7 @@ const Dashboard: React.FC<DashboardProps> = ({
         );
       }
 
+      // CC BREAKDOWN
       if (activeModal === 'BREAKDOWN') {
         // 1. Calculate Personal CC based on Cycle Start Date
         const cycleStart = new Date(rankProgress.cycleStartDate);
@@ -489,7 +490,7 @@ const Dashboard: React.FC<DashboardProps> = ({
             .filter(s => new Date(s.date) >= cycleStart)
             .reduce((sum, s) => sum + s.ccEarned, 0);
 
-        // 2. Calculate Team CC (ensure total matches Rank Progress)
+        // 2. Calculate Team CC (Total - Personal)
         const totalCC = rankProgress.currentCycleCC;
         const teamCC = Math.max(0, totalCC - personalCC);
 
@@ -498,26 +499,86 @@ const Dashboard: React.FC<DashboardProps> = ({
             .sort((a, b) => b.caseCredits - a.caseCredits)
             .slice(0, 3);
 
-        const data = [
-            { name: 'Personal', value: personalCC, color: '#10b981' }, // Emerald-500
-            { name: 'Team', value: teamCC, color: '#3b82f6' }, // Blue-500
+        const chartData = [
+            { name: 'Personal', value: personalCC, color: '#3b82f6' }, // Blue-500
+            { name: 'Team', value: teamCC, color: '#10b981' }, // Emerald-500
         ];
 
         return (
             <CustomModal
                 isOpen={true}
                 onClose={() => setActiveModal('NONE')}
-                title="CC Breakdown"
+                title="Current CC Breakdown"
                 icon={PieChartIcon}
             >
                 <div className="space-y-8">
-                    {/* Chart Section */}
-                    <div className="flex flex-col items-center justify-center bg-white dark:bg-slate-800 rounded-3xl p-6 shadow-sm border border-slate-100 dark:border-slate-700">
+                    
+                    {/* Clarity Badge */}
+                    <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 flex items-start gap-3 dark:bg-blue-900/20 dark:border-blue-800/50">
+                        <Lock size={20} className="text-blue-600 dark:text-blue-400 mt-0.5 shrink-0" />
+                        <div>
+                            <p className="text-sm font-bold text-blue-800 dark:text-blue-300">Strictly Current Cycle</p>
+                            <p className="text-xs text-blue-600 dark:text-blue-400 mt-1 leading-relaxed">
+                                Only CC contributing to your current rank journey is shown here. Past CC is safely stored in your history.
+                            </p>
+                        </div>
+                    </div>
+
+                    {/* Row 1: Summary Cards */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div className="p-5 bg-blue-50 rounded-2xl border border-blue-100 flex flex-col justify-between dark:bg-blue-900/10 dark:border-blue-800">
+                            <div className="flex justify-between items-start mb-2">
+                                <div className="p-2 bg-blue-100 text-blue-600 rounded-lg dark:bg-blue-900/40 dark:text-blue-300">
+                                    <UserCheck size={20} />
+                                </div>
+                                <span className="text-[10px] font-bold uppercase text-blue-400">Direct</span>
+                            </div>
+                            <div>
+                                <h3 className="text-2xl font-bold text-slate-800 dark:text-white">{personalCC.toFixed(2)} CC</h3>
+                                <p className="text-xs font-bold text-slate-500 uppercase tracking-wide">Personal Sales</p>
+                                <p className="text-[10px] text-slate-400 mt-1">Your direct effort</p>
+                            </div>
+                        </div>
+
+                        <div className="p-5 bg-emerald-50 rounded-2xl border border-emerald-100 flex flex-col justify-between dark:bg-emerald-900/10 dark:border-emerald-800">
+                            <div className="flex justify-between items-start mb-2">
+                                <div className="p-2 bg-emerald-100 text-emerald-600 rounded-lg dark:bg-emerald-900/40 dark:text-emerald-300">
+                                    <Users size={20} />
+                                </div>
+                                <span className="text-[10px] font-bold uppercase text-emerald-400">Downline</span>
+                            </div>
+                            <div>
+                                <h3 className="text-2xl font-bold text-slate-800 dark:text-white">{teamCC.toFixed(2)} CC</h3>
+                                <p className="text-xs font-bold text-slate-500 uppercase tracking-wide">Team Contribution</p>
+                                <p className="text-[10px] text-slate-400 mt-1">From your team</p>
+                            </div>
+                        </div>
+
+                        <div className="p-5 bg-amber-50 rounded-2xl border border-amber-100 flex flex-col justify-between dark:bg-amber-900/10 dark:border-amber-800">
+                            <div className="flex justify-between items-start mb-2">
+                                <div className="p-2 bg-amber-100 text-amber-600 rounded-lg dark:bg-amber-900/40 dark:text-amber-300">
+                                    <Target size={20} />
+                                </div>
+                                <span className="text-[10px] font-bold uppercase text-amber-400">Goal</span>
+                            </div>
+                            <div>
+                                <h3 className="text-2xl font-bold text-slate-800 dark:text-white">{totalCC.toFixed(2)} CC</h3>
+                                <p className="text-xs font-bold text-slate-500 uppercase tracking-wide">Total Active CC</p>
+                                <div className="w-full bg-slate-200 h-1.5 rounded-full mt-2 overflow-hidden dark:bg-slate-700">
+                                    <div className="h-full bg-amber-500" style={{ width: `${Math.min(100, (totalCC / (rankProgress.targetCC || 1)) * 100)}%` }}></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Row 2: Visual Breakdown (Donut) */}
+                    <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm flex flex-col items-center dark:bg-slate-800 dark:border-slate-700">
+                        <h4 className="text-sm font-bold text-slate-800 dark:text-white mb-4 w-full text-left">CC Distribution</h4>
                         <div className="relative w-48 h-48">
                              <ResponsiveContainer width="100%" height="100%">
                                 <PieChart>
                                     <Pie
-                                        data={data}
+                                        data={chartData}
                                         cx="50%"
                                         cy="50%"
                                         innerRadius={60}
@@ -526,61 +587,70 @@ const Dashboard: React.FC<DashboardProps> = ({
                                         dataKey="value"
                                         stroke="none"
                                     >
-                                        {data.map((entry, index) => (
+                                        {chartData.map((entry, index) => (
                                             <Cell key={`cell-${index}`} fill={entry.color} />
                                         ))}
                                     </Pie>
+                                    <Tooltip 
+                                        contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 10px rgba(0,0,0,0.1)' }}
+                                        formatter={(value: number) => value.toFixed(2) + ' CC'}
+                                    />
                                 </PieChart>
                             </ResponsiveContainer>
-                            {/* Center Text */}
                             <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                                <span className="text-3xl font-bold text-slate-800 dark:text-white">{totalCC.toFixed(2)}</span>
-                                <span className="text-xs text-slate-400 uppercase font-bold">Total CC</span>
+                                <span className="text-3xl font-bold text-slate-800 dark:text-white">{totalCC.toFixed(1)}</span>
+                                <span className="text-[10px] text-slate-400 uppercase font-bold">Total</span>
                             </div>
                         </div>
-
-                        {/* Legend */}
-                        <div className="flex gap-6 mt-4">
-                            <div className="flex items-center gap-2">
-                                <div className="w-3 h-3 rounded-full bg-emerald-500"></div>
-                                <div>
-                                    <p className="text-xs text-slate-400 font-bold uppercase">Personal</p>
-                                    <p className="text-sm font-bold text-slate-700 dark:text-slate-200">{personalCC.toFixed(2)} CC</p>
-                                </div>
-                            </div>
+                        <div className="flex gap-6 mt-6">
                             <div className="flex items-center gap-2">
                                 <div className="w-3 h-3 rounded-full bg-blue-500"></div>
-                                <div>
-                                    <p className="text-xs text-slate-400 font-bold uppercase">Team</p>
-                                    <p className="text-sm font-bold text-slate-700 dark:text-slate-200">{teamCC.toFixed(2)} CC</p>
-                                </div>
+                                <span className="text-xs font-bold text-slate-600 dark:text-slate-300">Personal</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <div className="w-3 h-3 rounded-full bg-emerald-500"></div>
+                                <span className="text-xs font-bold text-slate-600 dark:text-slate-300">Team</span>
                             </div>
                         </div>
                     </div>
 
-                    {/* Top Contributors */}
+                    {/* Row 3: Top Contributors */}
                     <div>
-                        <h4 className="text-sm font-bold text-slate-800 dark:text-white mb-4 flex items-center gap-2">
-                            <Users size={16} className="text-indigo-500"/> Top Contributors
-                        </h4>
+                        <div className="flex justify-between items-center mb-4">
+                            <h4 className="text-sm font-bold text-slate-800 dark:text-white flex items-center gap-2">
+                                <Medal size={16} className="text-yellow-500"/> Top Contributors (This Journey)
+                            </h4>
+                            <button onClick={() => navigate('/students')} className="text-xs font-bold text-blue-600 hover:underline dark:text-blue-400">View Team</button>
+                        </div>
+                        
                         <div className="space-y-3">
                             {contributors.length > 0 ? contributors.map((student, idx) => (
-                                <div key={student.id} className="flex items-center justify-between p-4 bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700">
-                                    <div className="flex items-center gap-3">
-                                        <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold ${idx === 0 ? 'bg-yellow-100 text-yellow-700' : idx === 1 ? 'bg-slate-100 text-slate-700' : 'bg-orange-100 text-orange-700'}`}>
+                                <div key={student.id} className="flex items-center justify-between p-4 bg-white dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700 hover:shadow-sm transition-shadow">
+                                    <div className="flex items-center gap-4">
+                                        <div className={`w-8 h-8 flex items-center justify-center font-bold text-sm rounded-lg ${
+                                            idx === 0 ? 'bg-yellow-100 text-yellow-700' : 
+                                            idx === 1 ? 'bg-slate-200 text-slate-600' : 
+                                            'bg-orange-100 text-orange-700'
+                                        }`}>
                                             {idx + 1}
                                         </div>
-                                        <span className="font-bold text-slate-700 dark:text-slate-200">{student.name}</span>
+                                        <div>
+                                            <p className="font-bold text-slate-700 dark:text-white text-sm">{student.name}</p>
+                                            <p className="text-[10px] text-slate-400 font-mono">{student.handle}</p>
+                                        </div>
                                     </div>
-                                    <span className="font-mono text-sm font-bold text-indigo-600 dark:text-indigo-400">{student.caseCredits.toFixed(2)} CC</span>
+                                    <div className="text-right">
+                                        <span className="font-bold text-emerald-600 dark:text-emerald-400 block">{student.caseCredits.toFixed(2)} CC</span>
+                                    </div>
                                 </div>
                             )) : (
-                                <div className="text-center p-6 text-slate-400 italic bg-slate-50 dark:bg-slate-900 rounded-2xl">
-                                    No downline activity in this cycle yet.
+                                <div className="text-center p-8 border-2 border-dashed border-slate-200 rounded-2xl bg-slate-50/50 dark:border-slate-700 dark:bg-slate-900/30">
+                                    <p className="text-slate-400 text-sm">No significant team activity yet.</p>
                                 </div>
                             )}
                         </div>
                     </div>
+
                 </div>
             </CustomModal>
         );

@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useRef } from 'react';
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar } from 'recharts';
 import { Link, useNavigate } from 'react-router-dom';
 import { Student, UserRole, Course, CourseTrack, CourseStatus, MentorshipTemplate, Broadcast, AppNotification, Assignment } from '../types';
 import { 
@@ -967,7 +967,7 @@ const Dashboard: React.FC<DashboardProps> = ({
         );
       }
 
-      // Logic for Overview Data
+      // Logic for Overview Data (Updated for Enhanced UI)
       const qualificationMonths = currentRankDef.monthsAllowed || 2;
       const start = new Date(rankProgress.cycleStartDate);
       const now = new Date();
@@ -979,57 +979,104 @@ const Dashboard: React.FC<DashboardProps> = ({
       const target = rankProgress.targetCC;
       const pct = target > 0 ? Math.min(100, (currentCC / target) * 100) : 0;
 
+      // New: Logic for Colors, Message, and Graph
+      const progressColor = pct < 30 ? 'bg-red-500' : pct < 70 ? 'bg-orange-500' : 'bg-emerald-500';
+      const progressBg = pct < 30 ? 'bg-red-100' : pct < 70 ? 'bg-orange-100' : 'bg-emerald-100';
+      
+      let microMessage = '';
+      if (pct >= 100) microMessage = "🎉 You've hit the target! Maintenance phase.";
+      else if (target > 0) microMessage = `🔥 Just ${(target - currentCC).toFixed(2)} CC to reach ${nextRankDef?.name || 'Next Rank'}!`;
+      else microMessage = "Keep building your team structure!";
+
+      // Mock Weekly Trend Data (Last 4 Weeks)
+      const weeklyTrend = [
+          { name: 'Week 1', cc: Math.max(0, currentCC * 0.1) },
+          { name: 'Week 2', cc: Math.max(0, currentCC * 0.2) },
+          { name: 'Week 3', cc: Math.max(0, currentCC * 0.3) },
+          { name: 'Week 4', cc: Math.max(0, currentCC * 0.4) }, // Current
+      ];
+
       return (
           <CustomModal 
             isOpen={activeModal === 'OVERVIEW'} 
             onClose={() => setActiveModal('NONE')} 
-            title="Rank Overview"
+            title="Business Overview"
             icon={Activity}
           >
-              <div className="text-center space-y-6">
-                  {/* Current Rank Display */}
-                  <div className="space-y-1">
-                      <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Current Rank</p>
-                      <h2 className="text-3xl md:text-4xl font-extrabold text-slate-800 dark:text-white font-heading">
-                          {currentRankDef.name}
-                      </h2>
-                  </div>
-
-                  {/* Stats Grid */}
-                  <div className="grid grid-cols-2 gap-4">
-                      <div className="p-6 bg-slate-50 dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700">
-                          <p className="text-xs font-bold text-slate-400 uppercase mb-2">Qualifying Period</p>
-                          <p className="text-xl font-bold text-slate-700 dark:text-slate-200">
-                              Month {currentMonthIndex} <span className="text-slate-400 font-normal text-sm">of {qualificationMonths}</span>
-                          </p>
+              <div className="space-y-8">
+                  {/* 1 & 2: Rank Badge & Time */}
+                  <div className="flex justify-between items-start">
+                      <div>
+                          <p className="text-xs text-slate-400 uppercase font-bold mb-2 tracking-wider">Current Rank</p>
+                          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-slate-100 to-slate-200 border border-slate-200 dark:from-slate-800 dark:to-slate-700 dark:border-slate-600 shadow-sm">
+                              <Award size={18} className="text-amber-500" />
+                              <span className="font-bold text-slate-800 dark:text-white">{currentRankDef.name}</span>
+                          </div>
                       </div>
-                      <div className="p-6 bg-slate-50 dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700">
-                          <p className="text-xs font-bold text-slate-400 uppercase mb-2">Cycle Volume</p>
-                          <p className="text-xl font-bold text-slate-700 dark:text-slate-200">
-                              {currentCC.toFixed(2)} <span className="text-slate-400 font-normal text-sm">/ {target} CC</span>
-                          </p>
+                      <div className="text-right">
+                          <p className="text-xs text-slate-400 uppercase font-bold mb-2 tracking-wider">Qualification Period</p>
+                          <div className="flex items-center justify-end gap-2 text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-slate-800 px-3 py-1.5 rounded-lg border border-slate-100 dark:border-slate-700">
+                              <Clock size={16} className="text-blue-500"/>
+                              <span className="font-bold text-sm">Month {currentMonthIndex} of {qualificationMonths}</span>
+                          </div>
                       </div>
                   </div>
 
-                  {/* Progress Section */}
-                  <div className="bg-emerald-50 dark:bg-emerald-900/10 p-8 rounded-3xl border border-emerald-100 dark:border-emerald-800/50 text-left">
-                      <div className="flex justify-between items-end mb-3">
-                          <span className="text-sm font-bold text-emerald-800 dark:text-emerald-400 uppercase tracking-wide">Progress to Next Rank</span>
-                          <span className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">{pct.toFixed(0)}%</span>
+                  {/* 3 & 4: CC Progress & Bar */}
+                  <div className="bg-white dark:bg-slate-800 rounded-3xl p-6 border border-slate-100 dark:border-slate-700 shadow-sm relative overflow-hidden">
+                      <div className="relative z-10">
+                        <div className="flex justify-between items-end mb-4">
+                            <div>
+                                <p className="text-xs text-slate-400 uppercase font-bold mb-1 tracking-wider">Cycle Progress</p>
+                                <h2 className="text-4xl md:text-5xl font-extrabold text-slate-900 dark:text-white font-heading tracking-tight">
+                                    {currentCC.toFixed(2)} <span className="text-lg text-slate-400 font-medium ml-1">/ {target} CC</span>
+                                </h2>
+                            </div>
+                            <div className="text-right">
+                                <span className={`text-2xl font-bold ${pct > 70 ? 'text-emerald-500' : pct > 30 ? 'text-orange-500' : 'text-red-500'}`}>{pct.toFixed(0)}%</span>
+                            </div>
+                        </div>
+
+                        <div className={`w-full h-4 rounded-full overflow-hidden ${pct > 70 ? 'bg-emerald-100 dark:bg-emerald-900/30' : pct > 30 ? 'bg-orange-100 dark:bg-orange-900/30' : 'bg-red-100 dark:bg-red-900/30'} mb-5`}>
+                            <div className={`h-full rounded-full transition-all duration-1000 ease-out ${progressColor} shadow-lg`} style={{width: `${pct}%`}}></div>
+                        </div>
+
+                        {/* 5: Micro Message */}
+                        <div className="flex items-center gap-3 text-sm font-bold text-slate-700 dark:text-slate-200 bg-slate-50 dark:bg-slate-900/50 p-4 rounded-2xl border border-slate-100 dark:border-slate-700/50">
+                            <span className="text-xl">🚀</span>
+                            <span>{microMessage}</span>
+                        </div>
                       </div>
                       
-                      <div className="w-full h-4 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden mb-4">
-                          <div 
-                            className="h-full bg-emerald-500 rounded-full transition-all duration-1000 ease-out" 
-                            style={{ width: `${pct}%` }}
-                          />
-                      </div>
-                      
-                      <p className="text-sm text-emerald-700 dark:text-emerald-500 font-medium">
-                          {target > 0 && currentCC < target 
-                            ? `You need ${(target - currentCC).toFixed(2)} more CC to level up!` 
-                            : "You're on track! Keep pushing."}
-                      </p>
+                      {/* Decorative Background Blob */}
+                      <div className={`absolute top-0 right-0 w-64 h-64 rounded-full blur-3xl opacity-10 pointer-events-none ${pct > 70 ? 'bg-emerald-500' : 'bg-orange-500'}`}></div>
+                  </div>
+
+                  {/* 6: Trend Graph */}
+                  <div className="bg-white dark:bg-slate-800 rounded-3xl p-6 border border-slate-100 dark:border-slate-700 shadow-sm">
+                       <h3 className="font-bold text-slate-900 dark:text-white mb-6 flex items-center gap-2 text-sm uppercase tracking-wide">
+                          <TrendingUp size={18} className="text-blue-500"/> Activity Trend (Last 4 Weeks)
+                       </h3>
+                       <div className="h-40 w-full">
+                            <ResponsiveContainer width="100%" height="100%">
+                                <AreaChart data={weeklyTrend} margin={{ top: 5, right: 0, left: -20, bottom: 0 }}>
+                                    <defs>
+                                        <linearGradient id="colorWeekly" x1="0" y1="0" x2="0" y2="1">
+                                            <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.2}/>
+                                            <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
+                                        </linearGradient>
+                                    </defs>
+                                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                                    <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#94a3b8', fontSize: 10}} dy={10} />
+                                    <YAxis axisLine={false} tickLine={false} tick={{fill: '#94a3b8', fontSize: 10}} />
+                                    <Tooltip 
+                                        contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)', padding: '12px', backgroundColor: '#fff' }}
+                                        cursor={{ stroke: '#3b82f6', strokeWidth: 1, strokeDasharray: '4 4' }}
+                                    />
+                                    <Area type="monotone" dataKey="cc" stroke="#3b82f6" strokeWidth={3} fillOpacity={1} fill="url(#colorWeekly)" />
+                                </AreaChart>
+                            </ResponsiveContainer>
+                       </div>
                   </div>
               </div>
           </CustomModal>

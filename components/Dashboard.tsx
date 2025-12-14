@@ -7,7 +7,7 @@ import {
     Users, TrendingUp, Calendar, ArrowUpRight, Award, 
     BookOpen, DollarSign, CircleDollarSign, Target, MessageSquare, PlusCircle, 
     BarChart2, Zap, ArrowRight, Layout, ArrowLeft, Clock, Globe, UserPlus, Shield,
-    ShoppingCart, GraduationCap, Bell, Flag, Store, Lock, CheckCircle, X, PieChart as PieChartIcon, Activity, Lightbulb, ChevronLeft, HelpCircle, Hand, Medal, Gift, Hourglass, Megaphone, MessageCircle, Sparkles, Rocket, UserCheck, LayoutTemplate, CreditCard, Phone, MousePointerClick, Smartphone, Eye
+    ShoppingCart, GraduationCap, Bell, Flag, Store, Lock, CheckCircle, X, PieChart as PieChartIcon, Activity, Lightbulb, ChevronLeft, HelpCircle, Hand, Medal, Gift, Hourglass, Megaphone, MessageCircle, Sparkles, Rocket, UserCheck, LayoutTemplate, CreditCard, Phone, MousePointerClick, Smartphone, Eye, Filter, ArrowDown, ExternalLink, Share2, Trash2, MoreHorizontal, Wallet, Check, Edit3
 } from 'lucide-react';
 import { RANKS, RANK_ORDER } from '../constants';
 
@@ -246,6 +246,32 @@ const Dashboard: React.FC<DashboardProps> = ({
   
   const [supportMenuOpen, setSupportMenuOpen] = useState<string | null>(null); // Stores ID of user whose menu is open
   
+  // NEW: Sales Page Management States
+  const [selectedSalesPageId, setSelectedSalesPageId] = useState<string | null>(null);
+  const [salesFilter, setSalesFilter] = useState<'ALL' | 'PUBLISHED' | 'DRAFT'>('ALL');
+  
+  // Mock Payment Status
+  const [isPaymentSetup, setIsPaymentSetup] = useState(false);
+
+  // MOCK DATA for Sales Pages
+  const MOCK_SALES_PAGES = [
+      { id: 'sp1', title: 'Clean 9 Detox Challenge', package: 'C9 Pack', status: 'PUBLISHED', views: 1240, leads: 85, sales: 12, conversion: 14.1, lastUpdated: '2h ago' },
+      { id: 'sp2', title: 'Vital5 Heart Health', package: 'Vital5', status: 'DRAFT', views: 45, leads: 2, sales: 0, conversion: 0, lastUpdated: '1d ago' },
+      { id: 'sp3', title: 'Glow Up Skincare Routine', package: 'Infinite Kit', status: 'PUBLISHED', views: 890, leads: 42, sales: 5, conversion: 11.9, lastUpdated: '3d ago' },
+  ];
+
+  // Calculated Metrics
+  const totalViews = MOCK_SALES_PAGES.reduce((acc, p) => acc + p.views, 0);
+  const totalLeads = MOCK_SALES_PAGES.reduce((acc, p) => acc + p.leads, 0);
+  const totalSales = MOCK_SALES_PAGES.reduce((acc, p) => acc + p.sales, 0);
+  const avgConversion = totalViews > 0 ? ((totalSales / totalViews) * 100).toFixed(1) : '0.0';
+
+  // Filtered List
+  const filteredSalesPages = MOCK_SALES_PAGES.filter(page => {
+      if (salesFilter === 'ALL') return true;
+      return page.status === salesFilter;
+  });
+
   // Auto-scroll ref
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
@@ -377,44 +403,241 @@ const Dashboard: React.FC<DashboardProps> = ({
       // ----------------------------
       
       if (activeModal === 'MY_PAGES') {
+          // Determine Content based on selection
+          const selectedPage = selectedSalesPageId ? MOCK_SALES_PAGES.find(p => p.id === selectedSalesPageId) : null;
+
           return (
               <CustomModal
                   isOpen={true}
-                  onClose={() => setActiveModal('NONE')}
-                  title="My Sales Pages"
+                  onClose={() => { setActiveModal('NONE'); setSelectedSalesPageId(null); }}
+                  title={selectedPage ? selectedPage.title : "My Sales Pages"}
                   icon={LayoutTemplate}
               >
-                  <div className="space-y-6">
-                      <div className="flex justify-between items-center">
-                          <p className="text-sm text-slate-500">Manage your active landing pages.</p>
-                          <button onClick={() => navigate('/sales-builder')} className="text-xs bg-emerald-600 text-white px-3 py-2 rounded-lg font-bold">Create New</button>
-                      </div>
-                      
-                      <div className="grid gap-4">
-                          {[1, 2].map(i => (
-                              <div key={i} className="bg-white p-4 rounded-xl border border-slate-200 flex flex-col md:flex-row gap-4 items-start md:items-center dark:bg-slate-800 dark:border-slate-700">
-                                  <div className="w-16 h-16 bg-slate-100 rounded-lg flex items-center justify-center shrink-0 dark:bg-slate-700">
-                                      <Rocket size={24} className="text-slate-400" />
-                                  </div>
-                                  <div className="flex-1">
-                                      <div className="flex items-center gap-2">
-                                          <h4 className="font-bold text-slate-800 dark:text-white">Clean 9 Detox Offer</h4>
-                                          <span className="text-[10px] bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-bold uppercase">Published</span>
-                                      </div>
-                                      <p className="text-xs text-slate-500 mt-1">fbo.com/p/c9-detox-{currentUser.handle.replace('@','')}</p>
-                                      <div className="flex gap-4 mt-2 text-xs font-bold text-slate-400">
-                                          <span className="flex items-center gap-1"><Eye size={12}/> 124 Views</span>
-                                          <span className="flex items-center gap-1"><MousePointerClick size={12}/> 18 Clicks</span>
+                  {selectedPage ? (
+                      // === DEEP PAGE DETAILS VIEW ===
+                      <div className="space-y-8 animate-fade-in">
+                          <button 
+                            onClick={() => setSelectedSalesPageId(null)}
+                            className="flex items-center gap-2 text-sm font-bold text-slate-500 hover:text-slate-800 transition-colors dark:text-slate-400 dark:hover:text-white"
+                          >
+                              <ArrowLeft size={16} /> Back to All Pages
+                          </button>
+
+                          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                              {/* Left: Performance */}
+                              <div className="lg:col-span-2 space-y-6">
+                                  <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 dark:bg-slate-800 dark:border-slate-700">
+                                      <h3 className="font-bold text-slate-800 mb-4 dark:text-white">Performance Timeline</h3>
+                                      <div className="h-64 w-full bg-slate-50 rounded-xl flex items-center justify-center text-slate-400 dark:bg-slate-900/50">
+                                          <p className="text-xs">Graph Placeholder: Views vs Leads over 30 days</p>
                                       </div>
                                   </div>
-                                  <div className="flex gap-2 w-full md:w-auto">
-                                      <button className="flex-1 md:flex-none px-4 py-2 border border-slate-200 rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-50 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-700">Edit</button>
-                                      <button className="flex-1 md:flex-none px-4 py-2 bg-emerald-50 text-emerald-700 rounded-lg text-xs font-bold hover:bg-emerald-100 dark:bg-emerald-900/30 dark:text-emerald-400">Share</button>
+
+                                  <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 dark:bg-slate-800 dark:border-slate-700">
+                                      <h3 className="font-bold text-slate-800 mb-4 dark:text-white">Customer Actions Funnel</h3>
+                                      <div className="space-y-4">
+                                          <div className="flex items-center gap-4">
+                                              <div className="w-24 text-xs font-bold text-slate-500 dark:text-slate-400">Page Views</div>
+                                              <div className="flex-1 bg-slate-100 h-2 rounded-full overflow-hidden dark:bg-slate-700">
+                                                  <div className="h-full bg-blue-500 w-full"></div>
+                                              </div>
+                                              <div className="w-12 text-right text-xs font-bold">{selectedPage.views}</div>
+                                          </div>
+                                          <div className="flex items-center gap-4">
+                                              <div className="w-24 text-xs font-bold text-slate-500 dark:text-slate-400">Leads</div>
+                                              <div className="flex-1 bg-slate-100 h-2 rounded-full overflow-hidden dark:bg-slate-700">
+                                                  <div className="h-full bg-indigo-500" style={{width: '40%'}}></div>
+                                              </div>
+                                              <div className="w-12 text-right text-xs font-bold">{selectedPage.leads}</div>
+                                          </div>
+                                          <div className="flex items-center gap-4">
+                                              <div className="w-24 text-xs font-bold text-slate-500 dark:text-slate-400">Sales</div>
+                                              <div className="flex-1 bg-slate-100 h-2 rounded-full overflow-hidden dark:bg-slate-700">
+                                                  <div className="h-full bg-emerald-500" style={{width: '15%'}}></div>
+                                              </div>
+                                              <div className="w-12 text-right text-xs font-bold">{selectedPage.sales}</div>
+                                          </div>
+                                      </div>
                                   </div>
                               </div>
-                          ))}
+
+                              {/* Right: Sources & Earnings */}
+                              <div className="space-y-6">
+                                  <div className="bg-emerald-50 p-6 rounded-2xl border border-emerald-100 dark:bg-emerald-900/10 dark:border-emerald-800">
+                                      <h3 className="font-bold text-emerald-900 mb-2 dark:text-emerald-400">Earnings Breakdown</h3>
+                                      <p className="text-3xl font-bold text-emerald-700 dark:text-emerald-300">$450.00</p>
+                                      <p className="text-xs text-emerald-600 mt-1 dark:text-emerald-500">From {selectedPage.sales} confirmed sales</p>
+                                      <div className="mt-4 pt-4 border-t border-emerald-200/50 space-y-2">
+                                          <div className="flex justify-between text-xs text-emerald-800 dark:text-emerald-400">
+                                              <span>Product Cost</span>
+                                              <span>$300.00</span>
+                                          </div>
+                                          <div className="flex justify-between text-xs font-bold text-emerald-900 dark:text-emerald-300">
+                                              <span>Net Profit</span>
+                                              <span>$150.00</span>
+                                          </div>
+                                      </div>
+                                  </div>
+
+                                  <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 dark:bg-slate-800 dark:border-slate-700">
+                                      <h3 className="font-bold text-slate-800 mb-4 dark:text-white">Top Sources</h3>
+                                      <ul className="space-y-3">
+                                          <li className="flex justify-between text-sm">
+                                              <span className="flex items-center gap-2 text-slate-600 dark:text-slate-300"><MessageCircle size={14} className="text-green-500"/> WhatsApp</span>
+                                              <span className="font-bold text-slate-800 dark:text-white">65%</span>
+                                          </li>
+                                          <li className="flex justify-between text-sm">
+                                              <span className="flex items-center gap-2 text-slate-600 dark:text-slate-300"><Share2 size={14} className="text-blue-500"/> Direct Link</span>
+                                              <span className="font-bold text-slate-800 dark:text-white">20%</span>
+                                          </li>
+                                          <li className="flex justify-between text-sm">
+                                              <span className="flex items-center gap-2 text-slate-600 dark:text-slate-300"><Globe size={14} className="text-purple-500"/> Instagram</span>
+                                              <span className="font-bold text-slate-800 dark:text-white">15%</span>
+                                          </li>
+                                      </ul>
+                                  </div>
+                              </div>
+                          </div>
                       </div>
-                  </div>
+                  ) : (
+                      // === LIST VIEW (DASHBOARD) ===
+                      <div className="space-y-8 animate-fade-in">
+                          
+                          {/* 1. Summary Metrics */}
+                          <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+                              <div className="bg-slate-50 p-3 rounded-xl border border-slate-100 dark:bg-slate-800 dark:border-slate-700">
+                                  <p className="text-[10px] font-bold text-slate-400 uppercase">Pages</p>
+                                  <p className="text-xl font-bold text-slate-800 dark:text-white">{MOCK_SALES_PAGES.length}</p>
+                              </div>
+                              <div className="bg-slate-50 p-3 rounded-xl border border-slate-100 dark:bg-slate-800 dark:border-slate-700">
+                                  <p className="text-[10px] font-bold text-slate-400 uppercase">Views</p>
+                                  <p className="text-xl font-bold text-slate-800 dark:text-white">{totalViews.toLocaleString()}</p>
+                              </div>
+                              <div className="bg-slate-50 p-3 rounded-xl border border-slate-100 dark:bg-slate-800 dark:border-slate-700">
+                                  <p className="text-[10px] font-bold text-slate-400 uppercase">Leads</p>
+                                  <p className="text-xl font-bold text-blue-600 dark:text-blue-400">{totalLeads}</p>
+                              </div>
+                              <div className="bg-slate-50 p-3 rounded-xl border border-slate-100 dark:bg-slate-800 dark:border-slate-700">
+                                  <p className="text-xs font-bold text-slate-400 uppercase">Sales</p>
+                                  <p className="text-xl font-bold text-emerald-600 dark:text-emerald-400">{totalSales}</p>
+                              </div>
+                              <div className="bg-slate-50 p-3 rounded-xl border border-slate-100 col-span-2 md:col-span-1 dark:bg-slate-800 dark:border-slate-700">
+                                  <p className="text-[10px] font-bold text-slate-400 uppercase">Conversion</p>
+                                  <p className="text-xl font-bold text-purple-600 dark:text-purple-400">{avgConversion}%</p>
+                              </div>
+                          </div>
+
+                          {/* 2. Action Zone */}
+                          <div className="flex flex-col md:flex-row gap-4 items-stretch">
+                              <button 
+                                  onClick={() => navigate('/sales-builder')} 
+                                  className="flex-1 bg-emerald-600 text-white p-4 rounded-xl font-bold shadow-lg hover:bg-emerald-700 transition-all flex items-center justify-center gap-3 hover:-translate-y-0.5"
+                              >
+                                  <PlusCircle size={20} /> Create New Sales Page
+                              </button>
+                              <button 
+                                  onClick={() => setActiveModal('PAYMENTS')}
+                                  className={`flex-1 p-4 rounded-xl font-bold border-2 transition-all flex items-center justify-center gap-3 ${isPaymentSetup ? 'border-slate-200 text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800' : 'border-yellow-400 bg-yellow-50 text-yellow-800 hover:bg-yellow-100 dark:bg-yellow-900/20 dark:text-yellow-400 dark:border-yellow-600'}`}
+                              >
+                                  <Wallet size={20} /> 
+                                  {isPaymentSetup ? 'Manage Payments' : 'Finish Payment Setup'}
+                                  {!isPaymentSetup && <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>}
+                              </button>
+                          </div>
+
+                          {/* 3. Filters */}
+                          <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-2">
+                              {['ALL', 'PUBLISHED', 'DRAFT'].map(filter => (
+                                  <button
+                                      key={filter}
+                                      onClick={() => setSalesFilter(filter as any)}
+                                      className={`px-4 py-2 rounded-lg text-xs font-bold whitespace-nowrap transition-colors border ${salesFilter === filter ? 'bg-slate-800 text-white border-slate-800 dark:bg-white dark:text-slate-900' : 'bg-white text-slate-500 border-slate-200 hover:bg-slate-50 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-400'}`}
+                                  >
+                                      {filter.charAt(0) + filter.slice(1).toLowerCase()}
+                                  </button>
+                              ))}
+                          </div>
+
+                          {/* 4. Page Cards List */}
+                          <div className="space-y-4">
+                              {filteredSalesPages.length > 0 ? filteredSalesPages.map(page => (
+                                  <div key={page.id} className="bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-all overflow-hidden dark:bg-slate-800 dark:border-slate-700 group">
+                                      <div className="p-5">
+                                          <div className="flex justify-between items-start mb-4">
+                                              <div>
+                                                  <div className="flex items-center gap-2 mb-1">
+                                                      <h3 className="font-bold text-lg text-slate-900 dark:text-white">{page.title}</h3>
+                                                      <span className={`text-[9px] font-bold px-2 py-0.5 rounded uppercase ${page.status === 'PUBLISHED' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400'}`}>
+                                                          {page.status}
+                                                      </span>
+                                                  </div>
+                                                  <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">{page.package}</p>
+                                              </div>
+                                              <button className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300">
+                                                  <MoreHorizontal size={20} />
+                                              </button>
+                                          </div>
+
+                                          <div className="grid grid-cols-4 gap-2 mb-6">
+                                              <div className="text-center p-2 bg-slate-50 rounded-lg dark:bg-slate-700/50">
+                                                  <Eye size={14} className="mx-auto mb-1 text-slate-400" />
+                                                  <span className="block text-sm font-bold text-slate-700 dark:text-slate-200">{page.views}</span>
+                                              </div>
+                                              <div className="text-center p-2 bg-slate-50 rounded-lg dark:bg-slate-700/50">
+                                                  <MessageSquare size={14} className="mx-auto mb-1 text-blue-400" />
+                                                  <span className="block text-sm font-bold text-slate-700 dark:text-slate-200">{page.leads}</span>
+                                              </div>
+                                              <div className="text-center p-2 bg-slate-50 rounded-lg dark:bg-slate-700/50">
+                                                  <ShoppingCart size={14} className="mx-auto mb-1 text-emerald-500" />
+                                                  <span className="block text-sm font-bold text-slate-700 dark:text-slate-200">{page.sales}</span>
+                                              </div>
+                                              <div className="text-center p-2 bg-slate-50 rounded-lg dark:bg-slate-700/50">
+                                                  <Activity size={14} className="mx-auto mb-1 text-purple-400" />
+                                                  <span className="block text-sm font-bold text-slate-700 dark:text-slate-200">{page.conversion}%</span>
+                                              </div>
+                                          </div>
+
+                                          <div className="flex gap-2 pt-4 border-t border-slate-100 dark:border-slate-700">
+                                              <button className="flex-1 py-2 text-xs font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors flex items-center justify-center gap-2 dark:bg-slate-700 dark:text-slate-300 dark:hover:bg-slate-600">
+                                                  <Edit3 size={14} /> Edit
+                                              </button>
+                                              <button className="flex-1 py-2 text-xs font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors flex items-center justify-center gap-2 dark:bg-slate-700 dark:text-slate-300 dark:hover:bg-slate-600">
+                                                  <Eye size={14} /> Preview
+                                              </button>
+                                              <button className="flex-1 py-2 text-xs font-bold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 rounded-lg transition-colors flex items-center justify-center gap-2 dark:bg-emerald-900/20 dark:text-emerald-400">
+                                                  <Share2 size={14} /> Share
+                                              </button>
+                                              <button 
+                                                  onClick={() => setSelectedSalesPageId(page.id)}
+                                                  className="flex-1 py-2 text-xs font-bold text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors flex items-center justify-center gap-2 dark:bg-blue-900/20 dark:text-blue-400"
+                                              >
+                                                  <BarChart2 size={14} /> Analytics
+                                              </button>
+                                          </div>
+                                      </div>
+                                  </div>
+                              )) : (
+                                  <div className="text-center py-16 px-6 bg-slate-50 border-2 border-dashed border-slate-200 rounded-3xl dark:bg-slate-800/50 dark:border-slate-700">
+                                      <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm dark:bg-slate-800">
+                                          <LayoutTemplate size={32} className="text-slate-400" />
+                                      </div>
+                                      <h3 className="font-bold text-slate-800 text-lg dark:text-white">No pages found</h3>
+                                      <p className="text-sm text-slate-500 max-w-xs mx-auto mt-2 dark:text-slate-400">
+                                          {salesFilter !== 'ALL' ? `You don't have any ${salesFilter.toLowerCase()} pages.` : "Start by creating one page to sell a product package and generate leads automatically."}
+                                      </p>
+                                      {salesFilter === 'ALL' && (
+                                          <button 
+                                              onClick={() => navigate('/sales-builder')}
+                                              className="mt-6 text-emerald-600 font-bold text-sm hover:underline dark:text-emerald-400"
+                                          >
+                                              + Create First Page
+                                          </button>
+                                      )}
+                                  </div>
+                              )}
+                          </div>
+                      </div>
+                  )}
               </CustomModal>
           );
       }
@@ -518,18 +741,25 @@ const Dashboard: React.FC<DashboardProps> = ({
                   <div className="space-y-6">
                       <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 dark:bg-slate-800 dark:border-slate-700">
                           <h4 className="font-bold text-sm text-slate-700 mb-4 dark:text-white">Active Methods</h4>
-                          <div className="flex items-center gap-3 p-3 bg-white rounded-lg border border-slate-200 dark:bg-slate-900 dark:border-slate-700">
-                              <div className="w-10 h-10 bg-yellow-400 rounded flex items-center justify-center font-bold text-xs">MTN</div>
-                              <div className="flex-1">
-                                  <p className="font-bold text-sm text-slate-800 dark:text-white">Mobile Money</p>
-                                  <p className="text-xs text-slate-500">Ending in **89</p>
+                          {isPaymentSetup ? (
+                              <div className="flex items-center gap-3 p-3 bg-white rounded-lg border border-slate-200 dark:bg-slate-900 dark:border-slate-700">
+                                  <div className="w-10 h-10 bg-yellow-400 rounded flex items-center justify-center font-bold text-xs">MTN</div>
+                                  <div className="flex-1">
+                                      <p className="font-bold text-sm text-slate-800 dark:text-white">Mobile Money</p>
+                                      <p className="text-xs text-slate-500">Ending in **89</p>
+                                  </div>
+                                  <span className="text-xs text-green-600 font-bold bg-green-50 px-2 py-1 rounded">Active</span>
                               </div>
-                              <span className="text-xs text-green-600 font-bold bg-green-50 px-2 py-1 rounded">Active</span>
-                          </div>
+                          ) : (
+                              <div className="text-center py-4 text-slate-400 text-xs">No payment methods configured.</div>
+                          )}
                       </div>
 
-                      <button className="w-full py-3 border-2 border-dashed border-slate-300 rounded-xl text-slate-500 font-bold text-sm hover:border-emerald-500 hover:text-emerald-600 transition-colors flex items-center justify-center gap-2 dark:border-slate-600 dark:hover:border-emerald-400">
-                          <PlusCircle size={16} /> Add Bank Account
+                      <button 
+                        onClick={() => { setIsPaymentSetup(true); alert("Payment method added (Mock)!"); }}
+                        className="w-full py-3 border-2 border-dashed border-slate-300 rounded-xl text-slate-500 font-bold text-sm hover:border-emerald-500 hover:text-emerald-600 transition-colors flex items-center justify-center gap-2 dark:border-slate-600 dark:hover:border-emerald-400"
+                      >
+                          <PlusCircle size={16} /> Add Payment Method
                       </button>
                   </div>
               </CustomModal>
@@ -706,7 +936,7 @@ const Dashboard: React.FC<DashboardProps> = ({
       }
 
       if (activeModal === 'BREAKDOWN') {
-        // 1. Calculate Personal CC based on Cycle Start Date
+        // ... (Existing Breakdown Code) ...
         const cycleStart = new Date(rankProgress.cycleStartDate);
         const personalCC = (currentUser.salesHistory || [])
             .filter(s => new Date(s.date) >= cycleStart)

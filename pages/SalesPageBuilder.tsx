@@ -190,19 +190,21 @@ const SalesPageBuilder: React.FC = () => {
       <div className="flex-1 flex overflow-hidden relative">
         {/* Editor Panel */}
         <div className={`
-            flex-col transition-all duration-300 ease-in-out z-10
+            flex-col transition-all duration-300 ease-in-out z-10 bg-white
             ${isPreviewMode ? 'hidden' : 'flex'}
-            ${showSplitView ? 'flex-1 border-r border-slate-200 max-w-3xl' : 'w-full max-w-5xl mx-auto shadow-xl my-0 md:my-6 rounded-none md:rounded-2xl border-x border-slate-200'}
-            bg-white
+            ${showSplitView 
+                ? 'w-full md:w-1/2 border-r border-slate-200' 
+                : 'w-full max-w-5xl mx-auto shadow-xl my-0 md:my-6 rounded-none md:rounded-2xl border-x border-slate-200'
+            }
         `}>
           <EditorLayout data={page} updateField={updateField} isPreviewMode={false} />
         </div>
 
         {/* Preview Panel */}
         <div className={`
-            flex-1 bg-slate-200 overflow-hidden relative transition-all duration-300
-            ${isPreviewMode ? 'flex' : 'hidden'}
-            ${showSplitView && !isPreviewMode ? 'hidden md:flex' : ''}
+            bg-slate-200 overflow-hidden relative transition-all duration-300
+            ${isPreviewMode ? 'flex w-full' : 'hidden'}
+            ${showSplitView && !isPreviewMode ? 'hidden md:flex w-1/2' : ''}
         `}>
           <div className="w-full h-full bg-dot-pattern flex items-center justify-center overflow-hidden p-4 md:p-8">
              <PreviewPanel data={page} device={previewDevice} />

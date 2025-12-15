@@ -53,45 +53,42 @@ const ProductSectionEditor: React.FC<ProductSectionEditorProps> = ({ data, onCha
   );
 
   return (
-    <div className="space-y-6 md:space-y-8 pb-10 w-full max-w-full">
+    <div className="space-y-6 md:space-y-8 pb-10 w-full max-w-full overflow-x-hidden">
       
-      {/* 1. Header (Updated Layout) */}
-      <div className="flex items-center gap-3 border-b border-slate-100 pb-4 dark:border-slate-800">
-        <div className="mt-1">
+      {/* 1. Controls Row (Toggle + Info Icon) - Removed Redundant Title */}
+      <div className="flex gap-2 items-center w-full">
+          <div className="bg-slate-100 p-1 rounded-xl flex dark:bg-slate-800 flex-1">
+              <button 
+                onClick={() => setSelectionType('SINGLE')}
+                className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-xs md:text-sm font-bold transition-all ${selectionType === 'SINGLE' ? 'bg-white shadow-sm text-emerald-600 dark:bg-slate-700 dark:text-emerald-400' : 'text-slate-500 hover:text-slate-700 dark:text-slate-400'}`}
+              >
+                  <ShoppingBag size={16} /> <span className="truncate">Single</span>
+              </button>
+              <button 
+                onClick={() => setSelectionType('BUNDLE')}
+                className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-xs md:text-sm font-bold transition-all ${selectionType === 'BUNDLE' ? 'bg-white shadow-sm text-emerald-600 dark:bg-slate-700 dark:text-emerald-400' : 'text-slate-500 hover:text-slate-700 dark:text-slate-400'}`}
+              >
+                  <Package size={16} /> <span className="truncate">Bundle</span>
+              </button>
+          </div>
+          
+          <div className="shrink-0">
             <InfoPopover 
-                title="Product Selection Tab"
+                title="Product Settings"
                 description={
                     <ul className="list-disc pl-4 space-y-1">
                         <li><strong>Search Catalog:</strong> Quickly find Forever products to auto-fill details.</li>
                         <li><strong>Smart Data:</strong> Images, benefits, and usage instructions are loaded automatically.</li>
                         <li><strong>Pricing:</strong> Use the official price or set a custom offer.</li>
-                        <li><strong>Stock:</strong> See alerts if a product is low on stock in your region.</li>
                     </ul>
                 }
             />
-        </div>
-        <h3 className="font-bold text-lg text-slate-900 dark:text-white">Product Selection</h3>
+          </div>
       </div>
 
-      {/* 2. Selection Type Toggle */}
-      <div className="bg-slate-100 p-1 rounded-xl flex dark:bg-slate-800">
-          <button 
-            onClick={() => setSelectionType('SINGLE')}
-            className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-xs md:text-sm font-bold transition-all ${selectionType === 'SINGLE' ? 'bg-white shadow-sm text-emerald-600 dark:bg-slate-700 dark:text-emerald-400' : 'text-slate-500 hover:text-slate-700 dark:text-slate-400'}`}
-          >
-              <ShoppingBag size={16} /> <span className="truncate">Single Product</span>
-          </button>
-          <button 
-            onClick={() => setSelectionType('BUNDLE')}
-            className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-xs md:text-sm font-bold transition-all ${selectionType === 'BUNDLE' ? 'bg-white shadow-sm text-emerald-600 dark:bg-slate-700 dark:text-emerald-400' : 'text-slate-500 hover:text-slate-700 dark:text-slate-400'}`}
-          >
-              <Package size={16} /> <span className="truncate">Bundle / Pack</span>
-          </button>
-      </div>
-
-      {/* 3. Catalog Search */}
-      <div className="relative z-20">
-          <div className="relative">
+      {/* 2. Catalog Search */}
+      <div className="relative z-20 w-full">
+          <div className="relative w-full">
               <Search className="absolute left-3 top-3.5 text-slate-400" size={18} />
               <input 
                   type="text" 
@@ -104,7 +101,7 @@ const ProductSectionEditor: React.FC<ProductSectionEditorProps> = ({ data, onCha
           
           {/* Search Results Dropdown */}
           {searchQuery && (
-              <div className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-slate-800 rounded-xl shadow-xl border border-slate-100 dark:border-slate-700 max-h-60 overflow-y-auto z-30">
+              <div className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-slate-800 rounded-xl shadow-xl border border-slate-100 dark:border-slate-700 max-h-60 overflow-y-auto z-30 w-full">
                   {filteredCatalog.length > 0 ? filteredCatalog.map(item => (
                       <button 
                         key={item.id}
@@ -131,12 +128,12 @@ const ProductSectionEditor: React.FC<ProductSectionEditorProps> = ({ data, onCha
           )}
       </div>
 
-      {/* 4. Active Product Details */}
+      {/* 3. Active Product Details */}
       {activeProduct ? (
-          <div className="animate-fade-in space-y-6">
+          <div className="animate-fade-in space-y-6 w-full">
               
               {/* Product Card */}
-              <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl p-4 md:p-5 shadow-sm relative overflow-hidden">
+              <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl p-3 md:p-5 shadow-sm relative overflow-hidden w-full">
                   {/* Stock Badge */}
                   {activeProduct.stockStatus && (
                       <div className={`absolute top-0 right-0 px-3 py-1 text-[10px] font-bold uppercase rounded-bl-xl z-10 ${
@@ -148,9 +145,9 @@ const ProductSectionEditor: React.FC<ProductSectionEditorProps> = ({ data, onCha
                       </div>
                   )}
 
-                  <div className="flex flex-row gap-4">
-                      {/* Image - Fixed width on mobile, prevents squashing */}
-                      <div className="w-24 h-24 md:w-32 md:h-32 bg-slate-50 dark:bg-slate-700 rounded-xl flex items-center justify-center border border-slate-100 dark:border-slate-600 overflow-hidden shrink-0">
+                  <div className="flex flex-row gap-3 md:gap-4 items-start">
+                      {/* Image - Fixed width to prevent squashing */}
+                      <div className="w-20 h-20 md:w-32 md:h-32 bg-slate-50 dark:bg-slate-700 rounded-xl flex items-center justify-center border border-slate-100 dark:border-slate-600 overflow-hidden shrink-0 mt-1">
                           {activeProduct.image ? (
                               <img src={activeProduct.image} alt="Product" className="w-full h-full object-cover" />
                           ) : (
@@ -158,8 +155,8 @@ const ProductSectionEditor: React.FC<ProductSectionEditorProps> = ({ data, onCha
                           )}
                       </div>
 
-                      {/* Info Fields - min-w-0 ensures text inputs shrink properly in flex container */}
-                      <div className="flex-1 space-y-3 md:space-y-4 min-w-0">
+                      {/* Info Fields - min-w-0 ensures children truncate properly inside flex container */}
+                      <div className="flex-1 space-y-3 min-w-0">
                           <div className="w-full">
                               <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">Product Name</label>
                               <input 
@@ -191,8 +188,8 @@ const ProductSectionEditor: React.FC<ProductSectionEditorProps> = ({ data, onCha
                   </div>
               </div>
 
-              {/* 5. Pricing Options */}
-              <div className="bg-slate-50 dark:bg-slate-800/50 p-4 md:p-5 rounded-2xl border border-slate-200 dark:border-slate-700">
+              {/* 4. Pricing Options */}
+              <div className="bg-slate-50 dark:bg-slate-800/50 p-4 md:p-5 rounded-2xl border border-slate-200 dark:border-slate-700 w-full">
                   <div className="flex justify-between items-center mb-4">
                       <h4 className="font-bold text-slate-700 dark:text-slate-200 flex items-center gap-2 text-sm md:text-base">
                           <DollarSign size={18} className="text-emerald-500"/> Pricing Strategy
@@ -235,8 +232,8 @@ const ProductSectionEditor: React.FC<ProductSectionEditorProps> = ({ data, onCha
                   </div>
               </div>
 
-              {/* 6. Product Content (Auto-filled) */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* 5. Product Content (Auto-filled) */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
                   {/* Benefits */}
                   <div className="border border-slate-200 rounded-xl p-4 dark:border-slate-700">
                       <div className="flex items-center justify-between mb-3">
@@ -274,7 +271,7 @@ const ProductSectionEditor: React.FC<ProductSectionEditorProps> = ({ data, onCha
 
               {/* Ingredients (Read Only) */}
               {activeProduct.ingredients && activeProduct.ingredients.length > 0 && (
-                  <div className="bg-slate-50 p-4 rounded-xl dark:bg-slate-800/50">
+                  <div className="bg-slate-50 p-4 rounded-xl dark:bg-slate-800/50 w-full">
                       <div className="flex items-center gap-2 mb-2">
                           <AlertTriangle size={14} className="text-slate-400" />
                           <span className="text-xs font-bold text-slate-500 uppercase dark:text-slate-400">Ingredients (Read-only reference)</span>
@@ -288,7 +285,7 @@ const ProductSectionEditor: React.FC<ProductSectionEditorProps> = ({ data, onCha
           </div>
       ) : (
           /* Empty State */
-          <div className="text-center py-16 border-2 border-dashed border-slate-200 rounded-3xl bg-slate-50/50 dark:border-slate-700 dark:bg-slate-900/30">
+          <div className="text-center py-16 border-2 border-dashed border-slate-200 rounded-3xl bg-slate-50/50 dark:border-slate-700 dark:bg-slate-900/30 w-full">
               <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm dark:bg-slate-800">
                   <Search size={24} className="text-slate-400" />
               </div>

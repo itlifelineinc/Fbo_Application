@@ -11,7 +11,14 @@ const EMPTY_PAGE: SalesPage = {
   heroImage: null,
   galleryImages: [],
   themeColor: '#10b981', // Emerald-500
-  layoutStyle: 'modern',
+  layoutStyle: 'clean', // Default to 'clean'
+  
+  // Defaults for new design system
+  headingFont: 'Lexend',
+  bodyFont: 'Noto Sans',
+  baseFontSize: 16,
+  sectionSpacing: 2, // Medium spacing
+
   description: '',
   features: [],
   testimonials: [],
@@ -40,7 +47,12 @@ export const useLocalDraft = () => {
   const [page, setPage] = useState<SalesPage>(() => {
     try {
       const saved = localStorage.getItem('sales_page_draft');
-      return saved ? JSON.parse(saved) : EMPTY_PAGE;
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        // Merge with defaults to ensure new fields exist on old drafts
+        return { ...EMPTY_PAGE, ...parsed };
+      }
+      return EMPTY_PAGE;
     } catch (e) {
       console.error("Failed to parse draft from local storage", e);
       return EMPTY_PAGE;

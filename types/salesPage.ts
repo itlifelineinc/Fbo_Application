@@ -1,12 +1,12 @@
 
 export type CurrencyCode = 'USD' | 'EUR' | 'GBP' | 'GHS' | 'NGN' | 'ZAR' | 'KES' | 'AED' | 'INR' | 'CAD' | 'AUD' | 'PHP' | 'MYR' | 'TZS' | 'UGX';
-export type LayoutStyle = 'classic' | 'modern' | 'minimal';
+export type LayoutStyle = 'clean' | 'health' | 'bold'; // Updated styles
 export type PageType = 'product' | 'bundle' | 'problem' | 'capture' | 'brand' | 'recruit';
 
 export interface Product {
   id: string;
   name: string;
-  images: string[]; // Changed to array for multi-angle support
+  images: string[]; 
   shortDescription: string;
   fullDescription: string;
   price: number;
@@ -14,7 +14,7 @@ export interface Product {
   benefits: string[];
   usageSteps: string[];
   tags?: string[];
-  ingredients: string[]; // Made mandatory for consistency, default to empty
+  ingredients: string[]; 
   category?: string; 
   stockStatus?: 'IN_STOCK' | 'LOW_STOCK' | 'OUT_OF_STOCK';
 }
@@ -22,7 +22,7 @@ export interface Product {
 export interface Package {
   id: string;
   title: string;
-  productIds: string[]; // References Product.id
+  productIds: string[]; 
   description: string;
   bannerImage?: string;
   totalPrice: number;
@@ -43,8 +43,8 @@ export interface CTAButton {
   label: string;
   url: string;
   style: "primary" | "outline" | "link";
-  color?: string; // Custom hex override
-  icon?: string; // Icon name
+  color?: string; 
+  icon?: string; 
 }
 
 export interface Testimonial {
@@ -68,6 +68,12 @@ export interface SalesPage {
   galleryImages: string[];
   themeColor: string;
   layoutStyle: LayoutStyle;
+  
+  // New Design Props
+  headingFont: string;
+  bodyFont: string;
+  baseFontSize: number; // 14-20
+  sectionSpacing: number; // 0-100 scale
   
   // Content
   description: string; 

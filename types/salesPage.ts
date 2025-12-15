@@ -14,6 +14,10 @@ export interface Product {
   benefits: string[];
   usageSteps: string[];
   tags?: string[];
+  // New fields for Product Selection Tab
+  ingredients?: string[]; 
+  category?: string; // e.g., Weight Management, Skincare
+  stockStatus?: 'IN_STOCK' | 'LOW_STOCK' | 'OUT_OF_STOCK';
 }
 
 export interface Package {

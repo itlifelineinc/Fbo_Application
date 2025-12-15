@@ -1,6 +1,9 @@
-import React, { useState, useRef } from 'react';
-import { SalesPage, Product, CurrencyCode } from '../../types/salesPage';
-import { Plus, Trash2, ChevronDown, ChevronUp, Image as ImageIcon, X } from 'lucide-react';
+
+import React, { useState, useEffect } from 'react';
+import { SalesPage, Product } from '../../types/salesPage';
+import { Search, Plus, Trash2, ChevronDown, ChevronUp, Image as ImageIcon, Package, ShoppingBag, AlertTriangle, CheckCircle, Tag, List, DollarSign } from 'lucide-react';
+import InfoPopover from '../Shared/InfoPopover';
+import { FOREVER_CATALOG } from '../../data/foreverCatalog';
 
 interface ProductSectionEditorProps {
   data: SalesPage;
@@ -8,230 +11,292 @@ interface ProductSectionEditorProps {
 }
 
 const ProductSectionEditor: React.FC<ProductSectionEditorProps> = ({ data, onChange }) => {
-  const [expandedId, setExpandedId] = useState<string | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const [activeUploadId, setActiveUploadId] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectionType, setSelectionType] = useState<'SINGLE' | 'BUNDLE'>('SINGLE');
+  const [isPricingCustom, setIsPricingCustom] = useState(false);
+  
+  // Since this page type focuses on a main offer, we look at the first product
+  const activeProduct = data.products.length > 0 ? data.products[0] : null;
 
-  const addProduct = () => {
+  const handleCatalogSelect = (catalogItem: Product) => {
+    // Clone item to avoid mutation of catalog
     const newProduct: Product = {
-      id: `prod_${Date.now()}`,
-      name: 'New Product',
-      image: '',
-      shortDescription: '',
-      fullDescription: '',
-      price: 0,
-      benefits: [],
-      usageSteps: []
+        ...catalogItem,
+        id: `prod_${Date.now()}`, // Generate unique ID for this instance
+        price: catalogItem.price, // Reset any previous edits
     };
-    onChange('products', [...data.products, newProduct]);
-    setExpandedId(newProduct.id);
+    
+    // Replace current products list with this single selection
+    onChange('products', [newProduct]);
+    setSearchQuery(''); // Clear search
+    setIsPricingCustom(false); // Reset custom pricing toggle
   };
 
-  const updateProduct = (id: string, field: keyof Product, value: any) => {
-    const updatedProducts = data.products.map(p => p.id === id ? { ...p, [field]: value } : p);
-    onChange('products', updatedProducts);
+  const handleUpdateProduct = (field: keyof Product, value: any) => {
+      if (!activeProduct) return;
+      const updatedProduct = { ...activeProduct, [field]: value };
+      onChange('products', [updatedProduct]);
   };
 
-  const removeProduct = (id: string) => {
-    if (window.confirm('Delete this product?')) {
-      onChange('products', data.products.filter(p => p.id !== id));
-    }
+  const handlePriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+      handleUpdateProduct('price', parseFloat(e.target.value));
   };
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file && activeUploadId) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        updateProduct(activeUploadId, 'image', reader.result as string);
-        setActiveUploadId(null);
-      };
-      reader.readAsDataURL(file);
-    }
+  const handleDiscountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+      const val = parseFloat(e.target.value);
+      handleUpdateProduct('discountPrice', isNaN(val) ? undefined : val);
   };
 
-  const toggleArrayItem = (productId: string, arrayField: 'benefits' | 'usageSteps', itemIndex: number | null, value?: string) => {
-    const product = data.products.find(p => p.id === productId);
-    if (!product) return;
-
-    let newArray = [...(product[arrayField] || [])];
-
-    if (itemIndex === null && value) {
-      // Add
-      newArray.push(value);
-    } else if (itemIndex !== null && value === undefined) {
-      // Remove
-      newArray.splice(itemIndex, 1);
-    } else if (itemIndex !== null && value !== undefined) {
-      // Edit
-      newArray[itemIndex] = value;
-    }
-
-    updateProduct(productId, arrayField, newArray);
-  };
+  const filteredCatalog = FOREVER_CATALOG.filter(p => 
+      p.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+      p.category?.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   return (
-    <div className="space-y-4">
-      <div className="flex justify-between items-center">
-        <label className="block text-sm font-bold text-slate-700 dark:text-slate-300">Single Products</label>
-        <button onClick={addProduct} className="text-xs flex items-center gap-1 text-emerald-600 font-bold hover:bg-emerald-50 px-2 py-1 rounded dark:bg-emerald-900/30 dark:text-emerald-400 dark:hover:bg-emerald-800/50">
-          <Plus size={14} /> Add Product
-        </button>
+    <div className="space-y-8 pb-10">
+      
+      {/* 1. Header with Info Popover */}
+      <div className="flex justify-between items-center border-b border-slate-100 pb-4 dark:border-slate-800">
+        <div>
+            <h3 className="font-bold text-lg text-slate-900 dark:text-white">Product Selection</h3>
+            <p className="text-xs text-slate-500 dark:text-slate-400">What are you selling on this page?</p>
+        </div>
+        <InfoPopover 
+            title="Product Selection Tab"
+            description={
+                <ul className="list-disc pl-4 space-y-1">
+                    <li><strong>Search Catalog:</strong> Quickly find Forever products to auto-fill details.</li>
+                    <li><strong>Smart Data:</strong> Images, benefits, and usage instructions are loaded automatically.</li>
+                    <li><strong>Pricing:</strong> Use the official price or set a custom offer.</li>
+                    <li><strong>Stock:</strong> See alerts if a product is low on stock in your region.</li>
+                </ul>
+            }
+        />
       </div>
 
-      <input 
-        type="file" 
-        ref={fileInputRef} 
-        className="hidden" 
-        accept="image/*" 
-        onChange={handleImageUpload} 
-      />
+      {/* 2. Selection Type Toggle */}
+      <div className="bg-slate-100 p-1 rounded-xl flex dark:bg-slate-800">
+          <button 
+            onClick={() => setSelectionType('SINGLE')}
+            className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-bold transition-all ${selectionType === 'SINGLE' ? 'bg-white shadow-sm text-emerald-600 dark:bg-slate-700 dark:text-emerald-400' : 'text-slate-500 hover:text-slate-700 dark:text-slate-400'}`}
+          >
+              <ShoppingBag size={16} /> Single Product
+          </button>
+          <button 
+            onClick={() => setSelectionType('BUNDLE')}
+            className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-bold transition-all ${selectionType === 'BUNDLE' ? 'bg-white shadow-sm text-emerald-600 dark:bg-slate-700 dark:text-emerald-400' : 'text-slate-500 hover:text-slate-700 dark:text-slate-400'}`}
+          >
+              <Package size={16} /> Bundle / Pack
+          </button>
+      </div>
 
-      <div className="space-y-3">
-        {data.products.map((product) => (
-          <div key={product.id} className="border border-slate-200 rounded-xl bg-white overflow-hidden shadow-sm transition-all dark:bg-slate-800 dark:border-slate-700">
-            {/* Header */}
-            <div 
-              className="flex items-center justify-between p-4 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-700/50"
-              onClick={() => setExpandedId(expandedId === product.id ? null : product.id)}
-            >
-              <div className="flex items-center gap-3">
-                {product.image ? (
-                  <img src={product.image} alt="" className="w-10 h-10 rounded-lg object-cover bg-slate-100 dark:bg-slate-700" />
-                ) : (
-                  <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center text-slate-400 dark:bg-slate-700 dark:text-slate-500">
-                    <ImageIcon size={16} />
-                  </div>
-                )}
-                <div>
-                  <h4 className="font-bold text-sm text-slate-800 dark:text-slate-200">{product.name}</h4>
-                  <p className="text-xs text-slate-500 dark:text-slate-400">{data.currency} {product.price}</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-2">
-                <button 
-                  onClick={(e) => { e.stopPropagation(); removeProduct(product.id); }}
-                  className="p-2 text-slate-400 hover:text-red-500 rounded-full hover:bg-red-50 dark:hover:bg-red-900/30"
-                >
-                  <Trash2 size={16} />
-                </button>
-                <div className="text-slate-400 dark:text-slate-500">
-                    {expandedId === product.id ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-                </div>
-              </div>
-            </div>
-
-            {/* Expanded Content */}
-            {expandedId === product.id && (
-              <div className="p-4 border-t border-slate-100 bg-slate-50/50 space-y-4 animate-fade-in dark:bg-slate-900/50 dark:border-slate-700">
-                
-                {/* Image & Basic Info */}
-                <div className="flex gap-4">
-                  <div 
-                    onClick={() => { setActiveUploadId(product.id); fileInputRef.current?.click(); }}
-                    className="w-24 h-24 bg-slate-100 border-2 border-dashed border-slate-300 rounded-xl flex flex-col items-center justify-center text-slate-400 cursor-pointer hover:border-emerald-400 hover:text-emerald-500 transition-colors shrink-0 dark:bg-slate-800 dark:border-slate-600 dark:hover:border-emerald-500"
-                  >
-                    {product.image ? (
-                      <img src={product.image} className="w-full h-full object-cover rounded-xl" />
-                    ) : (
-                      <>
-                        <ImageIcon size={20} />
-                        <span className="text-[10px] mt-1 font-bold">Upload</span>
-                      </>
-                    )}
-                  </div>
-                  <div className="flex-1 space-y-2">
-                    <div className="relative">
-                        <input 
-                        type="text" 
-                        value={product.name}
-                        onChange={(e) => updateProduct(product.id, 'name', e.target.value)}
-                        maxLength={40}
-                        placeholder="Product Name (e.g. Aloe Vera Gel)"
-                        className="w-full p-2 text-sm border border-slate-200 rounded-lg focus:ring-1 focus:ring-emerald-500 outline-none dark:bg-slate-700 dark:border-slate-600 dark:text-white"
-                        />
-                        <span className="absolute right-2 top-2 text-[10px] text-slate-400">{product.name.length}/40</span>
-                    </div>
-                    <div className="relative">
-                        <input 
-                        type="text" 
-                        value={product.shortDescription}
-                        onChange={(e) => updateProduct(product.id, 'shortDescription', e.target.value)}
-                        maxLength={80}
-                        placeholder="Tagline (e.g. For daily digestive health)"
-                        className="w-full p-2 text-sm border border-slate-200 rounded-lg focus:ring-1 focus:ring-emerald-500 outline-none dark:bg-slate-700 dark:border-slate-600 dark:text-white"
-                        />
-                        <span className="absolute right-2 top-2 text-[10px] text-slate-400">{product.shortDescription.length}/80</span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Pricing */}
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-xs font-bold text-slate-500 mb-1 dark:text-slate-400">Price ({data.currency})</label>
-                    <input 
-                      type="number" 
-                      value={product.price}
-                      onChange={(e) => updateProduct(product.id, 'price', parseFloat(e.target.value))}
-                      className="w-full p-2 text-sm border border-slate-200 rounded-lg outline-none dark:bg-slate-700 dark:border-slate-600 dark:text-white"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-bold text-slate-500 mb-1 dark:text-slate-400">Discount Price (Optional)</label>
-                    <input 
-                      type="number" 
-                      value={product.discountPrice || ''}
-                      onChange={(e) => updateProduct(product.id, 'discountPrice', parseFloat(e.target.value))}
-                      className="w-full p-2 text-sm border border-slate-200 rounded-lg outline-none dark:bg-slate-700 dark:border-slate-600 dark:text-white"
-                    />
-                  </div>
-                </div>
-
-                {/* Description */}
-                <div>
-                  <label className="block text-xs font-bold text-slate-500 mb-1 dark:text-slate-400">Full Description</label>
-                  <textarea 
-                    value={product.fullDescription}
-                    onChange={(e) => updateProduct(product.id, 'fullDescription', e.target.value)}
-                    className="w-full p-2 text-sm border border-slate-200 rounded-lg h-24 resize-none outline-none dark:bg-slate-700 dark:border-slate-600 dark:text-white"
-                    placeholder="Rich text description..."
-                  />
-                </div>
-
-                {/* Benefits */}
-                <div>
-                  <div className="flex justify-between items-center mb-2">
-                    <label className="text-xs font-bold text-slate-500 dark:text-slate-400">Key Benefits</label>
-                    <button 
-                      onClick={() => toggleArrayItem(product.id, 'benefits', null, 'New Benefit')}
-                      className="text-[10px] bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded hover:bg-emerald-200 dark:bg-emerald-900/50 dark:text-emerald-400"
-                    >
-                      + Add
-                    </button>
-                  </div>
-                  <div className="space-y-2">
-                    {product.benefits.map((benefit, idx) => (
-                      <div key={idx} className="flex gap-2">
-                        <input 
-                          type="text" 
-                          value={benefit}
-                          onChange={(e) => toggleArrayItem(product.id, 'benefits', idx, e.target.value)}
-                          className="flex-1 p-1.5 text-xs border border-slate-200 rounded outline-none dark:bg-slate-700 dark:border-slate-600 dark:text-white"
-                        />
-                        <button onClick={() => toggleArrayItem(product.id, 'benefits', idx)} className="text-slate-400 hover:text-red-500">
-                          <X size={14} />
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-              </div>
-            )}
+      {/* 3. Catalog Search */}
+      <div className="relative z-20">
+          <div className="relative">
+              <Search className="absolute left-3 top-3.5 text-slate-400" size={20} />
+              <input 
+                  type="text" 
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search Forever Catalog (e.g. C9, Aloe Gel)..."
+                  className="w-full pl-10 pr-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none text-slate-900 bg-white dark:bg-slate-700 dark:border-slate-600 dark:text-white dark:placeholder-slate-400"
+              />
           </div>
-        ))}
+          
+          {/* Search Results Dropdown */}
+          {searchQuery && (
+              <div className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-slate-800 rounded-xl shadow-xl border border-slate-100 dark:border-slate-700 max-h-60 overflow-y-auto z-30">
+                  {filteredCatalog.length > 0 ? filteredCatalog.map(item => (
+                      <button 
+                        key={item.id}
+                        onClick={() => handleCatalogSelect(item)}
+                        className="w-full text-left p-3 hover:bg-emerald-50 dark:hover:bg-slate-700 flex items-center gap-3 transition-colors border-b border-slate-50 dark:border-slate-700/50 last:border-0"
+                      >
+                          <div className="w-10 h-10 bg-white rounded-lg border border-slate-100 flex items-center justify-center overflow-hidden shrink-0">
+                              <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
+                          </div>
+                          <div className="flex-1">
+                              <p className="font-bold text-sm text-slate-800 dark:text-white">{item.name}</p>
+                              <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
+                                  <span>{item.category}</span>
+                                  {item.stockStatus === 'LOW_STOCK' && <span className="text-orange-500 font-bold">• Low Stock</span>}
+                                  {item.stockStatus === 'OUT_OF_STOCK' && <span className="text-red-500 font-bold">• Out of Stock</span>}
+                              </div>
+                          </div>
+                          <div className="text-emerald-600 font-bold text-sm dark:text-emerald-400">Select</div>
+                      </button>
+                  )) : (
+                      <div className="p-4 text-center text-slate-500 text-sm">No products found.</div>
+                  )}
+              </div>
+          )}
       </div>
+
+      {/* 4. Active Product Details */}
+      {activeProduct ? (
+          <div className="animate-fade-in space-y-6">
+              
+              {/* Product Card */}
+              <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl p-5 shadow-sm relative overflow-hidden">
+                  {/* Stock Badge */}
+                  {activeProduct.stockStatus && (
+                      <div className={`absolute top-0 right-0 px-3 py-1 text-[10px] font-bold uppercase rounded-bl-xl ${
+                          activeProduct.stockStatus === 'IN_STOCK' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900 dark:text-emerald-300' :
+                          activeProduct.stockStatus === 'LOW_STOCK' ? 'bg-orange-100 text-orange-700 dark:bg-orange-900 dark:text-orange-300' :
+                          'bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300'
+                      }`}>
+                          {activeProduct.stockStatus.replace('_', ' ')}
+                      </div>
+                  )}
+
+                  <div className="flex flex-col md:flex-row gap-6">
+                      {/* Image */}
+                      <div className="w-full md:w-32 h-32 bg-slate-50 dark:bg-slate-700 rounded-xl flex items-center justify-center border border-slate-100 dark:border-slate-600 overflow-hidden shrink-0">
+                          {activeProduct.image ? (
+                              <img src={activeProduct.image} alt="Product" className="w-full h-full object-cover" />
+                          ) : (
+                              <ImageIcon className="text-slate-300" size={32} />
+                          )}
+                      </div>
+
+                      {/* Info Fields */}
+                      <div className="flex-1 space-y-4">
+                          <div>
+                              <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">Product Name</label>
+                              <input 
+                                  type="text" 
+                                  value={activeProduct.name}
+                                  onChange={(e) => handleUpdateProduct('name', e.target.value)}
+                                  className="w-full bg-slate-50 dark:bg-slate-900 border-none rounded-lg px-3 py-2 font-bold text-slate-800 dark:text-white focus:ring-1 focus:ring-emerald-500"
+                              />
+                          </div>
+                          <div>
+                              <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">Short Description</label>
+                              <input 
+                                  type="text" 
+                                  value={activeProduct.shortDescription}
+                                  onChange={(e) => handleUpdateProduct('shortDescription', e.target.value)}
+                                  className="w-full bg-slate-50 dark:bg-slate-900 border-none rounded-lg px-3 py-2 text-sm text-slate-600 dark:text-slate-300 focus:ring-1 focus:ring-emerald-500"
+                              />
+                          </div>
+                      </div>
+                  </div>
+
+                  {/* Smart Tags */}
+                  <div className="mt-4 flex flex-wrap gap-2">
+                      <span className="text-xs text-slate-400 flex items-center gap-1"><Tag size={12}/> Recommended for:</span>
+                      {activeProduct.category && <span className="bg-blue-50 text-blue-700 px-2 py-1 rounded-md text-xs font-bold dark:bg-blue-900/30 dark:text-blue-300">{activeProduct.category}</span>}
+                      {activeProduct.tags?.map(tag => (
+                          <span key={tag} className="bg-slate-100 text-slate-600 px-2 py-1 rounded-md text-xs font-medium dark:bg-slate-700 dark:text-slate-300">{tag}</span>
+                      ))}
+                  </div>
+              </div>
+
+              {/* 5. Pricing Options */}
+              <div className="bg-slate-50 dark:bg-slate-800/50 p-5 rounded-2xl border border-slate-200 dark:border-slate-700">
+                  <div className="flex justify-between items-center mb-4">
+                      <h4 className="font-bold text-slate-700 dark:text-slate-200 flex items-center gap-2">
+                          <DollarSign size={18} className="text-emerald-500"/> Pricing Strategy
+                      </h4>
+                      <div className="flex items-center gap-2">
+                          <span className="text-xs text-slate-500 dark:text-slate-400">Custom Price</span>
+                          <label className="relative inline-flex items-center cursor-pointer">
+                              <input type="checkbox" checked={isPricingCustom} onChange={(e) => setIsPricingCustom(e.target.checked)} className="sr-only peer" />
+                              <div className="w-9 h-5 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-500 dark:bg-slate-600"></div>
+                          </label>
+                      </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                      <div>
+                          <label className="block text-xs font-bold text-slate-500 mb-1">Selling Price ({data.currency})</label>
+                          <input 
+                              type="number" 
+                              value={activeProduct.price}
+                              onChange={handlePriceChange}
+                              disabled={!isPricingCustom}
+                              className={`w-full p-2.5 rounded-xl border font-mono font-bold text-lg outline-none transition-colors ${
+                                  isPricingCustom 
+                                  ? 'bg-white border-slate-300 focus:border-emerald-500 dark:bg-slate-900 dark:border-slate-600 dark:text-white' 
+                                  : 'bg-slate-200 border-transparent text-slate-500 cursor-not-allowed dark:bg-slate-700 dark:text-slate-400'
+                              }`}
+                          />
+                      </div>
+                      <div>
+                          <label className="block text-xs font-bold text-slate-500 mb-1">Discount Price (Optional)</label>
+                          <input 
+                              type="number" 
+                              value={activeProduct.discountPrice || ''}
+                              onChange={handleDiscountChange}
+                              placeholder="e.g. 150.00"
+                              className="w-full p-2.5 rounded-xl border border-slate-300 bg-white font-mono text-lg outline-none focus:border-emerald-500 dark:bg-slate-900 dark:border-slate-600 dark:text-white"
+                          />
+                      </div>
+                  </div>
+              </div>
+
+              {/* 6. Product Content (Auto-filled) */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Benefits */}
+                  <div className="border border-slate-200 rounded-xl p-4 dark:border-slate-700">
+                      <div className="flex items-center justify-between mb-3">
+                          <h4 className="font-bold text-sm text-slate-700 dark:text-slate-300 flex items-center gap-2">
+                              <CheckCircle size={16} className="text-emerald-500"/> Key Benefits
+                          </h4>
+                          <span className="text-[10px] bg-emerald-50 text-emerald-600 px-2 py-0.5 rounded font-bold dark:bg-emerald-900/30 dark:text-emerald-400">Auto-filled</span>
+                      </div>
+                      <ul className="space-y-2">
+                          {activeProduct.benefits.map((b, i) => (
+                              <li key={i} className="text-xs text-slate-600 dark:text-slate-400 flex items-start gap-2">
+                                  <span className="text-emerald-400">•</span> {b}
+                              </li>
+                          ))}
+                      </ul>
+                  </div>
+
+                  {/* Usage */}
+                  <div className="border border-slate-200 rounded-xl p-4 dark:border-slate-700">
+                      <div className="flex items-center justify-between mb-3">
+                          <h4 className="font-bold text-sm text-slate-700 dark:text-slate-300 flex items-center gap-2">
+                              <List size={16} className="text-blue-500"/> How to Use
+                          </h4>
+                          <button className="text-[10px] text-blue-600 hover:underline dark:text-blue-400">Edit</button>
+                      </div>
+                      <ul className="space-y-2">
+                          {activeProduct.usageSteps.map((step, i) => (
+                              <li key={i} className="text-xs text-slate-600 dark:text-slate-400 flex items-start gap-2">
+                                  <span className="font-bold text-slate-300">{i+1}.</span> {step}
+                              </li>
+                          ))}
+                      </ul>
+                  </div>
+              </div>
+
+              {/* Ingredients (Read Only) */}
+              {activeProduct.ingredients && activeProduct.ingredients.length > 0 && (
+                  <div className="bg-slate-50 p-4 rounded-xl dark:bg-slate-800/50">
+                      <div className="flex items-center gap-2 mb-2">
+                          <AlertTriangle size={14} className="text-slate-400" />
+                          <span className="text-xs font-bold text-slate-500 uppercase dark:text-slate-400">Ingredients (Read-only reference)</span>
+                      </div>
+                      <p className="text-xs text-slate-600 dark:text-slate-300 italic leading-relaxed">
+                          {activeProduct.ingredients.join(', ')}
+                      </p>
+                  </div>
+              )}
+
+          </div>
+      ) : (
+          /* Empty State */
+          <div className="text-center py-16 border-2 border-dashed border-slate-200 rounded-3xl bg-slate-50/50 dark:border-slate-700 dark:bg-slate-900/30">
+              <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm dark:bg-slate-800">
+                  <Search size={24} className="text-slate-400" />
+              </div>
+              <h3 className="font-bold text-lg text-slate-700 dark:text-white">No Product Selected</h3>
+              <p className="text-sm text-slate-500 max-w-xs mx-auto mt-1 dark:text-slate-400">Use the search bar above to find a product from the Forever catalog.</p>
+          </div>
+      )}
+
     </div>
   );
 };

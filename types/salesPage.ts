@@ -6,7 +6,7 @@ export type PageType = 'product' | 'bundle' | 'problem' | 'capture' | 'brand' | 
 export interface Product {
   id: string;
   name: string;
-  image: string;
+  images: string[]; // Changed to array for multi-angle support
   shortDescription: string;
   fullDescription: string;
   price: number;
@@ -14,9 +14,8 @@ export interface Product {
   benefits: string[];
   usageSteps: string[];
   tags?: string[];
-  // New fields for Product Selection Tab
-  ingredients?: string[]; 
-  category?: string; // e.g., Weight Management, Skincare
+  ingredients: string[]; // Made mandatory for consistency, default to empty
+  category?: string; 
   stockStatus?: 'IN_STOCK' | 'LOW_STOCK' | 'OUT_OF_STOCK';
 }
 
@@ -58,7 +57,7 @@ export interface Testimonial {
 
 export interface SalesPage {
   id: string;
-  type: PageType; // New field
+  type: PageType; 
   // Metadata
   title: string;
   subtitle: string;
@@ -71,8 +70,8 @@ export interface SalesPage {
   layoutStyle: LayoutStyle;
   
   // Content
-  description: string; // Global page description (optional now)
-  features: string[]; // Global page features (optional now)
+  description: string; 
+  features: string[]; 
   testimonials: Testimonial[];
   
   // Commerce

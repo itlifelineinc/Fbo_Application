@@ -236,37 +236,50 @@ const PreviewContent: React.FC<{ data: SalesPage; device: 'mobile' | 'desktop' }
               <div className="max-w-5xl mx-auto grid gap-12">
                   {data.products.map(product => (
                       <div key={product.id} className="flex flex-col md:flex-row gap-8 items-start border border-slate-200 rounded-3xl p-6 shadow-sm hover:shadow-md transition-shadow bg-white dark:border-slate-800 dark:bg-slate-950">
-                          {/* Image */}
-                          <div className="w-full md:w-1/3 aspect-square rounded-2xl overflow-hidden bg-slate-100 dark:bg-slate-800">
-                              {product.image ? (
-                                  <img src={product.image} className="w-full h-full object-cover" />
-                              ) : (
-                                  <div className="w-full h-full flex items-center justify-center text-slate-300 dark:text-slate-600">No Image</div>
-                              )}
+                          {/* Image Gallery Grid for Single Product Focus */}
+                          <div className="w-full md:w-1/2 grid grid-cols-2 gap-2">
+                              {/* Main Image */}
+                              <div className="col-span-2 aspect-video rounded-xl overflow-hidden bg-slate-100 dark:bg-slate-800">
+                                  {product.images && product.images.length > 0 ? (
+                                      <img src={product.images[0]} className="w-full h-full object-cover" />
+                                  ) : (
+                                      <div className="w-full h-full flex items-center justify-center text-slate-300 dark:text-slate-600">No Image</div>
+                                  )}
+                              </div>
+                              {/* Additional Angles */}
+                              {product.images && product.images.slice(1, 3).map((img, i) => (
+                                  <div key={i} className="aspect-square rounded-xl overflow-hidden bg-slate-100 dark:bg-slate-800">
+                                      <img src={img} className="w-full h-full object-cover" />
+                                  </div>
+                              ))}
                           </div>
                           
                           {/* Info */}
-                          <div className="flex-1 space-y-4 w-full">
+                          <div className="flex-1 space-y-6 w-full">
                               <div className="flex justify-between items-start">
-                                  <h3 className="text-2xl font-bold text-slate-900 dark:text-white">{product.name}</h3>
+                                  <div>
+                                      <h3 className="text-3xl font-bold text-slate-900 dark:text-white mb-2">{product.name}</h3>
+                                      {product.category && <span className="bg-blue-50 text-blue-700 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider dark:bg-blue-900/30 dark:text-blue-300">{product.category}</span>}
+                                  </div>
                                   <div className="text-right">
                                       {product.discountPrice && (
                                           <span className="text-sm text-slate-400 line-through block dark:text-slate-500">{data.currency} {product.price}</span>
                                       )}
-                                      <span className="text-xl font-bold text-emerald-600 dark:text-emerald-400">
+                                      <span className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">
                                           {data.currency} {product.discountPrice || product.price}
                                       </span>
                                   </div>
                               </div>
-                              <p className="text-slate-600 text-sm dark:text-slate-300">{product.fullDescription || product.shortDescription}</p>
+                              
+                              <p className="text-slate-600 text-base leading-relaxed dark:text-slate-300">{product.fullDescription || product.shortDescription}</p>
                               
                               {product.benefits.length > 0 && (
-                                  <div className="bg-emerald-50/50 p-4 rounded-xl dark:bg-emerald-900/20">
-                                      <h4 className="font-bold text-sm text-emerald-800 mb-2 dark:text-emerald-400">Key Benefits</h4>
-                                      <ul className="space-y-2">
+                                  <div className="bg-emerald-50/50 p-5 rounded-2xl dark:bg-emerald-900/20">
+                                      <h4 className="font-bold text-sm text-emerald-800 mb-3 dark:text-emerald-400 uppercase tracking-wide">Why You'll Love It</h4>
+                                      <ul className="space-y-3">
                                           {product.benefits.map((b, i) => (
-                                              <li key={i} className="flex items-start gap-2 text-sm text-slate-700 dark:text-slate-300">
-                                                  <Check size={14} className="text-emerald-500 mt-1 shrink-0" />
+                                              <li key={i} className="flex items-start gap-3 text-sm text-slate-700 dark:text-slate-300">
+                                                  <Check size={16} className="text-emerald-500 mt-0.5 shrink-0" />
                                                   {b}
                                               </li>
                                           ))}
@@ -274,16 +287,10 @@ const PreviewContent: React.FC<{ data: SalesPage; device: 'mobile' | 'desktop' }
                                   </div>
                               )}
 
-                              {product.usageSteps.length > 0 && (
+                              {product.ingredients && product.ingredients.length > 0 && (
                                   <div className="pt-2">
-                                      <h4 className="font-bold text-sm text-slate-800 mb-2 dark:text-slate-200">How to Use</h4>
-                                      <div className="flex flex-wrap gap-2">
-                                          {product.usageSteps.map((step, i) => (
-                                              <span key={i} className="text-xs bg-slate-100 px-3 py-1 rounded-full text-slate-600 border border-slate-200 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-300">
-                                                  {i+1}. {step}
-                                              </span>
-                                          ))}
-                                      </div>
+                                      <h4 className="font-bold text-xs text-slate-400 uppercase tracking-wide mb-2">Key Ingredients</h4>
+                                      <p className="text-xs text-slate-500 italic dark:text-slate-400">{product.ingredients.join(', ')}</p>
                                   </div>
                               )}
                           </div>

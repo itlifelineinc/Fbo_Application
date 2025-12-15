@@ -5,7 +5,7 @@ export const FOREVER_CATALOG: Product[] = [
     {
         id: 'cat_015',
         name: 'Forever Aloe Vera Gel',
-        image: 'https://cdn.foreverliving.com/content/products/images/015_A.jpg',
+        images: ['https://cdn.foreverliving.com/content/products/images/015_A.jpg'],
         shortDescription: 'The pure power of nature.',
         fullDescription: 'Our flagship product. 99.7% pure inner leaf aloe vera gel. Supports healthy digestion and nutrient absorption.',
         price: 180.00,
@@ -19,7 +19,7 @@ export const FOREVER_CATALOG: Product[] = [
     {
         id: 'cat_028',
         name: 'Forever Bright Toothgel',
-        image: 'https://cdn.foreverliving.com/content/products/images/028_A.jpg',
+        images: ['https://cdn.foreverliving.com/content/products/images/028_A.jpg'],
         shortDescription: 'Gentle, fluoride-free formula.',
         fullDescription: 'Aloe vera and bee propolis formula. Gentle on teeth and gums, great minty flavor.',
         price: 55.00,
@@ -33,7 +33,7 @@ export const FOREVER_CATALOG: Product[] = [
     {
         id: 'cat_475',
         name: 'C9™ Cleansing Program',
-        image: 'https://cdn.foreverliving.com/content/products/images/475_A.jpg',
+        images: ['https://cdn.foreverliving.com/content/products/images/475_A.jpg'],
         shortDescription: 'Look better and feel better in just 9 days.',
         fullDescription: 'The C9 program can help you jumpstart your journey to a slimmer, healthier you. This effective, easy-to-follow cleansing program will give you the tools you need to start transforming your body today.',
         price: 950.00,
@@ -47,7 +47,7 @@ export const FOREVER_CATALOG: Product[] = [
     {
         id: 'cat_034',
         name: 'Aloe Berry Nectar',
-        image: 'https://cdn.foreverliving.com/content/products/images/034_A.jpg',
+        images: ['https://cdn.foreverliving.com/content/products/images/034_A.jpg'],
         shortDescription: 'All the benefits of Aloe with a burst of cranberry.',
         fullDescription: 'A refreshing zest of cranberries and sweet apples for a naturally derived, sweet yet tangy flavor.',
         price: 180.00,

@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState, useMemo } from 'react';
 import { SalesPage } from '../../types/salesPage';
 import { CheckCircle, AlertCircle } from 'lucide-react';
@@ -83,13 +84,13 @@ const ContactSettings: React.FC<ContactSettingsProps> = ({ data, onChange }) => 
   return (
     <div className="space-y-6">
       <div>
-        <label className="block text-sm font-bold text-slate-700 mb-1 dark:text-slate-300">WhatsApp Number <span className="text-red-500">*</span></label>
+        <label className="block text-xs md:text-sm font-bold text-slate-700 mb-1 dark:text-slate-300">WhatsApp Number <span className="text-red-500">*</span></label>
         
         <div className="flex gap-2 relative">
             <select
                 value={selectedCode}
                 onChange={(e) => setSelectedCode(e.target.value)}
-                className="w-32 p-3 border border-slate-200 rounded-xl bg-slate-50 text-slate-900 focus:ring-2 focus:ring-emerald-500 outline-none text-sm appearance-none dark:bg-slate-700 dark:border-slate-600 dark:text-white"
+                className="w-28 md:w-32 p-2.5 md:p-3 border border-slate-200 rounded-xl bg-slate-50 text-slate-900 focus:ring-2 focus:ring-emerald-500 outline-none text-xs md:text-sm appearance-none dark:bg-slate-700 dark:border-slate-600 dark:text-white"
             >
                 {countryCodes.map((c) => (
                     <option key={c.code} value={c.code}>
@@ -104,22 +105,22 @@ const ContactSettings: React.FC<ContactSettingsProps> = ({ data, onChange }) => 
                     value={localNumber}
                     onChange={(e) => setLocalNumber(e.target.value)}
                     placeholder="e.g. 059 716 0478"
-                    className={`w-full p-3 border rounded-xl bg-white text-slate-900 focus:ring-2 outline-none font-mono transition-colors dark:bg-slate-700 dark:text-white dark:placeholder-slate-500 ${
+                    className={`w-full p-2.5 md:p-3 border rounded-xl bg-white text-slate-900 focus:ring-2 outline-none font-mono transition-colors text-sm dark:bg-slate-700 dark:text-white dark:placeholder-slate-500 ${
                         localNumber && !validationState.valid 
                         ? 'border-red-300 focus:border-red-500 focus:ring-red-200' 
                         : 'border-slate-200 focus:border-emerald-500 focus:ring-emerald-500'
                     }`}
                 />
-                <div className="absolute right-3 top-3.5">
-                    {localNumber && validationState.valid && <CheckCircle size={18} className="text-emerald-500" />}
-                    {localNumber && !validationState.valid && <AlertCircle size={18} className="text-red-500" />}
+                <div className="absolute right-3 top-3">
+                    {localNumber && validationState.valid && <CheckCircle size={16} className="text-emerald-500" />}
+                    {localNumber && !validationState.valid && <AlertCircle size={16} className="text-red-500" />}
                 </div>
             </div>
         </div>
         
         {/* Validation Message / Preview */}
         <div className="flex justify-between items-start mt-2">
-            <p className={`text-xs ${localNumber && !validationState.valid ? 'text-red-500 font-medium' : 'text-slate-500 dark:text-slate-400'}`}>
+            <p className={`text-[10px] md:text-xs ${localNumber && !validationState.valid ? 'text-red-500 font-medium' : 'text-slate-500 dark:text-slate-400'}`}>
                 {localNumber && !validationState.valid ? validationState.msg : 'We automatically remove the leading "0" for the link.'}
             </p>
             <p className="text-xs text-slate-400 font-mono hidden sm:block">
@@ -129,12 +130,12 @@ const ContactSettings: React.FC<ContactSettingsProps> = ({ data, onChange }) => 
       </div>
 
       <div>
-        <label className="block text-sm font-bold text-slate-700 mb-1 dark:text-slate-300">Contact Email</label>
+        <label className="block text-xs md:text-sm font-bold text-slate-700 mb-1 dark:text-slate-300">Contact Email</label>
         <input 
           type="email" 
           value={data.contactEmail}
           onChange={(e) => onChange('contactEmail', e.target.value)}
-          className="w-full p-3 border border-slate-200 rounded-xl bg-white text-slate-900 focus:ring-2 focus:ring-emerald-500 outline-none dark:bg-slate-700 dark:border-slate-600 dark:text-white"
+          className="w-full p-2.5 md:p-3 border border-slate-200 rounded-xl bg-white text-slate-900 focus:ring-2 focus:ring-emerald-500 outline-none text-sm dark:bg-slate-700 dark:border-slate-600 dark:text-white"
         />
       </div>
 
@@ -150,11 +151,11 @@ const ContactSettings: React.FC<ContactSettingsProps> = ({ data, onChange }) => 
       </div>
 
       <div className="border-t border-slate-200 pt-4 dark:border-slate-700">
-        <label className="block text-sm font-bold text-slate-700 mb-2 dark:text-slate-300">Refund Policy & Legal</label>
+        <label className="block text-xs md:text-sm font-bold text-slate-700 mb-2 dark:text-slate-300">Refund Policy & Legal</label>
         <textarea 
           value={data.refundPolicy}
           onChange={(e) => onChange('refundPolicy', e.target.value)}
-          className="w-full p-3 border border-slate-200 rounded-xl bg-white text-slate-900 text-sm h-24 resize-none focus:ring-2 focus:ring-emerald-500 outline-none dark:bg-slate-700 dark:border-slate-600 dark:text-white"
+          className="w-full p-2.5 md:p-3 border border-slate-200 rounded-xl bg-white text-slate-900 text-xs md:text-sm h-24 resize-none focus:ring-2 focus:ring-emerald-500 outline-none dark:bg-slate-700 dark:border-slate-600 dark:text-white"
           placeholder="e.g. 30-day money back guarantee for unopened products..."
         />
       </div>

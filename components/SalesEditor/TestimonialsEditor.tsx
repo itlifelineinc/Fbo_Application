@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { SalesPage, Testimonial } from '../../types/salesPage';
 import { Plus, Trash2, User } from 'lucide-react';
@@ -33,7 +34,7 @@ const TestimonialsEditor: React.FC<TestimonialsEditorProps> = ({ data, onChange 
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
-        <label className="block text-sm font-bold text-slate-700 dark:text-slate-300">Testimonials</label>
+        <label className="block text-xs md:text-sm font-bold text-slate-700 dark:text-slate-300">Testimonials</label>
         <button onClick={addTestimonial} className="text-xs text-emerald-600 font-bold hover:underline flex items-center gap-1 dark:text-emerald-400">
           <Plus size={14} /> Add New
         </button>
@@ -41,7 +42,7 @@ const TestimonialsEditor: React.FC<TestimonialsEditorProps> = ({ data, onChange 
 
       <div className="space-y-4">
         {data.testimonials.map((t, idx) => (
-          <div key={t.id} className="border border-slate-200 rounded-xl p-4 relative bg-slate-50 dark:bg-slate-800 dark:border-slate-700">
+          <div key={t.id} className="border border-slate-200 rounded-xl p-3 md:p-4 relative bg-slate-50 dark:bg-slate-800 dark:border-slate-700">
             <button 
               onClick={() => removeTestimonial(idx)}
               className="absolute top-2 right-2 text-slate-400 hover:text-red-500"
@@ -54,10 +55,10 @@ const TestimonialsEditor: React.FC<TestimonialsEditorProps> = ({ data, onChange 
                 value={t.quote}
                 onChange={(e) => updateTestimonial(idx, 'quote', e.target.value)}
                 maxLength={280}
-                className="w-full text-sm italic bg-white border border-slate-200 rounded p-2 focus:border-emerald-500 outline-none text-slate-900 dark:bg-slate-700 dark:border-slate-600 dark:text-white"
+                className="w-full text-xs md:text-sm italic bg-white border border-slate-200 rounded p-2 focus:border-emerald-500 outline-none text-slate-900 dark:bg-slate-700 dark:border-slate-600 dark:text-white"
                 placeholder="Quote... (Max 280 chars)"
               />
-              <div className="flex gap-2">
+              <div className="flex flex-col sm:flex-row gap-2">
                 <input 
                   type="text" 
                   value={t.name}

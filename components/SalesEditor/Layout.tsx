@@ -66,7 +66,7 @@ const EditorLayout: React.FC<EditorLayoutProps> = ({ data, updateField, isPrevie
           case 'WHATSAPP_SETUP':
           case 'SPONSOR_SETUP':
               return (
-                  <div className="space-y-8">
+                  <div className="space-y-6 md:space-y-8">
                       <ContactSettings data={data} onChange={updateField} />
                       <div className="border-t border-slate-100 dark:border-slate-800 pt-6">
                           <CTAButtonsEditor data={data} onChange={updateField} />
@@ -79,7 +79,7 @@ const EditorLayout: React.FC<EditorLayoutProps> = ({ data, updateField, isPrevie
               return <ProductSectionEditor data={data} onChange={updateField} />;
           case 'CONTENT':
               return (
-                  <div className="space-y-8">
+                  <div className="space-y-6 md:space-y-8">
                       <RichTextEditor value={data.description} onChange={(val) => updateField('description', val)} />
                       <div className="border-t border-slate-100 dark:border-slate-800 pt-6">
                           <FeaturesList data={data} onChange={updateField} />
@@ -95,7 +95,7 @@ const EditorLayout: React.FC<EditorLayoutProps> = ({ data, updateField, isPrevie
           // --- BUNDLE TYPE ---
           case 'PKG_PRODUCTS':
               return (
-                  <div className="space-y-8">
+                  <div className="space-y-6 md:space-y-8">
                       <ProductSectionEditor data={data} onChange={updateField} />
                       <div className="border-t border-slate-100 dark:border-slate-800 pt-6">
                           <PackageSectionEditor data={data} onChange={updateField} />
@@ -174,7 +174,7 @@ const EditorLayout: React.FC<EditorLayoutProps> = ({ data, updateField, isPrevie
                 key={tab.id}
                 onClick={() => setActiveTabId(tab.id)}
                 className={`
-                  flex items-center gap-2 px-4 py-2 rounded-full text-sm font-bold whitespace-nowrap transition-all
+                  flex items-center gap-2 px-4 py-2 rounded-full text-xs md:text-sm font-bold whitespace-nowrap transition-all
                   ${isActive 
                     ? 'bg-slate-900 text-white shadow-md shadow-slate-200 dark:bg-white dark:text-slate-900 dark:shadow-none scale-105' 
                     : 'bg-slate-50 text-slate-500 hover:bg-slate-100 dark:bg-slate-800 dark:text-slate-400 dark:hover:bg-slate-700'
@@ -201,10 +201,10 @@ const EditorLayout: React.FC<EditorLayoutProps> = ({ data, updateField, isPrevie
       </div>
 
       {/* Content Area */}
-      <div className="flex-1 overflow-y-auto p-4 md:p-8 no-scrollbar bg-slate-50/50 dark:bg-slate-950/50">
-        <div className="max-w-2xl mx-auto space-y-6 animate-fade-in">
-            <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800">
-                <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-6 font-heading border-b border-slate-100 dark:border-slate-800 pb-4 flex items-center gap-2">
+      <div className="flex-1 overflow-y-auto p-3 md:p-8 no-scrollbar bg-slate-50/50 dark:bg-slate-950/50">
+        <div className="max-w-2xl mx-auto space-y-4 md:space-y-6 animate-fade-in">
+            <div className="bg-white dark:bg-slate-900 p-4 md:p-6 rounded-xl md:rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800">
+                <h2 className="text-lg md:text-xl font-bold text-slate-900 dark:text-white mb-4 md:mb-6 font-heading border-b border-slate-100 dark:border-slate-800 pb-4 flex items-center gap-2">
                     <ActiveIcon size={20} className="text-emerald-500" />
                     {tabs.find(t => t.id === activeTabId)?.label} Settings
                 </h2>

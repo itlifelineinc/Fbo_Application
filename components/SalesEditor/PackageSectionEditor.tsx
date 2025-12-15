@@ -1,3 +1,4 @@
+
 import React, { useState, useRef } from 'react';
 import { SalesPage, Package } from '../../types/salesPage';
 import { Plus, Trash2, Image as ImageIcon, LayoutTemplate } from 'lucide-react';
@@ -75,7 +76,7 @@ const PackageSectionEditor: React.FC<PackageSectionEditorProps> = ({ data, onCha
 
       <div className="space-y-6">
         {data.packages.map((pkg) => (
-          <div key={pkg.id} className="border border-slate-200 rounded-xl bg-slate-50 p-4 space-y-4 dark:bg-slate-800 dark:border-slate-700">
+          <div key={pkg.id} className="border border-slate-200 rounded-xl bg-slate-50 p-3 md:p-4 space-y-4 dark:bg-slate-800 dark:border-slate-700">
             
             <div className="flex justify-between items-start">
               <div className="flex-1 space-y-2">
@@ -84,7 +85,7 @@ const PackageSectionEditor: React.FC<PackageSectionEditorProps> = ({ data, onCha
                   value={pkg.title}
                   onChange={(e) => updatePackage(pkg.id, 'title', e.target.value)}
                   maxLength={40}
-                  className="w-full bg-transparent border-b border-slate-300 focus:border-emerald-500 outline-none font-bold text-slate-800 dark:text-slate-200 dark:border-slate-600"
+                  className="w-full bg-transparent border-b border-slate-300 focus:border-emerald-500 outline-none font-bold text-slate-800 text-sm md:text-base dark:text-slate-200 dark:border-slate-600"
                   placeholder="Bundle Name (Max 40)"
                 />
                 <input 
@@ -109,7 +110,7 @@ const PackageSectionEditor: React.FC<PackageSectionEditorProps> = ({ data, onCha
                   <button
                     key={prod.id}
                     onClick={() => handleProductSelection(pkg.id, prod.id)}
-                    className={`text-xs px-2 py-1 rounded border transition-all ${
+                    className={`text-[10px] md:text-xs px-2 py-1 rounded border transition-all ${
                       pkg.productIds.includes(prod.id)
                         ? 'bg-emerald-100 border-emerald-300 text-emerald-800 font-bold dark:bg-emerald-900/50 dark:text-emerald-300 dark:border-emerald-800'
                         : 'bg-white border-slate-200 text-slate-500 hover:border-emerald-200 dark:bg-slate-700 dark:border-slate-600 dark:text-slate-400'
@@ -122,19 +123,19 @@ const PackageSectionEditor: React.FC<PackageSectionEditorProps> = ({ data, onCha
             </div>
 
             {/* Pricing */}
-            <div className="flex gap-4 items-center bg-white p-3 rounded-lg border border-slate-100 dark:bg-slate-700 dark:border-slate-600">
-              <div className="flex-1">
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 items-start sm:items-center bg-white p-3 rounded-lg border border-slate-100 dark:bg-slate-700 dark:border-slate-600">
+              <div className="flex-1 w-full sm:w-auto">
                 <label className="block text-[10px] font-bold text-slate-400 uppercase dark:text-slate-300">Total Value</label>
                 <div className="text-sm font-bold text-slate-700 dark:text-white">{data.currency} {pkg.totalPrice}</div>
               </div>
-              <div className="flex-1">
+              <div className="flex-1 w-full sm:w-auto">
                 <label className="block text-[10px] font-bold text-emerald-600 uppercase dark:text-emerald-400">Special Price</label>
                 <input 
                   type="number"
                   value={pkg.specialPrice || ''}
                   onChange={(e) => updatePackage(pkg.id, 'specialPrice', parseFloat(e.target.value))}
                   placeholder="Optional"
-                  className="w-full text-sm font-bold text-emerald-600 outline-none border-b border-emerald-100 focus:border-emerald-500 dark:bg-transparent dark:border-slate-500 dark:text-emerald-400"
+                  className="w-full text-sm font-bold text-emerald-600 outline-none border-b border-emerald-100 focus:border-emerald-500 bg-transparent dark:border-slate-500 dark:text-emerald-400"
                 />
               </div>
             </div>

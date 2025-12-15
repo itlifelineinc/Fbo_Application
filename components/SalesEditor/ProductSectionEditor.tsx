@@ -1,8 +1,7 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { SalesPage, Product } from '../../types/salesPage';
-import { Search, Plus, Trash2, ChevronDown, ChevronUp, Image as ImageIcon, Package, ShoppingBag, AlertTriangle, CheckCircle, Tag, List, DollarSign } from 'lucide-react';
-import InfoPopover from '../Shared/InfoPopover';
+import { Search, Image as ImageIcon, Package, ShoppingBag, AlertTriangle, CheckCircle, Tag, List, DollarSign } from 'lucide-react';
 import { FOREVER_CATALOG } from '../../data/foreverCatalog';
 
 interface ProductSectionEditorProps {
@@ -55,35 +54,20 @@ const ProductSectionEditor: React.FC<ProductSectionEditorProps> = ({ data, onCha
   return (
     <div className="space-y-6 md:space-y-8 pb-10 w-full max-w-full overflow-x-hidden">
       
-      {/* 1. Controls Row (Toggle + Info Icon) - Removed Redundant Title */}
-      <div className="flex gap-2 items-center w-full">
-          <div className="bg-slate-100 p-1 rounded-xl flex dark:bg-slate-800 flex-1">
-              <button 
-                onClick={() => setSelectionType('SINGLE')}
-                className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-xs md:text-sm font-bold transition-all ${selectionType === 'SINGLE' ? 'bg-white shadow-sm text-emerald-600 dark:bg-slate-700 dark:text-emerald-400' : 'text-slate-500 hover:text-slate-700 dark:text-slate-400'}`}
-              >
-                  <ShoppingBag size={16} /> <span className="truncate">Single</span>
-              </button>
-              <button 
-                onClick={() => setSelectionType('BUNDLE')}
-                className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-xs md:text-sm font-bold transition-all ${selectionType === 'BUNDLE' ? 'bg-white shadow-sm text-emerald-600 dark:bg-slate-700 dark:text-emerald-400' : 'text-slate-500 hover:text-slate-700 dark:text-slate-400'}`}
-              >
-                  <Package size={16} /> <span className="truncate">Bundle</span>
-              </button>
-          </div>
-          
-          <div className="shrink-0">
-            <InfoPopover 
-                title="Product Settings"
-                description={
-                    <ul className="list-disc pl-4 space-y-1">
-                        <li><strong>Search Catalog:</strong> Quickly find Forever products to auto-fill details.</li>
-                        <li><strong>Smart Data:</strong> Images, benefits, and usage instructions are loaded automatically.</li>
-                        <li><strong>Pricing:</strong> Use the official price or set a custom offer.</li>
-                    </ul>
-                }
-            />
-          </div>
+      {/* 1. Selection Type Toggle (No Header Title Here anymore) */}
+      <div className="bg-slate-100 p-1 rounded-xl flex dark:bg-slate-800 w-full">
+          <button 
+            onClick={() => setSelectionType('SINGLE')}
+            className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-xs md:text-sm font-bold transition-all ${selectionType === 'SINGLE' ? 'bg-white shadow-sm text-emerald-600 dark:bg-slate-700 dark:text-emerald-400' : 'text-slate-500 hover:text-slate-700 dark:text-slate-400'}`}
+          >
+              <ShoppingBag size={16} /> <span className="truncate">Single Product</span>
+          </button>
+          <button 
+            onClick={() => setSelectionType('BUNDLE')}
+            className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-xs md:text-sm font-bold transition-all ${selectionType === 'BUNDLE' ? 'bg-white shadow-sm text-emerald-600 dark:bg-slate-700 dark:text-emerald-400' : 'text-slate-500 hover:text-slate-700 dark:text-slate-400'}`}
+          >
+              <Package size={16} /> <span className="truncate">Bundle / Pack</span>
+          </button>
       </div>
 
       {/* 2. Catalog Search */}

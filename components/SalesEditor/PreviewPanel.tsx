@@ -123,28 +123,33 @@ const PreviewContent: React.FC<{ data: SalesPage; device: 'mobile' | 'desktop' }
   // --- Helper Icons ---
   const getIcon = (name?: string) => {
     switch(name) {
-        case 'shopping-cart': return <ShoppingCart size={16} />;
-        case 'arrow-right': return <ArrowRight size={16} />;
-        case 'check': return <CheckCircle size={16} />;
-        case 'whatsapp': return <MessageCircle size={16} />;
+        case 'shopping-cart': return <ShoppingCart size={20} />;
+        case 'arrow-right': return <ArrowRight size={20} />;
+        case 'check': return <CheckCircle size={20} />;
+        case 'whatsapp': return <MessageCircle size={20} />;
         default: return null;
     }
   };
 
-  const renderCTA = (cta: CTAButton) => {
-      const baseClass = "px-6 py-3 rounded-full font-bold transition-transform hover:scale-105 shadow-md flex items-center justify-center gap-2 text-sm";
+  const renderCTA = (cta: CTAButton, isHero: boolean = false) => {
+      // Large font and padding for Hero buttons, smaller for others
+      const sizeClasses = isHero ? "px-8 py-4 text-lg" : "px-6 py-3 text-sm";
+      const baseClass = `${sizeClasses} rounded-full font-bold transition-transform hover:scale-105 shadow-xl flex items-center justify-center gap-2`;
+      
       let style: React.CSSProperties = {};
       let className = baseClass;
       
       const btnColor = cta.color || data.themeColor;
 
       if (cta.style === 'primary') {
-          style = { backgroundColor: btnColor, color: '#fff' };
+          // Brand color background, white text
+          style = { backgroundColor: btnColor, color: '#fff', boxShadow: `0 10px 25px -5px ${btnColor}66` }; // Add colored shadow
       } else if (cta.style === 'outline') {
-          style = { border: `2px solid ${btnColor}`, color: btnColor, backgroundColor: 'transparent' };
-          className = baseClass.replace('shadow-md', ''); 
+          // Transparent background, border and text in brand color/slate
+          style = { border: `2px solid ${isHero ? '#e2e8f0' : btnColor}`, color: isHero ? '#334155' : btnColor, backgroundColor: 'transparent' };
+          className = baseClass.replace('shadow-xl', 'shadow-sm hover:bg-slate-50'); 
       } else if (cta.style === 'link') {
-          style = { color: btnColor, textDecoration: 'underline', padding: '0' };
+          style = { color: btnColor, textDecoration: 'underline', padding: '0', boxShadow: 'none' };
           className = "font-bold text-sm hover:opacity-80 transition-opacity flex items-center gap-1";
       }
 
@@ -162,38 +167,58 @@ const PreviewContent: React.FC<{ data: SalesPage; device: 'mobile' | 'desktop' }
   };
 
   const renderHero = () => {
-      // Explicitly check for mobile device prop to override browser media queries
-      const isMobile = device === 'mobile';
-      
-      // Font Sizes: Mobile fixed at text-2xl, Desktop uses responsive text-4xl to text-6xl
-      const titleClass = isMobile ? 'text-2xl' : 'text-4xl md:text-6xl';
-      const subtitleClass = isMobile ? 'text-base' : 'text-lg md:text-xl';
-      
-      // Layout: Modern layout only applies grids on desktop view
-      const layoutContainerClass = (data.layoutStyle === 'modern' && !isMobile) 
-        ? 'grid md:grid-cols-2 gap-10 items-center' 
-        : 'text-center';
+      // --- CLASSIC STYLE (CLEAN, BOLD, NO CLUTTER) ---
+      if (data.layoutStyle === 'classic' || true) { // Forcing Classic as requested for now
+          return (
+              <div className="bg-white dark:bg-slate-950 py-20 md:py-32 px-6 text-center relative overflow-hidden transition-colors">
+                  <div className="max-w-4xl mx-auto relative z-10 flex flex-col items-center">
+                      
+                      {/* Optional: Very subtle brand accent element */}
+                      <div className="w-16 h-1 rounded-full mb-8 opacity-50" style={{ backgroundColor: data.themeColor }}></div>
 
+                      {/* Headline: Big, Bold, Centered */}
+                      <h1 className="text-4xl md:text-7xl font-extrabold text-slate-900 dark:text-white tracking-tight mb-6 leading-[1.1] md:leading-tight drop-shadow-sm">
+                          {data.title || 'Your Big Headline Here'}
+                      </h1>
+                      
+                      {/* Subtitle: Smaller, Softer */}
+                      <p className="text-lg md:text-2xl text-slate-500 dark:text-slate-400 mb-12 max-w-2xl mx-auto leading-relaxed font-medium">
+                          {data.subtitle || 'Your compelling subtitle goes here explaining the value in seconds.'}
+                      </p>
+                      
+                      {/* CTA Buttons: Clear, Brand Color Only */}
+                      <div className="flex flex-col sm:flex-row items-center justify-center gap-4 w-full sm:w-auto">
+                          {data.ctas.map((cta) => renderCTA(cta, true))}
+                      </div>
+
+                      {/* Trust Indicator (Optional Mock) */}
+                      <div className="mt-12 flex items-center gap-2 text-xs font-bold text-slate-400 uppercase tracking-widest opacity-60">
+                          <CheckCircle size={14} /> 100% Satisfaction Guarantee
+                      </div>
+                  </div>
+              </div>
+          );
+      }
+
+      // Fallback/Legacy Logic (Not currently reachable due to force true above)
       return (
           <div className={`relative ${data.layoutStyle === 'classic' ? 'bg-slate-900 text-white' : 'bg-slate-50 text-slate-900 dark:bg-slate-900 dark:text-white'} overflow-hidden transition-colors`}>
               {data.heroImage && (
-                  <div className={`absolute inset-0 ${data.layoutStyle === 'classic' ? 'opacity-40' : 'opacity-100'} ${data.layoutStyle === 'modern' && !isMobile ? 'hidden md:block md:w-1/2 md:right-0 md:left-auto' : ''}`}>
+                  <div className={`absolute inset-0 ${data.layoutStyle === 'classic' ? 'opacity-40' : 'opacity-100'}`}>
                       <img src={data.heroImage} alt="Hero" className="w-full h-full object-cover" />
                       {data.layoutStyle === 'classic' && <div className="absolute inset-0 bg-gradient-to-t from-slate-900 to-transparent"></div>}
                   </div>
               )}
               
-              <div className={`relative z-10 px-6 py-16 md:py-24 max-w-6xl mx-auto ${layoutContainerClass}`}>
+              <div className={`relative z-10 px-6 py-16 md:py-24 max-w-6xl mx-auto text-center`}>
                   <div>
-                      <span style={{ color: data.themeColor }} className="font-bold tracking-wider text-xs uppercase mb-3 block opacity-90">New Launch</span>
-                      {/* Title Font Size Logic Applied Here */}
-                      <h1 className={`${titleClass} font-bold font-heading mb-6 leading-tight break-words`}>
+                      <h1 className="text-4xl md:text-6xl font-bold font-heading mb-6 leading-tight break-words">
                           {data.title || 'Your Page Title'}
                       </h1>
-                      <p className={`${subtitleClass} mb-8 ${data.layoutStyle === 'classic' ? 'text-slate-200' : 'text-slate-600 dark:text-slate-300'}`}>
+                      <p className="text-lg md:text-xl mb-8 opacity-90">
                           {data.subtitle || 'Your compelling subtitle goes here.'}
                       </p>
-                      <div className={`flex flex-wrap gap-4 ${(data.layoutStyle === 'modern' && !isMobile) ? 'justify-start' : 'justify-center'}`}>
+                      <div className="flex flex-wrap gap-4 justify-center">
                           {data.ctas.map((cta) => renderCTA(cta))}
                       </div>
                   </div>
@@ -206,11 +231,11 @@ const PreviewContent: React.FC<{ data: SalesPage; device: 'mobile' | 'desktop' }
       if (!data.products.length) return null;
       
       return (
-          <div id="products" className="py-16 px-6 bg-white dark:bg-slate-950 transition-colors">
+          <div id="products" className="py-16 px-6 bg-slate-50 dark:bg-slate-900 transition-colors">
               <h2 className="text-3xl font-bold text-center text-slate-900 mb-12 dark:text-white">Our Products</h2>
               <div className="max-w-5xl mx-auto grid gap-12">
                   {data.products.map(product => (
-                      <div key={product.id} className="flex flex-col md:flex-row gap-8 items-start border border-slate-100 rounded-3xl p-6 shadow-sm hover:shadow-md transition-shadow dark:border-slate-800 dark:bg-slate-900">
+                      <div key={product.id} className="flex flex-col md:flex-row gap-8 items-start border border-slate-200 rounded-3xl p-6 shadow-sm hover:shadow-md transition-shadow bg-white dark:border-slate-800 dark:bg-slate-950">
                           {/* Image */}
                           <div className="w-full md:w-1/3 aspect-square rounded-2xl overflow-hidden bg-slate-100 dark:bg-slate-800">
                               {product.image ? (
@@ -278,7 +303,7 @@ const PreviewContent: React.FC<{ data: SalesPage; device: 'mobile' | 'desktop' }
       const slidePercentage = 100 / itemsPerView;
 
       return (
-          <div className="py-16 px-6 bg-slate-50 dark:bg-slate-900 transition-colors overflow-hidden">
+          <div className="py-16 px-6 bg-white border-t border-slate-100 dark:bg-slate-950 dark:border-slate-800 transition-colors overflow-hidden">
               <h2 className="text-3xl font-bold text-center text-slate-900 mb-4 dark:text-white">Bundles & Kits</h2>
               <p className="text-center text-slate-500 mb-12 dark:text-slate-400">Save more with our exclusive packages</p>
               
@@ -294,9 +319,9 @@ const PreviewContent: React.FC<{ data: SalesPage; device: 'mobile' | 'desktop' }
                             className="flex-shrink-0 px-3"
                             style={{ width: `${slidePercentage}%` }}
                           >
-                              <div className="w-full bg-white rounded-3xl shadow-lg overflow-hidden border-2 border-transparent hover:border-emerald-500 transition-all flex flex-col h-full dark:bg-slate-800 dark:border-slate-700 dark:hover:border-emerald-500">
+                              <div className="w-full bg-slate-50 rounded-3xl shadow-sm overflow-hidden border-2 border-transparent hover:border-emerald-500 transition-all flex flex-col h-full dark:bg-slate-900 dark:border-slate-800 dark:hover:border-emerald-500">
                                   {pkg.bannerImage && (
-                                      <div className="h-40 bg-slate-200 dark:bg-slate-700 shrink-0">
+                                      <div className="h-40 bg-slate-200 dark:bg-slate-800 shrink-0">
                                           <img src={pkg.bannerImage} className="w-full h-full object-cover" />
                                       </div>
                                   )}
@@ -316,7 +341,7 @@ const PreviewContent: React.FC<{ data: SalesPage; device: 'mobile' | 'desktop' }
                                           })}
                                       </div>
 
-                                      <div className="mt-auto pt-4 border-t border-slate-100 flex items-end justify-between dark:border-slate-700">
+                                      <div className="mt-auto pt-4 border-t border-slate-200 flex items-end justify-between dark:border-slate-700">
                                           <div>
                                               {pkg.specialPrice && (
                                                   <span className="text-xs text-slate-400 line-through block dark:text-slate-500">Total: {data.currency}{pkg.totalPrice}</span>
@@ -360,7 +385,7 @@ const PreviewContent: React.FC<{ data: SalesPage; device: 'mobile' | 'desktop' }
     const slidePercentage = 100 / itemsPerView;
 
     return (
-        <div className="py-16 px-6 bg-slate-50 border-t border-slate-200 dark:bg-slate-900 dark:border-slate-800 transition-colors overflow-hidden">
+        <div className="py-16 px-6 bg-slate-50 border-t border-slate-100 dark:bg-slate-900 dark:border-slate-800 transition-colors overflow-hidden">
             <h2 className="text-2xl font-bold text-center mb-10 dark:text-white">What People Say</h2>
             
             <div className="max-w-6xl mx-auto relative">
@@ -375,7 +400,7 @@ const PreviewContent: React.FC<{ data: SalesPage; device: 'mobile' | 'desktop' }
                             className="flex-shrink-0 px-3"
                             style={{ width: `${slidePercentage}%` }}
                         >
-                            <div className="bg-white p-6 rounded-2xl shadow-sm h-full flex flex-col dark:bg-slate-800">
+                            <div className="bg-white p-6 rounded-2xl shadow-sm h-full flex flex-col dark:bg-slate-800 border border-slate-100 dark:border-slate-700">
                                 <div className="flex gap-1 text-yellow-400 mb-4">
                                     {[1,2,3,4,5].map(i => <Star key={i} size={14} fill="currentColor" />)}
                                 </div>
@@ -415,9 +440,9 @@ const PreviewContent: React.FC<{ data: SalesPage; device: 'mobile' | 'desktop' }
       {renderHero()}
 
       {/* Description Content - Rendered as HTML */}
-      <div className="px-6 py-12 max-w-3xl mx-auto dark:text-slate-200">
+      <div className="px-6 py-24 max-w-3xl mx-auto dark:text-slate-200">
           <div 
-            className="prose prose-slate max-w-none dark:prose-invert [&_h1]:text-3xl [&_h1]:font-bold [&_h1]:mb-6 [&_h1]:mt-8 [&_h1]:font-heading [&_h2]:text-2xl [&_h2]:font-bold [&_h2]:mb-4 [&_h2]:mt-6 [&_h2]:font-heading [&_h3]:text-xl [&_h3]:font-bold [&_h3]:mb-3 [&_h3]:mt-5 [&_p]:mb-4 [&_ul]:list-disc [&_ul]:pl-5 [&_ul]:mb-4 [&_ol]:list-decimal [&_ol]:pl-5 [&_ol]:mb-4 [&_blockquote]:border-l-4 [&_blockquote]:border-slate-300 [&_blockquote]:pl-4 [&_blockquote]:italic [&_blockquote]:text-slate-600 [&_blockquote]:my-6 dark:[&_blockquote]:border-slate-600 dark:[&_blockquote]:text-slate-400"
+            className="prose prose-slate prose-lg max-w-none dark:prose-invert [&_h1]:text-3xl [&_h1]:font-bold [&_h1]:mb-6 [&_h1]:mt-8 [&_h1]:font-heading [&_h2]:text-2xl [&_h2]:font-bold [&_h2]:mb-4 [&_h2]:mt-6 [&_h2]:font-heading [&_h3]:text-xl [&_h3]:font-bold [&_h3]:mb-3 [&_h3]:mt-5 [&_p]:mb-4 [&_ul]:list-disc [&_ul]:pl-5 [&_ul]:mb-4 [&_ol]:list-decimal [&_ol]:pl-5 [&_ol]:mb-4 [&_blockquote]:border-l-4 [&_blockquote]:border-slate-300 [&_blockquote]:pl-4 [&_blockquote]:italic [&_blockquote]:text-slate-600 [&_blockquote]:my-6 dark:[&_blockquote]:border-slate-600 dark:[&_blockquote]:text-slate-400 leading-relaxed text-slate-600"
             dangerouslySetInnerHTML={{ __html: data.description }} 
           />
       </div>
@@ -427,12 +452,12 @@ const PreviewContent: React.FC<{ data: SalesPage; device: 'mobile' | 'desktop' }
 
       {/* Global Features */}
       {data.features.length > 0 && (
-          <div className="py-12 bg-white text-center dark:bg-slate-950 transition-colors">
+          <div className="py-20 bg-white text-center dark:bg-slate-950 transition-colors">
               <div className="max-w-4xl mx-auto px-6 grid grid-cols-2 md:grid-cols-4 gap-6">
                   {data.features.map((feat, i) => (
-                      <div key={i} className="p-4 bg-slate-50 rounded-xl dark:bg-slate-900">
-                          <CheckCircle className="mx-auto mb-2 text-emerald-500" />
-                          <span className="font-bold text-slate-700 text-sm dark:text-slate-200">{feat}</span>
+                      <div key={i} className="p-6 bg-slate-50 rounded-2xl dark:bg-slate-900 border border-slate-100 dark:border-slate-800">
+                          <CheckCircle className="mx-auto mb-3 text-emerald-500" size={32} />
+                          <span className="font-bold text-slate-800 text-sm md:text-base dark:text-slate-200">{feat}</span>
                       </div>
                   ))}
               </div>
@@ -442,16 +467,16 @@ const PreviewContent: React.FC<{ data: SalesPage; device: 'mobile' | 'desktop' }
       {renderTestimonials()}
 
       {/* Footer */}
-      <div className="bg-white border-t border-slate-100 py-12 px-6 text-center dark:bg-slate-950 dark:border-slate-800 transition-colors">
+      <div className="bg-white border-t border-slate-100 py-16 px-6 text-center dark:bg-slate-950 dark:border-slate-800 transition-colors">
         {data.contactVisible && (
           <div className="mb-8 space-y-2">
-            <h3 className="font-bold text-slate-800 dark:text-slate-200">Questions?</h3>
+            <h3 className="font-bold text-slate-800 dark:text-slate-200 text-lg">Questions?</h3>
             <p className="text-sm text-slate-600 dark:text-slate-400">{data.contactEmail}</p>
-            <p className="text-sm text-slate-600 dark:text-slate-400">{data.whatsappNumber}</p>
+            <p className="text-sm text-slate-600 dark:text-slate-400 font-mono">{data.whatsappNumber}</p>
           </div>
         )}
         <div className="text-xs text-slate-400 max-w-lg mx-auto dark:text-slate-500">
-          <p className="mb-4">{data.refundPolicy}</p>
+          <p className="mb-4 leading-relaxed">{data.refundPolicy}</p>
           <p>&copy; {new Date().getFullYear()} {data.title}. All rights reserved.</p>
         </div>
       </div>

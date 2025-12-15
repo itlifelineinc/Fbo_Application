@@ -12,6 +12,7 @@ import ContactSettings from './ContactSettings';
 import ThemeSelector from './ThemeSelector';
 import CTAButtonsEditor from './CTAButtonsEditor';
 import SEOSettings from './SEOSettings';
+import InfoPopover from '../Shared/InfoPopover';
 import { PAGE_TAB_CONFIG, PlaceholderTab } from './TabConfiguration';
 import { Type, ChevronLeft, ChevronRight } from 'lucide-react';
 
@@ -20,6 +21,28 @@ interface EditorLayoutProps {
   updateField: <K extends keyof SalesPage>(field: K, value: SalesPage[K]) => void;
   isPreviewMode: boolean;
 }
+
+const TAB_HELP_CONTENT: Record<string, React.ReactNode> = {
+    'PRODUCTS': (
+        <ul className="list-disc pl-4 space-y-1">
+            <li><strong>Search Catalog:</strong> Quickly find Forever products to auto-fill details.</li>
+            <li><strong>Smart Data:</strong> Images, benefits, and usage instructions are loaded automatically.</li>
+            <li><strong>Pricing:</strong> Use the official price or set a custom offer.</li>
+        </ul>
+    ),
+    'PKG_PRODUCTS': (
+        <ul className="list-disc pl-4 space-y-1">
+            <li><strong>Bundle Creation:</strong> Group multiple products together for a higher average order value.</li>
+            <li><strong>Discounting:</strong> Set a special price for the bundle to encourage purchase.</li>
+        </ul>
+    ),
+    'CTA_SETUP': (
+        <ul className="list-disc pl-4 space-y-1">
+            <li><strong>WhatsApp Link:</strong> Ensure your number includes the country code.</li>
+            <li><strong>Call to Action:</strong> Customize the buttons that appear on your page.</li>
+        </ul>
+    )
+};
 
 const EditorLayout: React.FC<EditorLayoutProps> = ({ data, updateField, isPreviewMode }) => {
   // Get the tabs for the current page type
@@ -138,6 +161,7 @@ const EditorLayout: React.FC<EditorLayoutProps> = ({ data, updateField, isPrevie
   };
 
   const ActiveIcon = tabs.find(t => t.id === activeTabId)?.icon || Type;
+  const activeLabel = tabs.find(t => t.id === activeTabId)?.label;
 
   return (
     <div className="flex flex-col h-full bg-white dark:bg-slate-900 w-full max-w-full">
@@ -204,10 +228,21 @@ const EditorLayout: React.FC<EditorLayoutProps> = ({ data, updateField, isPrevie
       <div className="flex-1 overflow-y-auto p-3 md:p-8 no-scrollbar bg-slate-50/50 dark:bg-slate-950/50">
         <div className="max-w-2xl mx-auto space-y-4 md:space-y-6 animate-fade-in w-full">
             <div className="bg-white dark:bg-slate-900 p-4 md:p-6 rounded-xl md:rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800 overflow-hidden w-full">
-                <h2 className="text-lg md:text-xl font-bold text-slate-900 dark:text-white mb-4 md:mb-6 font-heading border-b border-slate-100 dark:border-slate-800 pb-4 flex items-center gap-2">
-                    <ActiveIcon size={20} className="text-emerald-500" />
-                    {tabs.find(t => t.id === activeTabId)?.label} Settings
-                </h2>
+                {/* Header with Title and Optional Info Icon */}
+                <div className="mb-4 md:mb-6 border-b border-slate-100 dark:border-slate-800 pb-4 flex items-center justify-between">
+                    <h2 className="text-lg md:text-xl font-bold text-slate-900 dark:text-white font-heading flex items-center gap-2">
+                        <ActiveIcon size={20} className="text-emerald-500" />
+                        {activeLabel} Settings
+                    </h2>
+                    
+                    {/* Info Icon in Top Right Corner */}
+                    {TAB_HELP_CONTENT[activeTabId] && (
+                        <InfoPopover 
+                            title={`${activeLabel} Help`} 
+                            description={TAB_HELP_CONTENT[activeTabId]} 
+                        />
+                    )}
+                </div>
                 
                 {/* Content Wrapper with constrained width/overflow handling */}
                 <div className="min-h-[300px] w-full max-w-full overflow-x-hidden">

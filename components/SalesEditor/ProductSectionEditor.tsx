@@ -53,25 +53,24 @@ const ProductSectionEditor: React.FC<ProductSectionEditorProps> = ({ data, onCha
   );
 
   return (
-    <div className="space-y-6 md:space-y-8 pb-10">
+    <div className="space-y-6 md:space-y-8 pb-10 w-full max-w-full">
       
-      {/* 1. Header with Info Popover */}
-      <div className="flex justify-between items-center border-b border-slate-100 pb-4 dark:border-slate-800">
-        <div>
-            <h3 className="font-bold text-lg text-slate-900 dark:text-white">Product Selection</h3>
-            <p className="text-xs text-slate-500 dark:text-slate-400">What are you selling on this page?</p>
+      {/* 1. Header (Updated Layout) */}
+      <div className="flex items-center gap-3 border-b border-slate-100 pb-4 dark:border-slate-800">
+        <div className="mt-1">
+            <InfoPopover 
+                title="Product Selection Tab"
+                description={
+                    <ul className="list-disc pl-4 space-y-1">
+                        <li><strong>Search Catalog:</strong> Quickly find Forever products to auto-fill details.</li>
+                        <li><strong>Smart Data:</strong> Images, benefits, and usage instructions are loaded automatically.</li>
+                        <li><strong>Pricing:</strong> Use the official price or set a custom offer.</li>
+                        <li><strong>Stock:</strong> See alerts if a product is low on stock in your region.</li>
+                    </ul>
+                }
+            />
         </div>
-        <InfoPopover 
-            title="Product Selection Tab"
-            description={
-                <ul className="list-disc pl-4 space-y-1">
-                    <li><strong>Search Catalog:</strong> Quickly find Forever products to auto-fill details.</li>
-                    <li><strong>Smart Data:</strong> Images, benefits, and usage instructions are loaded automatically.</li>
-                    <li><strong>Pricing:</strong> Use the official price or set a custom offer.</li>
-                    <li><strong>Stock:</strong> See alerts if a product is low on stock in your region.</li>
-                </ul>
-            }
-        />
+        <h3 className="font-bold text-lg text-slate-900 dark:text-white">Product Selection</h3>
       </div>
 
       {/* 2. Selection Type Toggle */}
@@ -80,13 +79,13 @@ const ProductSectionEditor: React.FC<ProductSectionEditorProps> = ({ data, onCha
             onClick={() => setSelectionType('SINGLE')}
             className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-xs md:text-sm font-bold transition-all ${selectionType === 'SINGLE' ? 'bg-white shadow-sm text-emerald-600 dark:bg-slate-700 dark:text-emerald-400' : 'text-slate-500 hover:text-slate-700 dark:text-slate-400'}`}
           >
-              <ShoppingBag size={16} /> Single Product
+              <ShoppingBag size={16} /> <span className="truncate">Single Product</span>
           </button>
           <button 
             onClick={() => setSelectionType('BUNDLE')}
             className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-xs md:text-sm font-bold transition-all ${selectionType === 'BUNDLE' ? 'bg-white shadow-sm text-emerald-600 dark:bg-slate-700 dark:text-emerald-400' : 'text-slate-500 hover:text-slate-700 dark:text-slate-400'}`}
           >
-              <Package size={16} /> Bundle / Pack
+              <Package size={16} /> <span className="truncate">Bundle / Pack</span>
           </button>
       </div>
 
@@ -115,15 +114,15 @@ const ProductSectionEditor: React.FC<ProductSectionEditorProps> = ({ data, onCha
                           <div className="w-10 h-10 bg-white rounded-lg border border-slate-100 flex items-center justify-center overflow-hidden shrink-0">
                               <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
                           </div>
-                          <div className="flex-1">
-                              <p className="font-bold text-sm text-slate-800 dark:text-white">{item.name}</p>
+                          <div className="flex-1 min-w-0">
+                              <p className="font-bold text-sm text-slate-800 dark:text-white truncate">{item.name}</p>
                               <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
-                                  <span>{item.category}</span>
-                                  {item.stockStatus === 'LOW_STOCK' && <span className="text-orange-500 font-bold">• Low Stock</span>}
-                                  {item.stockStatus === 'OUT_OF_STOCK' && <span className="text-red-500 font-bold">• Out of Stock</span>}
+                                  <span className="truncate">{item.category}</span>
+                                  {item.stockStatus === 'LOW_STOCK' && <span className="text-orange-500 font-bold shrink-0">• Low Stock</span>}
+                                  {item.stockStatus === 'OUT_OF_STOCK' && <span className="text-red-500 font-bold shrink-0">• Out of Stock</span>}
                               </div>
                           </div>
-                          <div className="text-emerald-600 font-bold text-xs md:text-sm dark:text-emerald-400">Select</div>
+                          <div className="text-emerald-600 font-bold text-xs md:text-sm dark:text-emerald-400 shrink-0">Select</div>
                       </button>
                   )) : (
                       <div className="p-4 text-center text-slate-500 text-sm">No products found.</div>
@@ -140,7 +139,7 @@ const ProductSectionEditor: React.FC<ProductSectionEditorProps> = ({ data, onCha
               <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl p-4 md:p-5 shadow-sm relative overflow-hidden">
                   {/* Stock Badge */}
                   {activeProduct.stockStatus && (
-                      <div className={`absolute top-0 right-0 px-3 py-1 text-[10px] font-bold uppercase rounded-bl-xl ${
+                      <div className={`absolute top-0 right-0 px-3 py-1 text-[10px] font-bold uppercase rounded-bl-xl z-10 ${
                           activeProduct.stockStatus === 'IN_STOCK' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900 dark:text-emerald-300' :
                           activeProduct.stockStatus === 'LOW_STOCK' ? 'bg-orange-100 text-orange-700 dark:bg-orange-900 dark:text-orange-300' :
                           'bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300'
@@ -149,8 +148,8 @@ const ProductSectionEditor: React.FC<ProductSectionEditorProps> = ({ data, onCha
                       </div>
                   )}
 
-                  <div className="flex flex-row gap-4 md:gap-6">
-                      {/* Image - Compact on mobile */}
+                  <div className="flex flex-row gap-4">
+                      {/* Image - Fixed width on mobile, prevents squashing */}
                       <div className="w-24 h-24 md:w-32 md:h-32 bg-slate-50 dark:bg-slate-700 rounded-xl flex items-center justify-center border border-slate-100 dark:border-slate-600 overflow-hidden shrink-0">
                           {activeProduct.image ? (
                               <img src={activeProduct.image} alt="Product" className="w-full h-full object-cover" />
@@ -159,9 +158,9 @@ const ProductSectionEditor: React.FC<ProductSectionEditorProps> = ({ data, onCha
                           )}
                       </div>
 
-                      {/* Info Fields */}
-                      <div className="flex-1 space-y-3 md:space-y-4">
-                          <div>
+                      {/* Info Fields - min-w-0 ensures text inputs shrink properly in flex container */}
+                      <div className="flex-1 space-y-3 md:space-y-4 min-w-0">
+                          <div className="w-full">
                               <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">Product Name</label>
                               <input 
                                   type="text" 
@@ -170,7 +169,7 @@ const ProductSectionEditor: React.FC<ProductSectionEditorProps> = ({ data, onCha
                                   className="w-full bg-slate-50 dark:bg-slate-900 border-none rounded-lg px-2 py-1.5 md:px-3 md:py-2 text-sm md:text-base font-bold text-slate-800 dark:text-white focus:ring-1 focus:ring-emerald-500"
                               />
                           </div>
-                          <div>
+                          <div className="w-full">
                               <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">Short Description</label>
                               <input 
                                   type="text" 
@@ -184,7 +183,7 @@ const ProductSectionEditor: React.FC<ProductSectionEditorProps> = ({ data, onCha
 
                   {/* Smart Tags */}
                   <div className="mt-4 flex flex-wrap gap-2">
-                      <span className="text-xs text-slate-400 flex items-center gap-1"><Tag size={12}/> Recommended for:</span>
+                      <span className="text-xs text-slate-400 flex items-center gap-1"><Tag size={12}/> Recommended:</span>
                       {activeProduct.category && <span className="bg-blue-50 text-blue-700 px-2 py-1 rounded-md text-[10px] md:text-xs font-bold dark:bg-blue-900/30 dark:text-blue-300">{activeProduct.category}</span>}
                       {activeProduct.tags?.map(tag => (
                           <span key={tag} className="bg-slate-100 text-slate-600 px-2 py-1 rounded-md text-[10px] md:text-xs font-medium dark:bg-slate-700 dark:text-slate-300">{tag}</span>
@@ -207,7 +206,8 @@ const ProductSectionEditor: React.FC<ProductSectionEditorProps> = ({ data, onCha
                       </div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4">
+                  {/* Grid becomes 1 column on mobile to prevent squishing */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div>
                           <label className="block text-xs font-bold text-slate-500 mb-1">Selling Price ({data.currency})</label>
                           <input 

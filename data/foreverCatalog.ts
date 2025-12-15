@@ -5,7 +5,11 @@ export const FOREVER_CATALOG: Product[] = [
     {
         id: 'cat_015',
         name: 'Forever Aloe Vera Gel',
-        images: ['https://cdn.foreverliving.com/content/products/images/015_A.jpg'],
+        // Green/Yellow bottle context
+        images: [
+            'https://images.unsplash.com/photo-1620916566398-39f1143ab7be?q=80&w=2000&h=2000&auto=format&fit=crop',
+            'https://images.unsplash.com/photo-1609120786967-3323049b49b4?q=80&w=2000&h=2000&auto=format&fit=crop'
+        ],
         shortDescription: 'The pure power of nature.',
         fullDescription: 'Our flagship product. 99.7% pure inner leaf aloe vera gel. Supports healthy digestion and nutrient absorption.',
         price: 180.00,
@@ -19,7 +23,11 @@ export const FOREVER_CATALOG: Product[] = [
     {
         id: 'cat_028',
         name: 'Forever Bright Toothgel',
-        images: ['https://cdn.foreverliving.com/content/products/images/028_A.jpg'],
+        // Dental/Fresh context
+        images: [
+            'https://images.unsplash.com/photo-1559599101-f09722fb2948?q=80&w=2000&h=2000&auto=format&fit=crop',
+            'https://images.unsplash.com/photo-1571781926291-280553fe755c?q=80&w=2000&h=2000&auto=format&fit=crop'
+        ],
         shortDescription: 'Gentle, fluoride-free formula.',
         fullDescription: 'Aloe vera and bee propolis formula. Gentle on teeth and gums, great minty flavor.',
         price: 55.00,
@@ -33,7 +41,11 @@ export const FOREVER_CATALOG: Product[] = [
     {
         id: 'cat_475',
         name: 'C9™ Cleansing Program',
-        images: ['https://cdn.foreverliving.com/content/products/images/475_A.jpg'],
+        // Supplements/Fitness context
+        images: [
+            'https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?q=80&w=2000&h=2000&auto=format&fit=crop',
+            'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?q=80&w=2000&h=2000&auto=format&fit=crop'
+        ],
         shortDescription: 'Look better and feel better in just 9 days.',
         fullDescription: 'The C9 program can help you jumpstart your journey to a slimmer, healthier you. This effective, easy-to-follow cleansing program will give you the tools you need to start transforming your body today.',
         price: 950.00,
@@ -47,7 +59,11 @@ export const FOREVER_CATALOG: Product[] = [
     {
         id: 'cat_034',
         name: 'Aloe Berry Nectar',
-        images: ['https://cdn.foreverliving.com/content/products/images/034_A.jpg'],
+        // Red drink/Cranberry context
+        images: [
+            'https://images.unsplash.com/photo-1620917670397-a3313437ef78?q=80&w=2000&h=2000&auto=format&fit=crop',
+            'https://images.unsplash.com/photo-1600093463592-203651439697?q=80&w=2000&h=2000&auto=format&fit=crop'
+        ],
         shortDescription: 'All the benefits of Aloe with a burst of cranberry.',
         fullDescription: 'A refreshing zest of cranberries and sweet apples for a naturally derived, sweet yet tangy flavor.',
         price: 180.00,

@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { SalesPage } from '../../types/salesPage';
-import { Layout, Palette, Type, MoveVertical, Check, Lock, Sliders, Minus, Plus } from 'lucide-react';
+import { Layout, Palette, Type, MoveVertical, Check, Lock, Sliders, Minus, Plus, MousePointerClick, Square, Circle } from 'lucide-react';
 import CustomSelect from '../Shared/CustomSelect';
 
 interface ThemeSelectorProps {
@@ -41,8 +41,8 @@ const PRESET_COLORS = [
 const ThemeSelector: React.FC<ThemeSelectorProps> = ({ data, onChange }) => {
   
   // Handlers for steppers
-  const adjustValue = (field: 'baseFontSize' | 'sectionSpacing', amount: number, min: number, max: number) => {
-      const current = data[field] || (field === 'baseFontSize' ? 16 : 5);
+  const adjustValue = (field: 'baseFontSize' | 'subtitleFontSize' | 'sectionSpacing', amount: number, min: number, max: number) => {
+      const current = data[field] || (field === 'baseFontSize' ? 16 : field === 'subtitleFontSize' ? 20 : 5);
       const next = Math.min(max, Math.max(min, current + amount));
       onChange(field, next);
   };
@@ -151,7 +151,68 @@ const ThemeSelector: React.FC<ThemeSelectorProps> = ({ data, onChange }) => {
 
       <div className="w-full h-px bg-slate-100 dark:bg-slate-800"></div>
 
-      {/* 3. Advanced Typography */}
+      {/* 3. Button Styles */}
+      <section>
+        <label className="block text-sm font-bold text-slate-700 mb-6 flex items-center gap-2 dark:text-slate-300">
+          <MousePointerClick size={18} className="text-indigo-500" /> Button Styles
+        </label>
+
+        <div className="space-y-6">
+            {/* Shape Selection */}
+            <div>
+                <label className="text-xs font-bold text-slate-500 uppercase dark:text-slate-400 mb-3 block">Shape</label>
+                <div className="grid grid-cols-3 gap-3">
+                    <button 
+                        onClick={() => onChange('buttonCorner', 'square')}
+                        className={`p-3 rounded-xl border-2 flex flex-col items-center justify-center gap-2 transition-all ${data.buttonCorner === 'square' ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20' : 'border-slate-200 bg-white hover:border-emerald-200 dark:bg-slate-800 dark:border-slate-700'}`}
+                    >
+                        <div className="w-8 h-8 bg-slate-900 rounded-none shadow-sm dark:bg-white"></div>
+                        <span className={`text-[10px] font-bold uppercase ${data.buttonCorner === 'square' ? 'text-emerald-700 dark:text-emerald-400' : 'text-slate-500'}`}>Square</span>
+                    </button>
+                    
+                    <button 
+                        onClick={() => onChange('buttonCorner', 'rounded')}
+                        className={`p-3 rounded-xl border-2 flex flex-col items-center justify-center gap-2 transition-all ${data.buttonCorner === 'rounded' ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20' : 'border-slate-200 bg-white hover:border-emerald-200 dark:bg-slate-800 dark:border-slate-700'}`}
+                    >
+                        <div className="w-8 h-8 bg-slate-900 rounded-lg shadow-sm dark:bg-white"></div>
+                        <span className={`text-[10px] font-bold uppercase ${data.buttonCorner === 'rounded' ? 'text-emerald-700 dark:text-emerald-400' : 'text-slate-500'}`}>Soft</span>
+                    </button>
+
+                    <button 
+                        onClick={() => onChange('buttonCorner', 'pill')}
+                        className={`p-3 rounded-xl border-2 flex flex-col items-center justify-center gap-2 transition-all ${data.buttonCorner === 'pill' ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20' : 'border-slate-200 bg-white hover:border-emerald-200 dark:bg-slate-800 dark:border-slate-700'}`}
+                    >
+                        <div className="w-8 h-8 bg-slate-900 rounded-full shadow-sm dark:bg-white"></div>
+                        <span className={`text-[10px] font-bold uppercase ${data.buttonCorner === 'pill' ? 'text-emerald-700 dark:text-emerald-400' : 'text-slate-500'}`}>Pill</span>
+                    </button>
+                </div>
+            </div>
+
+            {/* Size Selection */}
+            <div>
+                <label className="text-xs font-bold text-slate-500 uppercase dark:text-slate-400 mb-3 block">Size</label>
+                <div className="bg-slate-100 p-1 rounded-xl flex dark:bg-slate-800">
+                    {['sm', 'md', 'lg'].map((size) => (
+                        <button
+                            key={size}
+                            onClick={() => onChange('buttonSize', size as 'sm'|'md'|'lg')}
+                            className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${
+                                data.buttonSize === size 
+                                ? 'bg-white shadow-sm text-slate-900 dark:bg-slate-700 dark:text-white' 
+                                : 'text-slate-500 hover:text-slate-700 dark:text-slate-400'
+                            }`}
+                        >
+                            {size === 'sm' ? 'Small' : size === 'md' ? 'Medium' : 'Large'}
+                        </button>
+                    ))}
+                </div>
+            </div>
+        </div>
+      </section>
+
+      <div className="w-full h-px bg-slate-100 dark:bg-slate-800"></div>
+
+      {/* 4. Advanced Typography */}
       <section>
         <label className="block text-sm font-bold text-slate-700 mb-6 flex items-center gap-2 dark:text-slate-300">
           <Type size={18} className="text-blue-500" /> Typography
@@ -178,14 +239,14 @@ const ThemeSelector: React.FC<ThemeSelectorProps> = ({ data, onChange }) => {
                 </div>
             </div>
 
-            {/* Base Size Control (Stepper + Slider) */}
+            {/* Body Size Control */}
             <div className="bg-slate-50 p-5 rounded-2xl border border-slate-200 dark:bg-slate-800 dark:border-slate-700">
                 <div className="flex justify-between items-center mb-4">
                     <div className="flex items-center gap-2">
                         <span className="p-1.5 bg-blue-100 text-blue-600 rounded dark:bg-blue-900/30 dark:text-blue-400"><Type size={14} /></span>
                         <div>
-                            <label className="text-xs font-bold text-slate-700 dark:text-slate-200 block">Base Font Size</label>
-                            <span className="text-[10px] text-slate-400">Root size for body text</span>
+                            <label className="text-xs font-bold text-slate-700 dark:text-slate-200 block">Body Text Size</label>
+                            <span className="text-[10px] text-slate-400">Base scale for paragraphs</span>
                         </div>
                     </div>
                     <div className="flex items-center gap-2">
@@ -213,10 +274,43 @@ const ThemeSelector: React.FC<ThemeSelectorProps> = ({ data, onChange }) => {
                     onChange={(e) => onChange('baseFontSize', parseInt(e.target.value))}
                     className="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-emerald-500 dark:bg-slate-700"
                 />
-                <div className="flex justify-between text-[10px] text-slate-400 mt-2 font-medium px-1">
-                    <span>12px</span>
-                    <span>24px</span>
+            </div>
+
+            {/* Subtitle Size Control (NEW) */}
+            <div className="bg-slate-50 p-5 rounded-2xl border border-slate-200 dark:bg-slate-800 dark:border-slate-700">
+                <div className="flex justify-between items-center mb-4">
+                    <div className="flex items-center gap-2">
+                        <span className="p-1.5 bg-indigo-100 text-indigo-600 rounded dark:bg-indigo-900/30 dark:text-indigo-400"><Type size={14} /></span>
+                        <div>
+                            <label className="text-xs font-bold text-slate-700 dark:text-slate-200 block">Subtitle Size</label>
+                            <span className="text-[10px] text-slate-400">Controls size of secondary text</span>
+                        </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <button 
+                            onClick={() => adjustValue('subtitleFontSize', -1, 14, 32)}
+                            className="w-8 h-8 rounded-full bg-white border border-slate-200 flex items-center justify-center text-slate-500 hover:bg-slate-50 hover:text-slate-800 dark:bg-slate-700 dark:border-slate-600 dark:text-slate-300"
+                        >
+                            <Minus size={14} />
+                        </button>
+                        <span className="w-8 text-center font-bold text-sm text-slate-800 dark:text-white">{data.subtitleFontSize || 20}</span>
+                        <button 
+                            onClick={() => adjustValue('subtitleFontSize', 1, 14, 32)}
+                            className="w-8 h-8 rounded-full bg-white border border-slate-200 flex items-center justify-center text-slate-500 hover:bg-slate-50 hover:text-slate-800 dark:bg-slate-700 dark:border-slate-600 dark:text-slate-300"
+                        >
+                            <Plus size={14} />
+                        </button>
+                    </div>
                 </div>
+                <input 
+                    type="range" 
+                    min="14" 
+                    max="32" 
+                    step="1" 
+                    value={data.subtitleFontSize || 20} 
+                    onChange={(e) => onChange('subtitleFontSize', parseInt(e.target.value))}
+                    className="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-indigo-500 dark:bg-slate-700"
+                />
             </div>
 
             {/* Heading Scale Slider */}
@@ -246,20 +340,13 @@ const ThemeSelector: React.FC<ThemeSelectorProps> = ({ data, onChange }) => {
                     <span>Subtle</span>
                     <span>Dramatic</span>
                 </div>
-                
-                {/* Visual Preview of Scale */}
-                <div className="mt-4 flex items-end gap-3 h-8 border-b border-slate-200 dark:border-slate-700 pb-1">
-                    <div className="bg-slate-300 w-4 rounded-t-sm dark:bg-slate-600" style={{ height: '30%' }}></div>
-                    <div className="bg-slate-400 w-4 rounded-t-sm dark:bg-slate-500" style={{ height: `${30 * (data.typeScale || 1.25)}%` }}></div>
-                    <div className="bg-slate-800 w-4 rounded-t-sm dark:bg-slate-300" style={{ height: `${30 * Math.pow((data.typeScale || 1.25), 2)}%` }}></div>
-                </div>
             </div>
         </div>
       </section>
 
       <div className="w-full h-px bg-slate-100 dark:bg-slate-800"></div>
 
-      {/* 4. Spacing */}
+      {/* 5. Spacing */}
       <section>
         <label className="block text-sm font-bold text-slate-700 mb-6 flex items-center gap-2 dark:text-slate-300">
           <MoveVertical size={18} className="text-orange-500" /> Layout Spacing

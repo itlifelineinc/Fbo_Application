@@ -15,34 +15,57 @@ const PreviewPanel: React.FC<PreviewPanelProps> = ({ data, device }) => {
   const fontFamilyHeading = data.headingFont || 'Lexend';
   const fontFamilyBody = data.bodyFont || 'Noto Sans';
   const baseSize = data.baseFontSize || 16;
+  const subtitleSize = data.subtitleFontSize || 20; // New variable
   const scaleRatio = data.typeScale || 1.25;
   const spacingValue = data.sectionSpacing ?? 5; // 0 to 10
 
   // Calculate Header Sizes based on Modular Scale
-  const h1Size = Math.round(baseSize * Math.pow(scaleRatio, 4)); // e.g. 16 * 1.25^4 = 39px
-  const h2Size = Math.round(baseSize * Math.pow(scaleRatio, 3)); // e.g. 16 * 1.25^3 = 31px
-  const h3Size = Math.round(baseSize * Math.pow(scaleRatio, 2)); // e.g. 16 * 1.25^2 = 25px
+  const h1Size = Math.round(baseSize * Math.pow(scaleRatio, 4)); 
+  const h2Size = Math.round(baseSize * Math.pow(scaleRatio, 3)); 
+  const h3Size = Math.round(baseSize * Math.pow(scaleRatio, 2)); 
   const smallSize = Math.round(baseSize * 0.85);
 
-  // Calculate Spacing (Base unit 4px)
-  // Mapping 0-10 to rem values. 5 is standard (4rem/64px). 
-  // Formula: (Value * 0.8 + 2) rem. 
-  // 0 -> 2rem (32px), 5 -> 6rem (96px), 10 -> 10rem (160px) 
-  // Let's make it more linear: 
-  // 0=1rem, 1=1.5rem, 5=4rem, 10=8rem
   const sectionPaddingRem = 1 + (spacingValue * 0.7); 
   
+  // Button Styles Logic
+  const btnCorner = data.buttonCorner || 'pill';
+  const btnSize = data.buttonSize || 'md';
+  const radius = btnCorner === 'pill' ? '9999px' : btnCorner === 'rounded' ? '0.75rem' : '0px';
+  
+  // Size Map (Normal)
+  const paddingMap = {
+      sm: '0.5rem 1rem', // px-4 py-2
+      md: '0.75rem 1.5rem', // px-6 py-3
+      lg: '1rem 2rem' // px-8 py-4
+  };
+  const fontSizeMap = {
+      sm: '0.75rem', // text-xs
+      md: '0.875rem', // text-sm
+      lg: '1.125rem' // text-lg
+  };
+
   const previewStyle = {
       '--font-heading': `'${fontFamilyHeading}', sans-serif`,
       '--font-body': `'${fontFamilyBody}', sans-serif`,
       '--base-size': `${baseSize}px`,
+      '--subtitle-size': `${subtitleSize}px`, // Inject subtitle size
       '--h1-size': `${h1Size}px`,
       '--h2-size': `${h2Size}px`,
       '--h3-size': `${h3Size}px`,
       '--small-size': `${smallSize}px`,
       '--theme-color': data.themeColor || '#10b981',
       '--section-padding': `${sectionPaddingRem}rem`,
-      '--gap-size': `${sectionPaddingRem * 0.5}rem`
+      '--gap-size': `${sectionPaddingRem * 0.5}rem`,
+      
+      // Button Vars
+      '--btn-radius': radius,
+      '--btn-padding': paddingMap[btnSize],
+      '--btn-font-size': fontSizeMap[btnSize],
+      
+      // Hero Button Vars (One size up logic)
+      '--btn-hero-padding': btnSize === 'sm' ? paddingMap['md'] : btnSize === 'md' ? paddingMap['lg'] : '1.25rem 2.5rem',
+      '--btn-hero-font-size': btnSize === 'sm' ? fontSizeMap['md'] : btnSize === 'md' ? fontSizeMap['lg'] : '1.25rem',
+
   } as React.CSSProperties;
 
   const scrollbarStyles = (
@@ -70,6 +93,18 @@ const PreviewPanel: React.FC<PreviewPanelProps> = ({ data, device }) => {
       
       .preview-gap {
         gap: var(--gap-size);
+      }
+
+      .preview-btn {
+        border-radius: var(--btn-radius);
+        padding: var(--btn-padding);
+        font-size: var(--btn-font-size);
+      }
+
+      .preview-btn-hero {
+        border-radius: var(--btn-radius);
+        padding: var(--btn-hero-padding);
+        font-size: var(--btn-hero-font-size);
       }
 
       .dark .preview-wrapper { color: #cbd5e1; }
@@ -188,8 +223,7 @@ const PreviewContent: React.FC<{
   };
 
   const renderCTA = (cta: CTAButton, isHero: boolean = false) => {
-      const sizeClasses = isHero ? "px-8 py-4 text-lg" : "px-6 py-3 text-sm";
-      const baseClass = `${sizeClasses} rounded-full font-bold transition-transform hover:scale-105 shadow-xl flex items-center justify-center gap-2`;
+      const baseClass = `${isHero ? 'preview-btn-hero' : 'preview-btn'} font-bold transition-transform hover:scale-105 shadow-xl flex items-center justify-center gap-2`;
       
       let style: React.CSSProperties = {};
       let className = baseClass;
@@ -203,7 +237,7 @@ const PreviewContent: React.FC<{
           className = baseClass.replace('shadow-xl', 'shadow-sm hover:bg-slate-50'); 
       } else if (cta.style === 'link') {
           style = { color: btnColor, textDecoration: 'underline', padding: '0', boxShadow: 'none' };
-          className = "font-bold text-sm hover:opacity-80 transition-opacity flex items-center gap-1";
+          className = "font-bold text-sm hover:opacity-80 transition-opacity flex items-center gap-1 preview-btn"; // Link style ignores heavy sizing usually
       }
 
       return (
@@ -229,7 +263,10 @@ const PreviewContent: React.FC<{
                       {data.title || 'Your Big Headline Here'}
                   </h1>
                   
-                  <p className="text-lg md:text-xl text-slate-500 dark:text-slate-400 mb-12 max-w-2xl mx-auto leading-relaxed font-medium">
+                  <p 
+                    className="text-slate-500 dark:text-slate-400 mb-12 max-w-2xl mx-auto leading-relaxed font-medium"
+                    style={{ fontSize: 'var(--subtitle-size)' }}
+                  >
                       {data.subtitle || 'Your compelling subtitle goes here explaining the value in seconds.'}
                   </p>
                   
@@ -339,7 +376,7 @@ const PreviewContent: React.FC<{
                               <p className="text-slate-600 leading-relaxed text-lg dark:text-slate-300">{product.fullDescription || product.shortDescription}</p>
                               
                               <div className="pt-4">
-                                  <button style={{ backgroundColor: data.themeColor }} className="px-8 py-4 rounded-full text-white font-bold shadow-lg hover:opacity-90 transition-opacity">
+                                  <button style={{ backgroundColor: data.themeColor }} className="preview-btn text-white font-bold shadow-lg hover:opacity-90 transition-opacity">
                                       Add to Cart
                                   </button>
                               </div>
@@ -437,7 +474,7 @@ const PreviewContent: React.FC<{
                                                   {data.currency}{pkg.specialPrice || pkg.totalPrice}
                                               </span>
                                           </div>
-                                          <button style={{ backgroundColor: data.themeColor }} className="px-4 py-2 rounded-lg text-white text-sm font-bold shadow-sm whitespace-nowrap">
+                                          <button style={{ backgroundColor: data.themeColor }} className="preview-btn text-white text-sm font-bold shadow-sm whitespace-nowrap">
                                               Order
                                           </button>
                                       </div>

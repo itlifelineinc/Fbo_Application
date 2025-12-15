@@ -73,8 +73,13 @@ export interface SalesPage {
   headingFont: string;
   bodyFont: string;
   baseFontSize: number; // 14-20
+  subtitleFontSize?: number; // New: Specific control for subtitles
   typeScale: number; // 1.0 - 1.6 (Controls heading prominence)
   sectionSpacing: number; // 0-10 scale
+  
+  // Button Styling
+  buttonCorner?: 'square' | 'rounded' | 'pill';
+  buttonSize?: 'sm' | 'md' | 'lg';
   
   // Content
   description: string; 

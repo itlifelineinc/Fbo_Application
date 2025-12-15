@@ -4,7 +4,8 @@ import { PageType } from '../../types/salesPage';
 import { 
     Layout, Type, Image as ImageIcon, ShoppingBag, Package, FileText, 
     MousePointerClick, Star, Phone, Search, Lock, ShieldCheck, 
-    CreditCard, Share2, AlertTriangle, Lightbulb, Heart, ListChecks, X
+    CreditCard, Share2, AlertTriangle, Lightbulb, Heart, ListChecks, X,
+    Zap, UserPlus, Award, User, Briefcase, TrendingUp, Palette, ListOrdered, ClipboardCheck, Gift
 } from 'lucide-react';
 
 export interface TabDefinition {
@@ -46,10 +47,32 @@ export const PAGE_TAB_CONFIG: Record<PageType, TabDefinition[]> = {
         { id: 'COMPLIANCE', label: 'Compliance', icon: ListChecks },
         { id: 'PUBLISH', label: 'Publish', icon: Share2 },
     ],
-    // Inactive types (fallback)
-    'capture': [{ id: 'OVERVIEW', label: 'Overview', icon: Type }],
-    'brand': [{ id: 'OVERVIEW', label: 'Overview', icon: Type }],
-    'recruit': [{ id: 'OVERVIEW', label: 'Overview', icon: Type }],
+    'capture': [
+        { id: 'HEADLINE_MSG', label: 'Headline & Message', icon: Type },
+        { id: 'EXPLANATION', label: 'Quick Explanation', icon: Zap },
+        { id: 'WHATSAPP_SETUP', label: 'WhatsApp Setup', icon: Phone },
+        { id: 'LEAD_FORM', label: 'Lead Form', icon: ClipboardCheck },
+        { id: 'DESIGN_PREVIEW', label: 'Design & Preview', icon: Layout },
+    ],
+    'brand': [
+        { id: 'PROFILE_ID', label: 'Profile & Identity', icon: User },
+        { id: 'MY_STORY', label: 'My Story', icon: FileText },
+        { id: 'WHY_FOREVER', label: 'Why Forever', icon: Heart },
+        { id: 'CERTS_RANK', label: 'Certifications', icon: Award },
+        { id: 'HELP_WITH', label: 'What I Help With', icon: Lightbulb },
+        { id: 'OFFERS_LINKS', label: 'My Offers', icon: Gift },
+        { id: 'SETTINGS_PREVIEW', label: 'Page Settings', icon: Layout },
+    ],
+    'recruit': [
+        { id: 'PAGE_BASICS', label: 'Page Basics', icon: Type },
+        { id: 'OPP_OVERVIEW', label: 'Opportunity', icon: Briefcase },
+        { id: 'BENEFITS', label: 'Benefits', icon: TrendingUp },
+        { id: 'SUCCESS_STORIES', label: 'Success Stories', icon: Star },
+        { id: 'GET_STARTED', label: 'Steps to Start', icon: ListOrdered },
+        { id: 'SPONSOR_SETUP', label: 'Sponsor Setup', icon: UserPlus },
+        { id: 'DESIGN_BRANDING', label: 'Design', icon: Palette },
+        { id: 'PREVIEW_PUBLISH', label: 'Publish', icon: Share2 },
+    ],
 };
 
 export const PlaceholderTab: React.FC<{ label: string }> = ({ label }) => (

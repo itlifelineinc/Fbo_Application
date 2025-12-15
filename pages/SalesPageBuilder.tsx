@@ -53,21 +53,21 @@ const SalesPageBuilder: React.FC = () => {
       title: 'Lead Capture',
       description: 'Get WhatsApp leads fast',
       icon: MessageCircle,
-      active: false
+      active: true
     },
     {
       id: 'brand',
       title: 'Personal Brand',
       description: 'Your mini website profile',
       icon: User,
-      active: false
+      active: true
     },
     {
       id: 'recruit',
       title: 'Recruitment',
       description: 'Join the business opportunity',
       icon: Briefcase,
-      active: false
+      active: true
     }
   ];
 
@@ -84,6 +84,9 @@ const SalesPageBuilder: React.FC = () => {
           setShowTypeSelection(false);
       }, 400);
   };
+
+  const activePageType = pageTypes.find(t => t.id === page.type);
+  const pageTypeTitle = activePageType ? activePageType.title : 'Page Builder';
 
   return (
     <div className="flex flex-col h-full bg-slate-100 overflow-hidden relative">
@@ -172,6 +175,7 @@ const SalesPageBuilder: React.FC = () => {
 
       {/* Main Builder UI */}
       <EditorToolbar 
+        pageTypeTitle={pageTypeTitle}
         lastSaved={lastSaved}
         isPublished={page.isPublished}
         onPublish={publish}

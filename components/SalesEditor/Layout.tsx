@@ -48,9 +48,33 @@ const EditorLayout: React.FC<EditorLayoutProps> = ({ data, updateField, isPrevie
   // Content Renderer Switch
   const renderContent = () => {
       switch (activeTabId) {
-          // --- PRODUCT SALES TYPE ---
+          // --- SHARED COMPONENTS / LOGIC ---
           case 'OVERVIEW':
+          case 'PKG_BASICS':
+          case 'PAGE_BASICS':
+          case 'HEADLINE_MSG':
+          case 'PROFILE_ID':
               return <MetaForm data={data} onChange={updateField} />;
+          
+          case 'DESIGN':
+          case 'DESIGN_PREVIEW':
+          case 'DESIGN_BRANDING':
+          case 'SETTINGS_PREVIEW':
+              return <ThemeSelector data={data} onChange={updateField} />;
+
+          case 'CTA_SETUP':
+          case 'WHATSAPP_SETUP':
+          case 'SPONSOR_SETUP':
+              return (
+                  <div className="space-y-8">
+                      <ContactSettings data={data} onChange={updateField} />
+                      <div className="border-t border-slate-100 dark:border-slate-800 pt-6">
+                          <CTAButtonsEditor data={data} onChange={updateField} />
+                      </div>
+                  </div>
+              );
+
+          // --- PRODUCT SALES TYPE ---
           case 'PRODUCTS':
               return <ProductSectionEditor data={data} onChange={updateField} />;
           case 'CONTENT':
@@ -62,25 +86,13 @@ const EditorLayout: React.FC<EditorLayoutProps> = ({ data, updateField, isPrevie
                       </div>
                   </div>
               );
-          case 'DESIGN':
-              return <ThemeSelector data={data} onChange={updateField} />;
           case 'TRUST_PROOF':
-          case 'PROOF': // Problem Solver
-          case 'TRUST_BUILDER': // Bundle
+          case 'PROOF': 
+          case 'TRUST_BUILDER': 
+          case 'SUCCESS_STORIES':
               return <TestimonialsEditor data={data} onChange={updateField} />;
-          case 'CTA_SETUP':
-              return (
-                  <div className="space-y-8">
-                      <ContactSettings data={data} onChange={updateField} />
-                      <div className="border-t border-slate-100 dark:border-slate-800 pt-6">
-                          <CTAButtonsEditor data={data} onChange={updateField} />
-                      </div>
-                  </div>
-              );
           
           // --- BUNDLE TYPE ---
-          case 'PKG_BASICS':
-              return <MetaForm data={data} onChange={updateField} />;
           case 'PKG_PRODUCTS':
               return (
                   <div className="space-y-8">
@@ -92,20 +104,32 @@ const EditorLayout: React.FC<EditorLayoutProps> = ({ data, updateField, isPrevie
               );
           
           // --- PROBLEM SOLVER TYPE ---
-          case 'PAGE_BASICS':
-              return <MetaForm data={data} onChange={updateField} />;
           case 'SOLUTION':
               return <ProductSectionEditor data={data} onChange={updateField} />;
 
-          // --- GENERIC / NEW FEATURES (Placeholders) ---
+          // --- PERSONAL BRAND ---
+          case 'MY_STORY':
+              return <RichTextEditor value={data.description} onChange={(val) => updateField('description', val)} />;
+
+          // --- PLACEHOLDERS FOR SPECIFIC NEW FEATURES ---
           case 'CHECKOUT':
           case 'PUBLISH':
+          case 'PREVIEW_PUBLISH':
           case 'EDUCATION':
           case 'PRICING':
           case 'PROBLEM_EDU':
           case 'MISTAKES':
           case 'LIFESTYLE':
           case 'COMPLIANCE':
+          case 'EXPLANATION':
+          case 'LEAD_FORM':
+          case 'WHY_FOREVER':
+          case 'CERTS_RANK':
+          case 'HELP_WITH':
+          case 'OFFERS_LINKS':
+          case 'OPP_OVERVIEW':
+          case 'BENEFITS':
+          case 'GET_STARTED':
               return <PlaceholderTab label={tabs.find(t => t.id === activeTabId)?.label || 'Feature'} />;
           
           default:

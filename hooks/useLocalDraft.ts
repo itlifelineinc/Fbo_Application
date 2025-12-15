@@ -17,7 +17,8 @@ const EMPTY_PAGE: SalesPage = {
   headingFont: 'Lexend',
   bodyFont: 'Noto Sans',
   baseFontSize: 16,
-  sectionSpacing: 2, // Medium spacing
+  typeScale: 1.25, // Major Third (Modern & Clean)
+  sectionSpacing: 5, // 0-10 Scale (5 is normal)
 
   description: '',
   features: [],

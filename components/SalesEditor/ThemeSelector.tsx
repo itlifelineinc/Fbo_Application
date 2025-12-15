@@ -1,15 +1,31 @@
 
 import React from 'react';
-import { SalesPage, LayoutStyle } from '../../types/salesPage';
-import { Layout, Palette, Type, MoveVertical, Check, Lock, ChevronDown } from 'lucide-react';
+import { SalesPage } from '../../types/salesPage';
+import { Layout, Palette, Type, MoveVertical, Check, Lock, Sliders, Minus, Plus } from 'lucide-react';
+import CustomSelect from '../Shared/CustomSelect';
 
 interface ThemeSelectorProps {
   data: SalesPage;
   onChange: <K extends keyof SalesPage>(field: K, value: SalesPage[K]) => void;
 }
 
-const FONTS_HEADING = ['Lexend', 'Josefin Sans', 'Noto Sans', 'Inter', 'Playfair Display'];
-const FONTS_BODY = ['Noto Sans', 'Inter', 'Lato', 'Roboto', 'Open Sans'];
+const FONTS_HEADING_OPTIONS = [
+  { value: 'Lexend', label: 'Lexend (Modern)', previewFont: 'Lexend' },
+  { value: 'Josefin Sans', label: 'Josefin Sans (Geometric)', previewFont: 'Josefin Sans' },
+  { value: 'Montserrat', label: 'Montserrat (Bold)', previewFont: 'Montserrat' },
+  { value: 'Playfair Display', label: 'Playfair Display (Serif)', previewFont: 'Playfair Display' },
+  { value: 'Merriweather', label: 'Merriweather (Classic)', previewFont: 'Merriweather' },
+  { value: 'Noto Sans', label: 'Noto Sans (Clean)', previewFont: 'Noto Sans' },
+];
+
+const FONTS_BODY_OPTIONS = [
+  { value: 'Noto Sans', label: 'Noto Sans (Standard)', previewFont: 'Noto Sans' },
+  { value: 'Inter', label: 'Inter (UI Optimized)', previewFont: 'Inter' },
+  { value: 'Open Sans', label: 'Open Sans (Friendly)', previewFont: 'Open Sans' },
+  { value: 'Lato', label: 'Lato (Round)', previewFont: 'Lato' },
+  { value: 'Roboto', label: 'Roboto (Tech)', previewFont: 'Roboto' },
+  { value: 'Poppins', label: 'Poppins (Soft)', previewFont: 'Poppins' },
+];
 
 const PRESET_COLORS = [
   '#10b981', // Emerald
@@ -24,20 +40,27 @@ const PRESET_COLORS = [
 
 const ThemeSelector: React.FC<ThemeSelectorProps> = ({ data, onChange }) => {
   
+  // Handlers for steppers
+  const adjustValue = (field: 'baseFontSize' | 'sectionSpacing', amount: number, min: number, max: number) => {
+      const current = data[field] || (field === 'baseFontSize' ? 16 : 5);
+      const next = Math.min(max, Math.max(min, current + amount));
+      onChange(field, next);
+  };
+
   return (
-    <div className="space-y-8 pb-10">
+    <div className="space-y-10 pb-10">
       
       {/* 1. Theme Selection */}
       <section>
-        <label className="block text-sm font-bold text-slate-700 mb-3 flex items-center gap-2 dark:text-slate-300">
-          <Layout size={16} /> Theme Layout
+        <label className="block text-sm font-bold text-slate-700 mb-4 flex items-center gap-2 dark:text-slate-300">
+          <Layout size={18} className="text-emerald-500" /> Theme Layout
         </label>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           {/* Active Theme: Clean */}
           <button
             onClick={() => onChange('layoutStyle', 'clean')}
             className={`
-              relative p-4 rounded-xl border-2 text-left transition-all overflow-hidden group
+              relative p-4 rounded-2xl border-2 text-left transition-all overflow-hidden group
               ${data.layoutStyle === 'clean' 
                 ? 'border-emerald-500 bg-emerald-50/50 dark:bg-emerald-900/20 dark:border-emerald-500' 
                 : 'border-slate-200 bg-white hover:border-emerald-200 dark:bg-slate-800 dark:border-slate-700'
@@ -53,7 +76,7 @@ const ThemeSelector: React.FC<ThemeSelectorProps> = ({ data, onChange }) => {
           </button>
 
           {/* Disabled Theme: Health */}
-          <button disabled className="relative p-4 rounded-xl border-2 border-slate-100 bg-slate-50 text-left opacity-60 cursor-not-allowed dark:bg-slate-800 dark:border-slate-700">
+          <button disabled className="relative p-4 rounded-2xl border-2 border-slate-100 bg-slate-50 text-left opacity-60 cursor-not-allowed dark:bg-slate-800 dark:border-slate-700">
             <div className="absolute top-2 right-2"><Lock size={14} className="text-slate-400" /></div>
             <div className="w-8 h-8 rounded-full bg-slate-200 mb-2"></div>
             <div className="font-bold text-slate-400">Health</div>
@@ -61,7 +84,7 @@ const ThemeSelector: React.FC<ThemeSelectorProps> = ({ data, onChange }) => {
           </button>
 
           {/* Disabled Theme: Bold */}
-          <button disabled className="relative p-4 rounded-xl border-2 border-slate-100 bg-slate-50 text-left opacity-60 cursor-not-allowed dark:bg-slate-800 dark:border-slate-700">
+          <button disabled className="relative p-4 rounded-2xl border-2 border-slate-100 bg-slate-50 text-left opacity-60 cursor-not-allowed dark:bg-slate-800 dark:border-slate-700">
             <div className="absolute top-2 right-2"><Lock size={14} className="text-slate-400" /></div>
             <div className="w-8 h-8 rounded-none bg-slate-900 mb-2"></div>
             <div className="font-bold text-slate-400">Bold</div>
@@ -74,22 +97,22 @@ const ThemeSelector: React.FC<ThemeSelectorProps> = ({ data, onChange }) => {
 
       {/* 2. Brand Colors */}
       <section>
-        <label className="block text-sm font-bold text-slate-700 mb-3 flex items-center gap-2 dark:text-slate-300">
-          <Palette size={16} /> Brand Colors
+        <label className="block text-sm font-bold text-slate-700 mb-4 flex items-center gap-2 dark:text-slate-300">
+          <Palette size={18} className="text-pink-500" /> Brand Colors
         </label>
         
         <div className="flex flex-col gap-4">
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-3">
                 {PRESET_COLORS.map((color) => (
                     <button
                     key={color}
                     onClick={() => onChange('themeColor', color)}
-                    className={`w-9 h-9 rounded-full flex items-center justify-center transition-transform hover:scale-110 shadow-sm border border-slate-100 dark:border-slate-700 ${
+                    className={`w-10 h-10 rounded-full flex items-center justify-center transition-transform hover:scale-110 shadow-sm border border-slate-100 dark:border-slate-700 ${
                         data.themeColor === color ? 'ring-2 ring-offset-2 ring-slate-900 dark:ring-white dark:ring-offset-slate-900 scale-110' : ''
                     }`}
                     style={{ backgroundColor: color }}
                     >
-                    {data.themeColor === color && <Check size={14} className="text-white" />}
+                    {data.themeColor === color && <Check size={16} className="text-white" strokeWidth={3} />}
                     </button>
                 ))}
             </div>
@@ -118,7 +141,7 @@ const ThemeSelector: React.FC<ThemeSelectorProps> = ({ data, onChange }) => {
                         onChange={(e) => onChange('themeColor', e.target.value)}
                         className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
                     />
-                    <div className="p-2 bg-white rounded-lg border border-slate-200 hover:bg-slate-50 text-slate-600 dark:bg-slate-700 dark:border-slate-600 dark:text-slate-300">
+                    <div className="p-2 bg-white rounded-lg border border-slate-200 hover:bg-slate-50 text-slate-600 dark:bg-slate-700 dark:border-slate-600 dark:text-slate-300 shadow-sm">
                         <Palette size={16} />
                     </div>
                 </div>
@@ -128,63 +151,107 @@ const ThemeSelector: React.FC<ThemeSelectorProps> = ({ data, onChange }) => {
 
       <div className="w-full h-px bg-slate-100 dark:bg-slate-800"></div>
 
-      {/* 3. Typography */}
+      {/* 3. Advanced Typography */}
       <section>
-        <label className="block text-sm font-bold text-slate-700 mb-4 flex items-center gap-2 dark:text-slate-300">
-          <Type size={16} /> Typography
+        <label className="block text-sm font-bold text-slate-700 mb-6 flex items-center gap-2 dark:text-slate-300">
+          <Type size={18} className="text-blue-500" /> Typography
         </label>
         
-        <div className="space-y-4">
-            {/* Heading Font */}
-            <div className="flex flex-col gap-1">
-                <label className="text-[10px] font-bold text-slate-400 uppercase">Headings</label>
-                <div className="relative">
-                    <select 
-                        value={data.headingFont || 'Lexend'} 
-                        onChange={(e) => onChange('headingFont', e.target.value)}
-                        className="w-full p-3 bg-white border border-slate-200 rounded-xl appearance-none text-sm font-medium text-slate-800 outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 dark:bg-slate-800 dark:border-slate-700 dark:text-white"
-                        style={{ fontFamily: data.headingFont }}
-                    >
-                        {FONTS_HEADING.map(f => <option key={f} value={f}>{f}</option>)}
-                    </select>
-                    <ChevronDown size={16} className="absolute right-3 top-3.5 text-slate-400 pointer-events-none" />
+        <div className="space-y-6">
+            {/* Font Families */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="flex flex-col gap-1">
+                    <CustomSelect 
+                        label="Headings Font"
+                        value={data.headingFont || 'Lexend'}
+                        options={FONTS_HEADING_OPTIONS}
+                        onChange={(val) => onChange('headingFont', val)}
+                    />
+                </div>
+                <div className="flex flex-col gap-1">
+                    <CustomSelect 
+                        label="Body Font"
+                        value={data.bodyFont || 'Noto Sans'}
+                        options={FONTS_BODY_OPTIONS}
+                        onChange={(val) => onChange('bodyFont', val)}
+                    />
                 </div>
             </div>
 
-            {/* Body Font */}
-            <div className="flex flex-col gap-1">
-                <label className="text-[10px] font-bold text-slate-400 uppercase">Body Text</label>
-                <div className="relative">
-                    <select 
-                        value={data.bodyFont || 'Noto Sans'} 
-                        onChange={(e) => onChange('bodyFont', e.target.value)}
-                        className="w-full p-3 bg-white border border-slate-200 rounded-xl appearance-none text-sm font-medium text-slate-800 outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 dark:bg-slate-800 dark:border-slate-700 dark:text-white"
-                        style={{ fontFamily: data.bodyFont }}
-                    >
-                        {FONTS_BODY.map(f => <option key={f} value={f}>{f}</option>)}
-                    </select>
-                    <ChevronDown size={16} className="absolute right-3 top-3.5 text-slate-400 pointer-events-none" />
-                </div>
-            </div>
-
-            {/* Base Size Slider */}
-            <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 dark:bg-slate-800 dark:border-slate-700">
-                <div className="flex justify-between items-center mb-2">
-                    <label className="text-[10px] font-bold text-slate-500 uppercase dark:text-slate-400">Base Size</label>
-                    <span className="text-xs font-bold text-slate-900 dark:text-white">{data.baseFontSize || 16}px</span>
+            {/* Base Size Control (Stepper + Slider) */}
+            <div className="bg-slate-50 p-5 rounded-2xl border border-slate-200 dark:bg-slate-800 dark:border-slate-700">
+                <div className="flex justify-between items-center mb-4">
+                    <div className="flex items-center gap-2">
+                        <span className="p-1.5 bg-blue-100 text-blue-600 rounded dark:bg-blue-900/30 dark:text-blue-400"><Type size={14} /></span>
+                        <div>
+                            <label className="text-xs font-bold text-slate-700 dark:text-slate-200 block">Base Font Size</label>
+                            <span className="text-[10px] text-slate-400">Root size for body text</span>
+                        </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <button 
+                            onClick={() => adjustValue('baseFontSize', -1, 12, 24)}
+                            className="w-8 h-8 rounded-full bg-white border border-slate-200 flex items-center justify-center text-slate-500 hover:bg-slate-50 hover:text-slate-800 dark:bg-slate-700 dark:border-slate-600 dark:text-slate-300"
+                        >
+                            <Minus size={14} />
+                        </button>
+                        <span className="w-8 text-center font-bold text-sm text-slate-800 dark:text-white">{data.baseFontSize || 16}</span>
+                        <button 
+                            onClick={() => adjustValue('baseFontSize', 1, 12, 24)}
+                            className="w-8 h-8 rounded-full bg-white border border-slate-200 flex items-center justify-center text-slate-500 hover:bg-slate-50 hover:text-slate-800 dark:bg-slate-700 dark:border-slate-600 dark:text-slate-300"
+                        >
+                            <Plus size={14} />
+                        </button>
+                    </div>
                 </div>
                 <input 
                     type="range" 
-                    min="14" 
-                    max="20" 
+                    min="12" 
+                    max="24" 
                     step="1" 
                     value={data.baseFontSize || 16} 
                     onChange={(e) => onChange('baseFontSize', parseInt(e.target.value))}
-                    className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-emerald-500 dark:bg-slate-700"
+                    className="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-emerald-500 dark:bg-slate-700"
                 />
-                <div className="flex justify-between text-[10px] text-slate-400 mt-1">
-                    <span>Small</span>
-                    <span>Large</span>
+                <div className="flex justify-between text-[10px] text-slate-400 mt-2 font-medium px-1">
+                    <span>12px</span>
+                    <span>24px</span>
+                </div>
+            </div>
+
+            {/* Heading Scale Slider */}
+            <div className="bg-slate-50 p-5 rounded-2xl border border-slate-200 dark:bg-slate-800 dark:border-slate-700">
+                <div className="flex justify-between items-center mb-4">
+                    <div className="flex items-center gap-2">
+                        <span className="p-1.5 bg-purple-100 text-purple-600 rounded dark:bg-purple-900/30 dark:text-purple-400"><Sliders size={14} /></span>
+                        <div>
+                            <label className="text-xs font-bold text-slate-700 dark:text-slate-200 block">Heading Prominence</label>
+                            <span className="text-[10px] text-slate-400">Scale ratio for Headers vs Body</span>
+                        </div>
+                    </div>
+                    <span className="text-xs font-bold text-purple-600 dark:text-purple-400 bg-purple-50 px-2 py-1 rounded dark:bg-purple-900/20">
+                        {data.typeScale?.toFixed(2) || '1.25'}x
+                    </span>
+                </div>
+                <input 
+                    type="range" 
+                    min="1.1" 
+                    max="1.6" 
+                    step="0.05" 
+                    value={data.typeScale || 1.25} 
+                    onChange={(e) => onChange('typeScale', parseFloat(e.target.value))}
+                    className="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-purple-500 dark:bg-slate-700"
+                />
+                <div className="flex justify-between text-[10px] text-slate-400 mt-2 font-medium px-1">
+                    <span>Subtle</span>
+                    <span>Dramatic</span>
+                </div>
+                
+                {/* Visual Preview of Scale */}
+                <div className="mt-4 flex items-end gap-3 h-8 border-b border-slate-200 dark:border-slate-700 pb-1">
+                    <div className="bg-slate-300 w-4 rounded-t-sm dark:bg-slate-600" style={{ height: '30%' }}></div>
+                    <div className="bg-slate-400 w-4 rounded-t-sm dark:bg-slate-500" style={{ height: `${30 * (data.typeScale || 1.25)}%` }}></div>
+                    <div className="bg-slate-800 w-4 rounded-t-sm dark:bg-slate-300" style={{ height: `${30 * Math.pow((data.typeScale || 1.25), 2)}%` }}></div>
                 </div>
             </div>
         </div>
@@ -194,29 +261,47 @@ const ThemeSelector: React.FC<ThemeSelectorProps> = ({ data, onChange }) => {
 
       {/* 4. Spacing */}
       <section>
-        <label className="block text-sm font-bold text-slate-700 mb-4 flex items-center gap-2 dark:text-slate-300">
-          <MoveVertical size={16} /> Section Spacing
+        <label className="block text-sm font-bold text-slate-700 mb-6 flex items-center gap-2 dark:text-slate-300">
+          <MoveVertical size={18} className="text-orange-500" /> Layout Spacing
         </label>
         
-        <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 dark:bg-slate-800 dark:border-slate-700">
-            <div className="flex justify-between items-center mb-2">
-                <label className="text-[10px] font-bold text-slate-500 uppercase dark:text-slate-400">Vertical Density</label>
-                <span className="text-xs font-bold text-slate-900 dark:text-white">
-                    {data.sectionSpacing === 1 ? 'Compact' : data.sectionSpacing === 2 ? 'Normal' : 'Airy'}
-                </span>
+        <div className="bg-slate-50 p-5 rounded-2xl border border-slate-200 dark:bg-slate-800 dark:border-slate-700">
+            <div className="flex justify-between items-center mb-4">
+                <div className="flex items-center gap-2">
+                    <span className="p-1.5 bg-orange-100 text-orange-600 rounded dark:bg-orange-900/30 dark:text-orange-400"><MoveVertical size={14} /></span>
+                    <div>
+                        <label className="text-xs font-bold text-slate-700 dark:text-slate-200 block">Section Breathing Room</label>
+                        <span className="text-[10px] text-slate-400">Vertical padding between blocks</span>
+                    </div>
+                </div>
+                <div className="flex items-center gap-2">
+                    <button 
+                        onClick={() => adjustValue('sectionSpacing', -1, 0, 10)}
+                        className="w-8 h-8 rounded-full bg-white border border-slate-200 flex items-center justify-center text-slate-500 hover:bg-slate-50 hover:text-slate-800 dark:bg-slate-700 dark:border-slate-600 dark:text-slate-300"
+                    >
+                        <Minus size={14} />
+                    </button>
+                    <span className="w-8 text-center font-bold text-sm text-slate-800 dark:text-white">{data.sectionSpacing ?? 5}</span>
+                    <button 
+                        onClick={() => adjustValue('sectionSpacing', 1, 0, 10)}
+                        className="w-8 h-8 rounded-full bg-white border border-slate-200 flex items-center justify-center text-slate-500 hover:bg-slate-50 hover:text-slate-800 dark:bg-slate-700 dark:border-slate-600 dark:text-slate-300"
+                    >
+                        <Plus size={14} />
+                    </button>
+                </div>
             </div>
             <input 
                 type="range" 
-                min="1" 
-                max="3" 
+                min="0" 
+                max="10" 
                 step="1" 
-                value={data.sectionSpacing || 2} 
+                value={data.sectionSpacing ?? 5} 
                 onChange={(e) => onChange('sectionSpacing', parseInt(e.target.value))}
-                className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-emerald-500 dark:bg-slate-700"
+                className="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-orange-500 dark:bg-slate-700"
             />
-            <div className="flex justify-between text-[10px] text-slate-400 mt-1">
-                <span>Tight</span>
-                <span>Spacious</span>
+            <div className="flex justify-between text-[10px] text-slate-400 mt-2 font-medium px-1">
+                <span>Compact</span>
+                <span>Airy</span>
             </div>
         </div>
       </section>

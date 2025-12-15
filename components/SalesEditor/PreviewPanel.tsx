@@ -11,22 +11,38 @@ interface PreviewPanelProps {
 
 const PreviewPanel: React.FC<PreviewPanelProps> = ({ data, device }) => {
   
-  // Dynamic Styles Injection
+  // --- DYNAMIC DESIGN SYSTEM ---
   const fontFamilyHeading = data.headingFont || 'Lexend';
   const fontFamilyBody = data.bodyFont || 'Noto Sans';
   const baseSize = data.baseFontSize || 16;
-  
-  // Calculate padding based on spacing setting (1=Compact, 2=Normal, 3=Airy)
-  // Mapping: 1 -> py-10/12, 2 -> py-16/24 (default), 3 -> py-24/32
-  const spacingScale = data.sectionSpacing || 2;
-  const sectionPadding = spacingScale === 1 ? 'py-10 md:py-12' : spacingScale === 3 ? 'py-24 md:py-32' : 'py-16 md:py-24';
-  const gapScale = spacingScale === 1 ? 'gap-6' : spacingScale === 3 ? 'gap-16' : 'gap-12';
+  const scaleRatio = data.typeScale || 1.25;
+  const spacingValue = data.sectionSpacing ?? 5; // 0 to 10
 
+  // Calculate Header Sizes based on Modular Scale
+  const h1Size = Math.round(baseSize * Math.pow(scaleRatio, 4)); // e.g. 16 * 1.25^4 = 39px
+  const h2Size = Math.round(baseSize * Math.pow(scaleRatio, 3)); // e.g. 16 * 1.25^3 = 31px
+  const h3Size = Math.round(baseSize * Math.pow(scaleRatio, 2)); // e.g. 16 * 1.25^2 = 25px
+  const smallSize = Math.round(baseSize * 0.85);
+
+  // Calculate Spacing (Base unit 4px)
+  // Mapping 0-10 to rem values. 5 is standard (4rem/64px). 
+  // Formula: (Value * 0.8 + 2) rem. 
+  // 0 -> 2rem (32px), 5 -> 6rem (96px), 10 -> 10rem (160px) 
+  // Let's make it more linear: 
+  // 0=1rem, 1=1.5rem, 5=4rem, 10=8rem
+  const sectionPaddingRem = 1 + (spacingValue * 0.7); 
+  
   const previewStyle = {
       '--font-heading': `'${fontFamilyHeading}', sans-serif`,
       '--font-body': `'${fontFamilyBody}', sans-serif`,
       '--base-size': `${baseSize}px`,
+      '--h1-size': `${h1Size}px`,
+      '--h2-size': `${h2Size}px`,
+      '--h3-size': `${h3Size}px`,
+      '--small-size': `${smallSize}px`,
       '--theme-color': data.themeColor || '#10b981',
+      '--section-padding': `${sectionPaddingRem}rem`,
+      '--gap-size': `${sectionPaddingRem * 0.5}rem`
   } as React.CSSProperties;
 
   const scrollbarStyles = (
@@ -34,17 +50,33 @@ const PreviewPanel: React.FC<PreviewPanelProps> = ({ data, device }) => {
       .preview-wrapper {
         font-family: var(--font-body);
         font-size: var(--base-size);
+        line-height: 1.6;
+        color: #334155;
       }
       .preview-wrapper h1, .preview-wrapper h2, .preview-wrapper h3, .preview-wrapper h4 {
         font-family: var(--font-heading);
+        line-height: 1.2;
+        margin-bottom: 0.5em;
+        color: #0f172a;
       }
-      .no-scrollbar::-webkit-scrollbar {
-        display: none;
+      .preview-wrapper h1 { font-size: var(--h1-size); }
+      .preview-wrapper h2 { font-size: var(--h2-size); }
+      .preview-wrapper h3 { font-size: var(--h3-size); }
+      
+      .preview-section {
+        padding-top: var(--section-padding);
+        padding-bottom: var(--section-padding);
       }
-      .no-scrollbar {
-        -ms-overflow-style: none;
-        scrollbar-width: none;
+      
+      .preview-gap {
+        gap: var(--gap-size);
       }
+
+      .dark .preview-wrapper { color: #cbd5e1; }
+      .dark .preview-wrapper h1, .dark .preview-wrapper h2 { color: #ffffff; }
+
+      .no-scrollbar::-webkit-scrollbar { display: none; }
+      .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     `}</style>
   );
 
@@ -57,7 +89,7 @@ const PreviewPanel: React.FC<PreviewPanelProps> = ({ data, device }) => {
             style={previewStyle}
         >
            <div className="w-full h-full overflow-y-auto scroll-smooth no-scrollbar bg-white dark:bg-slate-950 transition-colors">
-              <PreviewContent data={data} device={device} sectionPadding={sectionPadding} gapScale={gapScale} />
+              <PreviewContent data={data} device={device} />
            </div>
            
            <WhatsAppFloatingButton 
@@ -81,7 +113,7 @@ const PreviewPanel: React.FC<PreviewPanelProps> = ({ data, device }) => {
         
         {/* Scrollable Content */}
         <div className="w-full flex-1 overflow-y-auto overflow-x-hidden no-scrollbar scroll-smooth bg-white relative dark:bg-slate-950 transition-colors">
-            <PreviewContent data={data} device={device} sectionPadding={sectionPadding} gapScale={gapScale} />
+            <PreviewContent data={data} device={device} />
             <div className="h-6"></div>
         </div>
 
@@ -101,18 +133,14 @@ const PreviewPanel: React.FC<PreviewPanelProps> = ({ data, device }) => {
 const PreviewContent: React.FC<{ 
     data: SalesPage; 
     device: 'mobile' | 'desktop'; 
-    sectionPadding: string;
-    gapScale: string;
-}> = ({ data, device, sectionPadding, gapScale }) => {
+}> = ({ data, device }) => {
   const [testimonialIndex, setTestimonialIndex] = useState(0);
   const [packageIndex, setPackageIndex] = useState(0);
   
-  // Gallery State
   const [galleryIndex, setGalleryIndex] = useState(0);
   const [touchStart, setTouchStart] = useState<number | null>(null);
   const [touchEnd, setTouchEnd] = useState<number | null>(null);
 
-  // --- Carousel Logic for Testimonials ---
   useEffect(() => {
     if (data.testimonials.length === 0) return;
     const itemsVisible = device === 'mobile' ? 1 : 3;
@@ -128,7 +156,6 @@ const PreviewContent: React.FC<{
     return () => clearInterval(interval);
   }, [data.testimonials.length, device]);
 
-  // --- Carousel Logic for Packages ---
   useEffect(() => {
     if (data.packages.length === 0) return;
     const itemsVisible = device === 'mobile' ? 1 : 3;
@@ -144,7 +171,6 @@ const PreviewContent: React.FC<{
     return () => clearInterval(interval);
   }, [data.packages.length, device]);
 
-  // Reset indices
   useEffect(() => {
       setTestimonialIndex(0);
       setPackageIndex(0);
@@ -194,13 +220,12 @@ const PreviewContent: React.FC<{
   };
 
   const renderHero = () => {
-      // Clean / Default Layout
       return (
-          <div className={`bg-white dark:bg-slate-950 ${sectionPadding} px-6 text-center relative overflow-hidden transition-colors`}>
+          <div className={`bg-white dark:bg-slate-950 preview-section px-6 text-center relative overflow-hidden transition-colors`}>
               <div className="max-w-4xl mx-auto relative z-10 flex flex-col items-center">
                   <div className="w-16 h-1 rounded-full mb-8 opacity-50" style={{ backgroundColor: data.themeColor }}></div>
                   
-                  <h1 className="text-4xl md:text-6xl font-extrabold text-slate-900 dark:text-white tracking-tight mb-6 leading-[1.1] md:leading-tight drop-shadow-sm">
+                  <h1 className="font-extrabold tracking-tight mb-6 drop-shadow-sm">
                       {data.title || 'Your Big Headline Here'}
                   </h1>
                   
@@ -248,9 +273,9 @@ const PreviewContent: React.FC<{
       };
 
       return (
-          <div className={`${sectionPadding} bg-slate-50 dark:bg-slate-900/50 transition-colors`}>
+          <div className={`preview-section bg-slate-50 dark:bg-slate-900/50 transition-colors`}>
               <div className="px-6 md:px-20 mb-12">
-                  <h2 className="text-3xl md:text-4xl font-bold text-slate-900 dark:text-white mb-4">Product Gallery</h2>
+                  <h2 className="font-bold mb-4">Product Gallery</h2>
                   <div className="h-1.5 w-24 rounded-full" style={{ backgroundColor: data.themeColor }}></div>
               </div>
 
@@ -303,13 +328,13 @@ const PreviewContent: React.FC<{
       if (!data.products.length) return null;
       
       return (
-          <div className={`${sectionPadding} px-6 bg-white dark:bg-slate-950 transition-colors`}>
+          <div className={`preview-section px-6 bg-white dark:bg-slate-950 transition-colors`}>
               <div className={`max-w-4xl mx-auto space-y-16`}>
                   {data.products.map(product => (
-                      <div key={product.id} className={`grid grid-cols-1 md:grid-cols-2 ${gapScale} items-start`}>
+                      <div key={product.id} className={`grid grid-cols-1 md:grid-cols-2 preview-gap items-start`}>
                           <div className="space-y-6">
                               <span className="text-emerald-600 font-bold tracking-widest uppercase text-sm dark:text-emerald-400">Specification</span>
-                              <h2 className="text-3xl md:text-4xl font-bold text-slate-900 dark:text-white font-heading">{product.name}</h2>
+                              <h2 className="font-bold">{product.name}</h2>
                               <p className="text-xl text-emerald-600 font-bold dark:text-emerald-400">{data.currency} {product.discountPrice || product.price}</p>
                               <p className="text-slate-600 leading-relaxed text-lg dark:text-slate-300">{product.fullDescription || product.shortDescription}</p>
                               
@@ -323,9 +348,9 @@ const PreviewContent: React.FC<{
                           <div className="space-y-8">
                               {product.benefits.length > 0 && (
                                   <div className="bg-slate-50 p-8 rounded-3xl dark:bg-slate-900 border border-slate-100 dark:border-slate-800">
-                                      <h4 className="font-bold text-lg text-slate-900 mb-6 dark:text-white flex items-center gap-2">
+                                      <h3 className="font-bold text-lg mb-6 flex items-center gap-2">
                                           <Star className="text-yellow-500" size={20} fill="currentColor" /> Key Highlights
-                                      </h4>
+                                      </h3>
                                       <ul className="space-y-4">
                                           {product.benefits.map((b, i) => (
                                               <li key={i} className="flex items-start gap-4 text-slate-700 dark:text-slate-300">
@@ -366,7 +391,7 @@ const PreviewContent: React.FC<{
       const slidePercentage = 100 / itemsPerView;
 
       return (
-          <div className={`${sectionPadding} px-6 bg-white border-t border-slate-100 dark:bg-slate-950 dark:border-slate-800 transition-colors overflow-hidden`}>
+          <div className={`preview-section px-6 bg-white border-t border-slate-100 dark:bg-slate-950 dark:border-slate-800 transition-colors overflow-hidden`}>
               <h2 className="text-3xl font-bold text-center text-slate-900 mb-4 dark:text-white">Bundles & Kits</h2>
               <p className="text-center text-slate-500 mb-12 dark:text-slate-400">Save more with our exclusive packages</p>
               
@@ -388,7 +413,7 @@ const PreviewContent: React.FC<{
                                       </div>
                                   )}
                                   <div className="p-6 flex-1 flex flex-col">
-                                      <h3 className="text-xl font-bold text-slate-900 mb-2 dark:text-white">{pkg.title}</h3>
+                                      <h3 className="font-bold mb-2">{pkg.title}</h3>
                                       <p className="text-sm text-slate-500 mb-4 dark:text-slate-400">{pkg.description}</p>
                                       
                                       <div className="space-y-2 mb-6 flex-1">
@@ -444,7 +469,7 @@ const PreviewContent: React.FC<{
     const slidePercentage = 100 / itemsPerView;
 
     return (
-        <div className={`${sectionPadding} px-6 bg-slate-50 border-t border-slate-100 dark:bg-slate-900 dark:border-slate-800 transition-colors overflow-hidden`}>
+        <div className={`preview-section px-6 bg-slate-50 border-t border-slate-100 dark:bg-slate-900 dark:border-slate-800 transition-colors overflow-hidden`}>
             <h2 className="text-2xl font-bold text-center mb-10 dark:text-white">What People Say</h2>
             
             <div className="max-w-6xl mx-auto relative">
@@ -496,7 +521,7 @@ const PreviewContent: React.FC<{
     <>
       {renderHero()}
 
-      <div className={`${sectionPadding} px-6 max-w-3xl mx-auto dark:text-slate-200`}>
+      <div className={`preview-section px-6 max-w-3xl mx-auto dark:text-slate-200`}>
           <div 
             className="prose prose-slate prose-lg max-w-none dark:prose-invert leading-relaxed text-slate-600"
             dangerouslySetInnerHTML={{ __html: data.description }} 
@@ -509,7 +534,7 @@ const PreviewContent: React.FC<{
       {renderPackages()}
 
       {data.features.length > 0 && (
-          <div className={`${sectionPadding} bg-white text-center dark:bg-slate-950 transition-colors`}>
+          <div className={`preview-section bg-white text-center dark:bg-slate-950 transition-colors`}>
               <div className="max-w-4xl mx-auto px-6 grid grid-cols-2 md:grid-cols-4 gap-6">
                   {data.features.map((feat, i) => (
                       <div key={i} className="p-6 bg-slate-50 rounded-2xl dark:bg-slate-900 border border-slate-100 dark:border-slate-800">
@@ -524,7 +549,7 @@ const PreviewContent: React.FC<{
       {renderTestimonials()}
 
       {/* Footer */}
-      <div className={`bg-white border-t border-slate-100 ${sectionPadding} px-6 text-center dark:bg-slate-950 dark:border-slate-800 transition-colors`}>
+      <div className={`bg-white border-t border-slate-100 preview-section px-6 text-center dark:bg-slate-950 dark:border-slate-800 transition-colors`}>
         {data.contactVisible && (
           <div className="mb-8 space-y-2">
             <h3 className="font-bold text-slate-800 dark:text-slate-200 text-lg">Questions?</h3>

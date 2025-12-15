@@ -73,7 +73,8 @@ export interface SalesPage {
   headingFont: string;
   bodyFont: string;
   baseFontSize: number; // 14-20
-  sectionSpacing: number; // 0-100 scale
+  typeScale: number; // 1.0 - 1.6 (Controls heading prominence)
+  sectionSpacing: number; // 0-10 scale
   
   // Content
   description: string; 

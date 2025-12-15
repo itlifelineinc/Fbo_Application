@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { SalesPage, CurrencyCode } from '../../types/salesPage';
+import CustomSelect from '../Shared/CustomSelect';
 
 interface MetaFormProps {
   data: SalesPage;
@@ -28,22 +29,22 @@ const MetaForm: React.FC<MetaFormProps> = ({ data, onChange }) => {
     onChange('slug', val);
   };
 
-  const currencies: {code: CurrencyCode, name: string}[] = [
-    { code: 'USD', name: 'US Dollar ($)' },
-    { code: 'EUR', name: 'Euro (€)' },
-    { code: 'GBP', name: 'British Pound (£)' },
-    { code: 'GHS', name: 'Ghana Cedi (₵)' },
-    { code: 'NGN', name: 'Nigerian Naira (₦)' },
-    { code: 'ZAR', name: 'South African Rand (R)' },
-    { code: 'KES', name: 'Kenyan Shilling (KSh)' },
-    { code: 'TZS', name: 'Tanzanian Shilling (TSh)' },
-    { code: 'UGX', name: 'Ugandan Shilling (USh)' },
-    { code: 'AED', name: 'UAE Dirham (AED)' },
-    { code: 'INR', name: 'Indian Rupee (₹)' },
-    { code: 'CAD', name: 'Canadian Dollar (C$)' },
-    { code: 'AUD', name: 'Australian Dollar (A$)' },
-    { code: 'PHP', name: 'Philippine Peso (₱)' },
-    { code: 'MYR', name: 'Malaysian Ringgit (RM)' },
+  const currencyOptions = [
+    { value: 'USD', label: 'USD - US Dollar ($)' },
+    { value: 'EUR', label: 'EUR - Euro (€)' },
+    { value: 'GBP', label: 'GBP - British Pound (£)' },
+    { value: 'GHS', label: 'GHS - Ghana Cedi (₵)' },
+    { value: 'NGN', label: 'NGN - Nigerian Naira (₦)' },
+    { value: 'ZAR', label: 'ZAR - South African Rand (R)' },
+    { value: 'KES', label: 'KES - Kenyan Shilling (KSh)' },
+    { value: 'TZS', label: 'TZS - Tanzanian Shilling (TSh)' },
+    { value: 'UGX', label: 'UGX - Ugandan Shilling (USh)' },
+    { value: 'AED', label: 'AED - UAE Dirham (AED)' },
+    { value: 'INR', label: 'INR - Indian Rupee (₹)' },
+    { value: 'CAD', label: 'CAD - Canadian Dollar (C$)' },
+    { value: 'AUD', label: 'AUD - Australian Dollar (A$)' },
+    { value: 'PHP', label: 'PHP - Philippine Peso (₱)' },
+    { value: 'MYR', label: 'MYR - Malaysian Ringgit (RM)' },
   ];
 
   return (
@@ -85,16 +86,13 @@ const MetaForm: React.FC<MetaFormProps> = ({ data, onChange }) => {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
-            <label className={LABEL_STYLE}>Store Currency</label>
-            <select 
+            <CustomSelect 
+                label="Store Currency"
                 value={data.currency}
-                onChange={(e) => onChange('currency', e.target.value as CurrencyCode)}
-                className={INPUT_STYLE}
-            >
-                {currencies.map(c => (
-                    <option key={c.code} value={c.code}>{c.code} - {c.name}</option>
-                ))}
-            </select>
+                options={currencyOptions}
+                onChange={(val) => onChange('currency', val as CurrencyCode)}
+                placeholder="Select Currency"
+            />
         </div>
 
         <div>

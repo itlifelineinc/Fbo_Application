@@ -20,6 +20,7 @@ interface EditorLayoutProps {
   data: SalesPage;
   updateField: <K extends keyof SalesPage>(field: K, value: SalesPage[K]) => void;
   isPreviewMode: boolean;
+  previewDevice?: 'mobile' | 'desktop'; // Added prop
 }
 
 const TAB_HELP_CONTENT: Record<string, React.ReactNode> = {
@@ -44,7 +45,7 @@ const TAB_HELP_CONTENT: Record<string, React.ReactNode> = {
     )
 };
 
-const EditorLayout: React.FC<EditorLayoutProps> = ({ data, updateField, isPreviewMode }) => {
+const EditorLayout: React.FC<EditorLayoutProps> = ({ data, updateField, isPreviewMode, previewDevice = 'desktop' }) => {
   // Get the tabs for the current page type
   const tabs = PAGE_TAB_CONFIG[data.type] || PAGE_TAB_CONFIG['product'];
   
@@ -83,7 +84,7 @@ const EditorLayout: React.FC<EditorLayoutProps> = ({ data, updateField, isPrevie
           case 'DESIGN_PREVIEW':
           case 'DESIGN_BRANDING':
           case 'SETTINGS_PREVIEW':
-              return <ThemeSelector data={data} onChange={updateField} />;
+              return <ThemeSelector data={data} onChange={updateField} previewDevice={previewDevice} />;
 
           case 'CTA_SETUP':
           case 'WHATSAPP_SETUP':

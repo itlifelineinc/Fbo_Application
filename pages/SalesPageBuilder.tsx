@@ -197,7 +197,8 @@ const SalesPageBuilder: React.FC = () => {
                 : 'w-full max-w-5xl mx-auto shadow-xl my-0 md:my-6 rounded-none md:rounded-2xl border-x border-slate-200'
             }
         `}>
-          <EditorLayout data={page} updateField={updateField} isPreviewMode={false} />
+          {/* Pass previewDevice here */}
+          <EditorLayout data={page} updateField={updateField} isPreviewMode={false} previewDevice={previewDevice} />
         </div>
 
         {/* Preview Panel */}

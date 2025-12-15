@@ -55,6 +55,14 @@ export interface Testimonial {
   quote: string;
 }
 
+export interface MobileDesignOverrides {
+  baseFontSize?: number;
+  subtitleFontSize?: number;
+  typeScale?: number;
+  sectionSpacing?: number;
+  buttonSize?: 'sm' | 'md' | 'lg';
+}
+
 export interface SalesPage {
   id: string;
   type: PageType; 
@@ -69,17 +77,20 @@ export interface SalesPage {
   themeColor: string;
   layoutStyle: LayoutStyle;
   
-  // New Design Props
+  // New Design Props (Desktop Defaults)
   headingFont: string;
   bodyFont: string;
   baseFontSize: number; // 14-20
-  subtitleFontSize?: number; // New: Specific control for subtitles
-  typeScale: number; // 1.0 - 1.6 (Controls heading prominence)
+  subtitleFontSize?: number; 
+  typeScale: number; // 1.0 - 1.6
   sectionSpacing: number; // 0-10 scale
   
   // Button Styling
   buttonCorner?: 'square' | 'rounded' | 'pill';
   buttonSize?: 'sm' | 'md' | 'lg';
+
+  // Responsive Overrides
+  mobileOverrides?: MobileDesignOverrides;
   
   // Content
   description: string; 

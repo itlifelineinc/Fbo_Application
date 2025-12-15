@@ -17,13 +17,22 @@ const EMPTY_PAGE: SalesPage = {
   headingFont: 'Lexend',
   bodyFont: 'Noto Sans',
   baseFontSize: 16,
-  subtitleFontSize: 20, // Default subtitle size
-  typeScale: 1.25, // Major Third (Modern & Clean)
-  sectionSpacing: 5, // 0-10 Scale (5 is normal)
+  subtitleFontSize: 20, 
+  typeScale: 1.25, 
+  sectionSpacing: 5, 
   
   // Button Defaults
   buttonCorner: 'pill',
   buttonSize: 'md',
+
+  // Mobile Overrides (Responsive Defaults)
+  mobileOverrides: {
+      baseFontSize: 15,
+      subtitleFontSize: 18,
+      typeScale: 1.2,
+      sectionSpacing: 4,
+      buttonSize: 'md'
+  },
 
   description: '',
   features: [],

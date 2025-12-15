@@ -12,12 +12,23 @@ interface PreviewPanelProps {
 const PreviewPanel: React.FC<PreviewPanelProps> = ({ data, device }) => {
   
   // --- DYNAMIC DESIGN SYSTEM ---
+  const isMobile = device === 'mobile';
+  
+  // Determine if we use mobile overrides or root defaults
+  const settings = isMobile && data.mobileOverrides ? { ...data, ...data.mobileOverrides } : data;
+
   const fontFamilyHeading = data.headingFont || 'Lexend';
   const fontFamilyBody = data.bodyFont || 'Noto Sans';
-  const baseSize = data.baseFontSize || 16;
-  const subtitleSize = data.subtitleFontSize || 20; // New variable
-  const scaleRatio = data.typeScale || 1.25;
-  const spacingValue = data.sectionSpacing ?? 5; // 0 to 10
+  
+  // Responsive Values from Merged Settings
+  const baseSize = settings.baseFontSize || (isMobile ? 15 : 16);
+  const subtitleSize = settings.subtitleFontSize || (isMobile ? 18 : 20);
+  const scaleRatio = settings.typeScale || (isMobile ? 1.2 : 1.25);
+  const spacingValue = settings.sectionSpacing ?? (isMobile ? 4 : 5); // 0 to 10
+  
+  // Responsive Button Values
+  const btnCorner = data.buttonCorner || 'pill'; // Global
+  const btnSize = settings.buttonSize || 'md'; // Responsive
 
   // Calculate Header Sizes based on Modular Scale
   const h1Size = Math.round(baseSize * Math.pow(scaleRatio, 4)); 
@@ -28,8 +39,6 @@ const PreviewPanel: React.FC<PreviewPanelProps> = ({ data, device }) => {
   const sectionPaddingRem = 1 + (spacingValue * 0.7); 
   
   // Button Styles Logic
-  const btnCorner = data.buttonCorner || 'pill';
-  const btnSize = data.buttonSize || 'md';
   const radius = btnCorner === 'pill' ? '9999px' : btnCorner === 'rounded' ? '0.75rem' : '0px';
   
   // Size Map (Normal)

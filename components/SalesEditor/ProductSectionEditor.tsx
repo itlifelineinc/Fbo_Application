@@ -9,6 +9,10 @@ interface ProductSectionEditorProps {
   onChange: <K extends keyof SalesPage>(field: K, value: SalesPage[K]) => void;
 }
 
+// --- NEW GLOBAL INPUT STYLES ---
+const INPUT_STYLE = "w-full bg-transparent border border-slate-300 rounded-xl px-4 py-3 text-slate-900 font-bold focus:border-emerald-600 focus:ring-0 outline-none transition-all dark:border-slate-700 dark:text-white placeholder-slate-400";
+const LABEL_STYLE = "block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2 dark:text-slate-200";
+
 const ProductSectionEditor: React.FC<ProductSectionEditorProps> = ({ data, onChange }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectionType, setSelectionType] = useState<'SINGLE' | 'BUNDLE'>('SINGLE');
@@ -21,11 +25,10 @@ const ProductSectionEditor: React.FC<ProductSectionEditorProps> = ({ data, onCha
 
   const handleCatalogSelect = (catalogItem: Product) => {
     // Clone item to avoid mutation of catalog
-    // Auto-generate 4 images if catalog has only 1 (replicating the main image to simulate different angles as requested)
+    // Auto-generate 4 images if catalog has only 1
     const baseImages = catalogItem.images || [];
     const filledImages = [...baseImages];
     
-    // Ensure we have 4 slots, filling with the first image if available
     while (filledImages.length < 4) {
         filledImages.push(baseImages[0] || '');
     }
@@ -33,7 +36,7 @@ const ProductSectionEditor: React.FC<ProductSectionEditorProps> = ({ data, onCha
     const newProduct: Product = {
         ...catalogItem,
         id: `prod_${Date.now()}`,
-        images: filledImages.slice(0, 4), // Exactly 4 images
+        images: filledImages.slice(0, 4),
         price: catalogItem.price,
         ingredients: catalogItem.ingredients || [],
         benefits: catalogItem.benefits || [],
@@ -41,7 +44,6 @@ const ProductSectionEditor: React.FC<ProductSectionEditorProps> = ({ data, onCha
         tags: catalogItem.tags || []
     };
     
-    // Replace current products list with this single selection
     onChange('products', [newProduct]);
     setSearchQuery(''); 
     setIsPricingCustom(false); 
@@ -53,7 +55,6 @@ const ProductSectionEditor: React.FC<ProductSectionEditorProps> = ({ data, onCha
       onChange('products', [updatedProduct]);
   };
 
-  // --- Image Handling ---
   const handleImageClick = (index: number) => {
       setActiveImageIndex(index);
       fileInputRef.current?.click();
@@ -74,7 +75,6 @@ const ProductSectionEditor: React.FC<ProductSectionEditorProps> = ({ data, onCha
       e.target.value = ''; // Reset
   };
 
-  // --- List Generators (Benefits, Usage, Ingredients) ---
   const handleListChange = (field: 'benefits' | 'usageSteps' | 'ingredients' | 'tags', index: number, val: string) => {
       if (!activeProduct) return;
       const newList = [...(activeProduct[field] || [])];
@@ -84,7 +84,7 @@ const ProductSectionEditor: React.FC<ProductSectionEditorProps> = ({ data, onCha
 
   const handleListAdd = (field: 'benefits' | 'usageSteps' | 'ingredients' | 'tags') => {
       if (!activeProduct) return;
-      const newList = [...(activeProduct[field] || []), '']; // Add empty string for editing
+      const newList = [...(activeProduct[field] || []), '']; 
       handleUpdateProduct(field, newList);
   };
 
@@ -95,7 +95,6 @@ const ProductSectionEditor: React.FC<ProductSectionEditorProps> = ({ data, onCha
       handleUpdateProduct(field, newList);
   };
 
-  // --- Pricing ---
   const handlePriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
       handleUpdateProduct('price', parseFloat(e.target.value));
   };
@@ -138,7 +137,7 @@ const ProductSectionEditor: React.FC<ProductSectionEditorProps> = ({ data, onCha
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Search Forever Catalog..."
-                  className="w-full pl-10 pr-4 py-2.5 md:py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none text-sm text-slate-900 bg-white dark:bg-slate-700 dark:border-slate-600 dark:text-white dark:placeholder-slate-400"
+                  className={INPUT_STYLE + " pl-10"}
               />
           </div>
           
@@ -173,11 +172,11 @@ const ProductSectionEditor: React.FC<ProductSectionEditorProps> = ({ data, onCha
           <div className="animate-fade-in space-y-8 w-full">
               
               {/* Basic Info & Images */}
-              <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl p-5 shadow-sm space-y-6">
+              <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl p-6 shadow-sm space-y-6">
                   
                   {/* Images Grid (4 Slots) */}
                   <div>
-                      <label className="block text-xs font-bold text-slate-400 uppercase mb-3">Product Images (4 Angles)</label>
+                      <label className={LABEL_STYLE}>Product Images (4 Angles)</label>
                       <div className="grid grid-cols-4 gap-3">
                           {[0, 1, 2, 3].map((idx) => (
                               <div 
@@ -209,40 +208,40 @@ const ProductSectionEditor: React.FC<ProductSectionEditorProps> = ({ data, onCha
                   </div>
 
                   {/* Text Inputs */}
-                  <div className="space-y-4">
+                  <div className="space-y-5">
                       <div>
-                          <label className="block text-xs font-bold text-slate-400 uppercase mb-1">Product Name</label>
+                          <label className={LABEL_STYLE}>Product Name</label>
                           <input 
                               type="text" 
                               value={activeProduct.name}
                               onChange={(e) => handleUpdateProduct('name', e.target.value)}
-                              className="w-full bg-slate-50 dark:bg-slate-900 border-none rounded-xl px-4 py-3 font-bold text-lg text-slate-800 dark:text-white focus:ring-2 focus:ring-emerald-500 outline-none"
+                              className={INPUT_STYLE}
                           />
                       </div>
                       <div>
-                          <label className="block text-xs font-bold text-slate-400 uppercase mb-1">Category / Tagline</label>
+                          <label className={LABEL_STYLE}>Category / Tagline</label>
                           <input 
                               type="text" 
                               value={activeProduct.category || ''}
                               onChange={(e) => handleUpdateProduct('category', e.target.value)}
                               placeholder="e.g. Skin Care"
-                              className="w-full bg-slate-50 dark:bg-slate-900 border-none rounded-xl px-4 py-3 text-sm font-medium text-slate-700 dark:text-slate-200 focus:ring-2 focus:ring-emerald-500 outline-none"
+                              className={INPUT_STYLE}
                           />
                       </div>
                       <div>
-                          <label className="block text-xs font-bold text-slate-400 uppercase mb-1">Short Description</label>
+                          <label className={LABEL_STYLE}>Short Description</label>
                           <textarea 
                               value={activeProduct.shortDescription}
                               onChange={(e) => handleUpdateProduct('shortDescription', e.target.value)}
-                              className="w-full bg-slate-50 dark:bg-slate-900 border-none rounded-xl px-4 py-3 text-sm text-slate-600 dark:text-slate-300 focus:ring-2 focus:ring-emerald-500 outline-none resize-none h-20"
+                              className={`${INPUT_STYLE} resize-none h-24`}
                           />
                       </div>
                   </div>
               </div>
 
               {/* 4. Pricing & Options */}
-              <div className="bg-slate-50 dark:bg-slate-800/50 p-5 rounded-2xl border border-slate-200 dark:border-slate-700">
-                  <div className="flex justify-between items-center mb-4">
+              <div className="bg-slate-50 dark:bg-slate-800/50 p-6 rounded-2xl border border-slate-200 dark:border-slate-700">
+                  <div className="flex justify-between items-center mb-6">
                       <h4 className="font-bold text-slate-700 dark:text-slate-200 flex items-center gap-2">
                           <DollarSign size={18} className="text-emerald-500"/> Pricing
                       </h4>
@@ -255,29 +254,29 @@ const ProductSectionEditor: React.FC<ProductSectionEditorProps> = ({ data, onCha
                       </div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-2 gap-6">
                       <div>
-                          <label className="block text-xs font-bold text-slate-500 mb-1">Selling Price ({data.currency})</label>
+                          <label className={LABEL_STYLE}>Selling Price ({data.currency})</label>
                           <input 
                               type="number" 
                               value={activeProduct.price}
                               onChange={handlePriceChange}
                               disabled={!isPricingCustom}
-                              className={`w-full p-3 rounded-xl border font-mono font-bold text-lg outline-none transition-colors ${
+                              className={`w-full px-4 py-3 rounded-xl border font-mono font-bold text-lg outline-none transition-colors ${
                                   isPricingCustom 
-                                  ? 'bg-white border-slate-300 focus:border-emerald-500 dark:bg-slate-900 dark:border-slate-600 dark:text-white' 
-                                  : 'bg-slate-200 border-transparent text-slate-500 cursor-not-allowed dark:bg-slate-700 dark:text-slate-400'
+                                  ? 'bg-transparent border-slate-300 focus:border-emerald-600 dark:border-slate-600 dark:text-white' 
+                                  : 'bg-slate-200/50 border-transparent text-slate-500 cursor-not-allowed dark:bg-slate-700/50 dark:text-slate-400'
                               }`}
                           />
                       </div>
                       <div>
-                          <label className="block text-xs font-bold text-slate-500 mb-1">Discount Price (Optional)</label>
+                          <label className={LABEL_STYLE}>Discount Price (Optional)</label>
                           <input 
                               type="number" 
                               value={activeProduct.discountPrice || ''}
                               onChange={handleDiscountChange}
                               placeholder="e.g. 150.00"
-                              className="w-full p-3 rounded-xl border border-slate-300 bg-white font-mono text-lg outline-none focus:border-emerald-500 dark:bg-slate-900 dark:border-slate-600 dark:text-white"
+                              className={INPUT_STYLE}
                           />
                       </div>
                   </div>
@@ -301,7 +300,7 @@ const ProductSectionEditor: React.FC<ProductSectionEditorProps> = ({ data, onCha
                                     type="text" 
                                     value={b} 
                                     onChange={(e) => handleListChange('benefits', i, e.target.value)}
-                                    className="flex-1 text-xs md:text-sm p-2 bg-slate-50 border border-slate-100 rounded-lg outline-none focus:border-emerald-300 dark:bg-slate-900 dark:border-slate-700 dark:text-white"
+                                    className="flex-1 text-xs md:text-sm p-2 bg-transparent border-b border-slate-200 outline-none focus:border-emerald-500 dark:border-slate-700 dark:text-white"
                                   />
                                   <button onClick={() => handleListRemove('benefits', i)} className="text-slate-400 hover:text-red-500"><X size={14}/></button>
                               </div>
@@ -325,7 +324,7 @@ const ProductSectionEditor: React.FC<ProductSectionEditorProps> = ({ data, onCha
                                     type="text" 
                                     value={step} 
                                     onChange={(e) => handleListChange('usageSteps', i, e.target.value)}
-                                    className="flex-1 text-xs md:text-sm p-2 bg-slate-50 border border-slate-100 rounded-lg outline-none focus:border-blue-300 dark:bg-slate-900 dark:border-slate-700 dark:text-white"
+                                    className="flex-1 text-xs md:text-sm p-2 bg-transparent border-b border-slate-200 outline-none focus:border-blue-500 dark:border-slate-700 dark:text-white"
                                   />
                                   <button onClick={() => handleListRemove('usageSteps', i)} className="text-slate-400 hover:text-red-500"><X size={14}/></button>
                               </div>

@@ -1,8 +1,8 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { SalesPage, CTAButton } from '../../types/salesPage';
 import WhatsAppFloatingButton from '../Shared/WhatsAppFloatingButton';
-import { Check, Star, User, ShoppingCart, ArrowRight, CheckCircle, MessageCircle } from 'lucide-react';
+import { Check, Star, User, ShoppingCart, ArrowRight, CheckCircle, MessageCircle, ChevronLeft, ChevronRight, AlertCircle } from 'lucide-react';
 
 interface PreviewPanelProps {
   data: SalesPage;
@@ -74,6 +74,11 @@ const PreviewPanel: React.FC<PreviewPanelProps> = ({ data, device }) => {
 const PreviewContent: React.FC<{ data: SalesPage; device: 'mobile' | 'desktop' }> = ({ data, device }) => {
   const [testimonialIndex, setTestimonialIndex] = useState(0);
   const [packageIndex, setPackageIndex] = useState(0);
+  
+  // Gallery State
+  const [galleryIndex, setGalleryIndex] = useState(0);
+  const [touchStart, setTouchStart] = useState<number | null>(null);
+  const [touchEnd, setTouchEnd] = useState<number | null>(null);
 
   // --- Carousel Logic for Testimonials ---
   useEffect(() => {
@@ -118,6 +123,7 @@ const PreviewContent: React.FC<{ data: SalesPage; device: 'mobile' | 'desktop' }
   useEffect(() => {
       setTestimonialIndex(0);
       setPackageIndex(0);
+      setGalleryIndex(0);
   }, [device]);
 
   // --- Helper Icons ---
@@ -227,60 +233,128 @@ const PreviewContent: React.FC<{ data: SalesPage; device: 'mobile' | 'desktop' }
       );
   };
 
-  const renderProducts = () => {
+  const renderProductGallery = () => {
+      if (!data.products.length) return null;
+      
+      const product = data.products[0];
+      const images = product.images && product.images.length > 0 ? product.images : [];
+      
+      if (images.length === 0) return null;
+
+      // Ensure gallery index is safe
+      const currentImg = images[galleryIndex % images.length];
+
+      // --- Gallery Handlers ---
+      const nextImage = () => setGalleryIndex((prev) => (prev + 1) % images.length);
+      const prevImage = () => setGalleryIndex((prev) => (prev - 1 + images.length) % images.length);
+
+      // --- Touch Handlers for Swipe ---
+      const onTouchStart = (e: React.TouchEvent) => {
+          setTouchEnd(null);
+          setTouchStart(e.targetTouches[0].clientX);
+      };
+      const onTouchMove = (e: React.TouchEvent) => setTouchEnd(e.targetTouches[0].clientX);
+      const onTouchEnd = () => {
+          if (!touchStart || !touchEnd) return;
+          const distance = touchStart - touchEnd;
+          const isLeftSwipe = distance > 50;
+          const isRightSwipe = distance < -50;
+          if (isLeftSwipe) nextImage();
+          if (isRightSwipe) prevImage();
+      };
+
+      return (
+          <div className="py-20 bg-slate-50 dark:bg-slate-900/50 transition-colors">
+              {/* Section Header */}
+              <div className="px-6 md:px-20 mb-12">
+                  <h2 className="text-3xl md:text-4xl font-bold text-slate-900 dark:text-white mb-4">Product Gallery</h2>
+                  <div className="h-1.5 w-24 rounded-full" style={{ backgroundColor: data.themeColor }}></div>
+              </div>
+
+              {/* B&O Style Gallery */}
+              <div 
+                  className="relative w-full h-[50vh] md:h-[70vh] bg-transparent flex items-center justify-center overflow-hidden touch-pan-y"
+                  onTouchStart={onTouchStart}
+                  onTouchMove={onTouchMove}
+                  onTouchEnd={onTouchEnd}
+              >
+                  {/* Large Product Image */}
+                  <img 
+                      src={currentImg} 
+                      alt={`Product Shot ${galleryIndex + 1}`} 
+                      className="max-h-full max-w-full md:max-w-[80%] object-contain drop-shadow-2xl transition-opacity duration-500 ease-in-out px-4"
+                      key={galleryIndex} // Force re-render for transition if needed, or use CSS transitions
+                  />
+
+                  {/* Desktop Controls (Bottom Right) */}
+                  {images.length > 1 && (
+                      <div className="hidden md:flex absolute bottom-12 right-20 gap-4 z-20">
+                          <button 
+                              onClick={prevImage} 
+                              className="w-14 h-14 rounded-full bg-white shadow-xl hover:scale-110 transition-all flex items-center justify-center text-slate-900 dark:bg-slate-800 dark:text-white"
+                          >
+                              <ChevronLeft size={24} strokeWidth={2.5} />
+                          </button>
+                          <button 
+                              onClick={nextImage} 
+                              className="w-14 h-14 rounded-full bg-white shadow-xl hover:scale-110 transition-all flex items-center justify-center text-slate-900 dark:bg-slate-800 dark:text-white"
+                          >
+                              <ChevronRight size={24} strokeWidth={2.5} />
+                          </button>
+                      </div>
+                  )}
+
+                  {/* Dots Indicator */}
+                  {images.length > 1 && (
+                      <div className="absolute bottom-6 md:bottom-12 left-1/2 -translate-x-1/2 flex gap-3 z-20">
+                          {images.map((_, i) => (
+                              <div 
+                                  key={i} 
+                                  className={`h-2 rounded-full transition-all duration-300 shadow-sm ${i === galleryIndex ? 'w-8 bg-slate-900 dark:bg-white' : 'w-2 bg-slate-300 dark:bg-slate-600'}`}
+                              />
+                          ))}
+                      </div>
+                  )}
+              </div>
+          </div>
+      );
+  };
+
+  const renderProductDetails = () => {
       if (!data.products.length) return null;
       
       return (
-          <div id="products" className="py-16 px-6 bg-slate-50 dark:bg-slate-900 transition-colors">
-              <h2 className="text-3xl font-bold text-center text-slate-900 mb-12 dark:text-white">Our Products</h2>
-              <div className="max-w-5xl mx-auto grid gap-12">
+          <div className="py-20 px-6 bg-white dark:bg-slate-950 transition-colors">
+              <div className="max-w-4xl mx-auto space-y-16">
                   {data.products.map(product => (
-                      <div key={product.id} className="flex flex-col md:flex-row gap-8 items-start border border-slate-200 rounded-3xl p-6 shadow-sm hover:shadow-md transition-shadow bg-white dark:border-slate-800 dark:bg-slate-950">
-                          {/* Image Gallery Grid for Single Product Focus */}
-                          <div className="w-full md:w-1/2 grid grid-cols-2 gap-2">
-                              {/* Main Image */}
-                              <div className="col-span-2 aspect-video rounded-xl overflow-hidden bg-slate-100 dark:bg-slate-800">
-                                  {product.images && product.images.length > 0 ? (
-                                      <img src={product.images[0]} className="w-full h-full object-cover" />
-                                  ) : (
-                                      <div className="w-full h-full flex items-center justify-center text-slate-300 dark:text-slate-600">No Image</div>
-                                  )}
+                      <div key={product.id} className="grid grid-cols-1 md:grid-cols-2 gap-12 items-start">
+                          <div className="space-y-6">
+                              <span className="text-emerald-600 font-bold tracking-widest uppercase text-sm dark:text-emerald-400">Specification</span>
+                              <h2 className="text-4xl font-bold text-slate-900 dark:text-white font-heading">{product.name}</h2>
+                              <p className="text-xl text-emerald-600 font-bold dark:text-emerald-400">{data.currency} {product.discountPrice || product.price}</p>
+                              <p className="text-slate-600 leading-relaxed text-lg dark:text-slate-300">{product.fullDescription || product.shortDescription}</p>
+                              
+                              {/* Add to Cart / CTA placeholder for context */}
+                              <div className="pt-4">
+                                  <button style={{ backgroundColor: data.themeColor }} className="px-8 py-4 rounded-full text-white font-bold shadow-lg hover:opacity-90 transition-opacity">
+                                      Add to Cart
+                                  </button>
                               </div>
-                              {/* Additional Angles */}
-                              {product.images && product.images.slice(1, 3).map((img, i) => (
-                                  <div key={i} className="aspect-square rounded-xl overflow-hidden bg-slate-100 dark:bg-slate-800">
-                                      <img src={img} className="w-full h-full object-cover" />
-                                  </div>
-                              ))}
                           </div>
-                          
-                          {/* Info */}
-                          <div className="flex-1 space-y-6 w-full">
-                              <div className="flex justify-between items-start">
-                                  <div>
-                                      <h3 className="text-3xl font-bold text-slate-900 dark:text-white mb-2">{product.name}</h3>
-                                      {product.category && <span className="bg-blue-50 text-blue-700 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider dark:bg-blue-900/30 dark:text-blue-300">{product.category}</span>}
-                                  </div>
-                                  <div className="text-right">
-                                      {product.discountPrice && (
-                                          <span className="text-sm text-slate-400 line-through block dark:text-slate-500">{data.currency} {product.price}</span>
-                                      )}
-                                      <span className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">
-                                          {data.currency} {product.discountPrice || product.price}
-                                      </span>
-                                  </div>
-                              </div>
-                              
-                              <p className="text-slate-600 text-base leading-relaxed dark:text-slate-300">{product.fullDescription || product.shortDescription}</p>
-                              
+
+                          <div className="space-y-8">
                               {product.benefits.length > 0 && (
-                                  <div className="bg-emerald-50/50 p-5 rounded-2xl dark:bg-emerald-900/20">
-                                      <h4 className="font-bold text-sm text-emerald-800 mb-3 dark:text-emerald-400 uppercase tracking-wide">Why You'll Love It</h4>
-                                      <ul className="space-y-3">
+                                  <div className="bg-slate-50 p-8 rounded-3xl dark:bg-slate-900 border border-slate-100 dark:border-slate-800">
+                                      <h4 className="font-bold text-lg text-slate-900 mb-6 dark:text-white flex items-center gap-2">
+                                          <Star className="text-yellow-500" size={20} fill="currentColor" /> Key Highlights
+                                      </h4>
+                                      <ul className="space-y-4">
                                           {product.benefits.map((b, i) => (
-                                              <li key={i} className="flex items-start gap-3 text-sm text-slate-700 dark:text-slate-300">
-                                                  <Check size={16} className="text-emerald-500 mt-0.5 shrink-0" />
-                                                  {b}
+                                              <li key={i} className="flex items-start gap-4 text-slate-700 dark:text-slate-300">
+                                                  <div className="mt-1 bg-emerald-100 text-emerald-700 rounded-full p-1 dark:bg-emerald-900/30 dark:text-emerald-400">
+                                                      <Check size={14} strokeWidth={3} />
+                                                  </div>
+                                                  <span className="flex-1">{b}</span>
                                               </li>
                                           ))}
                                       </ul>
@@ -288,9 +362,15 @@ const PreviewContent: React.FC<{ data: SalesPage; device: 'mobile' | 'desktop' }
                               )}
 
                               {product.ingredients && product.ingredients.length > 0 && (
-                                  <div className="pt-2">
-                                      <h4 className="font-bold text-xs text-slate-400 uppercase tracking-wide mb-2">Key Ingredients</h4>
-                                      <p className="text-xs text-slate-500 italic dark:text-slate-400">{product.ingredients.join(', ')}</p>
+                                  <div>
+                                      <h4 className="font-bold text-sm text-slate-400 uppercase tracking-widest mb-4">Ingredients</h4>
+                                      <div className="flex flex-wrap gap-2">
+                                          {product.ingredients.map((ing, i) => (
+                                              <span key={i} className="px-4 py-2 bg-slate-100 rounded-full text-sm text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+                                                  {ing}
+                                              </span>
+                                          ))}
+                                      </div>
                                   </div>
                               )}
                           </div>
@@ -454,7 +534,9 @@ const PreviewContent: React.FC<{ data: SalesPage; device: 'mobile' | 'desktop' }
           />
       </div>
 
-      {renderProducts()}
+      {renderProductGallery()}
+      {renderProductDetails()}
+      
       {renderPackages()}
 
       {/* Global Features */}

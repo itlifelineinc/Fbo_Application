@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { SalesPage, PackageOption, CurrencyCode } from '../../types/salesPage';
 import { Plus, Trash2, Edit2 } from 'lucide-react';
@@ -74,22 +75,25 @@ const PriceAndPackages: React.FC<PriceAndPackagesProps> = ({ data, onChange }) =
         <div className="space-y-3">
           {pricingOptions.map((pkg, idx) => (
             <div key={pkg.id} className="border border-slate-200 rounded-xl p-4 bg-slate-50 dark:bg-slate-800 dark:border-slate-700">
-              <div className="flex justify-between items-center mb-3">
+              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-3">
                 <input 
                   type="text" 
                   value={pkg.name}
                   onChange={(e) => updatePackage(idx, 'name', e.target.value)}
-                  className="font-bold bg-transparent border-b border-transparent focus:border-emerald-500 focus:bg-white outline-none w-1/2 text-slate-900 dark:text-white dark:focus:bg-slate-700"
+                  className="font-bold bg-transparent border-b border-transparent focus:border-emerald-500 focus:bg-white outline-none w-full sm:w-1/2 text-slate-900 dark:text-white dark:focus:bg-slate-700 p-1 rounded"
+                  placeholder="Option Name"
                 />
-                <div className="flex items-center gap-2">
-                  <span className="text-xs text-slate-500 dark:text-slate-400">Price +</span>
-                  <input 
-                    type="number" 
-                    value={pkg.priceDelta}
-                    onChange={(e) => updatePackage(idx, 'priceDelta', parseFloat(e.target.value))}
-                    className="w-20 p-1 text-right border border-slate-200 rounded bg-white text-sm text-slate-900 dark:bg-slate-700 dark:border-slate-600 dark:text-white"
-                  />
-                  <button onClick={() => removePackage(idx)} className="text-red-400 hover:text-red-600 ml-2">
+                <div className="flex items-center justify-between sm:justify-end gap-2 w-full sm:w-auto">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-slate-500 dark:text-slate-400 whitespace-nowrap">Price +</span>
+                    <input 
+                      type="number" 
+                      value={pkg.priceDelta}
+                      onChange={(e) => updatePackage(idx, 'priceDelta', parseFloat(e.target.value))}
+                      className="w-24 p-1 text-right border border-slate-200 rounded bg-white text-sm text-slate-900 dark:bg-slate-700 dark:border-slate-600 dark:text-white"
+                    />
+                  </div>
+                  <button onClick={() => removePackage(idx)} className="text-red-400 hover:text-red-600 p-1.5 bg-white rounded border border-slate-200 dark:bg-slate-700 dark:border-slate-600">
                     <Trash2 size={16} />
                   </button>
                 </div>
@@ -97,8 +101,8 @@ const PriceAndPackages: React.FC<PriceAndPackagesProps> = ({ data, onChange }) =
               
               <div className="space-y-2">
                 {pkg.features.map((feat, fIdx) => (
-                  <div key={fIdx} className="flex gap-2">
-                    <span className="text-emerald-500 text-xs mt-1">•</span>
+                  <div key={fIdx} className="flex gap-2 items-center">
+                    <span className="text-emerald-500 text-xs">•</span>
                     <input 
                       type="text" 
                       value={feat}
@@ -107,7 +111,7 @@ const PriceAndPackages: React.FC<PriceAndPackagesProps> = ({ data, onChange }) =
                     />
                   </div>
                 ))}
-                <button onClick={() => addPackageFeature(idx)} className="text-xs text-slate-400 hover:text-emerald-600 pl-4 dark:text-slate-500 dark:hover:text-emerald-400">+ Add feature</button>
+                <button onClick={() => addPackageFeature(idx)} className="text-xs text-slate-400 hover:text-emerald-600 pl-3 dark:text-slate-500 dark:hover:text-emerald-400">+ Add feature</button>
               </div>
             </div>
           ))}

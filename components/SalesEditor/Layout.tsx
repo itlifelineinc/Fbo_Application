@@ -140,7 +140,7 @@ const EditorLayout: React.FC<EditorLayoutProps> = ({ data, updateField, isPrevie
   const ActiveIcon = tabs.find(t => t.id === activeTabId)?.icon || Type;
 
   return (
-    <div className="flex flex-col h-full bg-white dark:bg-slate-900">
+    <div className="flex flex-col h-full bg-white dark:bg-slate-900 w-full max-w-full">
       <style>{`
         .no-scrollbar::-webkit-scrollbar {
           display: none;
@@ -202,14 +202,15 @@ const EditorLayout: React.FC<EditorLayoutProps> = ({ data, updateField, isPrevie
 
       {/* Content Area */}
       <div className="flex-1 overflow-y-auto p-3 md:p-8 no-scrollbar bg-slate-50/50 dark:bg-slate-950/50">
-        <div className="max-w-2xl mx-auto space-y-4 md:space-y-6 animate-fade-in">
-            <div className="bg-white dark:bg-slate-900 p-4 md:p-6 rounded-xl md:rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800">
+        <div className="max-w-2xl mx-auto space-y-4 md:space-y-6 animate-fade-in w-full">
+            <div className="bg-white dark:bg-slate-900 p-4 md:p-6 rounded-xl md:rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800 overflow-hidden w-full">
                 <h2 className="text-lg md:text-xl font-bold text-slate-900 dark:text-white mb-4 md:mb-6 font-heading border-b border-slate-100 dark:border-slate-800 pb-4 flex items-center gap-2">
                     <ActiveIcon size={20} className="text-emerald-500" />
                     {tabs.find(t => t.id === activeTabId)?.label} Settings
                 </h2>
                 
-                <div className="min-h-[300px]">
+                {/* Content Wrapper with constrained width/overflow handling */}
+                <div className="min-h-[300px] w-full max-w-full overflow-x-hidden">
                     {renderContent()}
                 </div>
             </div>

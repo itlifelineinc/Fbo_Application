@@ -141,7 +141,7 @@ const PackageSectionEditor: React.FC<PackageSectionEditorProps> = ({ data, onCha
             </div>
 
             {/* Layout & Visuals */}
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                <div>
                   <label className="block text-xs font-bold text-slate-500 mb-1 dark:text-slate-400">Layout</label>
                   <select 

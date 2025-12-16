@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { SalesPage, CTAButton } from '../../types/salesPage';
 import WhatsAppFloatingButton from '../Shared/WhatsAppFloatingButton';
-import { Check, Star, User, ShoppingCart, ArrowRight, CheckCircle, MessageCircle, ChevronLeft, ChevronRight, AlertCircle, Maximize2, X } from 'lucide-react';
+import { Check, Star, User, ShoppingCart, ArrowRight, CheckCircle, MessageCircle, ChevronLeft, ChevronRight, AlertCircle, Maximize2, X, Leaf, ShieldCheck, Heart, Sparkles, Plus, ArrowDown } from 'lucide-react';
 
 interface PreviewPanelProps {
   data: SalesPage;
@@ -124,6 +124,9 @@ const PreviewPanel: React.FC<PreviewPanelProps> = ({ data, device }) => {
     `}</style>
   );
 
+  // Parse Dynamic Message
+  const whatsappMessage = data.whatsappMessage?.replace('{title}', data.title) || `Hi, I'm interested in ${data.title}`;
+
   if (device === 'desktop') {
     return (
       <>
@@ -132,13 +135,14 @@ const PreviewPanel: React.FC<PreviewPanelProps> = ({ data, device }) => {
             className="w-full h-full relative overflow-hidden bg-slate-200 dark:bg-slate-900 rounded-xl md:rounded-none border border-slate-200 md:border-0 shadow-sm preview-wrapper"
             style={previewStyle}
         >
-           <div className="w-full h-full overflow-y-auto scroll-smooth no-scrollbar bg-white dark:bg-slate-950 transition-colors">
-              <PreviewContent data={data} device={device} />
+           <div className="w-full h-full overflow-y-auto scroll-smooth no-scrollbar bg-white dark:bg-slate-950 transition-colors relative">
+              <PreviewContent data={data} device={device} whatsappMessage={whatsappMessage} />
            </div>
            
            <WhatsAppFloatingButton 
               phoneNumber={data.whatsappNumber} 
-              isVisible={true} 
+              isVisible={data.ctaDisplay?.showFloatingWhatsapp ?? true} 
+              message={whatsappMessage}
               className="absolute bottom-8 right-8"
            />
         </div>
@@ -157,13 +161,14 @@ const PreviewPanel: React.FC<PreviewPanelProps> = ({ data, device }) => {
         
         {/* Scrollable Content */}
         <div className="w-full flex-1 overflow-y-auto overflow-x-hidden no-scrollbar scroll-smooth bg-white relative dark:bg-slate-950 transition-colors">
-            <PreviewContent data={data} device={device} />
+            <PreviewContent data={data} device={device} whatsappMessage={whatsappMessage} />
             <div className="h-6"></div>
         </div>
 
         <WhatsAppFloatingButton 
             phoneNumber={data.whatsappNumber} 
-            isVisible={true} 
+            isVisible={data.ctaDisplay?.showFloatingWhatsapp ?? true} 
+            message={whatsappMessage}
             className="absolute bottom-4 right-4"
         />
         
@@ -177,9 +182,11 @@ const PreviewPanel: React.FC<PreviewPanelProps> = ({ data, device }) => {
 const PreviewContent: React.FC<{ 
     data: SalesPage; 
     device: 'mobile' | 'desktop'; 
-}> = ({ data, device }) => {
+    whatsappMessage: string;
+}> = ({ data, device, whatsappMessage }) => {
   const [testimonialIndex, setTestimonialIndex] = useState(0);
   const [packageIndex, setPackageIndex] = useState(0);
+  const [activeFaq, setActiveFaq] = useState<string | null>(null);
   
   const [galleryIndex, setGalleryIndex] = useState(0);
   const [touchStart, setTouchStart] = useState<number | null>(null);
@@ -194,6 +201,9 @@ const PreviewContent: React.FC<{
   // Common Product Logic
   const product = data.products.length > 0 ? data.products[0] : null;
   const images = product && product.images && product.images.length > 0 ? product.images : [];
+  
+  // Helper to force mobile layout styles even if viewport is wide
+  const isDesktop = device === 'desktop';
 
   useEffect(() => {
     if (data.testimonials.length === 0) return;
@@ -276,7 +286,8 @@ const PreviewContent: React.FC<{
   };
 
   const renderCTA = (cta: CTAButton, isHero: boolean = false) => {
-      const baseClass = `${isHero ? 'preview-btn-hero' : 'preview-btn'} font-bold transition-transform hover:scale-105 shadow-xl flex items-center justify-center gap-2`;
+      // SLICK BUTTONS: Removed 'hover:scale-105' replaced with subtle hover transform. Removed 'shadow-xl'. 
+      const baseClass = `${isHero ? 'preview-btn-hero' : 'preview-btn'} font-bold transition-transform hover:-translate-y-0.5 shadow-md hover:shadow-lg flex items-center justify-center gap-2`;
       
       let style: React.CSSProperties = {};
       let className = baseClass;
@@ -284,19 +295,26 @@ const PreviewContent: React.FC<{
       const btnColor = cta.color || data.themeColor;
 
       if (cta.style === 'primary') {
-          style = { backgroundColor: btnColor, color: '#fff', boxShadow: `0 10px 25px -5px ${btnColor}66` };
+          // SLICK SHADOW: Tighter, less blur, lower opacity for modern look
+          style = { backgroundColor: btnColor, color: '#fff', boxShadow: `0 4px 14px 0 ${btnColor}40` };
       } else if (cta.style === 'outline') {
           style = { border: `2px solid ${isHero ? '#e2e8f0' : btnColor}`, color: isHero ? '#334155' : btnColor, backgroundColor: 'transparent' };
-          className = baseClass.replace('shadow-xl', 'shadow-sm hover:bg-slate-50'); 
+          className = baseClass.replace('shadow-md hover:shadow-lg', 'shadow-sm hover:bg-slate-50'); 
       } else if (cta.style === 'link') {
           style = { color: btnColor, textDecoration: 'underline', padding: '0', boxShadow: 'none' };
-          className = "font-bold text-sm hover:opacity-80 transition-opacity flex items-center gap-1 preview-btn"; // Link style ignores heavy sizing usually
+          className = "font-bold text-sm hover:opacity-80 transition-opacity flex items-center gap-1 preview-btn"; 
+      }
+
+      // Dynamic URL logic
+      let href = cta.url;
+      if (cta.actionType === 'WHATSAPP') {
+          href = `https://wa.me/${data.whatsappNumber}?text=${encodeURIComponent(whatsappMessage)}`;
       }
 
       return (
           <a 
             key={cta.id}
-            href={cta.url || '#'}
+            href={href || '#'}
             className={className}
             style={style}
           >
@@ -323,9 +341,12 @@ const PreviewContent: React.FC<{
                       {data.subtitle || 'Your compelling subtitle goes here explaining the value in seconds.'}
                   </p>
                   
-                  <div className="flex flex-col sm:flex-row items-center justify-center gap-4 w-full sm:w-auto">
-                      {data.ctas.map((cta) => renderCTA(cta, true))}
-                  </div>
+                  {/* Hero CTA Logic: Only render if enabled */}
+                  {data.ctaDisplay?.showHero && (
+                      <div className={`flex flex-col ${isDesktop ? 'sm:flex-row' : ''} items-center justify-center gap-4 w-full ${isDesktop ? 'sm:w-auto' : ''}`}>
+                          {data.ctas.map((cta) => renderCTA(cta, true))}
+                      </div>
+                  )}
 
                   <div className="mt-12 flex items-center gap-2 text-xs font-bold text-slate-400 uppercase tracking-widest opacity-60">
                       <CheckCircle size={14} /> 100% Satisfaction Guarantee
@@ -416,9 +437,10 @@ const PreviewContent: React.FC<{
       const currentImg = images[galleryIndex % images.length];
 
       return (
+          // CLEAN LAYOUT: Use bg-slate-50 but minimized padding on mobile
           <div className={`preview-section bg-slate-50 dark:bg-slate-900/50 transition-colors`}>
-              {/* Section Header */}
-              <div className="px-6 md:px-12 max-w-[2000px] mx-auto mb-8 flex flex-col items-center md:items-start text-center md:text-left">
+              {/* Section Header: Reduced bottom margin for mobile */}
+              <div className="px-6 md:px-12 max-w-[2000px] mx-auto mb-6 md:mb-8 flex flex-col items-center md:items-start text-center md:text-left">
                   <h3 
                     className="font-bold mb-3 text-slate-900 dark:text-white"
                     style={{ fontSize: 'var(--h3-size)', fontFamily: 'var(--font-heading)' }}
@@ -430,11 +452,13 @@ const PreviewContent: React.FC<{
 
               {/* B&O Split Layout Container */}
               <div className="max-w-[2000px] mx-auto px-4 md:px-8">
-                  <div className="flex flex-col lg:flex-row gap-8 lg:gap-16 items-center">
+                  {/* Reduced gap on mobile from gap-8 to gap-5 for tight modern feel */}
+                  <div className={`flex flex-col ${isDesktop ? 'lg:flex-row' : ''} gap-5 lg:gap-16 items-center`}>
                       
                       {/* LEFT: Image Gallery (60% width on desktop) */}
-                      <div className="w-full lg:w-[60%] relative">
-                          <div className="relative w-full h-[50vh] lg:h-[70vh] max-h-[800px] flex items-center justify-center">
+                      <div className={`w-full ${isDesktop ? 'lg:w-[60%]' : ''} relative`}>
+                          {/* Adjusted mobile height to be more compact (40vh) vs desktop (70vh) */}
+                          <div className="relative w-full h-[40vh] lg:h-[70vh] max-h-[800px] flex items-center justify-center">
                               <div 
                                   className="relative w-full h-full flex items-center justify-center overflow-hidden touch-pan-y"
                                   onTouchStart={onTouchStart}
@@ -473,7 +497,7 @@ const PreviewContent: React.FC<{
                               </div>
 
                               {/* Arrows (Right Aligned, Hidden on Mobile) */}
-                              {images.length > 1 && (
+                              {images.length > 1 && isDesktop && (
                                   <div className="hidden lg:flex gap-4">
                                       <button 
                                           onClick={prevImage} 
@@ -493,7 +517,7 @@ const PreviewContent: React.FC<{
                       </div>
 
                       {/* RIGHT: Product Info (40% width on desktop) */}
-                      <div className="w-full lg:w-[40%] space-y-8">
+                      <div className={`w-full ${isDesktop ? 'lg:w-[40%] text-left' : 'text-center'} space-y-8`}>
                           <div>
                               <span className="text-slate-400 font-bold tracking-widest uppercase text-xs mb-2 block dark:text-slate-500">
                                   {product.category || 'Premium Collection'}
@@ -513,14 +537,15 @@ const PreviewContent: React.FC<{
                                     backgroundColor: data.themeColor,
                                     borderRadius: 'var(--btn-radius)',
                                     padding: 'var(--btn-hero-padding)',
-                                    fontSize: 'var(--btn-hero-font-size)'
+                                    fontSize: 'var(--btn-hero-font-size)',
+                                    boxShadow: `0 4px 14px 0 ${data.themeColor}40` // Slick shadow
                                 }} 
-                                className="w-full text-white font-bold shadow-xl hover:opacity-90 transition-all active:scale-95 flex items-center justify-center gap-2"
+                                className="w-full text-white font-bold hover:opacity-90 transition-all active:scale-95 flex items-center justify-center gap-2"
                               >
                                   <ShoppingCart size={20} /> Add to Cart
                               </button>
                               
-                              <p className="text-xs text-center text-slate-400 dark:text-slate-500">
+                              <p className="text-xs text-slate-400 dark:text-slate-500">
                                   Free shipping on orders over {data.currency}100
                               </p>
                           </div>
@@ -543,11 +568,11 @@ const PreviewContent: React.FC<{
               <div className="max-w-4xl mx-auto space-y-12">
                   <h3 className="font-bold text-2xl text-center">More from this collection</h3>
                   {data.products.slice(1).map(product => (
-                      <div key={product.id} className="flex flex-col md:flex-row gap-8 items-center border-b border-slate-100 pb-8 last:border-0 dark:border-slate-800">
-                          <div className="w-full md:w-1/3 aspect-square bg-slate-50 rounded-xl flex items-center justify-center dark:bg-slate-900">
+                      <div key={product.id} className={`flex flex-col ${isDesktop ? 'md:flex-row' : ''} gap-8 items-center border-b border-slate-100 pb-8 last:border-0 dark:border-slate-800`}>
+                          <div className={`w-full ${isDesktop ? 'md:w-1/3' : ''} aspect-square bg-slate-50 rounded-xl flex items-center justify-center dark:bg-slate-900`}>
                               {product.images[0] && <img src={product.images[0]} className="max-h-[80%] max-w-[80%] object-contain" />}
                           </div>
-                          <div className="flex-1 text-center md:text-left">
+                          <div className={`flex-1 text-center ${isDesktop ? 'md:text-left' : ''}`}>
                               <h4 className="font-bold text-xl mb-2">{product.name}</h4>
                               <p className="text-emerald-600 font-bold mb-4">{data.currency} {product.price}</p>
                               <p className="text-slate-600 text-sm mb-4 dark:text-slate-400">{product.shortDescription}</p>
@@ -646,6 +671,100 @@ const PreviewContent: React.FC<{
       );
   };
 
+  const renderTrustBadges = () => {
+      if (!data.badges || data.badges.length === 0) return null;
+      
+      const badgeIcons: Record<string, any> = {
+          'iasc': Leaf,
+          'guarantee': ShieldCheck,
+          'cruelty_free': Heart,
+          'kosher': CheckCircle,
+          'halal': CheckCircle,
+          'natural': Sparkles
+      };
+
+      const badgeLabels: Record<string, string> = {
+          'iasc': 'IASC Certified',
+          'guarantee': '30-Day Guarantee',
+          'cruelty_free': 'Cruelty Free',
+          'kosher': 'Kosher',
+          'halal': 'Halal',
+          'natural': 'Natural'
+      };
+
+      return (
+          <div className="preview-section px-4 flex flex-wrap justify-center gap-4 bg-slate-50 border-b border-slate-100 dark:bg-slate-900/50 dark:border-slate-800">
+              {data.badges.map(b => {
+                  const Icon = badgeIcons[b] || CheckCircle;
+                  return (
+                      <div key={b} className="flex flex-col items-center gap-1 opacity-70 hover:opacity-100 transition-opacity">
+                          <div className="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600 dark:bg-emerald-900/50 dark:text-emerald-400">
+                              <Icon size={16} />
+                          </div>
+                          <span className="text-[10px] font-bold uppercase text-slate-500 dark:text-slate-400">{badgeLabels[b]}</span>
+                      </div>
+                  );
+              })}
+          </div>
+      );
+  };
+
+  const renderPersonalBrand = () => {
+      if (!data.personalBranding?.bio) return null;
+      
+      return (
+          <div className="preview-section px-6 bg-white dark:bg-slate-950 transition-colors">
+              <div className="max-w-2xl mx-auto bg-slate-50 rounded-2xl p-6 border border-slate-100 flex flex-col md:flex-row gap-6 items-center dark:bg-slate-900 dark:border-slate-800">
+                  <div className="w-24 h-24 rounded-full border-4 border-white shadow-sm overflow-hidden shrink-0 dark:border-slate-700">
+                      {data.personalBranding.photoUrl ? (
+                          <img src={data.personalBranding.photoUrl} className="w-full h-full object-cover" />
+                      ) : (
+                          <div className="w-full h-full bg-slate-200 flex items-center justify-center text-slate-400 dark:bg-slate-800"><User size={32}/></div>
+                      )}
+                  </div>
+                  <div className="text-center md:text-left">
+                      <h4 className="font-bold text-lg text-slate-800 dark:text-white">Meet Your Sponsor</h4>
+                      <p className="text-sm text-slate-600 mt-2 italic leading-relaxed dark:text-slate-300">"{data.personalBranding.bio}"</p>
+                      {(data.personalBranding.yearsExperience > 0 || data.personalBranding.rank) && (
+                          <div className="flex gap-4 justify-center md:justify-start mt-4 text-xs font-bold text-emerald-600 uppercase dark:text-emerald-400">
+                              {data.personalBranding.yearsExperience > 0 && <span>{data.personalBranding.yearsExperience}+ Years Exp.</span>}
+                              {data.personalBranding.rank && <span>• {data.personalBranding.rank}</span>}
+                          </div>
+                      )}
+                  </div>
+              </div>
+          </div>
+      );
+  };
+
+  const renderFAQs = () => {
+      if (!data.faqs || data.faqs.length === 0) return null;
+
+      return (
+          <div className="preview-section px-6 bg-white dark:bg-slate-950 transition-colors">
+              <div className="max-w-2xl mx-auto space-y-4">
+                  <h3 className="font-bold text-xl text-center mb-6 dark:text-white">Common Questions</h3>
+                  {data.faqs.map((faq, idx) => (
+                      <div key={idx} className="border border-slate-200 rounded-xl overflow-hidden dark:border-slate-800">
+                          <button 
+                              onClick={() => setActiveFaq(activeFaq === faq.id ? null : faq.id)}
+                              className="w-full flex justify-between items-center p-4 bg-slate-50 hover:bg-slate-100 transition-colors text-left dark:bg-slate-900 dark:hover:bg-slate-800"
+                          >
+                              <span className="font-bold text-sm text-slate-800 dark:text-white">{faq.question}</span>
+                              <ChevronRight size={16} className={`text-slate-400 transition-transform ${activeFaq === faq.id ? 'rotate-90' : ''}`} />
+                          </button>
+                          {activeFaq === faq.id && (
+                              <div className="p-4 bg-white text-sm text-slate-600 leading-relaxed border-t border-slate-100 dark:bg-slate-950 dark:text-slate-300 dark:border-slate-800">
+                                  {faq.answer}
+                              </div>
+                          )}
+                      </div>
+                  ))}
+              </div>
+          </div>
+      );
+  };
+
   const renderTestimonials = () => {
     if (!data.testimonials.length) return null;
 
@@ -709,11 +828,45 @@ const PreviewContent: React.FC<{
     );
   };
 
+  const renderContentEndCTAs = () => {
+      if (!data.ctaDisplay?.showContentEnd || data.ctas.length === 0) return null;
+      return (
+          <div className="preview-section px-6 pb-12 bg-white dark:bg-slate-950 text-center">
+              <div className="max-w-md mx-auto p-6 rounded-3xl bg-slate-50 border border-slate-100 dark:bg-slate-900 dark:border-slate-800">
+                  <h3 className="font-bold text-lg mb-4 text-slate-900 dark:text-white">Ready to start?</h3>
+                  <div className="flex flex-col gap-3">
+                      {data.ctas.map(cta => renderCTA(cta))}
+                  </div>
+              </div>
+          </div>
+      );
+  };
+
+  const renderStickyBottom = () => {
+      if (!data.ctaDisplay?.showBottomSticky || data.ctas.length === 0) return null;
+      // Use the first primary CTA for the sticky bar
+      const primaryCTA = data.ctas.find(c => c.style === 'primary') || data.ctas[0];
+      
+      return (
+          <div className="fixed bottom-0 left-0 right-0 p-4 bg-white/90 backdrop-blur-md border-t border-slate-200 shadow-lg z-40 flex items-center justify-between gap-4 dark:bg-slate-900/90 dark:border-slate-800 animate-slide-up">
+              <div className="hidden md:block">
+                  <p className="font-bold text-slate-900 dark:text-white text-sm">{data.title}</p>
+                  <p className="text-xs text-emerald-600 font-bold dark:text-emerald-400">{data.currency} {data.products[0]?.price || '0.00'}</p>
+              </div>
+              <div className="w-full md:w-auto">
+                  {renderCTA(primaryCTA)}
+              </div>
+          </div>
+      );
+  };
+
   return (
     <>
       {renderHero()}
       {/* Zoom Modal - Must be at top level inside fragment */}
       {renderZoomModal()}
+      
+      {renderTrustBadges()}
 
       <div className={`preview-section px-6 max-w-3xl mx-auto dark:text-slate-200`}>
           <div 
@@ -739,11 +892,15 @@ const PreviewContent: React.FC<{
               </div>
           </div>
       )}
-
+      
+      {renderPersonalBrand()}
       {renderTestimonials()}
+      {renderFAQs()}
+      
+      {renderContentEndCTAs()}
 
       {/* Footer */}
-      <div className={`bg-white border-t border-slate-100 preview-section px-6 text-center dark:bg-slate-950 dark:border-slate-800 transition-colors`}>
+      <div className={`bg-white border-t border-slate-100 preview-section px-6 text-center dark:bg-slate-950 dark:border-slate-800 transition-colors pb-32`}>
         {data.contactVisible && (
           <div className="mb-8 space-y-2">
             <h3 className="font-bold text-slate-800 dark:text-slate-200 text-lg">Questions?</h3>
@@ -753,9 +910,12 @@ const PreviewContent: React.FC<{
         )}
         <div className="text-xs text-slate-400 max-w-lg mx-auto dark:text-slate-500">
           <p className="mb-4 leading-relaxed">{data.refundPolicy}</p>
+          {data.disclaimer && <p className="mb-4 leading-relaxed italic opacity-80">{data.disclaimer}</p>}
           <p>&copy; {new Date().getFullYear()} {data.title}. All rights reserved.</p>
         </div>
       </div>
+
+      {renderStickyBottom()}
     </>
   );
 };

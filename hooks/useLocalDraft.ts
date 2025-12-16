@@ -37,18 +37,40 @@ const EMPTY_PAGE: SalesPage = {
   description: '',
   features: [],
   testimonials: [],
+  
+  // Trust Defaults
+  badges: ['guarantee'],
+  personalBranding: {
+      bio: '',
+      yearsExperience: 0,
+      rank: '',
+      photoUrl: ''
+  },
+  faqs: [],
+  disclaimer: 'Statements have not been evaluated by the FDA. This product is not intended to diagnose, treat, cure, or prevent any disease.',
+
   currency: 'USD',
   products: [],
   packages: [],
+  
+  // CTA Defaults
+  whatsappNumber: '',
+  whatsappMessage: "Hi, I'm interested in {title}. Can you tell me more?",
+  ctaDisplay: {
+      showHero: true,
+      showBottomSticky: false,
+      showContentEnd: true,
+      showFloatingWhatsapp: true
+  },
   ctas: [
-    { id: 'default-cta', label: 'Buy Now', style: 'primary', url: '#products' }
+    { id: 'default-cta', label: 'Chat on WhatsApp', style: 'primary', actionType: 'WHATSAPP', url: '', icon: 'whatsapp' }
   ],
+  
   seo: {
     metaTitle: '',
     metaDescription: '',
     ogImage: ''
   },
-  whatsappNumber: '',
   contactEmail: '',
   contactVisible: true,
   refundPolicy: '30-day money-back guarantee.',

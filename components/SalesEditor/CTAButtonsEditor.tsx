@@ -14,6 +14,7 @@ const CTAButtonsEditor: React.FC<CTAButtonsEditorProps> = ({ data, onChange }) =
     const newCTA: CTAButton = {
       id: `cta-${Date.now()}`,
       label: 'Order Now',
+      actionType: 'SCROLL',
       style: 'primary',
       url: '#products',
       color: data.themeColor,

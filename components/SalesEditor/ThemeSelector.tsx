@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { SalesPage, MobileDesignOverrides } from '../../types/salesPage';
-import { Layout, Palette, Type, MoveVertical, Check, Lock, Sliders, Minus, Plus, MousePointerClick, Square, Circle, Smartphone, Monitor } from 'lucide-react';
+import { Layout, Palette, Type, Check, Lock, Sliders, Minus, Plus, MousePointerClick, Smartphone, Monitor } from 'lucide-react';
 import CustomSelect from '../Shared/CustomSelect';
 
 interface ThemeSelectorProps {
@@ -64,7 +64,7 @@ const ThemeSelector: React.FC<ThemeSelectorProps> = ({ data, onChange, previewDe
   };
 
   // Handlers for steppers
-  const adjustValue = (field: 'baseFontSize' | 'subtitleFontSize' | 'sectionSpacing', amount: number, min: number, max: number) => {
+  const adjustValue = (field: 'baseFontSize' | 'subtitleFontSize', amount: number, min: number, max: number) => {
       const current = getValue(field, field);
       const next = Math.min(max, Math.max(min, current + amount));
       handleResponsiveChange(field, next, field);
@@ -370,55 +370,6 @@ const ThemeSelector: React.FC<ThemeSelectorProps> = ({ data, onChange, previewDe
                     onChange={(e) => handleResponsiveChange('typeScale', parseFloat(e.target.value), 'typeScale')}
                     className="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-purple-500 dark:bg-slate-700"
                 />
-            </div>
-        </div>
-      </section>
-
-      <div className="w-full h-px bg-slate-100 dark:bg-slate-800"></div>
-
-      {/* 5. Spacing (Responsive) */}
-      <section>
-        <label className="block text-sm font-bold text-slate-700 mb-6 flex items-center gap-2 dark:text-slate-300">
-          <MoveVertical size={18} className="text-orange-500" /> Layout Spacing
-        </label>
-        
-        <div className="bg-slate-50 p-5 rounded-2xl border border-slate-200 dark:bg-slate-800 dark:border-slate-700">
-            <div className="flex justify-between items-center mb-4">
-                <div className="flex items-center gap-2">
-                    <span className="p-1.5 bg-orange-100 text-orange-600 rounded dark:bg-orange-900/30 dark:text-orange-400"><MoveVertical size={14} /></span>
-                    <div>
-                        <label className="text-xs font-bold text-slate-700 dark:text-slate-200 block">Section Breathing Room ({isMobileView ? 'Mobile' : 'Desktop'})</label>
-                        <span className="text-[10px] text-slate-400">Vertical padding between blocks</span>
-                    </div>
-                </div>
-                <div className="flex items-center gap-2">
-                    <button 
-                        onClick={() => adjustValue('sectionSpacing', -1, 0, 10)}
-                        className="w-8 h-8 rounded-full bg-white border border-slate-200 flex items-center justify-center text-slate-500 hover:bg-slate-50 hover:text-slate-800 dark:bg-slate-700 dark:border-slate-600 dark:text-slate-300"
-                    >
-                        <Minus size={14} />
-                    </button>
-                    <span className="w-8 text-center font-bold text-sm text-slate-800 dark:text-white">{getValue('sectionSpacing', 'sectionSpacing')}</span>
-                    <button 
-                        onClick={() => adjustValue('sectionSpacing', 1, 0, 10)}
-                        className="w-8 h-8 rounded-full bg-white border border-slate-200 flex items-center justify-center text-slate-500 hover:bg-slate-50 hover:text-slate-800 dark:bg-slate-700 dark:border-slate-600 dark:text-slate-300"
-                    >
-                        <Plus size={14} />
-                    </button>
-                </div>
-            </div>
-            <input 
-                type="range" 
-                min="0" 
-                max="10" 
-                step="1" 
-                value={getValue('sectionSpacing', 'sectionSpacing')} 
-                onChange={(e) => handleResponsiveChange('sectionSpacing', parseInt(e.target.value), 'sectionSpacing')}
-                className="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-orange-500 dark:bg-slate-700"
-            />
-            <div className="flex justify-between text-[10px] text-slate-400 mt-2 font-medium px-1">
-                <span>Compact</span>
-                <span>Airy</span>
             </div>
         </div>
       </section>

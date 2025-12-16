@@ -3,15 +3,13 @@ import React, { useState, useRef, useEffect } from 'react';
 import { SalesPage } from '../../types/salesPage';
 import MetaForm from './MetaForm';
 import MediaUploader from './MediaUploader';
-import RichTextEditor from './RichTextEditor';
 import ProductSectionEditor from './ProductSectionEditor';
+import PageContentEditor from './PageContentEditor'; 
 import PackageSectionEditor from './PackageSectionEditor';
-import FeaturesList from './FeaturesList';
-import TestimonialsEditor from './TestimonialsEditor';
-import ContactSettings from './ContactSettings';
+import TrustProofEditor from './TrustProofEditor'; 
+import CTAConfiguration from './CTAConfiguration'; // NEW
 import ThemeSelector from './ThemeSelector';
-import CTAButtonsEditor from './CTAButtonsEditor';
-import SEOSettings from './SEOSettings';
+import RichTextEditor from './RichTextEditor'; 
 import InfoPopover from '../Shared/InfoPopover';
 import { PAGE_TAB_CONFIG, PlaceholderTab } from './TabConfiguration';
 import { Type, ChevronLeft, ChevronRight } from 'lucide-react';
@@ -20,7 +18,7 @@ interface EditorLayoutProps {
   data: SalesPage;
   updateField: <K extends keyof SalesPage>(field: K, value: SalesPage[K]) => void;
   isPreviewMode: boolean;
-  previewDevice?: 'mobile' | 'desktop'; // Added prop
+  previewDevice?: 'mobile' | 'desktop'; 
 }
 
 const TAB_HELP_CONTENT: Record<string, React.ReactNode> = {
@@ -28,19 +26,25 @@ const TAB_HELP_CONTENT: Record<string, React.ReactNode> = {
         <ul className="list-disc pl-4 space-y-1">
             <li><strong>Search Catalog:</strong> Quickly find Forever products to auto-fill details.</li>
             <li><strong>Smart Data:</strong> Images, benefits, and usage instructions are loaded automatically.</li>
-            <li><strong>Pricing:</strong> Use the official price or set a custom offer.</li>
         </ul>
     ),
-    'PKG_PRODUCTS': (
+    'CONTENT': (
         <ul className="list-disc pl-4 space-y-1">
-            <li><strong>Bundle Creation:</strong> Group multiple products together for a higher average order value.</li>
-            <li><strong>Discounting:</strong> Set a special price for the bundle to encourage purchase.</li>
+            <li><strong>Headline:</strong> The main hook of your page.</li>
+            <li><strong>Benefits:</strong> Short bullet points that sell the result.</li>
+        </ul>
+    ),
+    'TRUST_PROOF': (
+        <ul className="list-disc pl-4 space-y-1">
+            <li><strong>Bio:</strong> Tell them why you are the expert.</li>
+            <li><strong>Badges:</strong> Official seals build instant trust.</li>
+            <li><strong>Testimonials:</strong> Social proof is key to conversion.</li>
         </ul>
     ),
     'CTA_SETUP': (
         <ul className="list-disc pl-4 space-y-1">
-            <li><strong>WhatsApp Link:</strong> Ensure your number includes the country code.</li>
-            <li><strong>Call to Action:</strong> Customize the buttons that appear on your page.</li>
+            <li><strong>WhatsApp Link:</strong> Auto-generated link with pre-filled message.</li>
+            <li><strong>Placement:</strong> Choose where buttons appear to maximize clicks.</li>
         </ul>
     )
 };
@@ -89,32 +93,19 @@ const EditorLayout: React.FC<EditorLayoutProps> = ({ data, updateField, isPrevie
           case 'CTA_SETUP':
           case 'WHATSAPP_SETUP':
           case 'SPONSOR_SETUP':
-              return (
-                  <div className="space-y-6 md:space-y-8">
-                      <ContactSettings data={data} onChange={updateField} />
-                      <div className="border-t border-slate-100 dark:border-slate-800 pt-6">
-                          <CTAButtonsEditor data={data} onChange={updateField} />
-                      </div>
-                  </div>
-              );
+              return <CTAConfiguration data={data} onChange={updateField} />;
 
           // --- PRODUCT SALES TYPE ---
           case 'PRODUCTS':
               return <ProductSectionEditor data={data} onChange={updateField} />;
           case 'CONTENT':
-              return (
-                  <div className="space-y-6 md:space-y-8">
-                      <RichTextEditor value={data.description} onChange={(val) => updateField('description', val)} />
-                      <div className="border-t border-slate-100 dark:border-slate-800 pt-6">
-                          <FeaturesList data={data} onChange={updateField} />
-                      </div>
-                  </div>
-              );
+              return <PageContentEditor data={data} onChange={updateField} />;
+          
           case 'TRUST_PROOF':
           case 'PROOF': 
           case 'TRUST_BUILDER': 
           case 'SUCCESS_STORIES':
-              return <TestimonialsEditor data={data} onChange={updateField} />;
+              return <TrustProofEditor data={data} onChange={updateField} />;
           
           // --- BUNDLE TYPE ---
           case 'PKG_PRODUCTS':

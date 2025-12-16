@@ -41,6 +41,7 @@ export interface PackageOption {
 export interface CTAButton {
   id: string;
   label: string;
+  actionType: 'WHATSAPP' | 'SCROLL' | 'LINK'; // New field to help UI
   url: string;
   style: "primary" | "outline" | "link";
   color?: string; 
@@ -53,6 +54,12 @@ export interface Testimonial {
   role?: string;
   photoUrl?: string;
   quote: string;
+}
+
+export interface FaqItem {
+  id: string;
+  question: string;
+  answer: string;
 }
 
 export interface MobileDesignOverrides {
@@ -97,6 +104,17 @@ export interface SalesPage {
   features: string[]; 
   testimonials: Testimonial[];
   
+  // Trust & Proof (New)
+  badges: string[]; // IDs of badges like 'iasc', 'cruelty_free'
+  personalBranding: {
+      bio: string;
+      yearsExperience: number;
+      rank: string;
+      photoUrl: string;
+  };
+  faqs: FaqItem[];
+  disclaimer: string;
+
   // Commerce
   currency: CurrencyCode;
   products: Product[];
@@ -106,6 +124,15 @@ export interface SalesPage {
   basePrice?: number;
   pricingOptions?: PackageOption[];
   
+  // CTA & WhatsApp
+  whatsappNumber: string;
+  whatsappMessage: string;
+  ctaDisplay: {
+      showHero: boolean;
+      showBottomSticky: boolean;
+      showContentEnd: boolean;
+      showFloatingWhatsapp: boolean;
+  };
   ctas: CTAButton[];
   
   // SEO
@@ -116,7 +143,6 @@ export interface SalesPage {
   };
   
   // Contact & Legal
-  whatsappNumber: string;
   contactEmail: string;
   contactVisible: boolean;
   refundPolicy: string;

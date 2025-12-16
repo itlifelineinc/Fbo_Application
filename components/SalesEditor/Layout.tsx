@@ -7,8 +7,11 @@ import ProductSectionEditor from './ProductSectionEditor';
 import PageContentEditor from './PageContentEditor'; 
 import PackageSectionEditor from './PackageSectionEditor';
 import TrustProofEditor from './TrustProofEditor'; 
-import CTAConfiguration from './CTAConfiguration'; // NEW
+import CTAConfiguration from './CTAConfiguration';
+import CheckoutConfiguration from './CheckoutConfiguration'; // NEW
 import ThemeSelector from './ThemeSelector';
+import ContactSettings from './ContactSettings';
+import CTAButtonsEditor from './CTAButtonsEditor';
 import RichTextEditor from './RichTextEditor'; 
 import InfoPopover from '../Shared/InfoPopover';
 import { PAGE_TAB_CONFIG, PlaceholderTab } from './TabConfiguration';
@@ -45,6 +48,12 @@ const TAB_HELP_CONTENT: Record<string, React.ReactNode> = {
         <ul className="list-disc pl-4 space-y-1">
             <li><strong>WhatsApp Link:</strong> Auto-generated link with pre-filled message.</li>
             <li><strong>Placement:</strong> Choose where buttons appear to maximize clicks.</li>
+        </ul>
+    ),
+    'CHECKOUT': (
+        <ul className="list-disc pl-4 space-y-1">
+            <li><strong>Commerce Mode:</strong> Choose between Lead Gen (Chat) or Direct Sales (Cart).</li>
+            <li><strong>Payments:</strong> Configure Mobile Money, Card, or Cash on Delivery.</li>
         </ul>
     )
 };
@@ -95,6 +104,10 @@ const EditorLayout: React.FC<EditorLayoutProps> = ({ data, updateField, isPrevie
           case 'SPONSOR_SETUP':
               return <CTAConfiguration data={data} onChange={updateField} />;
 
+          // --- COMMERCE & CHECKOUT ---
+          case 'CHECKOUT':
+              return <CheckoutConfiguration data={data} onChange={updateField} />;
+
           // --- PRODUCT SALES TYPE ---
           case 'PRODUCTS':
               return <ProductSectionEditor data={data} onChange={updateField} />;
@@ -127,7 +140,6 @@ const EditorLayout: React.FC<EditorLayoutProps> = ({ data, updateField, isPrevie
               return <RichTextEditor value={data.description} onChange={(val) => updateField('description', val)} />;
 
           // --- PLACEHOLDERS FOR SPECIFIC NEW FEATURES ---
-          case 'CHECKOUT':
           case 'PUBLISH':
           case 'PREVIEW_PUBLISH':
           case 'EDUCATION':

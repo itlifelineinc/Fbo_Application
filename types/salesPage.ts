@@ -70,6 +70,26 @@ export interface MobileDesignOverrides {
   buttonSize?: 'sm' | 'md' | 'lg';
 }
 
+export interface CheckoutConfig {
+  enabled: boolean;
+  paymentMethods: {
+    mobileMoney: boolean;
+    card: boolean;
+    cashOnDelivery: boolean;
+    bankTransfer: boolean;
+  };
+  shipping: {
+    enabled: boolean;
+    freeShippingThreshold?: number;
+    flatRate?: number;
+    pickupOption: boolean;
+  };
+  notifications: {
+    emailOrderAlert: boolean;
+    whatsappOrderAlert: boolean;
+  };
+}
+
 export interface SalesPage {
   id: string;
   type: PageType; 
@@ -135,6 +155,9 @@ export interface SalesPage {
   };
   ctas: CTAButton[];
   
+  // Checkout & Payments (New)
+  checkoutConfig: CheckoutConfig;
+
   // SEO
   seo: {
     metaTitle: string;

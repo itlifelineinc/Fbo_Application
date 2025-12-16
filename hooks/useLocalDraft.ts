@@ -66,6 +66,27 @@ const EMPTY_PAGE: SalesPage = {
     { id: 'default-cta', label: 'Chat on WhatsApp', style: 'primary', actionType: 'WHATSAPP', url: '', icon: 'whatsapp' }
   ],
   
+  // Checkout Defaults
+  checkoutConfig: {
+      enabled: false,
+      paymentMethods: {
+          mobileMoney: true,
+          card: false,
+          cashOnDelivery: true,
+          bankTransfer: false
+      },
+      shipping: {
+          enabled: true,
+          flatRate: 0,
+          freeShippingThreshold: 0,
+          pickupOption: true
+      },
+      notifications: {
+          emailOrderAlert: true,
+          whatsappOrderAlert: true
+      }
+  },
+  
   seo: {
     metaTitle: '',
     metaDescription: '',
@@ -87,7 +108,12 @@ export const useLocalDraft = () => {
       if (saved) {
         const parsed = JSON.parse(saved);
         // Merge with defaults to ensure new fields exist on old drafts
-        return { ...EMPTY_PAGE, ...parsed };
+        // Note: Deep merge would be safer in production, simplified here
+        const merged = { ...EMPTY_PAGE, ...parsed };
+        // Ensure nested objects exist if they were added later to the schema
+        if (!merged.checkoutConfig) merged.checkoutConfig = EMPTY_PAGE.checkoutConfig;
+        
+        return merged;
       }
       return EMPTY_PAGE;
     } catch (e) {

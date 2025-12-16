@@ -205,6 +205,9 @@ const PreviewContent: React.FC<{
   // Helper to force mobile layout styles even if viewport is wide
   const isDesktop = device === 'desktop';
 
+  // Checkout Mode Logic
+  const isCheckoutEnabled = data.checkoutConfig?.enabled;
+
   useEffect(() => {
     if (data.testimonials.length === 0) return;
     const itemsVisible = device === 'mobile' ? 1 : 3;
@@ -307,9 +310,16 @@ const PreviewContent: React.FC<{
 
       // Dynamic URL logic
       let href = cta.url;
+      
+      // If action is WHATSAPP or (SCROLL but Checkout Disabled, treat as WA fallback potentially)
       if (cta.actionType === 'WHATSAPP') {
           href = `https://wa.me/${data.whatsappNumber}?text=${encodeURIComponent(whatsappMessage)}`;
       }
+
+      // If action is SCROLL/Order and Checkout is Disabled, maybe redirect to WhatsApp too?
+      // For now, keep as is unless specified logic change.
+      // But if Checkout is enabled, maybe SCROLL should trigger Cart? 
+      // Simplified: Just use href provided or default behavior.
 
       return (
           <a 
@@ -327,6 +337,16 @@ const PreviewContent: React.FC<{
   const renderHero = () => {
       return (
           <div className={`bg-white dark:bg-slate-950 preview-section px-6 text-center relative overflow-hidden transition-colors`}>
+              {/* Header with Cart Icon if Checkout Enabled */}
+              {isCheckoutEnabled && (
+                  <div className="absolute top-4 right-4 z-50">
+                      <div className="p-2 bg-white dark:bg-slate-800 rounded-full shadow-md border border-slate-100 dark:border-slate-700">
+                          <ShoppingCart size={20} className="text-slate-700 dark:text-slate-200" />
+                          <div className="absolute -top-1 -right-1 w-4 h-4 bg-emerald-500 rounded-full flex items-center justify-center text-[9px] font-bold text-white">0</div>
+                      </div>
+                  </div>
+              )}
+
               <div className="max-w-4xl mx-auto relative z-10 flex flex-col items-center">
                   <div className="w-16 h-1 rounded-full mb-8 opacity-50" style={{ backgroundColor: data.themeColor }}></div>
                   
@@ -356,6 +376,7 @@ const PreviewContent: React.FC<{
       );
   };
 
+  // ... (Zoom Modal code remains same) ...
   // ZOOM MODAL RENDERER
   const renderZoomModal = () => {
     if (!isZoomOpen || images.length === 0) return null;
@@ -532,18 +553,35 @@ const PreviewContent: React.FC<{
                           </div>
 
                           <div className="space-y-6 pt-4 border-t border-slate-200 dark:border-slate-700">
-                              <button 
-                                style={{ 
-                                    backgroundColor: data.themeColor,
-                                    borderRadius: 'var(--btn-radius)',
-                                    padding: 'var(--btn-hero-padding)',
-                                    fontSize: 'var(--btn-hero-font-size)',
-                                    boxShadow: `0 4px 14px 0 ${data.themeColor}40` // Slick shadow
-                                }} 
-                                className="w-full text-white font-bold hover:opacity-90 transition-all active:scale-95 flex items-center justify-center gap-2"
-                              >
-                                  <ShoppingCart size={20} /> Add to Cart
-                              </button>
+                              {isCheckoutEnabled ? (
+                                  <button 
+                                    style={{ 
+                                        backgroundColor: data.themeColor,
+                                        borderRadius: 'var(--btn-radius)',
+                                        padding: 'var(--btn-hero-padding)',
+                                        fontSize: 'var(--btn-hero-font-size)',
+                                        boxShadow: `0 4px 14px 0 ${data.themeColor}40` // Slick shadow
+                                    }} 
+                                    className="w-full text-white font-bold hover:opacity-90 transition-all active:scale-95 flex items-center justify-center gap-2"
+                                  >
+                                      <ShoppingCart size={20} /> Add to Cart
+                                  </button>
+                              ) : (
+                                  <a 
+                                    href={`https://wa.me/${data.whatsappNumber}?text=${encodeURIComponent(whatsappMessage)}`}
+                                    target="_blank"
+                                    style={{ 
+                                        backgroundColor: '#25D366', // WhatsApp Green override for clarity, or use theme color
+                                        borderRadius: 'var(--btn-radius)',
+                                        padding: 'var(--btn-hero-padding)',
+                                        fontSize: 'var(--btn-hero-font-size)',
+                                        boxShadow: `0 4px 14px 0 rgba(37, 211, 102, 0.4)` 
+                                    }} 
+                                    className="w-full text-white font-bold hover:opacity-90 transition-all active:scale-95 flex items-center justify-center gap-2"
+                                  >
+                                      <MessageCircle size={20} /> Chat to Buy
+                                  </a>
+                              )}
                               
                               <p className="text-xs text-slate-400 dark:text-slate-500">
                                   Free shipping on orders over {data.currency}100
@@ -647,7 +685,7 @@ const PreviewContent: React.FC<{
                                               </span>
                                           </div>
                                           <button style={{ backgroundColor: data.themeColor }} className="preview-btn text-white text-sm font-bold shadow-sm whitespace-nowrap">
-                                              Order
+                                              {isCheckoutEnabled ? 'Add to Cart' : 'Order'}
                                           </button>
                                       </div>
                                   </div>

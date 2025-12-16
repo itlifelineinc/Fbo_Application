@@ -8,7 +8,8 @@ import PageContentEditor from './PageContentEditor';
 import PackageSectionEditor from './PackageSectionEditor';
 import TrustProofEditor from './TrustProofEditor'; 
 import CTAConfiguration from './CTAConfiguration';
-import CheckoutConfiguration from './CheckoutConfiguration'; // NEW
+import CheckoutConfiguration from './CheckoutConfiguration'; 
+import PublishShare from './PublishShare'; // NEW
 import ThemeSelector from './ThemeSelector';
 import ContactSettings from './ContactSettings';
 import CTAButtonsEditor from './CTAButtonsEditor';
@@ -54,6 +55,12 @@ const TAB_HELP_CONTENT: Record<string, React.ReactNode> = {
         <ul className="list-disc pl-4 space-y-1">
             <li><strong>Commerce Mode:</strong> Choose between Lead Gen (Chat) or Direct Sales (Cart).</li>
             <li><strong>Payments:</strong> Configure Mobile Money, Card, or Cash on Delivery.</li>
+        </ul>
+    ),
+    'PUBLISH': (
+        <ul className="list-disc pl-4 space-y-1">
+            <li><strong>Go Live:</strong> Make your page accessible to the world.</li>
+            <li><strong>Share:</strong> Use the generated link or QR code to promote your page.</li>
         </ul>
     )
 };
@@ -139,9 +146,12 @@ const EditorLayout: React.FC<EditorLayoutProps> = ({ data, updateField, isPrevie
           case 'MY_STORY':
               return <RichTextEditor value={data.description} onChange={(val) => updateField('description', val)} />;
 
-          // --- PLACEHOLDERS FOR SPECIFIC NEW FEATURES ---
+          // --- PUBLISH ---
           case 'PUBLISH':
           case 'PREVIEW_PUBLISH':
+              return <PublishShare data={data} onChange={updateField} />;
+
+          // --- PLACEHOLDERS FOR SPECIFIC NEW FEATURES ---
           case 'EDUCATION':
           case 'PRICING':
           case 'PROBLEM_EDU':

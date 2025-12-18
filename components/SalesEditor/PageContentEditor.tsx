@@ -3,7 +3,7 @@ import React from 'react';
 import { SalesPage, Product } from '../../types/salesPage';
 import BenefitsEditor from './BenefitsEditor';
 import RichTextEditor from './RichTextEditor';
-import { Type, DollarSign, List, Package } from 'lucide-react';
+import { Type, DollarSign, List, Package, Quote } from 'lucide-react';
 
 interface PageContentEditorProps {
   data: SalesPage;
@@ -92,7 +92,42 @@ const PageContentEditor: React.FC<PageContentEditorProps> = ({ data, onChange })
             </div>
         </section>
 
-        {/* 2. Pricing */}
+        {/* 2. Persuasive Short Story */}
+        <section className="space-y-5">
+            <div className="flex items-center gap-2 mb-2 pb-2 border-b border-slate-100 dark:border-slate-800">
+                <Quote className="text-amber-500" size={18} />
+                <h2 className="font-bold text-slate-800 dark:text-white">Persuasive Short Story</h2>
+            </div>
+            
+            <div>
+                <label className={LABEL_STYLE}>Card Title</label>
+                <input 
+                    type="text" 
+                    value={data.shortStoryTitle || ''}
+                    onChange={(e) => onChange('shortStoryTitle', e.target.value)}
+                    placeholder="e.g. My Personal Story"
+                    className={INPUT_STYLE}
+                />
+            </div>
+
+            <div>
+                <div className="flex justify-between items-center mb-1">
+                    <label className={LABEL_STYLE}>The Story</label>
+                    <span className={`text-[10px] font-bold ${ (data.shortStory?.length || 0) >= 200 ? 'text-red-500' : 'text-slate-400'}`}>
+                        {(data.shortStory?.length || 0)}/200
+                    </span>
+                </div>
+                <textarea 
+                    value={data.shortStory || ''}
+                    onChange={(e) => onChange('shortStory', e.target.value.slice(0, 200))}
+                    maxLength={200}
+                    className={`${INPUT_STYLE} h-32 resize-none text-sm font-normal`}
+                    placeholder="Tell a short story to persuade your buyers..."
+                />
+            </div>
+        </section>
+
+        {/* 3. Pricing */}
         <section className="space-y-5">
             <div className="flex items-center gap-2 mb-2 pb-2 border-b border-slate-100 dark:border-slate-800">
                 <DollarSign className="text-emerald-500" size={18} />
@@ -131,7 +166,7 @@ const PageContentEditor: React.FC<PageContentEditorProps> = ({ data, onChange })
             </div>
         </section>
 
-        {/* 3. Benefits Section */}
+        {/* 4. Benefits Section */}
         <section className="space-y-5">
             <div className="flex items-center gap-2 mb-2 pb-2 border-b border-slate-100 dark:border-slate-800">
                 <div className="bg-emerald-100 text-emerald-600 p-1 rounded dark:bg-emerald-900/30">
@@ -146,7 +181,7 @@ const PageContentEditor: React.FC<PageContentEditorProps> = ({ data, onChange })
             />
         </section>
 
-        {/* 4. How to Use */}
+        {/* 5. How to Use */}
         <section className="space-y-5">
             <div className="flex items-center gap-2 mb-2 pb-2 border-b border-slate-100 dark:border-slate-800">
                 <List className="text-purple-500" size={18} />
@@ -173,7 +208,7 @@ const PageContentEditor: React.FC<PageContentEditorProps> = ({ data, onChange })
             </div>
         </section>
 
-        {/* 5. Detailed Description (Rich Text) */}
+        {/* 6. Detailed Description (Rich Text) */}
         <section className="space-y-5">
              <div className="flex items-center gap-2 mb-2 pb-2 border-b border-slate-100 dark:border-slate-800">
                 <Type className="text-indigo-500" size={18} />

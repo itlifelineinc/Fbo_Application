@@ -6,7 +6,7 @@ import {
   Check, Star, User, ShoppingCart, ArrowRight, CheckCircle, 
   MessageCircle, ChevronLeft, ChevronRight, Maximize2, 
   X, Leaf, ShieldCheck, Heart, Sparkles, Plus, ArrowDown, HelpCircle,
-  Image as ImageIcon, CreditCard, Smartphone, Truck, MapPin, Minus, Send, Loader2, Package
+  Image as ImageIcon, CreditCard, Smartphone, Truck, MapPin, Minus, Send, Loader2, Package, Quote
 } from 'lucide-react';
 
 interface PreviewPanelProps {
@@ -313,14 +313,36 @@ const CleanThemeContent: React.FC<{ data: SalesPage; onOpenCheckout: () => void 
         </div>
       </header>
 
+      {/* Persuasive Short Story Card - After buttons but not on headline bg */}
+      {data.shortStory && (
+          <div className="px-6 -mt-8 relative z-30 mb-8">
+              <div className="bg-white dark:bg-slate-900 rounded-[2.5rem] p-8 shadow-2xl border border-slate-100 dark:border-slate-800 animate-fade-in shadow-slate-200/50 dark:shadow-none">
+                  <div className="mb-6">
+                      <h3 className="text-base font-black text-slate-900 dark:text-white uppercase tracking-wider inline-block">
+                          {data.shortStoryTitle || 'The Story'}
+                      </h3>
+                      <div className="h-1 w-8 bg-slate-900 dark:bg-emerald-500 mt-1 rounded-full"></div>
+                  </div>
+                  <div className="flex gap-5 items-start">
+                      <div className="p-3.5 bg-emerald-50 dark:bg-emerald-900/30 rounded-2xl text-emerald-600 shrink-0">
+                          <Quote size={24} fill="currentColor" className="opacity-80" />
+                      </div>
+                      <p className="text-base text-slate-700 dark:text-slate-200 leading-relaxed font-medium italic">
+                          "{data.shortStory}"
+                      </p>
+                  </div>
+              </div>
+          </div>
+      )}
+
       {/* 2. PRODUCT DETAILS SECTION */}
       <section className="clean-section bg-white dark:bg-slate-950">
           <div className="space-y-6">
               <div className="flex justify-between items-baseline pt-4 border-b border-slate-100 pb-6 dark:border-slate-800">
                   <div>
-                    <h2 className="text-2xl md:text-3xl font-black text-slate-900 dark:text-white leading-none">
+                    <h3 className="text-2xl md:text-3xl font-black text-slate-900 dark:text-white leading-none">
                         {product?.name || 'Product Title'}
-                    </h2>
+                    </h3>
                     <p className="text-xs font-bold text-emerald-600 mt-2 uppercase tracking-widest">{product?.category || 'Quality Natural Support'}</p>
                   </div>
                   <div className="text-right">
@@ -480,7 +502,6 @@ const CheckoutView: React.FC<{ data: SalesPage; onClose: () => void }> = ({ data
                     className={`flex items-center justify-between p-3 rounded-xl border-2 transition-all cursor-pointer ${buyFullPack ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20' : 'border-slate-200 bg-white dark:bg-slate-800 dark:border-slate-700'}`}
                   >
                       <div className="flex items-center gap-3">
-                          {/* Fix: Package icon is now properly imported from lucide-react */}
                           <Package size={20} className={buyFullPack ? 'text-emerald-600' : 'text-slate-400'} />
                           <div>
                               <p className={`font-bold text-sm ${buyFullPack ? 'text-emerald-900 dark:text-emerald-200' : 'text-slate-700 dark:text-slate-400'}`}>Full Pack Box</p>

@@ -37,6 +37,8 @@ const EMPTY_PAGE: SalesPage = {
   },
 
   description: '',
+  shortStoryTitle: 'Why this product?',
+  shortStory: '',
   features: [],
   testimonials: [],
   
@@ -56,7 +58,7 @@ const EMPTY_PAGE: SalesPage = {
   packages: [],
   
   // Pricing Defaults
-  fullPackPrice: 0, // NEW
+  fullPackPrice: 0,
 
   // CTA Defaults
   whatsappNumber: '',
@@ -120,6 +122,8 @@ export const useLocalDraft = () => {
         if (!merged.pageBgColor) merged.pageBgColor = EMPTY_PAGE.pageBgColor;
         if (!merged.cardBgColor) merged.cardBgColor = EMPTY_PAGE.cardBgColor;
         if (merged.fullPackPrice === undefined) merged.fullPackPrice = EMPTY_PAGE.fullPackPrice;
+        if (merged.shortStoryTitle === undefined) merged.shortStoryTitle = EMPTY_PAGE.shortStoryTitle;
+        if (merged.shortStory === undefined) merged.shortStory = EMPTY_PAGE.shortStory;
         
         return merged;
       }

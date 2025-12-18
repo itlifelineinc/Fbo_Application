@@ -123,6 +123,8 @@ export interface SalesPage {
   
   // Content
   description: string; 
+  shortStoryTitle?: string;
+  shortStory?: string;
   features: string[]; 
   testimonials: Testimonial[];
   
@@ -144,7 +146,7 @@ export interface SalesPage {
   
   // Pricing extension
   basePrice?: number;
-  fullPackPrice?: number; // NEW
+  fullPackPrice?: number; 
   pricingOptions?: PackageOption[];
   
   // CTA & WhatsApp

@@ -1,12 +1,12 @@
 
 import React, { useState, useEffect } from 'react';
-import { SalesPage, CTAButton } from '../../types/salesPage';
+import { SalesPage, CTAButton, Product } from '../../types/salesPage';
 import WhatsAppFloatingButton from '../Shared/WhatsAppFloatingButton';
 import { 
   Check, Star, User, ShoppingCart, ArrowRight, CheckCircle, 
   MessageCircle, ChevronLeft, ChevronRight, Maximize2, 
   X, Leaf, ShieldCheck, Heart, Sparkles, Plus, ArrowDown, HelpCircle,
-  Image as ImageIcon
+  Image as ImageIcon, CreditCard, Smartphone, Truck, MapPin
 } from 'lucide-react';
 
 interface PreviewPanelProps {
@@ -16,6 +16,7 @@ interface PreviewPanelProps {
 
 const PreviewPanel: React.FC<PreviewPanelProps> = ({ data, device }) => {
   const isMobile = device === 'mobile';
+  const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
   
   // Design System Calculations
   const settings = isMobile && data.mobileOverrides ? { ...data, ...data.mobileOverrides } : data;
@@ -117,14 +118,30 @@ const PreviewPanel: React.FC<PreviewPanelProps> = ({ data, device }) => {
 
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        
+        .checkout-drawer {
+          position: absolute;
+          inset: 0;
+          z-index: 100;
+          background: white;
+          transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+          display: flex;
+          flex-direction: column;
+        }
+        .dark .checkout-drawer { background: #0f172a; }
       `}</style>
 
       {isMobile ? (
         <div className="mx-auto w-full max-w-[375px] h-full max-h-[850px] bg-slate-900 rounded-[2.5rem] shadow-2xl border-[12px] border-slate-900 overflow-hidden relative">
            <div className="absolute top-0 left-1/2 -translate-x-1/2 h-6 w-32 bg-slate-900 rounded-b-xl z-20"></div>
            
+           {/* Checkout Drawer for Mobile */}
+           <div className={`checkout-drawer ${isCheckoutOpen ? 'translate-x-0' : 'translate-x-full'}`}>
+              <CheckoutView data={data} onClose={() => setIsCheckoutOpen(false)} />
+           </div>
+
            {/* Floating WhatsApp Button inside the mobile frame */}
-           {data.ctaDisplay.showFloatingWhatsapp && (
+           {data.ctaDisplay.showFloatingWhatsapp && !isCheckoutOpen && (
              <div className="absolute bottom-32 right-5 z-50 animate-bounce-subtle">
                 <WhatsAppFloatingButton 
                   phoneNumber={data.whatsappNumber} 
@@ -136,7 +153,7 @@ const PreviewPanel: React.FC<PreviewPanelProps> = ({ data, device }) => {
            )}
 
            <div className="h-full overflow-y-auto no-scrollbar preview-wrapper bg-white dark:bg-slate-950" style={previewStyle}>
-              <CleanThemeContent data={data} isMobile={true} />
+              <CleanThemeContent data={data} onOpenCheckout={() => setIsCheckoutOpen(true)} />
            </div>
         </div>
       ) : (
@@ -149,14 +166,14 @@ const PreviewPanel: React.FC<PreviewPanelProps> = ({ data, device }) => {
                 className="fixed bottom-10 right-10 z-50 animate-bounce-subtle"
               />
             )}
-            <CleanThemeContent data={data} isMobile={false} />
+            <CleanThemeContent data={data} onOpenCheckout={() => alert('Checkout is only available in mobile preview for this specific request.')} />
         </div>
       )}
     </>
   );
 };
 
-const CleanThemeContent: React.FC<{ data: SalesPage; isMobile: boolean }> = ({ data, isMobile }) => {
+const CleanThemeContent: React.FC<{ data: SalesPage; onOpenCheckout: () => void }> = ({ data, onOpenCheckout }) => {
   const [activeImg, setActiveImg] = useState(0);
   const product = data.products[0];
   const images = product?.images || [];
@@ -174,7 +191,6 @@ const CleanThemeContent: React.FC<{ data: SalesPage; isMobile: boolean }> = ({ d
   // Curated logic for text color on background
   const isDarkBg = data.pageBgColor === '#064e3b' || data.pageBgColor === '#111827' || data.pageBgColor === '#1e1b4b' || data.pageBgColor === '#4c0519' || data.pageBgColor === '#000000';
   const textColorClass = isDarkBg ? 'text-white' : 'text-slate-900';
-  const secondaryTextColorClass = isDarkBg ? 'text-white/80' : 'text-slate-700';
 
   // Per instructions: catchy headline = problem/solution field (product.name), support phrase = promise/support field (product.category)
   const mainHeadline = product?.name || data.title || 'Main Catchy Headline';
@@ -265,6 +281,7 @@ const CleanThemeContent: React.FC<{ data: SalesPage; isMobile: boolean }> = ({ d
             {/* Direct Checkout (Only if enabled) */}
             {data.checkoutConfig.enabled && (
                 <button 
+                    onClick={onOpenCheckout}
                     className={`clean-btn w-full border-2 ${isDarkBg ? 'bg-white/10 text-white border-white/20 hover:bg-white/20' : 'bg-slate-900/5 text-slate-900 border-slate-900/10 hover:bg-slate-900/10'}`}
                     style={{ backdropFilter: 'blur(8px)' }}
                 >
@@ -368,5 +385,146 @@ const CleanThemeContent: React.FC<{ data: SalesPage; isMobile: boolean }> = ({ d
     </div>
   );
 };
+
+const CheckoutView: React.FC<{ data: SalesPage; onClose: () => void }> = ({ data, onClose }) => {
+  const [selectedPayment, setSelectedPayment] = useState<string | null>(null);
+  const product = data.products[0];
+  const shippingFee = data.checkoutConfig.shipping.flatRate || 0;
+  const total = (product?.price || 0) + shippingFee;
+
+  return (
+    <div className="flex flex-col h-full bg-white dark:bg-slate-950 font-sans">
+      {/* 1. HEADER */}
+      <div className="flex items-center px-4 py-5 border-b border-slate-100 dark:border-slate-800 shrink-0">
+          <button onClick={onClose} className="p-2 -ml-2 text-slate-800 dark:text-white">
+              <ChevronLeft size={28} strokeWidth={3} />
+          </button>
+          <h2 className="text-2xl font-black text-slate-900 dark:text-white ml-2">Checkout</h2>
+      </div>
+
+      {/* 2. SCROLLABLE FORM */}
+      <div className="flex-1 overflow-y-auto p-6 space-y-8 no-scrollbar pb-32">
+          
+          {/* Order Summary Summary */}
+          <div className="bg-slate-50 dark:bg-slate-900/50 p-5 rounded-2xl border border-slate-100 dark:border-slate-800 flex items-center gap-4">
+              <div className="w-16 h-16 bg-white dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700 p-1 shrink-0">
+                  <img src={product?.images[0]} className="w-full h-full object-contain" />
+              </div>
+              <div className="flex-1 min-w-0">
+                  <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Your Item</p>
+                  <h3 className="font-bold text-slate-900 dark:text-white truncate">{product?.name}</h3>
+              </div>
+              <div className="text-right">
+                  <p className="text-lg font-black text-slate-900 dark:text-white">{data.currency} {product?.price}</p>
+              </div>
+          </div>
+
+          {/* Customer Info */}
+          <div className="space-y-4">
+              <h3 className="text-sm font-black uppercase tracking-widest text-slate-400 flex items-center gap-2">
+                  <User size={16} /> Contact Details
+              </h3>
+              <div className="grid grid-cols-1 gap-4">
+                  <input type="text" placeholder="Full Name" className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-4 font-bold outline-none focus:border-emerald-500 transition-all dark:text-white" />
+                  <input type="tel" placeholder="Phone Number" className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-4 font-bold outline-none focus:border-emerald-500 transition-all dark:text-white" />
+              </div>
+          </div>
+
+          {/* Shipping Info (If Enabled) */}
+          {data.checkoutConfig.shipping.enabled && (
+              <div className="space-y-4 animate-fade-in">
+                  <h3 className="text-sm font-black uppercase tracking-widest text-slate-400 flex items-center gap-2">
+                      <Truck size={16} /> Delivery Address
+                  </h3>
+                  <div className="grid grid-cols-1 gap-4">
+                      <input type="text" placeholder="Street Address" className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-4 font-bold outline-none focus:border-emerald-500 transition-all dark:text-white" />
+                      <div className="grid grid-cols-2 gap-4">
+                        <input type="text" placeholder="City" className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-4 font-bold outline-none focus:border-emerald-500 transition-all dark:text-white" />
+                        <input type="text" placeholder="Postal Code" className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-4 font-bold outline-none focus:border-emerald-500 transition-all dark:text-white" />
+                      </div>
+                  </div>
+              </div>
+          )}
+
+          {/* Payment Methods */}
+          <div className="space-y-4">
+              <h3 className="text-sm font-black uppercase tracking-widest text-slate-400 flex items-center gap-2">
+                  <CreditCard size={16} /> Payment Method
+              </h3>
+              <div className="grid grid-cols-1 gap-3">
+                  {data.checkoutConfig.paymentMethods.mobileMoney && (
+                    <PaymentOption 
+                        id="momo" 
+                        label="Mobile Money (MTN/AirtelTigo)" 
+                        icon={<Smartphone size={20} />} 
+                        selected={selectedPayment === 'momo'} 
+                        onSelect={() => setSelectedPayment('momo')} 
+                    />
+                  )}
+                  {data.checkoutConfig.paymentMethods.card && (
+                    <PaymentOption 
+                        id="card" 
+                        label="Credit / Debit Card" 
+                        icon={<CreditCard size={20} />} 
+                        selected={selectedPayment === 'card'} 
+                        onSelect={() => setSelectedPayment('card')} 
+                    />
+                  )}
+                  {data.checkoutConfig.paymentMethods.cashOnDelivery && (
+                    <PaymentOption 
+                        id="cod" 
+                        label="Cash on Delivery" 
+                        icon={<Truck size={20} />} 
+                        selected={selectedPayment === 'cod'} 
+                        onSelect={() => setSelectedPayment('cod')} 
+                    />
+                  )}
+              </div>
+          </div>
+      </div>
+
+      {/* 3. STICKY BOTTOM SUMMARY */}
+      <div className="p-6 border-t border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-950 shrink-0 shadow-[0_-10px_30px_-15px_rgba(0,0,0,0.1)]">
+          <div className="space-y-2 mb-6">
+              <div className="flex justify-between text-sm text-slate-500 dark:text-slate-400 font-bold">
+                  <span>Subtotal</span>
+                  <span>{data.currency} {product?.price}</span>
+              </div>
+              <div className="flex justify-between text-sm text-slate-500 dark:text-slate-400 font-bold">
+                  <span>Shipping</span>
+                  <span>{shippingFee > 0 ? `${data.currency} ${shippingFee}` : 'Free'}</span>
+              </div>
+              <div className="flex justify-between text-xl font-black text-slate-900 dark:text-white pt-2 border-t border-slate-50 dark:border-slate-900">
+                  <span>Total</span>
+                  <span>{data.currency} {total}</span>
+              </div>
+          </div>
+          <button 
+            className="w-full clean-btn text-white py-5 text-xl shadow-xl shadow-emerald-900/20 active:scale-95"
+            style={{ backgroundColor: data.themeColor }}
+          >
+            Complete Order
+          </button>
+      </div>
+    </div>
+  );
+};
+
+const PaymentOption: React.FC<{ id: string; label: string; icon: React.ReactNode; selected: boolean; onSelect: () => void }> = ({ label, icon, selected, onSelect }) => (
+    <div 
+        onClick={onSelect}
+        className={`p-4 rounded-2xl border-2 flex items-center justify-between cursor-pointer transition-all ${selected ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20' : 'border-slate-100 bg-slate-50 dark:bg-slate-900 dark:border-slate-800'}`}
+    >
+        <div className="flex items-center gap-3">
+            <div className={`p-2 rounded-xl ${selected ? 'bg-emerald-200 text-emerald-800' : 'bg-white dark:bg-slate-800 text-slate-400 shadow-sm'}`}>
+                {icon}
+            </div>
+            <span className={`font-bold text-sm ${selected ? 'text-emerald-900 dark:text-emerald-200' : 'text-slate-600 dark:text-slate-400'}`}>{label}</span>
+        </div>
+        <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${selected ? 'border-emerald-500 bg-emerald-500 text-white' : 'border-slate-200 bg-white dark:bg-slate-800 dark:border-slate-700'}`}>
+            {selected && <Check size={14} strokeWidth={4} />}
+        </div>
+    </div>
+);
 
 export default PreviewPanel;

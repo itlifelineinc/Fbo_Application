@@ -89,7 +89,7 @@ const PageContentEditor: React.FC<PageContentEditorProps> = ({ data, onChange })
             </div>
         </section>
 
-        {/* 2. Persuasive Short Story / Full Story */}
+        {/* 2. Persuasive Story / Full Story */}
         <section className="space-y-5">
             <div className="flex items-center gap-2 mb-2 pb-2 border-b border-slate-100 dark:border-slate-800">
                 <Quote className="text-amber-500" size={18} />
@@ -110,17 +110,14 @@ const PageContentEditor: React.FC<PageContentEditorProps> = ({ data, onChange })
             <div>
                 <div className="flex justify-between items-center mb-1">
                     <label className={LABEL_STYLE}>The Story / Detailed Description</label>
-                    <span className={`text-[10px] font-bold ${ (data.description?.length || 0) >= 500 ? 'text-red-500' : 'text-slate-400'}`}>
-                        {(data.description?.length || 0)}/500
-                    </span>
                 </div>
                 <textarea 
                     value={data.description || ''}
-                    onChange={(e) => onChange('description', e.target.value.slice(0, 500))}
-                    maxLength={500}
+                    onChange={(e) => onChange('description', e.target.value)}
                     className={`${INPUT_STYLE} h-48 resize-none text-sm font-normal leading-relaxed`}
-                    placeholder="Tell a story to persuade your buyers... Max 500 characters."
+                    placeholder="Tell a story to persuade your buyers..."
                 />
+                <p className="text-[10px] text-slate-400 mt-2">There is no character limit here. The UI will show the first 500 characters with a "Read More" button.</p>
             </div>
         </section>
 

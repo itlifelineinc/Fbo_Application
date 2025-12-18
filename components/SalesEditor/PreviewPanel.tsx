@@ -4,7 +4,7 @@ import { SalesPage, Product } from '../../types/salesPage';
 import WhatsAppFloatingButton from '../Shared/WhatsAppFloatingButton';
 import { 
   Check, User, ShoppingCart, MessageCircle, ChevronLeft,
-  Image as ImageIcon, CreditCard, Smartphone, Truck, Minus, Send, Loader2, Package, Quote, ShieldCheck, ArrowDown, Plus
+  Image as ImageIcon, CreditCard, Smartphone, Truck, Minus, Send, Loader2, Package, Quote, ShieldCheck, ArrowDown, Plus, X, ChevronUp
 } from 'lucide-react';
 
 interface PreviewPanelProps {
@@ -15,6 +15,7 @@ interface PreviewPanelProps {
 const PreviewPanel: React.FC<PreviewPanelProps> = ({ data, device }) => {
   const isMobile = device === 'mobile';
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
+  const [isStoryDrawerOpen, setIsStoryDrawerOpen] = useState(false);
   
   // Design System Calculations
   const settings = isMobile && data.mobileOverrides ? { ...data, ...data.mobileOverrides } : data;
@@ -22,10 +23,10 @@ const PreviewPanel: React.FC<PreviewPanelProps> = ({ data, device }) => {
   const scaleRatio = settings.typeScale || 1.25;
   const spacingValue = settings.sectionSpacing ?? 5;
   
-  // Adjusted heading sizes for mobile
-  const h1Size = isMobile ? Math.round(baseSize * 1.8) : Math.round(baseSize * Math.pow(scaleRatio, 4)); 
-  const h2Size = isMobile ? Math.round(baseSize * 1.5) : Math.round(baseSize * Math.pow(scaleRatio, 3)); 
-  const h3Size = isMobile ? Math.round(baseSize * 1.2) : Math.round(baseSize * Math.pow(scaleRatio, 2)); 
+  // Significantly reduced mobile heading sizes as requested
+  const h1Size = isMobile ? Math.round(baseSize * 1.5) : Math.round(baseSize * Math.pow(scaleRatio, 4)); 
+  const h2Size = isMobile ? Math.round(baseSize * 1.3) : Math.round(baseSize * Math.pow(scaleRatio, 3)); 
+  const h3Size = isMobile ? Math.round(baseSize * 1.1) : Math.round(baseSize * Math.pow(scaleRatio, 2)); 
 
   const sectionPaddingRem = 1 + (spacingValue * 0.5); 
   const radius = data.buttonCorner === 'pill' ? '9999px' : data.buttonCorner === 'rounded' ? '0.75rem' : '0px';
@@ -57,14 +58,20 @@ const PreviewPanel: React.FC<PreviewPanelProps> = ({ data, device }) => {
           width: 100%;
           height: 100%;
         }
-        .preview-wrapper h1, .preview-wrapper h2, .preview-wrapper h3 {
-          font-family: var(--font-heading);
-          line-height: 1.1;
-          font-weight: 800;
+        .preview-wrapper h1 { 
+            font-family: var(--font-heading);
+            line-height: 1.1;
+            font-weight: 800;
+            font-size: var(--h1-size); 
+            margin-bottom: 1rem; 
         }
-        .preview-wrapper h1 { font-size: var(--h1-size); margin-bottom: 1rem; }
-        .preview-wrapper h2 { font-size: var(--h2-size); margin-bottom: 1rem; }
-        .preview-wrapper h3 { font-size: var(--h3-size); margin-bottom: 1rem; }
+        .preview-wrapper h2, .preview-wrapper h3 {
+          font-family: var(--font-heading);
+          line-height: 1.2;
+          font-weight: 800;
+          font-size: var(--h3-size);
+          margin-bottom: 1rem;
+        }
         
         .clean-section { padding: var(--section-padding) 1.5rem; }
         
@@ -145,17 +152,56 @@ const PreviewPanel: React.FC<PreviewPanelProps> = ({ data, device }) => {
             transition: transform 0.3s ease-out;
         }
         .dark .payment-subdrawer { background: #1e293b; }
+
+        .custom-story-drawer {
+            position: absolute;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: white;
+            z-index: 200;
+            border-top-left-radius: 2rem;
+            border-top-right-radius: 2rem;
+            box-shadow: 0 -20px 50px -15px rgba(0,0,0,0.3);
+            max-height: 85%;
+            display: flex;
+            flex-direction: column;
+            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .dark .custom-story-drawer { background: #0f172a; border-top: 1px solid #334155; }
       `}</style>
 
       {isMobile ? (
         <div className="mx-auto w-full max-w-[375px] h-full max-h-[850px] bg-slate-900 rounded-[2.5rem] shadow-2xl border-[12px] border-slate-900 overflow-hidden relative">
            <div className="absolute top-0 left-1/2 -translate-x-1/2 h-6 w-32 bg-slate-900 rounded-b-xl z-20"></div>
            
+           {/* General Checkout Drawer */}
            <div className={`checkout-drawer ${isCheckoutOpen ? 'translate-x-0' : 'translate-x-full'}`}>
               <CheckoutView data={data} onClose={() => setIsCheckoutOpen(false)} />
            </div>
 
-           {data.ctaDisplay.showFloatingWhatsapp && !isCheckoutOpen && (
+           {/* Story Full Content Drawer */}
+           <div className={`custom-story-drawer ${isStoryDrawerOpen ? 'translate-y-0' : 'translate-y-full'}`}>
+              <div className="w-12 h-1 bg-slate-200 dark:bg-slate-800 rounded-full mx-auto mt-4 shrink-0"></div>
+              <div className="flex justify-between items-center px-6 pt-4 pb-2 shrink-0">
+                  <h3 className="text-lg font-black text-slate-900 dark:text-white uppercase tracking-wider">
+                      {data.shortStoryTitle || 'Full Story'}
+                  </h3>
+                  <button 
+                    onClick={() => setIsStoryDrawerOpen(false)}
+                    className="p-2 bg-slate-100 dark:bg-slate-800 rounded-full text-slate-500"
+                  >
+                      <X size={20} />
+                  </button>
+              </div>
+              <div className="flex-1 overflow-y-auto p-6 no-scrollbar pt-2">
+                  <p className="text-base text-slate-700 dark:text-slate-300 leading-relaxed whitespace-pre-wrap">
+                      {data.description}
+                  </p>
+              </div>
+           </div>
+
+           {data.ctaDisplay.showFloatingWhatsapp && !isCheckoutOpen && !isStoryDrawerOpen && (
              <div className="absolute bottom-32 right-5 z-50 animate-bounce-subtle">
                 <WhatsAppFloatingButton 
                   phoneNumber={data.whatsappNumber} 
@@ -167,7 +213,11 @@ const PreviewPanel: React.FC<PreviewPanelProps> = ({ data, device }) => {
            )}
 
            <div className="h-full overflow-y-auto no-scrollbar preview-wrapper bg-white dark:bg-slate-950" style={previewStyle}>
-              <CleanThemeContent data={data} onOpenCheckout={() => setIsCheckoutOpen(true)} />
+              <CleanThemeContent 
+                data={data} 
+                onOpenCheckout={() => setIsCheckoutOpen(true)} 
+                onReadMore={() => setIsStoryDrawerOpen(true)}
+              />
            </div>
         </div>
       ) : (
@@ -180,14 +230,22 @@ const PreviewPanel: React.FC<PreviewPanelProps> = ({ data, device }) => {
                 className="fixed bottom-10 right-10 z-50 animate-bounce-subtle"
               />
             )}
-            <CleanThemeContent data={data} onOpenCheckout={() => setIsCheckoutOpen(true)} />
+            <CleanThemeContent 
+                data={data} 
+                onOpenCheckout={() => alert('Checkout is only available in mobile preview.')} 
+                onReadMore={() => alert('Full story view.')}
+            />
         </div>
       )}
     </>
   );
 };
 
-const CleanThemeContent: React.FC<{ data: SalesPage; onOpenCheckout: () => void }> = ({ data, onOpenCheckout }) => {
+const CleanThemeContent: React.FC<{ 
+    data: SalesPage; 
+    onOpenCheckout: () => void;
+    onReadMore: () => void;
+}> = ({ data, onOpenCheckout, onReadMore }) => {
   const [activeImg, setActiveImg] = useState(0);
   const product = data.products[0];
   const images = product?.images || [];
@@ -206,6 +264,10 @@ const CleanThemeContent: React.FC<{ data: SalesPage; onOpenCheckout: () => void 
 
   const mainHeadline = product?.name || data.title || 'Main Catchy Headline';
   const supportPhrase = product?.category || data.subtitle || 'Your Support Phrase Here';
+
+  const storyContent = data.description || '';
+  const isLongStory = storyContent.length > 500;
+  const displayStory = isLongStory ? storyContent.substring(0, 500) + '...' : storyContent;
 
   return (
     <div className="flex flex-col">
@@ -299,23 +361,29 @@ const CleanThemeContent: React.FC<{ data: SalesPage; onOpenCheckout: () => void 
         </div>
       </header>
 
-      {/* 2. PERSUASIVE STORY CARD - Now below header with line color matched to background */}
-      {data.description && (
-          <div className="px-6 -mt-4 relative z-30 mb-8">
+      {/* 2. PERSUASIVE STORY CARD - Now clearly separated and styled like attachment */}
+      {storyContent && (
+          <div className="px-6 py-10 relative z-30 bg-white dark:bg-slate-950">
               <div className="bg-white dark:bg-slate-900 rounded-[2.5rem] p-8 shadow-2xl border border-slate-100 dark:border-slate-800 animate-fade-in shadow-slate-200/50 dark:shadow-none">
                   <div className="mb-6 text-left">
                       <h3 className="text-sm md:text-base font-black text-slate-900 dark:text-white uppercase tracking-wider inline-block">
-                          {data.shortStoryTitle || 'The Story'}
+                          {data.shortStoryTitle || 'Short Story'}
                       </h3>
                       <div className="h-1.5 w-10 mt-1 rounded-full" style={{ backgroundColor: data.pageBgColor }}></div>
                   </div>
-                  <div className="flex gap-5 items-start">
-                      <div className="p-3.5 bg-slate-50 dark:bg-slate-800 rounded-2xl shrink-0" style={{ color: data.themeColor }}>
-                          <Quote size={24} fill="currentColor" className="opacity-80" />
-                      </div>
-                      <p className="text-sm md:text-base text-slate-700 dark:text-slate-200 leading-relaxed font-medium italic">
-                          "{data.description}"
+                  <div className="flex flex-col gap-5">
+                      <p className="text-sm md:text-base text-slate-700 dark:text-slate-200 leading-relaxed font-medium">
+                          {displayStory}
                       </p>
+                      
+                      {isLongStory && (
+                          <button 
+                            onClick={onReadMore}
+                            className="flex items-center gap-2 text-emerald-600 font-black uppercase text-[10px] tracking-widest mt-2 hover:opacity-80 transition-opacity"
+                          >
+                              Read More <ChevronUp size={14} strokeWidth={4} />
+                          </button>
+                      )}
                   </div>
               </div>
           </div>
@@ -693,10 +761,6 @@ const PaymentOption: React.FC<{
             {selected && <Check size={12} strokeWidth={4} />}
         </div>
     </div>
-);
-
-const X = ({ size, className }: { size: number, className?: string }) => (
-    <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
 );
 
 export default PreviewPanel;

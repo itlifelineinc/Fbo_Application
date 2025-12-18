@@ -102,6 +102,8 @@ export interface SalesPage {
   heroImage: string | null;
   galleryImages: string[];
   themeColor: string;
+  pageBgColor: string; // NEW
+  cardBgColor: string; // NEW
   layoutStyle: LayoutStyle;
   
   // New Design Props (Desktop Defaults)

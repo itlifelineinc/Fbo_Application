@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { SalesPage, MobileDesignOverrides } from '../../types/salesPage';
-import { Layout, Palette, Type, Check, Lock, Sliders, Minus, Plus, MousePointerClick, Smartphone, Monitor } from 'lucide-react';
+import { Layout, Palette, Type, Check, Lock, MousePointerClick, Smartphone, Monitor, Shield, Square } from 'lucide-react';
 import CustomSelect from '../Shared/CustomSelect';
 
 interface ThemeSelectorProps {
@@ -28,88 +28,71 @@ const FONTS_BODY_OPTIONS = [
   { value: 'Poppins', label: 'Poppins (Soft)', previewFont: 'Poppins' },
 ];
 
-const PRESET_COLORS = [
-  '#10b981', // Emerald
-  '#3b82f6', // Blue
-  '#8b5cf6', // Violet
-  '#ec4899', // Pink
-  '#f59e0b', // Amber
-  '#ef4444', // Red
-  '#111827', // Gray
+// Eye-safe/High-end Background Palette
+const PAGE_BG_PALETTE = [
+  '#064e3b', // Deep Forest (Emerald 900)
+  '#111827', // Slate 900
+  '#f8fafc', // Soft White
+  '#f5f5f4', // Warm Stone
+  '#e2e8f0', // Clean Slate
+  '#1e1b4b', // Deep Indigo
+  '#4c0519', // Deep Rose
   '#000000', // Black
+];
+
+// Bold Accent Palette for Image Shape
+const CARD_BG_PALETTE = [
+  '#fcd34d', // Sun Yellow
+  '#fbbf24', // Amber
+  '#10b981', // Emerald
+  '#3b82f6', // Bright Blue
+  '#ef4444', // Red
+  '#ec4899', // Pink
+  '#ffffff', // White
+  '#d1d5db', // Silver
 ];
 
 const ThemeSelector: React.FC<ThemeSelectorProps> = ({ data, onChange, previewDevice = 'desktop' }) => {
   
   const isMobileView = previewDevice === 'mobile';
 
-  // Helper to get current value based on device
-  const getValue = <K extends keyof MobileDesignOverrides>(field: K, fallbackKey: keyof SalesPage): any => {
-      if (isMobileView && data.mobileOverrides) {
-          return data.mobileOverrides[field] ?? data[fallbackKey];
-      }
-      return data[fallbackKey];
-  };
-
-  // Helper to update value based on device
-  const handleResponsiveChange = (field: keyof MobileDesignOverrides, value: any, rootField: keyof SalesPage) => {
-      if (isMobileView) {
-          // Update Mobile Override
-          const newOverrides = { ...data.mobileOverrides, [field]: value };
-          onChange('mobileOverrides', newOverrides);
-      } else {
-          // Update Root (Desktop)
-          onChange(rootField, value);
-      }
-  };
-
-  // Handlers for steppers
-  const adjustValue = (field: 'baseFontSize' | 'subtitleFontSize', amount: number, min: number, max: number) => {
-      const current = getValue(field, field);
-      const next = Math.min(max, Math.max(min, current + amount));
-      handleResponsiveChange(field, next, field);
-  };
-
   return (
     <div className="space-y-10 pb-10">
       
-      {/* 1. Theme Selection (Global) */}
+      {/* 1. Theme Selection */}
       <section>
         <label className="block text-sm font-bold text-slate-700 mb-4 flex items-center gap-2 dark:text-slate-300">
           <Layout size={18} className="text-emerald-500" /> Theme Layout
         </label>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          {/* Active Theme: Clean */}
           <button
             onClick={() => onChange('layoutStyle', 'clean')}
             className={`
-              relative p-4 rounded-2xl border-2 text-left transition-all overflow-hidden group
+              relative p-5 rounded-3xl border-2 text-left transition-all overflow-hidden group
               ${data.layoutStyle === 'clean' 
-                ? 'border-emerald-500 bg-emerald-50/50 dark:bg-emerald-900/20 dark:border-emerald-500' 
+                ? 'border-emerald-500 bg-emerald-50/50 dark:bg-emerald-900/20 dark:border-emerald-500 shadow-lg' 
                 : 'border-slate-200 bg-white hover:border-emerald-200 dark:bg-slate-800 dark:border-slate-700'
               }
             `}
           >
-            <div className="flex justify-between items-start mb-2">
-               <div className="w-8 h-8 rounded-full bg-white border border-slate-200 flex items-center justify-center text-slate-700 font-bold dark:bg-slate-700 dark:border-slate-600 dark:text-white">Aa</div>
-               {data.layoutStyle === 'clean' && <div className="w-5 h-5 bg-emerald-500 rounded-full flex items-center justify-center text-white"><Check size={12} strokeWidth={3} /></div>}
+            <div className="flex justify-between items-start mb-3">
+               <div className="w-10 h-10 rounded-2xl bg-white border border-slate-200 flex items-center justify-center text-slate-700 font-bold dark:bg-slate-700 dark:border-slate-600 dark:text-white shadow-sm">Aa</div>
+               {data.layoutStyle === 'clean' && <div className="w-6 h-6 bg-emerald-500 rounded-full flex items-center justify-center text-white shadow-sm"><Check size={14} strokeWidth={3} /></div>}
             </div>
-            <div className="font-bold text-slate-900 dark:text-white">Clean</div>
-            <div className="text-[10px] text-slate-500 mt-1 dark:text-slate-400">Minimalist & Modern</div>
+            <div className="font-extrabold text-slate-900 dark:text-white">Clean</div>
+            <div className="text-[10px] text-slate-500 mt-1 dark:text-slate-400 uppercase font-bold tracking-wider">Arched & Modern</div>
           </button>
 
-          {/* Disabled Theme: Health */}
-          <button disabled className="relative p-4 rounded-2xl border-2 border-slate-100 bg-slate-50 text-left opacity-60 cursor-not-allowed dark:bg-slate-800 dark:border-slate-700">
-            <div className="absolute top-2 right-2"><Lock size={14} className="text-slate-400" /></div>
-            <div className="w-8 h-8 rounded-full bg-slate-200 mb-2"></div>
+          <button disabled className="relative p-5 rounded-3xl border-2 border-slate-100 bg-slate-50 text-left opacity-60 cursor-not-allowed dark:bg-slate-800 dark:border-slate-700">
+            <div className="absolute top-3 right-3 text-slate-300"><Lock size={14} /></div>
+            <div className="w-10 h-10 rounded-2xl bg-slate-200 mb-3 shadow-sm"></div>
             <div className="font-bold text-slate-400">Health</div>
             <div className="text-[10px] text-slate-400 mt-1">Coming Soon</div>
           </button>
 
-          {/* Disabled Theme: Bold */}
-          <button disabled className="relative p-4 rounded-2xl border-2 border-slate-100 bg-slate-50 text-left opacity-60 cursor-not-allowed dark:bg-slate-800 dark:border-slate-700">
-            <div className="absolute top-2 right-2"><Lock size={14} className="text-slate-400" /></div>
-            <div className="w-8 h-8 rounded-none bg-slate-900 mb-2"></div>
+          <button disabled className="relative p-5 rounded-3xl border-2 border-slate-100 bg-slate-50 text-left opacity-60 cursor-not-allowed dark:bg-slate-800 dark:border-slate-700">
+            <div className="absolute top-3 right-3 text-slate-300"><Lock size={14} /></div>
+            <div className="w-10 h-10 rounded-none bg-slate-900 mb-3 shadow-sm"></div>
             <div className="font-bold text-slate-400">Bold</div>
             <div className="text-[10px] text-slate-400 mt-1">Coming Soon</div>
           </button>
@@ -118,262 +101,126 @@ const ThemeSelector: React.FC<ThemeSelectorProps> = ({ data, onChange, previewDe
 
       <div className="w-full h-px bg-slate-100 dark:bg-slate-800"></div>
 
-      {/* 2. Brand Colors (Global) */}
-      <section>
+      {/* 2. Page Colors */}
+      <section className="space-y-6">
         <label className="block text-sm font-bold text-slate-700 mb-4 flex items-center gap-2 dark:text-slate-300">
-          <Palette size={18} className="text-pink-500" /> Brand Colors
+          <Palette size={18} className="text-pink-500" /> Header & Page Colors
         </label>
         
-        <div className="flex flex-col gap-4">
-            <div className="flex flex-wrap gap-3">
-                {PRESET_COLORS.map((color) => (
+        {/* Page Background */}
+        <div className="space-y-3">
+            <p className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest ml-1">Main Page Background</p>
+            <div className="flex flex-wrap gap-2 md:gap-3">
+                {PAGE_BG_PALETTE.map((color) => (
                     <button
-                    key={color}
-                    onClick={() => onChange('themeColor', color)}
-                    className={`w-10 h-10 rounded-full flex items-center justify-center transition-transform hover:scale-110 shadow-sm border border-slate-100 dark:border-slate-700 ${
-                        data.themeColor === color ? 'ring-2 ring-offset-2 ring-slate-900 dark:ring-white dark:ring-offset-slate-900 scale-110' : ''
-                    }`}
-                    style={{ backgroundColor: color }}
+                        key={color}
+                        onClick={() => onChange('pageBgColor', color)}
+                        className={`w-9 h-9 rounded-full flex items-center justify-center transition-all hover:scale-110 shadow-sm border border-slate-200 dark:border-slate-700 ${
+                            data.pageBgColor === color ? 'ring-2 ring-offset-2 ring-slate-900 dark:ring-white dark:ring-offset-slate-900 scale-110' : ''
+                        }`}
+                        style={{ backgroundColor: color }}
                     >
-                    {data.themeColor === color && <Check size={16} className="text-white" strokeWidth={3} />}
+                        {data.pageBgColor === color && <Check size={14} className={color === '#f8fafc' || color === '#f5f5f4' || color === '#e2e8f0' ? 'text-slate-900' : 'text-white'} strokeWidth={4} />}
                     </button>
                 ))}
             </div>
-            
-            <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl border border-slate-200 dark:bg-slate-800 dark:border-slate-700">
-                <div 
-                    className="w-8 h-8 rounded-lg shadow-sm border border-slate-200 shrink-0"
-                    style={{ backgroundColor: data.themeColor }}
-                ></div>
-                <div className="flex-1">
-                    <p className="text-[10px] font-bold text-slate-400 uppercase">Custom Hex</p>
-                    <div className="flex items-center gap-2">
-                        <span className="text-slate-400">#</span>
-                        <input 
-                            type="text" 
-                            value={data.themeColor.replace('#', '')}
-                            onChange={(e) => onChange('themeColor', `#${e.target.value}`)}
-                            className="bg-transparent font-mono text-sm font-bold text-slate-800 w-full focus:outline-none dark:text-white"
-                        />
-                    </div>
-                </div>
-                <div className="relative">
-                    <input 
-                        type="color" 
-                        value={data.themeColor}
-                        onChange={(e) => onChange('themeColor', e.target.value)}
-                        className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
-                    />
-                    <div className="p-2 bg-white rounded-lg border border-slate-200 hover:bg-slate-50 text-slate-600 dark:bg-slate-700 dark:border-slate-600 dark:text-slate-300 shadow-sm">
-                        <Palette size={16} />
-                    </div>
-                </div>
+        </div>
+
+        {/* Card/Shape Background */}
+        <div className="space-y-3 pt-2">
+            <p className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest ml-1">Image Frame Background</p>
+            <div className="flex flex-wrap gap-2 md:gap-3">
+                {CARD_BG_PALETTE.map((color) => (
+                    <button
+                        key={color}
+                        onClick={() => onChange('cardBgColor', color)}
+                        className={`w-9 h-9 rounded-full flex items-center justify-center transition-all hover:scale-110 shadow-sm border border-slate-200 dark:border-slate-700 ${
+                            data.cardBgColor === color ? 'ring-2 ring-offset-2 ring-slate-900 dark:ring-white dark:ring-offset-slate-900 scale-110' : ''
+                        }`}
+                        style={{ backgroundColor: color }}
+                    >
+                        {data.cardBgColor === color && <Check size={14} className={color === '#ffffff' || color === '#fcd34d' || color === '#fbbf24' || color === '#d1d5db' ? 'text-slate-900' : 'text-white'} strokeWidth={4} />}
+                    </button>
+                ))}
+            </div>
+        </div>
+
+        {/* Brand Primary (Buttons) */}
+        <div className="space-y-3 pt-2">
+            <p className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest ml-1">Brand Accent (Buttons)</p>
+            <div className="flex flex-wrap gap-2 md:gap-3">
+                {['#10b981', '#3b82f6', '#8b5cf6', '#ec4899', '#f59e0b', '#ef4444', '#111827'].map((color) => (
+                    <button
+                        key={color}
+                        onClick={() => onChange('themeColor', color)}
+                        className={`w-9 h-9 rounded-full flex items-center justify-center transition-all hover:scale-110 shadow-sm border border-slate-200 dark:border-slate-700 ${
+                            data.themeColor === color ? 'ring-2 ring-offset-2 ring-slate-900 dark:ring-white dark:ring-offset-slate-900 scale-110' : ''
+                        }`}
+                        style={{ backgroundColor: color }}
+                    >
+                        {data.themeColor === color && <Check size={14} className="text-white" strokeWidth={4} />}
+                    </button>
+                ))}
             </div>
         </div>
       </section>
 
       <div className="w-full h-px bg-slate-100 dark:bg-slate-800"></div>
 
-      {/* Active Device Indicator */}
-      <div className={`p-4 rounded-xl flex items-center justify-between ${isMobileView ? 'bg-indigo-50 border border-indigo-200 text-indigo-900 dark:bg-indigo-900/20 dark:border-indigo-800 dark:text-indigo-200' : 'bg-slate-100 border border-slate-200 text-slate-600 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-300'}`}>
-          <div className="flex items-center gap-3">
-              {isMobileView ? <Smartphone size={20} /> : <Monitor size={20} />}
-              <div>
-                  <p className="text-sm font-bold">{isMobileView ? 'Editing Mobile Styles' : 'Editing Desktop Styles'}</p>
-                  <p className="text-[10px] opacity-80">Settings below will apply to {isMobileView ? 'mobile' : 'desktop'} view.</p>
-              </div>
-          </div>
-      </div>
-
-      {/* 3. Button Styles (Responsive) */}
-      <section>
-        <label className="block text-sm font-bold text-slate-700 mb-6 flex items-center gap-2 dark:text-slate-300">
-          <MousePointerClick size={18} className="text-indigo-500" /> Button Styles
-        </label>
-
-        <div className="space-y-6">
-            {/* Shape Selection (Global for consistency usually, but we can keep it global or responsive. User request implied size responsive) */}
-            <div>
-                <label className="text-xs font-bold text-slate-500 uppercase dark:text-slate-400 mb-3 block">Shape (Global)</label>
-                <div className="grid grid-cols-3 gap-3">
-                    <button 
-                        onClick={() => onChange('buttonCorner', 'square')}
-                        className={`p-3 rounded-xl border-2 flex flex-col items-center justify-center gap-2 transition-all ${data.buttonCorner === 'square' ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20' : 'border-slate-200 bg-white hover:border-emerald-200 dark:bg-slate-800 dark:border-slate-700'}`}
-                    >
-                        <div className="w-8 h-8 bg-slate-900 rounded-none shadow-sm dark:bg-white"></div>
-                        <span className={`text-[10px] font-bold uppercase ${data.buttonCorner === 'square' ? 'text-emerald-700 dark:text-emerald-400' : 'text-slate-500'}`}>Square</span>
-                    </button>
-                    
-                    <button 
-                        onClick={() => onChange('buttonCorner', 'rounded')}
-                        className={`p-3 rounded-xl border-2 flex flex-col items-center justify-center gap-2 transition-all ${data.buttonCorner === 'rounded' ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20' : 'border-slate-200 bg-white hover:border-emerald-200 dark:bg-slate-800 dark:border-slate-700'}`}
-                    >
-                        <div className="w-8 h-8 bg-slate-900 rounded-lg shadow-sm dark:bg-white"></div>
-                        <span className={`text-[10px] font-bold uppercase ${data.buttonCorner === 'rounded' ? 'text-emerald-700 dark:text-emerald-400' : 'text-slate-500'}`}>Soft</span>
-                    </button>
-
-                    <button 
-                        onClick={() => onChange('buttonCorner', 'pill')}
-                        className={`p-3 rounded-xl border-2 flex flex-col items-center justify-center gap-2 transition-all ${data.buttonCorner === 'pill' ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20' : 'border-slate-200 bg-white hover:border-emerald-200 dark:bg-slate-800 dark:border-slate-700'}`}
-                    >
-                        <div className="w-8 h-8 bg-slate-900 rounded-full shadow-sm dark:bg-white"></div>
-                        <span className={`text-[10px] font-bold uppercase ${data.buttonCorner === 'pill' ? 'text-emerald-700 dark:text-emerald-400' : 'text-slate-500'}`}>Pill</span>
-                    </button>
-                </div>
-            </div>
-
-            {/* Size Selection (Responsive) */}
-            <div>
-                <label className="text-xs font-bold text-slate-500 uppercase dark:text-slate-400 mb-3 block">Size ({isMobileView ? 'Mobile' : 'Desktop'})</label>
-                <div className="bg-slate-100 p-1 rounded-xl flex dark:bg-slate-800">
-                    {['sm', 'md', 'lg'].map((size) => (
-                        <button
-                            key={size}
-                            onClick={() => handleResponsiveChange('buttonSize', size, 'buttonSize')}
-                            className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${
-                                getValue('buttonSize', 'buttonSize') === size 
-                                ? 'bg-white shadow-sm text-slate-900 dark:bg-slate-700 dark:text-white' 
-                                : 'text-slate-500 hover:text-slate-700 dark:text-slate-400'
-                            }`}
-                        >
-                            {size === 'sm' ? 'Small' : size === 'md' ? 'Medium' : 'Large'}
-                        </button>
-                    ))}
-                </div>
-            </div>
-        </div>
-      </section>
-
-      <div className="w-full h-px bg-slate-100 dark:bg-slate-800"></div>
-
-      {/* 4. Advanced Typography (Responsive Sizes) */}
+      {/* 3. Typography */}
       <section>
         <label className="block text-sm font-bold text-slate-700 mb-6 flex items-center gap-2 dark:text-slate-300">
           <Type size={18} className="text-blue-500" /> Typography
         </label>
         
-        <div className="space-y-6">
-            {/* Font Families (Global) */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="flex flex-col gap-1">
-                    <CustomSelect 
-                        label="Headings Font"
-                        value={data.headingFont || 'Lexend'}
-                        options={FONTS_HEADING_OPTIONS}
-                        onChange={(val) => onChange('headingFont', val)}
-                    />
-                </div>
-                <div className="flex flex-col gap-1">
-                    <CustomSelect 
-                        label="Body Font"
-                        value={data.bodyFont || 'Noto Sans'}
-                        options={FONTS_BODY_OPTIONS}
-                        onChange={(val) => onChange('bodyFont', val)}
-                    />
-                </div>
-            </div>
-
-            {/* Body Size Control (Responsive) */}
-            <div className="bg-slate-50 p-5 rounded-2xl border border-slate-200 dark:bg-slate-800 dark:border-slate-700">
-                <div className="flex justify-between items-center mb-4">
-                    <div className="flex items-center gap-2">
-                        <span className="p-1.5 bg-blue-100 text-blue-600 rounded dark:bg-blue-900/30 dark:text-blue-400"><Type size={14} /></span>
-                        <div>
-                            <label className="text-xs font-bold text-slate-700 dark:text-slate-200 block">Body Text Size ({isMobileView ? 'Mobile' : 'Desktop'})</label>
-                            <span className="text-[10px] text-slate-400">Base scale for paragraphs</span>
-                        </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                        <button 
-                            onClick={() => adjustValue('baseFontSize', -1, 12, 24)}
-                            className="w-8 h-8 rounded-full bg-white border border-slate-200 flex items-center justify-center text-slate-500 hover:bg-slate-50 hover:text-slate-800 dark:bg-slate-700 dark:border-slate-600 dark:text-slate-300"
-                        >
-                            <Minus size={14} />
-                        </button>
-                        <span className="w-8 text-center font-bold text-sm text-slate-800 dark:text-white">{getValue('baseFontSize', 'baseFontSize')}</span>
-                        <button 
-                            onClick={() => adjustValue('baseFontSize', 1, 12, 24)}
-                            className="w-8 h-8 rounded-full bg-white border border-slate-200 flex items-center justify-center text-slate-500 hover:bg-slate-50 hover:text-slate-800 dark:bg-slate-700 dark:border-slate-600 dark:text-slate-300"
-                        >
-                            <Plus size={14} />
-                        </button>
-                    </div>
-                </div>
-                <input 
-                    type="range" 
-                    min="12" 
-                    max="24" 
-                    step="1" 
-                    value={getValue('baseFontSize', 'baseFontSize')} 
-                    onChange={(e) => handleResponsiveChange('baseFontSize', parseInt(e.target.value), 'baseFontSize')}
-                    className="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-emerald-500 dark:bg-slate-700"
-                />
-            </div>
-
-            {/* Subtitle Size Control (Responsive) */}
-            <div className="bg-slate-50 p-5 rounded-2xl border border-slate-200 dark:bg-slate-800 dark:border-slate-700">
-                <div className="flex justify-between items-center mb-4">
-                    <div className="flex items-center gap-2">
-                        <span className="p-1.5 bg-indigo-100 text-indigo-600 rounded dark:bg-indigo-900/30 dark:text-indigo-400"><Type size={14} /></span>
-                        <div>
-                            <label className="text-xs font-bold text-slate-700 dark:text-slate-200 block">Subtitle Size ({isMobileView ? 'Mobile' : 'Desktop'})</label>
-                            <span className="text-[10px] text-slate-400">Controls size of secondary text</span>
-                        </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                        <button 
-                            onClick={() => adjustValue('subtitleFontSize', -1, 14, 32)}
-                            className="w-8 h-8 rounded-full bg-white border border-slate-200 flex items-center justify-center text-slate-500 hover:bg-slate-50 hover:text-slate-800 dark:bg-slate-700 dark:border-slate-600 dark:text-slate-300"
-                        >
-                            <Minus size={14} />
-                        </button>
-                        <span className="w-8 text-center font-bold text-sm text-slate-800 dark:text-white">{getValue('subtitleFontSize', 'subtitleFontSize')}</span>
-                        <button 
-                            onClick={() => adjustValue('subtitleFontSize', 1, 14, 32)}
-                            className="w-8 h-8 rounded-full bg-white border border-slate-200 flex items-center justify-center text-slate-500 hover:bg-slate-50 hover:text-slate-800 dark:bg-slate-700 dark:border-slate-600 dark:text-slate-300"
-                        >
-                            <Plus size={14} />
-                        </button>
-                    </div>
-                </div>
-                <input 
-                    type="range" 
-                    min="14" 
-                    max="32" 
-                    step="1" 
-                    value={getValue('subtitleFontSize', 'subtitleFontSize')} 
-                    onChange={(e) => handleResponsiveChange('subtitleFontSize', parseInt(e.target.value), 'subtitleFontSize')}
-                    className="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-indigo-500 dark:bg-slate-700"
-                />
-            </div>
-
-            {/* Heading Scale Slider (Responsive) */}
-            <div className="bg-slate-50 p-5 rounded-2xl border border-slate-200 dark:bg-slate-800 dark:border-slate-700">
-                <div className="flex justify-between items-center mb-4">
-                    <div className="flex items-center gap-2">
-                        <span className="p-1.5 bg-purple-100 text-purple-600 rounded dark:bg-purple-900/30 dark:text-purple-400"><Sliders size={14} /></span>
-                        <div>
-                            <label className="text-xs font-bold text-slate-700 dark:text-slate-200 block">Heading Prominence ({isMobileView ? 'Mobile' : 'Desktop'})</label>
-                            <span className="text-[10px] text-slate-400">Scale ratio for Headers vs Body</span>
-                        </div>
-                    </div>
-                    <span className="text-xs font-bold text-purple-600 dark:text-purple-400 bg-purple-50 px-2 py-1 rounded dark:bg-purple-900/20">
-                        {getValue('typeScale', 'typeScale').toFixed(2)}x
-                    </span>
-                </div>
-                <input 
-                    type="range" 
-                    min="1.1" 
-                    max="1.6" 
-                    step="0.05" 
-                    value={getValue('typeScale', 'typeScale')} 
-                    onChange={(e) => handleResponsiveChange('typeScale', parseFloat(e.target.value), 'typeScale')}
-                    className="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-purple-500 dark:bg-slate-700"
-                />
-            </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <CustomSelect 
+                label="Headings Font"
+                value={data.headingFont || 'Lexend'}
+                options={FONTS_HEADING_OPTIONS}
+                onChange={(val) => onChange('headingFont', val)}
+            />
+            <CustomSelect 
+                label="Body Font"
+                value={data.bodyFont || 'Noto Sans'}
+                options={FONTS_BODY_OPTIONS}
+                onChange={(val) => onChange('bodyFont', val)}
+            />
         </div>
       </section>
 
+      <div className="w-full h-px bg-slate-100 dark:bg-slate-800"></div>
+
+      {/* 4. Button Styles */}
+      <section>
+        <label className="block text-sm font-bold text-slate-700 mb-6 flex items-center gap-2 dark:text-slate-300">
+          <MousePointerClick size={18} className="text-indigo-500" /> Interaction Design
+        </label>
+
+        <div className="grid grid-cols-3 gap-3">
+            <button 
+                onClick={() => onChange('buttonCorner', 'square')}
+                className={`p-4 rounded-3xl border-2 flex flex-col items-center justify-center gap-2 transition-all ${data.buttonCorner === 'square' ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20 shadow-sm' : 'border-slate-200 bg-white hover:border-emerald-200 dark:bg-slate-800 dark:border-slate-700'}`}
+            >
+                <div className="w-8 h-8 bg-slate-900 rounded-none dark:bg-white"></div>
+                <span className="text-[10px] font-bold uppercase tracking-wider">Sharp</span>
+            </button>
+            <button 
+                onClick={() => onChange('buttonCorner', 'rounded')}
+                className={`p-4 rounded-3xl border-2 flex flex-col items-center justify-center gap-2 transition-all ${data.buttonCorner === 'rounded' ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20 shadow-sm' : 'border-slate-200 bg-white hover:border-emerald-200 dark:bg-slate-800 dark:border-slate-700'}`}
+            >
+                <div className="w-8 h-8 bg-slate-900 rounded-xl dark:bg-white"></div>
+                <span className="text-[10px] font-bold uppercase tracking-wider">Soft</span>
+            </button>
+            <button 
+                onClick={() => onChange('buttonCorner', 'pill')}
+                className={`p-4 rounded-3xl border-2 flex flex-col items-center justify-center gap-2 transition-all ${data.buttonCorner === 'pill' ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20 shadow-sm' : 'border-slate-200 bg-white hover:border-emerald-200 dark:bg-slate-800 dark:border-slate-700'}`}
+            >
+                <div className="w-8 h-8 bg-slate-900 rounded-full dark:bg-white"></div>
+                <span className="text-[10px] font-bold uppercase tracking-wider">Capsule</span>
+            </button>
+        </div>
+      </section>
     </div>
   );
 };

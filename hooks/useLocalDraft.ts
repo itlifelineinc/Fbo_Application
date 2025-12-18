@@ -11,6 +11,8 @@ const EMPTY_PAGE: SalesPage = {
   heroImage: null,
   galleryImages: [],
   themeColor: '#10b981', // Emerald-500
+  pageBgColor: '#064e3b', // Default Dark Green
+  cardBgColor: '#fcd34d', // Default Amber/Yellow
   layoutStyle: 'clean', // Default to 'clean'
   
   // Defaults for new design system
@@ -108,10 +110,12 @@ export const useLocalDraft = () => {
       if (saved) {
         const parsed = JSON.parse(saved);
         // Merge with defaults to ensure new fields exist on old drafts
-        // Note: Deep merge would be safer in production, simplified here
         const merged = { ...EMPTY_PAGE, ...parsed };
-        // Ensure nested objects exist if they were added later to the schema
+        
+        // Safety checks for nested objects
         if (!merged.checkoutConfig) merged.checkoutConfig = EMPTY_PAGE.checkoutConfig;
+        if (!merged.pageBgColor) merged.pageBgColor = EMPTY_PAGE.pageBgColor;
+        if (!merged.cardBgColor) merged.cardBgColor = EMPTY_PAGE.cardBgColor;
         
         return merged;
       }

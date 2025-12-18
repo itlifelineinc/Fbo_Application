@@ -90,6 +90,26 @@ const PreviewPanel: React.FC<PreviewPanelProps> = ({ data, device }) => {
             box-shadow: 0 10px 30px -10px rgba(0,0,0,0.3);
         }
 
+        .mini-arch {
+            border-radius: 2rem 2rem 2rem 2rem;
+            width: 2.5rem;
+            height: 3.5rem;
+            background-color: var(--card-bg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 10px -2px rgba(0,0,0,0.2);
+        }
+
+        .fade-in-slide {
+            animation: fadeInSlide 0.8s ease-out forwards;
+        }
+
+        @keyframes fadeInSlide {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
       `}</style>
@@ -111,45 +131,62 @@ const PreviewPanel: React.FC<PreviewPanelProps> = ({ data, device }) => {
 };
 
 const CleanThemeContent: React.FC<{ data: SalesPage; isMobile: boolean }> = ({ data, isMobile }) => {
+  const [activeImg, setActiveImg] = useState(0);
   const product = data.products[0];
   const images = product?.images || [];
   const whatsappMsg = data.whatsappMessage?.replace('{title}', data.title) || "";
+
+  // Auto-slide logic for product images
+  useEffect(() => {
+    if (images.length <= 1) return;
+    const timer = setInterval(() => {
+        setActiveImg((prev) => (prev + 1) % images.length);
+    }, 4000); // 4 seconds per slide
+    return () => clearInterval(timer);
+  }, [images.length]);
   
   // Curated logic for text color on background
   const isDarkBg = data.pageBgColor === '#064e3b' || data.pageBgColor === '#111827' || data.pageBgColor === '#1e1b4b' || data.pageBgColor === '#4c0519' || data.pageBgColor === '#000000';
   const textColorClass = isDarkBg ? 'text-white' : 'text-slate-900';
   const subtextColorClass = isDarkBg ? 'text-white/60' : 'text-slate-500';
 
+  // Per instructions: catchy headline = problem/solution field (product.name), support phrase = promise/support field (product.category)
+  const mainHeadline = product?.name || data.title || 'Main Catchy Headline';
+  const supportPhrase = product?.category || data.subtitle || 'Your Support Phrase Here';
+
   return (
     <div className="flex flex-col">
-      {/* 1. BRANDED HERO HEADER (MOBILE FOCUS) */}
+      {/* 1. BRANDED HERO HEADER */}
       <header 
-        className="clean-section pt-16 md:pt-24 pb-12 flex flex-col items-center text-center transition-colors duration-500"
+        className="clean-section pt-16 md:pt-24 pb-16 flex flex-col items-center text-center transition-colors duration-500 overflow-hidden"
         style={{ backgroundColor: data.pageBgColor }}
       >
         {/* Promise/Support (Small Text) */}
         <span 
             className={`text-[10px] md:text-xs font-black uppercase tracking-[0.25em] mb-4 opacity-80 animate-fade-in ${textColorClass}`}
         >
-            {data.subtitle || 'Your Support Phrase Here'}
+            {supportPhrase}
         </span>
 
         {/* Main Headline (Problem/Solution) */}
         <h1 
             className={`max-w-[90%] mx-auto mb-10 leading-[1.05] tracking-tight animate-slide-up ${textColorClass}`}
         >
-            {data.title || 'Main Catchy Headline'}
+            {mainHeadline}
         </h1>
 
-        {/* THE SIGNATURE ARCH FRAME */}
-        <div className="w-[85%] max-w-[300px] animate-fade-in delay-200">
-            <div className="arch-frame">
-                {product?.images[0] ? (
-                    <img 
-                        src={product.images[0]} 
-                        alt="Featured Product" 
-                        className="w-full h-full object-cover p-2"
-                    />
+        {/* THE SIGNATURE ARCH FRAME WITH AUTO-SLIDER */}
+        <div className="w-[85%] max-w-[300px] mb-12 relative">
+            <div className="arch-frame relative group">
+                {images.length > 0 ? (
+                    images.map((img, idx) => (
+                        <img 
+                            key={idx}
+                            src={img} 
+                            alt={`Product View ${idx + 1}`} 
+                            className={`absolute inset-0 w-full h-full object-cover p-2 transition-all duration-1000 ease-in-out ${activeImg === idx ? 'opacity-100 scale-100' : 'opacity-0 scale-110'}`}
+                        />
+                    ))
                 ) : (
                     <div className="flex flex-col items-center text-slate-400">
                         <ImageIcon size={48} />
@@ -157,15 +194,41 @@ const CleanThemeContent: React.FC<{ data: SalesPage; isMobile: boolean }> = ({ d
                     </div>
                 )}
             </div>
+            
+            {/* Slide Indicators */}
+            {images.length > 1 && (
+                <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 flex gap-1.5">
+                    {images.map((_, idx) => (
+                        <div 
+                            key={idx} 
+                            className={`h-1 rounded-full transition-all duration-500 ${activeImg === idx ? 'w-4 bg-white shadow-sm' : 'w-1 bg-white/30'}`}
+                        />
+                    ))}
+                </div>
+            )}
         </div>
 
-        {/* Scroll Indicator or CTA Hint */}
-        <div className="mt-12 animate-bounce">
-            <ArrowDown className={`${subtextColorClass}`} size={20} />
+        {/* CREDIBILITY BADGES - In mini arched frames, matching cardBgColor */}
+        <div className="flex flex-wrap justify-center gap-4 w-full px-4 mt-4">
+            {data.badges.map((badgeId, idx) => (
+                <div key={badgeId} className="flex flex-col items-center gap-1.5 animate-fade-in" style={{ animationDelay: `${idx * 100}ms` }}>
+                    <div className="mini-arch">
+                        <ShieldCheck size={18} className="text-slate-900" strokeWidth={2.5} />
+                    </div>
+                    <span className={`text-[8px] font-black uppercase tracking-widest ${textColorClass} opacity-60`}>
+                        {badgeId.replace('_', ' ')}
+                    </span>
+                </div>
+            ))}
+        </div>
+
+        {/* Scroll Hint */}
+        <div className="mt-10 animate-bounce opacity-40">
+            <ArrowDown className={`${textColorClass}`} size={20} />
         </div>
       </header>
 
-      {/* 2. PRODUCT DETAILS SECTION (Standard Light/Dark Mode) */}
+      {/* 2. PRODUCT DETAILS SECTION */}
       <section className="clean-section bg-white dark:bg-slate-950">
           <div className="space-y-6">
               <div className="flex justify-between items-baseline pt-4 border-b border-slate-100 pb-6 dark:border-slate-800">

@@ -3,7 +3,7 @@ import React from 'react';
 import { SalesPage, Product } from '../../types/salesPage';
 import BenefitsEditor from './BenefitsEditor';
 import RichTextEditor from './RichTextEditor';
-import { Type, DollarSign, List } from 'lucide-react';
+import { Type, DollarSign, List, Package } from 'lucide-react';
 
 interface PageContentEditorProps {
   data: SalesPage;
@@ -98,9 +98,9 @@ const PageContentEditor: React.FC<PageContentEditorProps> = ({ data, onChange })
                 <DollarSign className="text-emerald-500" size={18} />
                 <h2 className="font-bold text-slate-800 dark:text-white">Pricing & Offer</h2>
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                    <label className={LABEL_STYLE}>Price ({data.currency})</label>
+                    <label className={LABEL_STYLE}>Standard Price ({data.currency})</label>
                     <input 
                         type="number" 
                         value={activeProduct.price}
@@ -109,7 +109,17 @@ const PageContentEditor: React.FC<PageContentEditorProps> = ({ data, onChange })
                     />
                 </div>
                 <div>
-                    <label className={LABEL_STYLE}>Discount Price</label>
+                    <label className={LABEL_STYLE}>Full Pack / Box Price ({data.currency})</label>
+                    <input 
+                        type="number" 
+                        value={data.fullPackPrice || ''}
+                        onChange={(e) => onChange('fullPackPrice', parseFloat(e.target.value))}
+                        placeholder="Price for full case"
+                        className={INPUT_STYLE}
+                    />
+                </div>
+                <div className="md:col-span-2">
+                    <label className={LABEL_STYLE}>Discount Price (Strike-through)</label>
                     <input 
                         type="number" 
                         value={activeProduct.discountPrice || ''}

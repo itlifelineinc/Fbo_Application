@@ -55,6 +55,9 @@ const EMPTY_PAGE: SalesPage = {
   products: [],
   packages: [],
   
+  // Pricing Defaults
+  fullPackPrice: 0, // NEW
+
   // CTA Defaults
   whatsappNumber: '',
   whatsappMessage: "Hi, I'm interested in {title}. Can you tell me more?",
@@ -116,6 +119,7 @@ export const useLocalDraft = () => {
         if (!merged.checkoutConfig) merged.checkoutConfig = EMPTY_PAGE.checkoutConfig;
         if (!merged.pageBgColor) merged.pageBgColor = EMPTY_PAGE.pageBgColor;
         if (!merged.cardBgColor) merged.cardBgColor = EMPTY_PAGE.cardBgColor;
+        if (merged.fullPackPrice === undefined) merged.fullPackPrice = EMPTY_PAGE.fullPackPrice;
         
         return merged;
       }

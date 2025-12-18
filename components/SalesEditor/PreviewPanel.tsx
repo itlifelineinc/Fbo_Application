@@ -6,7 +6,7 @@ import {
   Check, Star, User, ShoppingCart, ArrowRight, CheckCircle, 
   MessageCircle, ChevronLeft, ChevronRight, Maximize2, 
   X, Leaf, ShieldCheck, Heart, Sparkles, Plus, ArrowDown, HelpCircle,
-  Image as ImageIcon, CreditCard, Smartphone, Truck, MapPin
+  Image as ImageIcon, CreditCard, Smartphone, Truck, MapPin, Minus, Send, Loader2, Package
 } from 'lucide-react';
 
 interface PreviewPanelProps {
@@ -82,7 +82,8 @@ const PreviewPanel: React.FC<PreviewPanelProps> = ({ data, device }) => {
           font-size: 0.85rem;
           box-shadow: 0 4px 14px 0 rgba(0,0,0,0.1);
         }
-        .clean-btn:active { transform: scale(0.96); }
+        .clean-btn:active:not(:disabled) { transform: scale(0.96); }
+        .clean-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
         .arch-frame {
             border-radius: 12rem 12rem 12rem 12rem;
@@ -129,6 +130,21 @@ const PreviewPanel: React.FC<PreviewPanelProps> = ({ data, device }) => {
           flex-direction: column;
         }
         .dark .checkout-drawer { background: #0f172a; }
+
+        .payment-subdrawer {
+            position: absolute;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: white;
+            z-index: 110;
+            border-top-left-radius: 1.5rem;
+            border-top-right-radius: 1.5rem;
+            box-shadow: 0 -20px 40px -10px rgba(0,0,0,0.2);
+            padding: 1.5rem;
+            transition: transform 0.3s ease-out;
+        }
+        .dark .payment-subdrawer { background: #1e293b; }
       `}</style>
 
       {isMobile ? (
@@ -387,13 +403,52 @@ const CleanThemeContent: React.FC<{ data: SalesPage; onOpenCheckout: () => void 
 };
 
 const CheckoutView: React.FC<{ data: SalesPage; onClose: () => void }> = ({ data, onClose }) => {
+  const [quantity, setQuantity] = useState(1);
+  const [buyFullPack, setBuyFullPack] = useState(false);
   const [selectedPayment, setSelectedPayment] = useState<string | null>(null);
+  const [activePaymentDrawer, setActivePaymentDrawer] = useState<'momo' | 'card' | null>(null);
+  const [paymentVerified, setPaymentVerified] = useState(false);
+  const [isVerifying, setIsVerifying] = useState(false);
+  
+  // Buyer Info States
+  const [buyerName, setBuyerName] = useState('');
+  const [buyerPhone, setBuyerPhone] = useState('');
+  const [buyerAddress, setBuyerAddress] = useState('');
+  
   const product = data.products[0];
+  const unitPrice = buyFullPack && data.fullPackPrice ? data.fullPackPrice : (product?.price || 0);
   const shippingFee = data.checkoutConfig.shipping.flatRate || 0;
-  const total = (product?.price || 0) + shippingFee;
+  const subtotal = unitPrice * quantity;
+  const total = subtotal + shippingFee;
+
+  const isFormValid = buyerName.trim() !== '' && 
+                      buyerPhone.trim() !== '' && 
+                      (data.checkoutConfig.shipping.enabled ? buyerAddress.trim() !== '' : true) &&
+                      selectedPayment !== null &&
+                      (selectedPayment === 'cod' || paymentVerified);
+
+  const handleMomoSend = () => {
+      setIsVerifying(true);
+      setTimeout(() => {
+          setIsVerifying(false);
+          setPaymentVerified(true);
+          setActivePaymentDrawer(null);
+          alert("MoMo Prompt Sent! Please confirm on your phone.");
+      }, 2000);
+  };
+
+  const handleCardVerify = () => {
+      setIsVerifying(true);
+      setTimeout(() => {
+          setIsVerifying(false);
+          setPaymentVerified(true);
+          setActivePaymentDrawer(null);
+          alert("Card eligible! Security check passed.");
+      }, 2000);
+  };
 
   return (
-    <div className="flex flex-col h-full bg-white dark:bg-slate-950 font-sans">
+    <div className="flex flex-col h-full bg-white dark:bg-slate-950 font-sans relative">
       {/* 1. HEADER */}
       <div className="flex items-center px-4 py-5 border-b border-slate-100 dark:border-slate-800 shrink-0">
           <button onClick={onClose} className="p-2 -ml-2 text-slate-800 dark:text-white">
@@ -406,16 +461,56 @@ const CheckoutView: React.FC<{ data: SalesPage; onClose: () => void }> = ({ data
       <div className="flex-1 overflow-y-auto p-6 space-y-8 no-scrollbar pb-32">
           
           {/* Order Summary Summary */}
-          <div className="bg-slate-50 dark:bg-slate-900/50 p-5 rounded-2xl border border-slate-100 dark:border-slate-800 flex items-center gap-4">
-              <div className="w-16 h-16 bg-white dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700 p-1 shrink-0">
-                  <img src={product?.images[0]} className="w-full h-full object-contain" />
+          <div className="bg-slate-50 dark:bg-slate-900/50 p-5 rounded-2xl border border-slate-100 dark:border-slate-800 space-y-4">
+              <div className="flex items-center gap-4">
+                  <div className="w-16 h-16 bg-white dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700 p-1 shrink-0">
+                      <img src={product?.images[0]} className="w-full h-full object-contain" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Selected Item</p>
+                      <h3 className="font-bold text-slate-900 dark:text-white truncate">{product?.name}</h3>
+                      <p className="text-sm font-black text-emerald-600">{data.currency} {unitPrice.toLocaleString()}</p>
+                  </div>
               </div>
-              <div className="flex-1 min-w-0">
-                  <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Your Item</p>
-                  <h3 className="font-bold text-slate-900 dark:text-white truncate">{product?.name}</h3>
-              </div>
-              <div className="text-right">
-                  <p className="text-lg font-black text-slate-900 dark:text-white">{data.currency} {product?.price}</p>
+
+              {/* Box/Full Pack Option */}
+              {data.fullPackPrice && data.fullPackPrice > 0 && (
+                  <div 
+                    onClick={() => setBuyFullPack(!buyFullPack)}
+                    className={`flex items-center justify-between p-3 rounded-xl border-2 transition-all cursor-pointer ${buyFullPack ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20' : 'border-slate-200 bg-white dark:bg-slate-800 dark:border-slate-700'}`}
+                  >
+                      <div className="flex items-center gap-3">
+                          {/* Fix: Package icon is now properly imported from lucide-react */}
+                          <Package size={20} className={buyFullPack ? 'text-emerald-600' : 'text-slate-400'} />
+                          <div>
+                              <p className={`font-bold text-sm ${buyFullPack ? 'text-emerald-900 dark:text-emerald-200' : 'text-slate-700 dark:text-slate-400'}`}>Full Pack Box</p>
+                              <p className="text-[10px] text-slate-400">Save more with the complete set</p>
+                          </div>
+                      </div>
+                      <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center ${buyFullPack ? 'bg-emerald-500 border-emerald-500' : 'border-slate-200'}`}>
+                          {buyFullPack && <Check size={12} className="text-white" strokeWidth={4} />}
+                      </div>
+                  </div>
+              )}
+
+              {/* Quantity Controls */}
+              <div className="flex items-center justify-between pt-2">
+                  <span className="text-sm font-bold text-slate-700 dark:text-slate-300">Quantity</span>
+                  <div className="flex items-center gap-4 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-full px-2 py-1 shadow-sm">
+                      <button 
+                        onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                        className="w-8 h-8 flex items-center justify-center rounded-full bg-slate-50 dark:bg-slate-700 text-slate-600 dark:text-white active:scale-90"
+                      >
+                          <Minus size={16} strokeWidth={3} />
+                      </button>
+                      <span className="text-lg font-black text-slate-900 dark:text-white w-4 text-center">{quantity}</span>
+                      <button 
+                        onClick={() => setQuantity(quantity + 1)}
+                        className="w-8 h-8 flex items-center justify-center rounded-full bg-emerald-500 text-white active:scale-90"
+                      >
+                          <Plus size={16} strokeWidth={3} />
+                      </button>
+                  </div>
               </div>
           </div>
 
@@ -425,8 +520,20 @@ const CheckoutView: React.FC<{ data: SalesPage; onClose: () => void }> = ({ data
                   <User size={16} /> Contact Details
               </h3>
               <div className="grid grid-cols-1 gap-4">
-                  <input type="text" placeholder="Full Name" className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-4 font-bold outline-none focus:border-emerald-500 transition-all dark:text-white" />
-                  <input type="tel" placeholder="Phone Number" className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-4 font-bold outline-none focus:border-emerald-500 transition-all dark:text-white" />
+                  <input 
+                    type="text" 
+                    value={buyerName}
+                    onChange={(e) => setBuyerName(e.target.value)}
+                    placeholder="Full Name" 
+                    className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-4 font-bold outline-none focus:border-emerald-500 transition-all dark:text-white" 
+                  />
+                  <input 
+                    type="tel" 
+                    value={buyerPhone}
+                    onChange={(e) => setBuyerPhone(e.target.value)}
+                    placeholder="Phone Number" 
+                    className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-4 font-bold outline-none focus:border-emerald-500 transition-all dark:text-white" 
+                  />
               </div>
           </div>
 
@@ -437,7 +544,13 @@ const CheckoutView: React.FC<{ data: SalesPage; onClose: () => void }> = ({ data
                       <Truck size={16} /> Delivery Address
                   </h3>
                   <div className="grid grid-cols-1 gap-4">
-                      <input type="text" placeholder="Street Address" className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-4 font-bold outline-none focus:border-emerald-500 transition-all dark:text-white" />
+                      <input 
+                        type="text" 
+                        value={buyerAddress}
+                        onChange={(e) => setBuyerAddress(e.target.value)}
+                        placeholder="Street Address" 
+                        className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-4 font-bold outline-none focus:border-emerald-500 transition-all dark:text-white" 
+                      />
                       <div className="grid grid-cols-2 gap-4">
                         <input type="text" placeholder="City" className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-4 font-bold outline-none focus:border-emerald-500 transition-all dark:text-white" />
                         <input type="text" placeholder="Postal Code" className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-4 font-bold outline-none focus:border-emerald-500 transition-all dark:text-white" />
@@ -458,7 +571,8 @@ const CheckoutView: React.FC<{ data: SalesPage; onClose: () => void }> = ({ data
                         label="Mobile Money (MTN/AirtelTigo)" 
                         icon={<Smartphone size={20} />} 
                         selected={selectedPayment === 'momo'} 
-                        onSelect={() => setSelectedPayment('momo')} 
+                        onSelect={() => { setSelectedPayment('momo'); setPaymentVerified(false); setActivePaymentDrawer('momo'); }} 
+                        status={paymentVerified && selectedPayment === 'momo' ? 'VERIFIED' : undefined}
                     />
                   )}
                   {data.checkoutConfig.paymentMethods.card && (
@@ -467,7 +581,8 @@ const CheckoutView: React.FC<{ data: SalesPage; onClose: () => void }> = ({ data
                         label="Credit / Debit Card" 
                         icon={<CreditCard size={20} />} 
                         selected={selectedPayment === 'card'} 
-                        onSelect={() => setSelectedPayment('card')} 
+                        onSelect={() => { setSelectedPayment('card'); setPaymentVerified(false); setActivePaymentDrawer('card'); }} 
+                        status={paymentVerified && selectedPayment === 'card' ? 'VERIFIED' : undefined}
                     />
                   )}
                   {data.checkoutConfig.paymentMethods.cashOnDelivery && (
@@ -476,19 +591,74 @@ const CheckoutView: React.FC<{ data: SalesPage; onClose: () => void }> = ({ data
                         label="Cash on Delivery" 
                         icon={<Truck size={20} />} 
                         selected={selectedPayment === 'cod'} 
-                        onSelect={() => setSelectedPayment('cod')} 
+                        onSelect={() => { setSelectedPayment('cod'); setPaymentVerified(false); }} 
                     />
                   )}
               </div>
           </div>
       </div>
 
-      {/* 3. STICKY BOTTOM SUMMARY */}
+      {/* 3. PAYMENT SUB-DRAWERS */}
+      {activePaymentDrawer === 'momo' && (
+          <>
+            <div className="fixed inset-0 bg-black/40 z-[105]" onClick={() => setActivePaymentDrawer(null)}></div>
+            <div className="payment-subdrawer animate-slide-up">
+                <div className="flex justify-between items-center mb-6">
+                    <h4 className="font-black text-xl text-slate-900 dark:text-white">Verify MoMo</h4>
+                    <button onClick={() => setActivePaymentDrawer(null)} className="text-slate-400"><X size={24} /></button>
+                </div>
+                <div className="relative">
+                    <input 
+                        type="tel" 
+                        placeholder="05x xxx xxxx" 
+                        className="w-full bg-slate-100 dark:bg-slate-800 border-none rounded-xl px-4 py-4 font-black outline-none dark:text-white pr-12"
+                    />
+                    <button 
+                        onClick={handleMomoSend}
+                        disabled={isVerifying}
+                        className="absolute right-2 top-2 p-2 bg-emerald-500 text-white rounded-lg hover:scale-105 transition-transform"
+                    >
+                        {isVerifying ? <Loader2 size={24} className="animate-spin" /> : <Send size={24} />}
+                    </button>
+                </div>
+                <p className="text-[10px] text-slate-400 mt-4 text-center">Confirm the prompt that appears on your handset to verify funds.</p>
+            </div>
+          </>
+      )}
+
+      {activePaymentDrawer === 'card' && (
+          <>
+            <div className="fixed inset-0 bg-black/40 z-[105]" onClick={() => setActivePaymentDrawer(null)}></div>
+            <div className="payment-subdrawer animate-slide-up">
+                <div className="flex justify-between items-center mb-6">
+                    <h4 className="font-black text-xl text-slate-900 dark:text-white">Card Details</h4>
+                    <button onClick={() => setActivePaymentDrawer(null)} className="text-slate-400"><X size={24} /></button>
+                </div>
+                <div className="space-y-4">
+                    <input type="text" placeholder="Card Number" className="w-full bg-slate-100 dark:bg-slate-800 border-none rounded-xl px-4 py-4 font-black outline-none dark:text-white" />
+                    <div className="grid grid-cols-2 gap-4">
+                        <input type="text" placeholder="MM / YY" className="w-full bg-slate-100 dark:bg-slate-800 border-none rounded-xl px-4 py-4 font-black outline-none dark:text-white" />
+                        <input type="text" placeholder="CVV" className="w-full bg-slate-100 dark:bg-slate-800 border-none rounded-xl px-4 py-4 font-black outline-none dark:text-white" />
+                    </div>
+                    <button 
+                        onClick={handleCardVerify}
+                        disabled={isVerifying}
+                        className="w-full py-4 bg-emerald-500 text-white font-black rounded-xl active:scale-95 transition-all flex items-center justify-center gap-3"
+                    >
+                        {isVerifying ? <Loader2 size={20} className="animate-spin" /> : <ShieldCheck size={20} />}
+                        Securely Verify Card
+                    </button>
+                </div>
+            </div>
+          </>
+      )}
+
+      {/* 4. STICKY BOTTOM SUMMARY */}
       <div className="p-6 border-t border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-950 shrink-0 shadow-[0_-10px_30px_-15px_rgba(0,0,0,0.1)]">
           <div className="space-y-2 mb-6">
               <div className="flex justify-between text-sm text-slate-500 dark:text-slate-400 font-bold">
-                  <span>Subtotal</span>
-                  <span>{data.currency} {product?.price}</span>
+                  <span>Subtotal ({quantity}x)</span>
+                  <span>{data.currency} {subtotal.toLocaleString()}</span>
               </div>
               <div className="flex justify-between text-sm text-slate-500 dark:text-slate-400 font-bold">
                   <span>Shipping</span>
@@ -496,12 +666,13 @@ const CheckoutView: React.FC<{ data: SalesPage; onClose: () => void }> = ({ data
               </div>
               <div className="flex justify-between text-xl font-black text-slate-900 dark:text-white pt-2 border-t border-slate-50 dark:border-slate-900">
                   <span>Total</span>
-                  <span>{data.currency} {total}</span>
+                  <span>{data.currency} {total.toLocaleString()}</span>
               </div>
           </div>
           <button 
-            className="w-full clean-btn text-white py-5 text-xl shadow-xl shadow-emerald-900/20 active:scale-95"
-            style={{ backgroundColor: data.themeColor }}
+            disabled={!isFormValid}
+            className="w-full clean-btn text-white py-5 text-xl shadow-xl shadow-emerald-900/20"
+            style={{ backgroundColor: isFormValid ? data.themeColor : '#94a3b8' }}
           >
             Complete Order
           </button>
@@ -510,7 +681,14 @@ const CheckoutView: React.FC<{ data: SalesPage; onClose: () => void }> = ({ data
   );
 };
 
-const PaymentOption: React.FC<{ id: string; label: string; icon: React.ReactNode; selected: boolean; onSelect: () => void }> = ({ label, icon, selected, onSelect }) => (
+const PaymentOption: React.FC<{ 
+    id: string; 
+    label: string; 
+    icon: React.ReactNode; 
+    selected: boolean; 
+    onSelect: () => void; 
+    status?: 'VERIFIED'
+}> = ({ label, icon, selected, onSelect, status }) => (
     <div 
         onClick={onSelect}
         className={`p-4 rounded-2xl border-2 flex items-center justify-between cursor-pointer transition-all ${selected ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20' : 'border-slate-100 bg-slate-50 dark:bg-slate-900 dark:border-slate-800'}`}
@@ -519,7 +697,10 @@ const PaymentOption: React.FC<{ id: string; label: string; icon: React.ReactNode
             <div className={`p-2 rounded-xl ${selected ? 'bg-emerald-200 text-emerald-800' : 'bg-white dark:bg-slate-800 text-slate-400 shadow-sm'}`}>
                 {icon}
             </div>
-            <span className={`font-bold text-sm ${selected ? 'text-emerald-900 dark:text-emerald-200' : 'text-slate-600 dark:text-slate-400'}`}>{label}</span>
+            <div>
+                <span className={`font-bold text-sm block ${selected ? 'text-emerald-900 dark:text-emerald-200' : 'text-slate-600 dark:text-slate-400'}`}>{label}</span>
+                {status === 'VERIFIED' && <span className="text-[9px] text-emerald-600 font-black uppercase tracking-widest">Verified & Ready</span>}
+            </div>
         </div>
         <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${selected ? 'border-emerald-500 bg-emerald-500 text-white' : 'border-slate-200 bg-white dark:bg-slate-800 dark:border-slate-700'}`}>
             {selected && <Check size={14} strokeWidth={4} />}

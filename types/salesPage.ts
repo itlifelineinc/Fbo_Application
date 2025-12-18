@@ -1,6 +1,6 @@
 
 export type CurrencyCode = 'USD' | 'EUR' | 'GBP' | 'GHS' | 'NGN' | 'ZAR' | 'KES' | 'AED' | 'INR' | 'CAD' | 'AUD' | 'PHP' | 'MYR' | 'TZS' | 'UGX';
-export type LayoutStyle = 'clean' | 'health' | 'bold'; // Updated styles
+export type LayoutStyle = 'clean' | 'health' | 'bold'; 
 export type PageType = 'product' | 'bundle' | 'problem' | 'capture' | 'brand' | 'recruit';
 
 export interface Product {
@@ -41,7 +41,7 @@ export interface PackageOption {
 export interface CTAButton {
   id: string;
   label: string;
-  actionType: 'WHATSAPP' | 'SCROLL' | 'LINK'; // New field to help UI
+  actionType: 'WHATSAPP' | 'SCROLL' | 'LINK'; 
   url: string;
   style: "primary" | "outline" | "link";
   color?: string; 
@@ -102,17 +102,17 @@ export interface SalesPage {
   heroImage: string | null;
   galleryImages: string[];
   themeColor: string;
-  pageBgColor: string; // NEW
-  cardBgColor: string; // NEW
+  pageBgColor: string; 
+  cardBgColor: string; 
   layoutStyle: LayoutStyle;
   
   // New Design Props (Desktop Defaults)
   headingFont: string;
   bodyFont: string;
-  baseFontSize: number; // 14-20
+  baseFontSize: number; 
   subtitleFontSize?: number; 
-  typeScale: number; // 1.0 - 1.6
-  sectionSpacing: number; // 0-10 scale
+  typeScale: number; 
+  sectionSpacing: number; 
   
   // Button Styling
   buttonCorner?: 'square' | 'rounded' | 'pill';
@@ -126,8 +126,8 @@ export interface SalesPage {
   features: string[]; 
   testimonials: Testimonial[];
   
-  // Trust & Proof (New)
-  badges: string[]; // IDs of badges like 'iasc', 'cruelty_free'
+  // Trust & Proof
+  badges: string[]; 
   personalBranding: {
       bio: string;
       yearsExperience: number;
@@ -142,8 +142,9 @@ export interface SalesPage {
   products: Product[];
   packages: Package[];
   
-  // New fields for alternative pricing model
+  // Pricing extension
   basePrice?: number;
+  fullPackPrice?: number; // NEW
   pricingOptions?: PackageOption[];
   
   // CTA & WhatsApp
@@ -157,7 +158,7 @@ export interface SalesPage {
   };
   ctas: CTAButton[];
   
-  // Checkout & Payments (New)
+  // Checkout & Payments
   checkoutConfig: CheckoutConfig;
 
   // SEO

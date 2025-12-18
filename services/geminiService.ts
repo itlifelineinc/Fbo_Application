@@ -2,14 +2,15 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { Module, Chapter } from '../types';
 
-const apiKey = process.env.API_KEY || '';
-const ai = new GoogleGenAI({ apiKey });
+// Fix: Use process.env.API_KEY directly in the initialization as per guidelines
+const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
 // 1. Generate a new Course Module based on a topic
 export const generateModuleContent = async (topic: string): Promise<Module | null> => {
   try {
+    // Fix: Updated model to gemini-3-flash-preview for text generation tasks
     const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
+      model: 'gemini-3-flash-preview',
       contents: `Create a detailed training module for a business course about "${topic}". 
       The output must be a JSON object.
       Include 2-3 lessons (chapters). The content of chapters should be informative educational text (approx 150 words each) formatted in Markdown.`,
@@ -85,8 +86,9 @@ export const askAITutor = async (context: string, question: string, history: {ro
     If the answer is not in the context, use your general business knowledge but mention that it goes beyond the current lesson. keep answers concise (under 100 words).`;
 
     // Construct chat history for the model
+    // Fix: Updated model to gemini-3-flash-preview for chat tasks
     const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
+      model: 'gemini-3-flash-preview',
       contents: [
         ...history.map(h => ({ role: h.role, parts: [{ text: h.text }] })),
         { role: 'user', parts: [{ text: question }] }
@@ -109,8 +111,9 @@ export const analyzeReceipt = async (base64Image: string): Promise<{ amount: num
     // Remove data URL prefix if present
     const cleanBase64 = base64Image.split(',')[1] || base64Image;
 
+    // Fix: Updated model to gemini-3-flash-preview for multimodal analysis tasks
     const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
+      model: 'gemini-3-flash-preview',
       contents: [
         {
           parts: [
@@ -150,8 +153,9 @@ export const analyzeReceipt = async (base64Image: string): Promise<{ amount: num
 // 4. Generate Onboarding Plan
 export const generateOnboardingPlan = async (name: string, goal: string, availability: string): Promise<string> => {
     try {
+        // Fix: Updated model to gemini-3-flash-preview for text tasks
         const response = await ai.models.generateContent({
-            model: 'gemini-2.5-flash',
+            model: 'gemini-3-flash-preview',
             contents: `Create a short, personalized, motivating 3-step 'First Week Plan' for a new business owner named ${name}. 
             Their primary goal is: ${goal}.
             Their availability is: ${availability}.

@@ -4,7 +4,7 @@ import { SalesPage, Product } from '../../types/salesPage';
 import WhatsAppFloatingButton from '../Shared/WhatsAppFloatingButton';
 import { 
   Check, User, ShoppingCart, MessageCircle, ChevronLeft,
-  Image as ImageIcon, CreditCard, Smartphone, Truck, Minus, Send, Loader2, Package, Quote, ShieldCheck, ArrowDown, Plus, X, ChevronUp
+  Image as ImageIcon, CreditCard, Smartphone, Truck, Minus, Send, Loader2, Package, Quote, ShieldCheck, ArrowDown, Plus, X, ChevronUp, Sparkles, Zap, Star
 } from 'lucide-react';
 
 interface PreviewPanelProps {
@@ -16,6 +16,8 @@ const PreviewPanel: React.FC<PreviewPanelProps> = ({ data, device }) => {
   const isMobile = device === 'mobile';
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
   const [isStoryDrawerOpen, setIsStoryDrawerOpen] = useState(false);
+  const [isBenefitsDrawerOpen, setIsBenefitsDrawerOpen] = useState(false);
+  const [isUsageDrawerOpen, setIsUsageDrawerOpen] = useState(false);
   
   // Design System Calculations
   const settings = isMobile && data.mobileOverrides ? { ...data, ...data.mobileOverrides } : data;
@@ -169,28 +171,40 @@ const PreviewPanel: React.FC<PreviewPanelProps> = ({ data, device }) => {
             transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         }
         .dark .custom-story-drawer { background: #0f172a; border-top: 1px solid #334155; }
+
+        .zigzag-line {
+          position: absolute;
+          left: 1.75rem;
+          top: 0;
+          bottom: 0;
+          width: 2px;
+          background: repeating-linear-gradient(
+            to bottom,
+            var(--page-bg) 0px,
+            var(--page-bg) 10px,
+            transparent 10px,
+            transparent 20px
+          );
+          opacity: 0.3;
+        }
       `}</style>
 
       {isMobile ? (
         <div className="mx-auto w-full max-w-[375px] h-full max-h-[850px] bg-slate-900 rounded-[2.5rem] shadow-2xl border-[12px] border-slate-900 overflow-hidden relative">
            <div className="absolute top-0 left-1/2 -translate-x-1/2 h-6 w-32 bg-slate-900 rounded-b-xl z-20"></div>
            
-           {/* General Checkout Drawer */}
            <div className={`checkout-drawer ${isCheckoutOpen ? 'translate-x-0' : 'translate-x-full'}`}>
               <CheckoutView data={data} onClose={() => setIsCheckoutOpen(false)} />
            </div>
 
-           {/* Story Full Content Drawer */}
+           {/* Full Story Drawer */}
            <div className={`custom-story-drawer ${isStoryDrawerOpen ? 'translate-y-0' : 'translate-y-full'}`}>
               <div className="w-12 h-1 bg-slate-200 dark:bg-slate-800 rounded-full mx-auto mt-4 shrink-0"></div>
               <div className="flex justify-between items-center px-6 pt-4 pb-2 shrink-0">
                   <h3 className="text-lg font-black text-slate-900 dark:text-white uppercase tracking-wider">
                       {data.shortStoryTitle || 'Full Story'}
                   </h3>
-                  <button 
-                    onClick={() => setIsStoryDrawerOpen(false)}
-                    className="p-2 bg-slate-100 dark:bg-slate-800 rounded-full text-slate-500"
-                  >
+                  <button onClick={() => setIsStoryDrawerOpen(false)} className="p-2 bg-slate-100 dark:bg-slate-800 rounded-full text-slate-500">
                       <X size={20} />
                   </button>
               </div>
@@ -201,7 +215,49 @@ const PreviewPanel: React.FC<PreviewPanelProps> = ({ data, device }) => {
               </div>
            </div>
 
-           {data.ctaDisplay.showFloatingWhatsapp && !isCheckoutOpen && !isStoryDrawerOpen && (
+           {/* Benefits Drawer */}
+           <div className={`custom-story-drawer ${isBenefitsDrawerOpen ? 'translate-y-0' : 'translate-y-full'}`}>
+              <div className="w-12 h-1 bg-slate-200 dark:bg-slate-800 rounded-full mx-auto mt-4 shrink-0"></div>
+              <div className="flex justify-between items-center px-6 pt-4 pb-2 shrink-0">
+                  <h3 className="text-lg font-black text-slate-900 dark:text-white uppercase tracking-wider">All Benefits</h3>
+                  <button onClick={() => setIsBenefitsDrawerOpen(false)} className="p-2 bg-slate-100 dark:bg-slate-800 rounded-full text-slate-500">
+                      <X size={20} />
+                  </button>
+              </div>
+              <div className="flex-1 overflow-y-auto p-6 no-scrollbar pt-2 space-y-4">
+                  {data.products[0]?.benefits.map((b, i) => (
+                    <div key={i} className="flex items-start gap-4">
+                        <div className="w-6 h-6 rounded-full flex items-center justify-center shrink-0 shadow-sm" style={{ backgroundColor: data.pageBgColor }}>
+                            <Check size={14} className="text-white" strokeWidth={4} />
+                        </div>
+                        <p className="text-base font-bold text-slate-700 dark:text-slate-200">{b}</p>
+                    </div>
+                  ))}
+              </div>
+           </div>
+
+           {/* Usage Steps Drawer */}
+           <div className={`custom-story-drawer ${isUsageDrawerOpen ? 'translate-y-0' : 'translate-y-full'}`}>
+              <div className="w-12 h-1 bg-slate-200 dark:bg-slate-800 rounded-full mx-auto mt-4 shrink-0"></div>
+              <div className="flex justify-between items-center px-6 pt-4 pb-2 shrink-0">
+                  <h3 className="text-lg font-black text-slate-900 dark:text-white uppercase tracking-wider">Complete Usage Path</h3>
+                  <button onClick={() => setIsUsageDrawerOpen(false)} className="p-2 bg-slate-100 dark:bg-slate-800 rounded-full text-slate-500">
+                      <X size={20} />
+                  </button>
+              </div>
+              <div className="flex-1 overflow-y-auto p-6 no-scrollbar pt-2 space-y-6">
+                  {data.products[0]?.usageSteps.map((s, i) => (
+                    <div key={i} className="flex items-center gap-6">
+                        <div className="w-12 h-12 rounded-full flex items-center justify-center font-black text-lg shadow-sm border-2 border-white dark:border-slate-800 shrink-0" style={{ backgroundColor: data.pageBgColor, color: 'white' }}>
+                            {i + 1}
+                        </div>
+                        <p className="text-base font-bold text-slate-700 dark:text-slate-200">{s}</p>
+                    </div>
+                  ))}
+              </div>
+           </div>
+
+           {data.ctaDisplay.showFloatingWhatsapp && !isCheckoutOpen && !isStoryDrawerOpen && !isBenefitsDrawerOpen && !isUsageDrawerOpen && (
              <div className="absolute bottom-32 right-5 z-50 animate-bounce-subtle">
                 <WhatsAppFloatingButton 
                   phoneNumber={data.whatsappNumber} 
@@ -216,7 +272,9 @@ const PreviewPanel: React.FC<PreviewPanelProps> = ({ data, device }) => {
               <CleanThemeContent 
                 data={data} 
                 onOpenCheckout={() => setIsCheckoutOpen(true)} 
-                onReadMore={() => setIsStoryDrawerOpen(true)}
+                onReadMoreStory={() => setIsStoryDrawerOpen(true)}
+                onReadMoreBenefits={() => setIsBenefitsDrawerOpen(true)}
+                onReadMoreUsage={() => setIsUsageDrawerOpen(true)}
               />
            </div>
         </div>
@@ -232,8 +290,10 @@ const PreviewPanel: React.FC<PreviewPanelProps> = ({ data, device }) => {
             )}
             <CleanThemeContent 
                 data={data} 
-                onOpenCheckout={() => alert('Checkout is only available in mobile preview.')} 
-                onReadMore={() => alert('Full story view.')}
+                onOpenCheckout={() => setIsCheckoutOpen(true)} 
+                onReadMoreStory={() => alert('Full story view.')}
+                onReadMoreBenefits={() => alert('Full benefits view.')}
+                onReadMoreUsage={() => alert('Full usage view.')}
             />
         </div>
       )}
@@ -244,11 +304,15 @@ const PreviewPanel: React.FC<PreviewPanelProps> = ({ data, device }) => {
 const CleanThemeContent: React.FC<{ 
     data: SalesPage; 
     onOpenCheckout: () => void;
-    onReadMore: () => void;
-}> = ({ data, onOpenCheckout, onReadMore }) => {
+    onReadMoreStory: () => void;
+    onReadMoreBenefits: () => void;
+    onReadMoreUsage: () => void;
+}> = ({ data, onOpenCheckout, onReadMoreStory, onReadMoreBenefits, onReadMoreUsage }) => {
   const [activeImg, setActiveImg] = useState(0);
+  const [activeTestimonial, setActiveTestimonial] = useState(0);
   const product = data.products[0];
   const images = product?.images || [];
+  const testimonials = data.testimonials || [];
   const whatsappMsg = data.whatsappMessage?.replace('{title}', data.title) || "";
 
   useEffect(() => {
@@ -258,6 +322,14 @@ const CleanThemeContent: React.FC<{
     }, 4000);
     return () => clearInterval(timer);
   }, [images.length]);
+
+  useEffect(() => {
+    if (testimonials.length <= 1) return;
+    const timer = setInterval(() => {
+        setActiveTestimonial((prev) => (prev + 1) % testimonials.length);
+    }, 6000);
+    return () => clearInterval(timer);
+  }, [testimonials.length]);
   
   const isDarkBg = data.pageBgColor === '#064e3b' || data.pageBgColor === '#111827' || data.pageBgColor === '#1e1b4b' || data.pageBgColor === '#4c0519' || data.pageBgColor === '#000000';
   const textColorClass = isDarkBg ? 'text-white' : 'text-slate-900';
@@ -269,6 +341,14 @@ const CleanThemeContent: React.FC<{
   const isLongStory = storyContent.length > 500;
   const displayStory = isLongStory ? storyContent.substring(0, 500) + '...' : storyContent;
 
+  const benefits = product?.benefits || [];
+  const displayBenefits = benefits.slice(0, 4);
+  const isLongBenefits = benefits.length > 4;
+
+  const usageSteps = product?.usageSteps || [];
+  const displayUsage = usageSteps.slice(0, 3);
+  const isLongUsage = usageSteps.length > 3;
+
   return (
     <div className="flex flex-col">
       {/* 1. BRANDED HERO HEADER */}
@@ -276,15 +356,11 @@ const CleanThemeContent: React.FC<{
         className="clean-section pt-16 md:pt-24 pb-12 flex flex-col items-center text-center transition-colors duration-500 overflow-hidden"
         style={{ backgroundColor: data.pageBgColor }}
       >
-        <span 
-            className={`text-[10px] md:text-xs font-black uppercase tracking-[0.25em] mb-4 opacity-80 animate-fade-in ${textColorClass}`}
-        >
+        <span className={`text-[10px] md:text-xs font-black uppercase tracking-[0.25em] mb-4 opacity-80 animate-fade-in ${textColorClass}`}>
             {supportPhrase}
         </span>
 
-        <h1 
-            className={`max-w-[90%] mx-auto mb-10 leading-[1.1] tracking-tight animate-slide-up ${textColorClass}`}
-        >
+        <h1 className={`max-w-[90%] mx-auto mb-10 leading-[1.1] tracking-tight animate-slide-up ${textColorClass}`}>
             {mainHeadline}
         </h1>
 
@@ -361,7 +437,7 @@ const CleanThemeContent: React.FC<{
         </div>
       </header>
 
-      {/* 2. PERSUASIVE STORY CARD - Now clearly separated and styled like attachment */}
+      {/* 2. PERSUASIVE STORY CARD */}
       {storyContent && (
           <div className="px-6 py-10 relative z-30 bg-white dark:bg-slate-950">
               <div className="bg-white dark:bg-slate-900 rounded-[2.5rem] p-8 shadow-2xl border border-slate-100 dark:border-slate-800 animate-fade-in shadow-slate-200/50 dark:shadow-none">
@@ -377,10 +453,7 @@ const CleanThemeContent: React.FC<{
                       </p>
                       
                       {isLongStory && (
-                          <button 
-                            onClick={onReadMore}
-                            className="flex items-center gap-2 text-emerald-600 font-black uppercase text-[10px] tracking-widest mt-2 hover:opacity-80 transition-opacity"
-                          >
+                          <button onClick={onReadMoreStory} className="flex items-center gap-2 text-emerald-600 font-black uppercase text-[10px] tracking-widest mt-2 hover:opacity-80 transition-opacity">
                               Read More <ChevronUp size={14} strokeWidth={4} />
                           </button>
                       )}
@@ -389,42 +462,122 @@ const CleanThemeContent: React.FC<{
           </div>
       )}
 
-      {/* 3. PRODUCT DETAILS SECTION */}
-      <section className="clean-section bg-white dark:bg-slate-950">
-          <div className="space-y-6">
-              <div className="flex justify-between items-baseline pt-4 border-b border-slate-100 pb-6 dark:border-slate-800">
-                  <div>
-                    <h3 className="text-xl md:text-2xl font-black text-slate-900 dark:text-white leading-none">
-                        {product?.name || 'Product Title'}
-                    </h3>
-                    <p className="text-xs font-bold text-emerald-600 mt-2 uppercase tracking-widest">{product?.category || 'Natural Support'}</p>
+      {/* 3. BENEFITS CARD */}
+      {benefits.length > 0 && (
+          <div className="px-6 py-4 relative z-30 bg-white dark:bg-slate-950">
+              <div className="bg-white dark:bg-slate-900 rounded-[2.5rem] p-8 shadow-2xl border border-slate-100 dark:border-slate-800 animate-fade-in shadow-slate-200/50 dark:shadow-none">
+                  <div className="flex justify-between items-start mb-6">
+                      <div className="text-left">
+                          <h3 className="text-sm md:text-base font-black text-slate-900 dark:text-white uppercase tracking-wider inline-block">Why You'll Love This</h3>
+                          <div className="h-1.5 w-10 mt-1 rounded-full" style={{ backgroundColor: data.pageBgColor }}></div>
+                      </div>
+                      <div className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-800 text-slate-400">
+                          <Sparkles size={20} />
+                      </div>
                   </div>
-                  <div className="text-right">
-                      <span className="text-2xl md:text-3xl font-black text-slate-900 dark:text-white">
-                          {data.currency} {product?.price || '0.00'}
-                      </span>
+
+                  <div className="grid grid-cols-1 gap-4">
+                      {displayBenefits.map((benefit, idx) => (
+                          <div key={idx} className="flex items-start gap-4 animate-fade-in" style={{ animationDelay: `${idx * 100}ms` }}>
+                              <div className="w-6 h-6 rounded-full flex items-center justify-center shrink-0 shadow-sm" style={{ backgroundColor: data.pageBgColor }}>
+                                  <Check size={14} className="text-white" strokeWidth={4} />
+                              </div>
+                              <p className="text-sm md:text-base font-bold text-slate-700 dark:text-slate-200 leading-tight">{benefit}</p>
+                          </div>
+                      ))}
                   </div>
-              </div>
 
-              <p className="text-slate-600 dark:text-slate-300 text-sm md:text-base leading-relaxed">
-                  {product?.shortDescription}
-              </p>
-
-              <div className="space-y-4 pt-4">
-                  {product?.benefits.slice(0, 5).map((b, i) => (
-                    <div key={i} className="flex items-start gap-3">
-                        <div className="mt-1 w-5 h-5 rounded-full bg-emerald-500 flex items-center justify-center text-white shrink-0 shadow-sm">
-                            <Check size={12} strokeWidth={4} />
-                        </div>
-                        <span className="text-xs md:text-sm font-bold text-slate-700 dark:text-slate-200">{b}</span>
-                    </div>
-                  ))}
+                  {isLongBenefits && (
+                    <button onClick={onReadMoreBenefits} className="flex items-center gap-2 text-emerald-600 font-black uppercase text-[10px] tracking-widest mt-8 hover:opacity-80 transition-opacity">
+                        View All Benefits <ChevronUp size={14} strokeWidth={4} />
+                    </button>
+                  )}
               </div>
           </div>
-      </section>
+      )}
 
-      {/* 4. EXPERT BIO */}
-      <section className="clean-section">
+      {/* 4. USAGE STEPS CARD */}
+      {usageSteps.length > 0 && (
+          <div className="px-6 py-10 relative z-30 bg-white dark:bg-slate-950">
+              <div className="bg-white dark:bg-slate-900 rounded-[2.5rem] p-8 shadow-2xl border border-slate-100 dark:border-slate-800 animate-fade-in shadow-slate-200/50 dark:shadow-none overflow-hidden relative">
+                  <div className="flex justify-between items-start mb-10">
+                      <div className="text-left">
+                          <h3 className="text-sm md:text-base font-black text-slate-900 dark:text-white uppercase tracking-wider inline-block">Easy Usage Path</h3>
+                          <div className="h-1.5 w-10 mt-1 rounded-full" style={{ backgroundColor: data.pageBgColor }}></div>
+                      </div>
+                      <div className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-800 text-slate-400">
+                          <Zap size={20} />
+                      </div>
+                  </div>
+
+                  <div className="relative space-y-12">
+                      <div className="zigzag-line" style={{ '--page-bg': data.pageBgColor } as React.CSSProperties}></div>
+                      {displayUsage.map((step, idx) => (
+                          <div key={idx} className="flex items-center gap-8 relative z-10">
+                              <div className="w-14 h-14 rounded-full flex items-center justify-center font-black text-xl shadow-xl border-4 border-white dark:border-slate-800 shrink-0" style={{ backgroundColor: data.pageBgColor, color: 'white' }}>
+                                  {idx + 1}
+                              </div>
+                              <div className="flex-1">
+                                  <p className="text-sm md:text-base font-extrabold text-slate-800 dark:text-white leading-snug">{step}</p>
+                                  <div className="h-0.5 w-8 bg-slate-100 dark:bg-slate-800 mt-2 rounded-full"></div>
+                              </div>
+                          </div>
+                      ))}
+                  </div>
+
+                  {isLongUsage && (
+                    <button onClick={onReadMoreUsage} className="flex items-center gap-2 text-emerald-600 font-black uppercase text-[10px] tracking-widest mt-12 hover:opacity-80 transition-opacity">
+                        View Full Path <ChevronUp size={14} strokeWidth={4} />
+                    </button>
+                  )}
+              </div>
+          </div>
+      )}
+
+      {/* 5. TESTIMONIAL CARD - Auto Sliding */}
+      {testimonials.length > 0 && (
+          <div className="px-6 py-4 relative z-30 bg-white dark:bg-slate-950">
+              <div className="bg-white dark:bg-slate-900 rounded-[2.5rem] p-10 shadow-2xl border border-slate-100 dark:border-slate-800 animate-fade-in shadow-slate-200/50 dark:shadow-none min-h-[300px] flex flex-col items-center text-center">
+                  <div className="mb-6 relative">
+                      <div className="w-20 h-20 rounded-full overflow-hidden border-4 border-slate-50 dark:border-slate-800 shadow-xl transition-all duration-500 transform scale-110">
+                          {testimonials[activeTestimonial].photoUrl ? (
+                              <img src={testimonials[activeTestimonial].photoUrl} className="w-full h-full object-cover" alt={testimonials[activeTestimonial].name} />
+                          ) : (
+                              <div className="w-full h-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-2xl font-black text-slate-400">
+                                  {testimonials[activeTestimonial].name.charAt(0)}
+                              </div>
+                          )}
+                      </div>
+                  </div>
+
+                  <h3 className="text-lg font-black text-slate-900 dark:text-white leading-tight mb-1">
+                      {testimonials[activeTestimonial].name}
+                  </h3>
+                  <p className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-600 mb-6">
+                      {testimonials[activeTestimonial].role || 'Verified Buyer'}
+                  </p>
+
+                  <div className="flex gap-1 mb-6 text-emerald-500">
+                      {[1,2,3,4,5].map(i => <Star key={i} size={14} fill="currentColor" />)}
+                  </div>
+
+                  <p className="text-base text-slate-700 dark:text-slate-300 leading-relaxed font-bold italic max-w-[280px]">
+                      "{testimonials[activeTestimonial].quote}"
+                  </p>
+                  
+                  {testimonials.length > 1 && (
+                      <div className="flex gap-1.5 mt-10">
+                          {testimonials.map((_, i) => (
+                              <div key={i} className={`h-1 rounded-full transition-all duration-500 ${activeTestimonial === i ? 'w-6' : 'w-2'}`} style={{ backgroundColor: activeTestimonial === i ? data.themeColor : '#e2e8f0' }} />
+                          ))}
+                      </div>
+                  )}
+              </div>
+          </div>
+      )}
+
+      {/* 6. EXPERT BIO */}
+      <section className="clean-section bg-white dark:bg-slate-950">
           <div className="bg-slate-900 rounded-[2.5rem] p-8 text-white relative overflow-hidden">
               <div className="relative z-10 flex flex-col items-center text-center">
                   <div className="w-20 h-20 md:w-24 md:h-24 rounded-full overflow-hidden border-4 border-white/20 mb-6 shadow-2xl">
@@ -458,7 +611,7 @@ const CleanThemeContent: React.FC<{
       </section>
 
       {/* FOOTER */}
-      <footer className="clean-section text-center space-y-6 pb-32">
+      <footer className="clean-section text-center space-y-6 pb-32 bg-white dark:bg-slate-950">
           <div className="max-w-2xl mx-auto space-y-4">
               <p className="text-[10px] text-slate-400 leading-relaxed italic uppercase tracking-wider">
                   {data.disclaimer}
@@ -563,14 +716,14 @@ const CheckoutView: React.FC<{ data: SalesPage; onClose: () => void }> = ({ data
                   <div className="flex items-center gap-4 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-full px-2 py-1 shadow-sm">
                       <button 
                         onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                        className="w-8 h-8 flex items-center justify-center rounded-full bg-slate-50 dark:bg-slate-700 text-slate-600 dark:text-white active:scale-90"
+                        className="w-8 h-8 flex items-center justify-center rounded-full bg-slate-50 dark:bg-slate-700 text-slate-600 dark:text-white active:scale-95"
                       >
                           <Minus size={14} strokeWidth={3} />
                       </button>
                       <span className="text-base font-black text-slate-900 dark:text-white w-4 text-center">{quantity}</span>
                       <button 
                         onClick={() => setQuantity(quantity + 1)}
-                        className="w-8 h-8 flex items-center justify-center rounded-full bg-emerald-500 text-white active:scale-90"
+                        className="w-8 h-8 flex items-center justify-center rounded-full bg-emerald-500 text-white active:scale-95"
                       >
                           <Plus size={14} strokeWidth={3} />
                       </button>

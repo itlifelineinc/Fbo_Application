@@ -2,8 +2,7 @@
 import React from 'react';
 import { SalesPage, Product } from '../../types/salesPage';
 import BenefitsEditor from './BenefitsEditor';
-import RichTextEditor from './RichTextEditor';
-import { Type, DollarSign, List, Package, Quote } from 'lucide-react';
+import { Type, DollarSign, List, Quote } from 'lucide-react';
 
 interface PageContentEditorProps {
   data: SalesPage;
@@ -14,13 +13,11 @@ const INPUT_STYLE = "w-full bg-transparent border border-slate-300 rounded-xl px
 const LABEL_STYLE = "block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2 dark:text-slate-200";
 
 const PageContentEditor: React.FC<PageContentEditorProps> = ({ data, onChange }) => {
-  // We assume single product mode for the main landing page content usually
   const activeProduct = data.products.length > 0 ? data.products[0] : null;
 
   const handleUpdateProduct = (field: keyof Product, value: any) => {
       if (!activeProduct) return;
       const updatedProduct = { ...activeProduct, [field]: value };
-      // Replace the first product
       const newProducts = [...data.products];
       newProducts[0] = updatedProduct;
       onChange('products', newProducts);
@@ -74,7 +71,7 @@ const PageContentEditor: React.FC<PageContentEditorProps> = ({ data, onChange })
                 <label className={LABEL_STYLE}>Sub-headline (Promise/Support)</label>
                 <input 
                     type="text" 
-                    value={activeProduct.category || ''} // Using category as Tagline/Subtitle
+                    value={activeProduct.category || ''} 
                     onChange={(e) => handleUpdateProduct('category', e.target.value)}
                     placeholder="e.g. The C9 Program helps you reset your habits."
                     className={INPUT_STYLE}
@@ -82,7 +79,7 @@ const PageContentEditor: React.FC<PageContentEditorProps> = ({ data, onChange })
             </div>
 
             <div>
-                <label className={LABEL_STYLE}>Intro / Short Story</label>
+                <label className={LABEL_STYLE}>Intro / Short Description</label>
                 <textarea 
                     value={activeProduct.shortDescription}
                     onChange={(e) => handleUpdateProduct('shortDescription', e.target.value)}
@@ -92,11 +89,11 @@ const PageContentEditor: React.FC<PageContentEditorProps> = ({ data, onChange })
             </div>
         </section>
 
-        {/* 2. Persuasive Short Story */}
+        {/* 2. Persuasive Short Story / Full Story */}
         <section className="space-y-5">
             <div className="flex items-center gap-2 mb-2 pb-2 border-b border-slate-100 dark:border-slate-800">
                 <Quote className="text-amber-500" size={18} />
-                <h2 className="font-bold text-slate-800 dark:text-white">Persuasive Short Story</h2>
+                <h2 className="font-bold text-slate-800 dark:text-white">Persuasive Story</h2>
             </div>
             
             <div>
@@ -112,17 +109,17 @@ const PageContentEditor: React.FC<PageContentEditorProps> = ({ data, onChange })
 
             <div>
                 <div className="flex justify-between items-center mb-1">
-                    <label className={LABEL_STYLE}>The Story</label>
-                    <span className={`text-[10px] font-bold ${ (data.shortStory?.length || 0) >= 200 ? 'text-red-500' : 'text-slate-400'}`}>
-                        {(data.shortStory?.length || 0)}/200
+                    <label className={LABEL_STYLE}>The Story / Detailed Description</label>
+                    <span className={`text-[10px] font-bold ${ (data.description?.length || 0) >= 500 ? 'text-red-500' : 'text-slate-400'}`}>
+                        {(data.description?.length || 0)}/500
                     </span>
                 </div>
                 <textarea 
-                    value={data.shortStory || ''}
-                    onChange={(e) => onChange('shortStory', e.target.value.slice(0, 200))}
-                    maxLength={200}
-                    className={`${INPUT_STYLE} h-32 resize-none text-sm font-normal`}
-                    placeholder="Tell a short story to persuade your buyers..."
+                    value={data.description || ''}
+                    onChange={(e) => onChange('description', e.target.value.slice(0, 500))}
+                    maxLength={500}
+                    className={`${INPUT_STYLE} h-48 resize-none text-sm font-normal leading-relaxed`}
+                    placeholder="Tell a story to persuade your buyers... Max 500 characters."
                 />
             </div>
         </section>
@@ -153,16 +150,6 @@ const PageContentEditor: React.FC<PageContentEditorProps> = ({ data, onChange })
                         className={INPUT_STYLE}
                     />
                 </div>
-                <div className="md:col-span-2">
-                    <label className={LABEL_STYLE}>Discount Price (Strike-through)</label>
-                    <input 
-                        type="number" 
-                        value={activeProduct.discountPrice || ''}
-                        onChange={(e) => handleUpdateProduct('discountPrice', parseFloat(e.target.value))}
-                        placeholder="Optional"
-                        className={INPUT_STYLE}
-                    />
-                </div>
             </div>
         </section>
 
@@ -172,7 +159,7 @@ const PageContentEditor: React.FC<PageContentEditorProps> = ({ data, onChange })
                 <div className="bg-emerald-100 text-emerald-600 p-1 rounded dark:bg-emerald-900/30">
                     <Type size={14} />
                 </div>
-                <h2 className="font-bold text-slate-800 dark:text-white">Benefits Section</h2>
+                <h2 className="font-bold text-slate-800 dark:text-white">Benefits List</h2>
             </div>
             
             <BenefitsEditor 
@@ -185,7 +172,7 @@ const PageContentEditor: React.FC<PageContentEditorProps> = ({ data, onChange })
         <section className="space-y-5">
             <div className="flex items-center gap-2 mb-2 pb-2 border-b border-slate-100 dark:border-slate-800">
                 <List className="text-purple-500" size={18} />
-                <h2 className="font-bold text-slate-800 dark:text-white">How It Works / Usage</h2>
+                <h2 className="font-bold text-slate-800 dark:text-white">Usage Steps</h2>
             </div>
             
             <div className="space-y-3">
@@ -200,25 +187,19 @@ const PageContentEditor: React.FC<PageContentEditorProps> = ({ data, onChange })
                             placeholder={`Step ${idx + 1}`}
                         />
                         <button onClick={() => removeUsageStep(idx)} className="text-slate-400 hover:text-red-500 px-1">
-                            <List size={16} className="rotate-45" /> {/* X icon alternative */}
+                            <X size={16} className="rotate-45" />
                         </button>
                     </div>
                 ))}
                 <button onClick={addUsageStep} className="text-xs font-bold text-purple-600 hover:text-purple-700 pl-8">+ Add Step</button>
             </div>
         </section>
-
-        {/* 6. Detailed Description (Rich Text) */}
-        <section className="space-y-5">
-             <div className="flex items-center gap-2 mb-2 pb-2 border-b border-slate-100 dark:border-slate-800">
-                <Type className="text-indigo-500" size={18} />
-                <h2 className="font-bold text-slate-800 dark:text-white">Full Story / Details</h2>
-            </div>
-            <RichTextEditor value={data.description} onChange={(val) => onChange('description', val)} />
-        </section>
-
     </div>
   );
 };
+
+const X = ({ size, className }: { size: number, className?: string }) => (
+    <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+);
 
 export default PageContentEditor;

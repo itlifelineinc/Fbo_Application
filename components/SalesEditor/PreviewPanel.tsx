@@ -1,12 +1,10 @@
 
 import React, { useState, useEffect } from 'react';
-import { SalesPage, CTAButton, Product } from '../../types/salesPage';
+import { SalesPage, Product } from '../../types/salesPage';
 import WhatsAppFloatingButton from '../Shared/WhatsAppFloatingButton';
 import { 
-  Check, Star, User, ShoppingCart, ArrowRight, CheckCircle, 
-  MessageCircle, ChevronLeft, ChevronRight, Maximize2, 
-  X, Leaf, ShieldCheck, Heart, Sparkles, Plus, ArrowDown, HelpCircle,
-  Image as ImageIcon, CreditCard, Smartphone, Truck, MapPin, Minus, Send, Loader2, Package, Quote
+  Check, User, ShoppingCart, MessageCircle, ChevronLeft,
+  Image as ImageIcon, CreditCard, Smartphone, Truck, Minus, Send, Loader2, Package, Quote, ShieldCheck, ArrowDown, Plus
 } from 'lucide-react';
 
 interface PreviewPanelProps {
@@ -24,9 +22,11 @@ const PreviewPanel: React.FC<PreviewPanelProps> = ({ data, device }) => {
   const scaleRatio = settings.typeScale || 1.25;
   const spacingValue = settings.sectionSpacing ?? 5;
   
-  const h1Size = Math.round(baseSize * Math.pow(scaleRatio, 4)); 
-  const h2Size = Math.round(baseSize * Math.pow(scaleRatio, 3)); 
-  const h3Size = Math.round(baseSize * Math.pow(scaleRatio, 2)); 
+  // Adjusted heading sizes for mobile
+  const h1Size = isMobile ? Math.round(baseSize * 1.8) : Math.round(baseSize * Math.pow(scaleRatio, 4)); 
+  const h2Size = isMobile ? Math.round(baseSize * 1.5) : Math.round(baseSize * Math.pow(scaleRatio, 3)); 
+  const h3Size = isMobile ? Math.round(baseSize * 1.2) : Math.round(baseSize * Math.pow(scaleRatio, 2)); 
+
   const sectionPaddingRem = 1 + (spacingValue * 0.5); 
   const radius = data.buttonCorner === 'pill' ? '9999px' : data.buttonCorner === 'rounded' ? '0.75rem' : '0px';
 
@@ -151,12 +151,10 @@ const PreviewPanel: React.FC<PreviewPanelProps> = ({ data, device }) => {
         <div className="mx-auto w-full max-w-[375px] h-full max-h-[850px] bg-slate-900 rounded-[2.5rem] shadow-2xl border-[12px] border-slate-900 overflow-hidden relative">
            <div className="absolute top-0 left-1/2 -translate-x-1/2 h-6 w-32 bg-slate-900 rounded-b-xl z-20"></div>
            
-           {/* Checkout Drawer for Mobile */}
            <div className={`checkout-drawer ${isCheckoutOpen ? 'translate-x-0' : 'translate-x-full'}`}>
               <CheckoutView data={data} onClose={() => setIsCheckoutOpen(false)} />
            </div>
 
-           {/* Floating WhatsApp Button inside the mobile frame */}
            {data.ctaDisplay.showFloatingWhatsapp && !isCheckoutOpen && (
              <div className="absolute bottom-32 right-5 z-50 animate-bounce-subtle">
                 <WhatsAppFloatingButton 
@@ -182,7 +180,7 @@ const PreviewPanel: React.FC<PreviewPanelProps> = ({ data, device }) => {
                 className="fixed bottom-10 right-10 z-50 animate-bounce-subtle"
               />
             )}
-            <CleanThemeContent data={data} onOpenCheckout={() => alert('Checkout is only available in mobile preview for this specific request.')} />
+            <CleanThemeContent data={data} onOpenCheckout={() => setIsCheckoutOpen(true)} />
         </div>
       )}
     </>
@@ -195,20 +193,17 @@ const CleanThemeContent: React.FC<{ data: SalesPage; onOpenCheckout: () => void 
   const images = product?.images || [];
   const whatsappMsg = data.whatsappMessage?.replace('{title}', data.title) || "";
 
-  // Auto-slide logic for product images
   useEffect(() => {
     if (images.length <= 1) return;
     const timer = setInterval(() => {
         setActiveImg((prev) => (prev + 1) % images.length);
-    }, 4000); // 4 seconds per slide
+    }, 4000);
     return () => clearInterval(timer);
   }, [images.length]);
   
-  // Curated logic for text color on background
   const isDarkBg = data.pageBgColor === '#064e3b' || data.pageBgColor === '#111827' || data.pageBgColor === '#1e1b4b' || data.pageBgColor === '#4c0519' || data.pageBgColor === '#000000';
   const textColorClass = isDarkBg ? 'text-white' : 'text-slate-900';
 
-  // Per instructions: catchy headline = problem/solution field (product.name), support phrase = promise/support field (product.category)
   const mainHeadline = product?.name || data.title || 'Main Catchy Headline';
   const supportPhrase = product?.category || data.subtitle || 'Your Support Phrase Here';
 
@@ -216,24 +211,21 @@ const CleanThemeContent: React.FC<{ data: SalesPage; onOpenCheckout: () => void 
     <div className="flex flex-col">
       {/* 1. BRANDED HERO HEADER */}
       <header 
-        className="clean-section pt-16 md:pt-24 pb-16 flex flex-col items-center text-center transition-colors duration-500 overflow-hidden"
+        className="clean-section pt-16 md:pt-24 pb-12 flex flex-col items-center text-center transition-colors duration-500 overflow-hidden"
         style={{ backgroundColor: data.pageBgColor }}
       >
-        {/* Promise/Support (Small Text) */}
         <span 
             className={`text-[10px] md:text-xs font-black uppercase tracking-[0.25em] mb-4 opacity-80 animate-fade-in ${textColorClass}`}
         >
             {supportPhrase}
         </span>
 
-        {/* Main Headline (Problem/Solution) */}
         <h1 
-            className={`max-w-[90%] mx-auto mb-10 leading-[1.05] tracking-tight animate-slide-up ${textColorClass}`}
+            className={`max-w-[90%] mx-auto mb-10 leading-[1.1] tracking-tight animate-slide-up ${textColorClass}`}
         >
             {mainHeadline}
         </h1>
 
-        {/* THE SIGNATURE ARCH FRAME WITH AUTO-SLIDER */}
         <div className="w-[85%] max-w-[300px] mb-12 relative">
             <div className="arch-frame relative group">
                 {images.length > 0 ? (
@@ -253,7 +245,6 @@ const CleanThemeContent: React.FC<{ data: SalesPage; onOpenCheckout: () => void 
                 )}
             </div>
             
-            {/* Slide Indicators */}
             {images.length > 1 && (
                 <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 flex gap-1.5">
                     {images.map((_, idx) => (
@@ -266,7 +257,6 @@ const CleanThemeContent: React.FC<{ data: SalesPage; onOpenCheckout: () => void 
             )}
         </div>
 
-        {/* CREDIBILITY BADGES - In mini arched frames, matching cardBgColor */}
         <div className="flex flex-wrap justify-center gap-4 w-full px-4 mb-10">
             {data.badges.map((badgeId, idx) => (
                 <div key={badgeId} className="flex flex-col items-center gap-1.5 animate-fade-in" style={{ animationDelay: `${idx * 100}ms` }}>
@@ -280,9 +270,7 @@ const CleanThemeContent: React.FC<{ data: SalesPage; onOpenCheckout: () => void 
             ))}
         </div>
 
-        {/* HERO CTA BUTTONS - Placed after badges on the solid background */}
         <div className="flex flex-col gap-3 w-full px-8 max-w-[340px] animate-slide-up delay-300">
-            {/* Direct Message on WhatsApp (Primary) */}
             <a 
                 href={`https://wa.me/${data.whatsappNumber?.replace(/\D/g, '')}?text=${encodeURIComponent(whatsappMsg)}`}
                 target="_blank"
@@ -294,7 +282,6 @@ const CleanThemeContent: React.FC<{ data: SalesPage; onOpenCheckout: () => void 
                 Message on WhatsApp
             </a>
 
-            {/* Direct Checkout (Only if enabled) */}
             {data.checkoutConfig.enabled && (
                 <button 
                     onClick={onOpenCheckout}
@@ -307,52 +294,51 @@ const CleanThemeContent: React.FC<{ data: SalesPage; onOpenCheckout: () => void 
             )}
         </div>
 
-        {/* Scroll Hint */}
         <div className="mt-12 animate-bounce opacity-40">
             <ArrowDown className={`${textColorClass}`} size={20} />
         </div>
       </header>
 
-      {/* Persuasive Short Story Card - After buttons but not on headline bg */}
-      {data.shortStory && (
-          <div className="px-6 -mt-8 relative z-30 mb-8">
+      {/* 2. PERSUASIVE STORY CARD - Now below header with line color matched to background */}
+      {data.description && (
+          <div className="px-6 -mt-4 relative z-30 mb-8">
               <div className="bg-white dark:bg-slate-900 rounded-[2.5rem] p-8 shadow-2xl border border-slate-100 dark:border-slate-800 animate-fade-in shadow-slate-200/50 dark:shadow-none">
-                  <div className="mb-6">
-                      <h3 className="text-base font-black text-slate-900 dark:text-white uppercase tracking-wider inline-block">
+                  <div className="mb-6 text-left">
+                      <h3 className="text-sm md:text-base font-black text-slate-900 dark:text-white uppercase tracking-wider inline-block">
                           {data.shortStoryTitle || 'The Story'}
                       </h3>
-                      <div className="h-1 w-8 bg-slate-900 dark:bg-emerald-500 mt-1 rounded-full"></div>
+                      <div className="h-1.5 w-10 mt-1 rounded-full" style={{ backgroundColor: data.pageBgColor }}></div>
                   </div>
                   <div className="flex gap-5 items-start">
-                      <div className="p-3.5 bg-emerald-50 dark:bg-emerald-900/30 rounded-2xl text-emerald-600 shrink-0">
+                      <div className="p-3.5 bg-slate-50 dark:bg-slate-800 rounded-2xl shrink-0" style={{ color: data.themeColor }}>
                           <Quote size={24} fill="currentColor" className="opacity-80" />
                       </div>
-                      <p className="text-base text-slate-700 dark:text-slate-200 leading-relaxed font-medium italic">
-                          "{data.shortStory}"
+                      <p className="text-sm md:text-base text-slate-700 dark:text-slate-200 leading-relaxed font-medium italic">
+                          "{data.description}"
                       </p>
                   </div>
               </div>
           </div>
       )}
 
-      {/* 2. PRODUCT DETAILS SECTION */}
+      {/* 3. PRODUCT DETAILS SECTION */}
       <section className="clean-section bg-white dark:bg-slate-950">
           <div className="space-y-6">
               <div className="flex justify-between items-baseline pt-4 border-b border-slate-100 pb-6 dark:border-slate-800">
                   <div>
-                    <h3 className="text-2xl md:text-3xl font-black text-slate-900 dark:text-white leading-none">
+                    <h3 className="text-xl md:text-2xl font-black text-slate-900 dark:text-white leading-none">
                         {product?.name || 'Product Title'}
                     </h3>
-                    <p className="text-xs font-bold text-emerald-600 mt-2 uppercase tracking-widest">{product?.category || 'Quality Natural Support'}</p>
+                    <p className="text-xs font-bold text-emerald-600 mt-2 uppercase tracking-widest">{product?.category || 'Natural Support'}</p>
                   </div>
                   <div className="text-right">
-                      <span className="text-3xl font-black text-slate-900 dark:text-white">
+                      <span className="text-2xl md:text-3xl font-black text-slate-900 dark:text-white">
                           {data.currency} {product?.price || '0.00'}
                       </span>
                   </div>
               </div>
 
-              <p className="text-slate-600 dark:text-slate-300 text-base leading-relaxed">
+              <p className="text-slate-600 dark:text-slate-300 text-sm md:text-base leading-relaxed">
                   {product?.shortDescription}
               </p>
 
@@ -362,45 +348,40 @@ const CleanThemeContent: React.FC<{ data: SalesPage; onOpenCheckout: () => void 
                         <div className="mt-1 w-5 h-5 rounded-full bg-emerald-500 flex items-center justify-center text-white shrink-0 shadow-sm">
                             <Check size={12} strokeWidth={4} />
                         </div>
-                        <span className="text-sm font-bold text-slate-700 dark:text-slate-200">{b}</span>
+                        <span className="text-xs md:text-sm font-bold text-slate-700 dark:text-slate-200">{b}</span>
                     </div>
                   ))}
               </div>
           </div>
       </section>
 
-      {/* 3. STORY / DESCRIPTION */}
-      <section className="clean-section bg-slate-50 dark:bg-slate-900/50">
-          <div className="prose prose-slate dark:prose-invert max-w-none text-slate-600" dangerouslySetInnerHTML={{ __html: data.description }} />
-      </section>
-
       {/* 4. EXPERT BIO */}
       <section className="clean-section">
           <div className="bg-slate-900 rounded-[2.5rem] p-8 text-white relative overflow-hidden">
               <div className="relative z-10 flex flex-col items-center text-center">
-                  <div className="w-24 h-24 rounded-full overflow-hidden border-4 border-white/20 mb-6 shadow-2xl">
+                  <div className="w-20 h-20 md:w-24 md:h-24 rounded-full overflow-hidden border-4 border-white/20 mb-6 shadow-2xl">
                     {data.personalBranding.photoUrl ? (
                         <img src={data.personalBranding.photoUrl} className="w-full h-full object-cover" />
                     ) : (
-                        <div className="w-full h-full bg-slate-800 flex items-center justify-center text-4xl font-bold">
+                        <div className="w-full h-full bg-slate-800 flex items-center justify-center text-2xl font-bold">
                             {data.personalBranding.rank?.charAt(0) || 'F'}
                         </div>
                     )}
                   </div>
                   <span className="text-emerald-400 font-bold uppercase tracking-widest text-[10px] mb-2">Personal Mentor</span>
-                  <h3 className="text-white text-xl md:text-2xl mb-4 font-heading">Connect with {data.personalBranding.rank || 'an Expert'}</h3>
-                  <p className="text-slate-400 text-sm italic leading-relaxed px-2">
+                  <h3 className="text-white text-lg md:text-xl mb-4 font-heading">Connect with {data.personalBranding.rank || 'an Expert'}</h3>
+                  <p className="text-slate-400 text-xs md:text-sm italic leading-relaxed px-2">
                       "{data.personalBranding.bio || "Supporting your health journey with high-quality Forever products."}"
                   </p>
                   
                   <div className="flex gap-6 pt-6">
                       <div className="text-center">
-                          <p className="text-xl font-bold text-white">{data.personalBranding.yearsExperience}+</p>
+                          <p className="text-lg md:text-xl font-bold text-white">{data.personalBranding.yearsExperience}+</p>
                           <p className="text-[9px] text-slate-500 uppercase font-bold tracking-widest">Years</p>
                       </div>
                       <div className="h-8 w-px bg-white/10"></div>
                       <div className="text-center">
-                          <p className="text-xl font-bold text-emerald-400">{data.personalBranding.rank || 'FBO'}</p>
+                          <p className="text-lg md:text-xl font-bold text-emerald-400">{data.personalBranding.rank || 'FBO'}</p>
                           <p className="text-[9px] text-slate-500 uppercase font-bold tracking-widest">Status</p>
                       </div>
                   </div>
@@ -414,8 +395,8 @@ const CleanThemeContent: React.FC<{ data: SalesPage; onOpenCheckout: () => void 
               <p className="text-[10px] text-slate-400 leading-relaxed italic uppercase tracking-wider">
                   {data.disclaimer}
               </p>
-              <div className="pt-8 text-xs text-slate-500">
-                  <p className="font-bold text-slate-800 dark:text-white">{data.title}</p>
+              <div className="pt-8 text-[10px] text-slate-500 uppercase font-bold">
+                  <p className="text-slate-800 dark:text-white">{data.title}</p>
                   <p>&copy; {new Date().getFullYear()} Forever Business Owner.</p>
               </div>
           </div>
@@ -432,7 +413,6 @@ const CheckoutView: React.FC<{ data: SalesPage; onClose: () => void }> = ({ data
   const [paymentVerified, setPaymentVerified] = useState(false);
   const [isVerifying, setIsVerifying] = useState(false);
   
-  // Buyer Info States
   const [buyerName, setBuyerName] = useState('');
   const [buyerPhone, setBuyerPhone] = useState('');
   const [buyerAddress, setBuyerAddress] = useState('');
@@ -471,18 +451,15 @@ const CheckoutView: React.FC<{ data: SalesPage; onClose: () => void }> = ({ data
 
   return (
     <div className="flex flex-col h-full bg-white dark:bg-slate-950 font-sans relative">
-      {/* 1. HEADER */}
       <div className="flex items-center px-4 py-5 border-b border-slate-100 dark:border-slate-800 shrink-0">
           <button onClick={onClose} className="p-2 -ml-2 text-slate-800 dark:text-white">
               <ChevronLeft size={28} strokeWidth={3} />
           </button>
-          <h2 className="text-2xl font-black text-slate-900 dark:text-white ml-2">Checkout</h2>
+          <h2 className="text-xl font-black text-slate-900 dark:text-white ml-2">Checkout</h2>
       </div>
 
-      {/* 2. SCROLLABLE FORM */}
       <div className="flex-1 overflow-y-auto p-6 space-y-8 no-scrollbar pb-32">
           
-          {/* Order Summary Summary */}
           <div className="bg-slate-50 dark:bg-slate-900/50 p-5 rounded-2xl border border-slate-100 dark:border-slate-800 space-y-4">
               <div className="flex items-center gap-4">
                   <div className="w-16 h-16 bg-white dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700 p-1 shrink-0">
@@ -490,12 +467,11 @@ const CheckoutView: React.FC<{ data: SalesPage; onClose: () => void }> = ({ data
                   </div>
                   <div className="flex-1 min-w-0">
                       <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Selected Item</p>
-                      <h3 className="font-bold text-slate-900 dark:text-white truncate">{product?.name}</h3>
+                      <h3 className="font-bold text-sm text-slate-900 dark:text-white truncate">{product?.name}</h3>
                       <p className="text-sm font-black text-emerald-600">{data.currency} {unitPrice.toLocaleString()}</p>
                   </div>
               </div>
 
-              {/* Box/Full Pack Option */}
               {data.fullPackPrice && data.fullPackPrice > 0 && (
                   <div 
                     onClick={() => setBuyFullPack(!buyFullPack)}
@@ -504,8 +480,8 @@ const CheckoutView: React.FC<{ data: SalesPage; onClose: () => void }> = ({ data
                       <div className="flex items-center gap-3">
                           <Package size={20} className={buyFullPack ? 'text-emerald-600' : 'text-slate-400'} />
                           <div>
-                              <p className={`font-bold text-sm ${buyFullPack ? 'text-emerald-900 dark:text-emerald-200' : 'text-slate-700 dark:text-slate-400'}`}>Full Pack Box</p>
-                              <p className="text-[10px] text-slate-400">Save more with the complete set</p>
+                              <p className={`font-bold text-xs ${buyFullPack ? 'text-emerald-900 dark:text-emerald-200' : 'text-slate-700 dark:text-slate-400'}`}>Full Pack Box</p>
+                              <p className="text-[9px] text-slate-400">Save more with the complete set</p>
                           </div>
                       </div>
                       <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center ${buyFullPack ? 'bg-emerald-500 border-emerald-500' : 'border-slate-200'}`}>
@@ -514,31 +490,29 @@ const CheckoutView: React.FC<{ data: SalesPage; onClose: () => void }> = ({ data
                   </div>
               )}
 
-              {/* Quantity Controls */}
               <div className="flex items-center justify-between pt-2">
-                  <span className="text-sm font-bold text-slate-700 dark:text-slate-300">Quantity</span>
+                  <span className="text-xs font-bold text-slate-700 dark:text-slate-300">Quantity</span>
                   <div className="flex items-center gap-4 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-full px-2 py-1 shadow-sm">
                       <button 
                         onClick={() => setQuantity(Math.max(1, quantity - 1))}
                         className="w-8 h-8 flex items-center justify-center rounded-full bg-slate-50 dark:bg-slate-700 text-slate-600 dark:text-white active:scale-90"
                       >
-                          <Minus size={16} strokeWidth={3} />
+                          <Minus size={14} strokeWidth={3} />
                       </button>
-                      <span className="text-lg font-black text-slate-900 dark:text-white w-4 text-center">{quantity}</span>
+                      <span className="text-base font-black text-slate-900 dark:text-white w-4 text-center">{quantity}</span>
                       <button 
                         onClick={() => setQuantity(quantity + 1)}
                         className="w-8 h-8 flex items-center justify-center rounded-full bg-emerald-500 text-white active:scale-90"
                       >
-                          <Plus size={16} strokeWidth={3} />
+                          <Plus size={14} strokeWidth={3} />
                       </button>
                   </div>
               </div>
           </div>
 
-          {/* Customer Info */}
           <div className="space-y-4">
-              <h3 className="text-sm font-black uppercase tracking-widest text-slate-400 flex items-center gap-2">
-                  <User size={16} /> Contact Details
+              <h3 className="text-xs font-black uppercase tracking-widest text-slate-400 flex items-center gap-2">
+                  <User size={14} /> Contact Details
               </h3>
               <div className="grid grid-cols-1 gap-4">
                   <input 
@@ -546,23 +520,22 @@ const CheckoutView: React.FC<{ data: SalesPage; onClose: () => void }> = ({ data
                     value={buyerName}
                     onChange={(e) => setBuyerName(e.target.value)}
                     placeholder="Full Name" 
-                    className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-4 font-bold outline-none focus:border-emerald-500 transition-all dark:text-white" 
+                    className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-4 font-bold outline-none focus:border-emerald-500 transition-all dark:text-white text-sm" 
                   />
                   <input 
                     type="tel" 
                     value={buyerPhone}
                     onChange={(e) => setBuyerPhone(e.target.value)}
                     placeholder="Phone Number" 
-                    className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-4 font-bold outline-none focus:border-emerald-500 transition-all dark:text-white" 
+                    className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-4 font-bold outline-none focus:border-emerald-500 transition-all dark:text-white text-sm" 
                   />
               </div>
           </div>
 
-          {/* Shipping Info (If Enabled) */}
           {data.checkoutConfig.shipping.enabled && (
               <div className="space-y-4 animate-fade-in">
-                  <h3 className="text-sm font-black uppercase tracking-widest text-slate-400 flex items-center gap-2">
-                      <Truck size={16} /> Delivery Address
+                  <h3 className="text-xs font-black uppercase tracking-widest text-slate-400 flex items-center gap-2">
+                      <Truck size={14} /> Delivery Address
                   </h3>
                   <div className="grid grid-cols-1 gap-4">
                       <input 
@@ -570,27 +543,22 @@ const CheckoutView: React.FC<{ data: SalesPage; onClose: () => void }> = ({ data
                         value={buyerAddress}
                         onChange={(e) => setBuyerAddress(e.target.value)}
                         placeholder="Street Address" 
-                        className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-4 font-bold outline-none focus:border-emerald-500 transition-all dark:text-white" 
+                        className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-4 font-bold outline-none focus:border-emerald-500 transition-all dark:text-white text-sm" 
                       />
-                      <div className="grid grid-cols-2 gap-4">
-                        <input type="text" placeholder="City" className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-4 font-bold outline-none focus:border-emerald-500 transition-all dark:text-white" />
-                        <input type="text" placeholder="Postal Code" className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-4 font-bold outline-none focus:border-emerald-500 transition-all dark:text-white" />
-                      </div>
                   </div>
               </div>
           )}
 
-          {/* Payment Methods */}
           <div className="space-y-4">
-              <h3 className="text-sm font-black uppercase tracking-widest text-slate-400 flex items-center gap-2">
-                  <CreditCard size={16} /> Payment Method
+              <h3 className="text-xs font-black uppercase tracking-widest text-slate-400 flex items-center gap-2">
+                  <CreditCard size={14} /> Payment Method
               </h3>
               <div className="grid grid-cols-1 gap-3">
                   {data.checkoutConfig.paymentMethods.mobileMoney && (
                     <PaymentOption 
                         id="momo" 
                         label="Mobile Money (MTN/AirtelTigo)" 
-                        icon={<Smartphone size={20} />} 
+                        icon={<Smartphone size={18} />} 
                         selected={selectedPayment === 'momo'} 
                         onSelect={() => { setSelectedPayment('momo'); setPaymentVerified(false); setActivePaymentDrawer('momo'); }} 
                         status={paymentVerified && selectedPayment === 'momo' ? 'VERIFIED' : undefined}
@@ -600,7 +568,7 @@ const CheckoutView: React.FC<{ data: SalesPage; onClose: () => void }> = ({ data
                     <PaymentOption 
                         id="card" 
                         label="Credit / Debit Card" 
-                        icon={<CreditCard size={20} />} 
+                        icon={<CreditCard size={18} />} 
                         selected={selectedPayment === 'card'} 
                         onSelect={() => { setSelectedPayment('card'); setPaymentVerified(false); setActivePaymentDrawer('card'); }} 
                         status={paymentVerified && selectedPayment === 'card' ? 'VERIFIED' : undefined}
@@ -610,7 +578,7 @@ const CheckoutView: React.FC<{ data: SalesPage; onClose: () => void }> = ({ data
                     <PaymentOption 
                         id="cod" 
                         label="Cash on Delivery" 
-                        icon={<Truck size={20} />} 
+                        icon={<Truck size={18} />} 
                         selected={selectedPayment === 'cod'} 
                         onSelect={() => { setSelectedPayment('cod'); setPaymentVerified(false); }} 
                     />
@@ -619,20 +587,19 @@ const CheckoutView: React.FC<{ data: SalesPage; onClose: () => void }> = ({ data
           </div>
       </div>
 
-      {/* 3. PAYMENT SUB-DRAWERS */}
       {activePaymentDrawer === 'momo' && (
           <>
             <div className="fixed inset-0 bg-black/40 z-[105]" onClick={() => setActivePaymentDrawer(null)}></div>
             <div className="payment-subdrawer animate-slide-up">
                 <div className="flex justify-between items-center mb-6">
-                    <h4 className="font-black text-xl text-slate-900 dark:text-white">Verify MoMo</h4>
+                    <h4 className="font-black text-lg text-slate-900 dark:text-white">Verify MoMo</h4>
                     <button onClick={() => setActivePaymentDrawer(null)} className="text-slate-400"><X size={24} /></button>
                 </div>
                 <div className="relative">
                     <input 
                         type="tel" 
                         placeholder="05x xxx xxxx" 
-                        className="w-full bg-slate-100 dark:bg-slate-800 border-none rounded-xl px-4 py-4 font-black outline-none dark:text-white pr-12"
+                        className="w-full bg-slate-100 dark:bg-slate-800 border-none rounded-xl px-4 py-4 font-black outline-none dark:text-white pr-12 text-base"
                     />
                     <button 
                         onClick={handleMomoSend}
@@ -642,7 +609,7 @@ const CheckoutView: React.FC<{ data: SalesPage; onClose: () => void }> = ({ data
                         {isVerifying ? <Loader2 size={24} className="animate-spin" /> : <Send size={24} />}
                     </button>
                 </div>
-                <p className="text-[10px] text-slate-400 mt-4 text-center">Confirm the prompt that appears on your handset to verify funds.</p>
+                <p className="text-[10px] text-slate-400 mt-4 text-center italic">Confirm the prompt on your phone to complete.</p>
             </div>
           </>
       )}
@@ -652,14 +619,14 @@ const CheckoutView: React.FC<{ data: SalesPage; onClose: () => void }> = ({ data
             <div className="fixed inset-0 bg-black/40 z-[105]" onClick={() => setActivePaymentDrawer(null)}></div>
             <div className="payment-subdrawer animate-slide-up">
                 <div className="flex justify-between items-center mb-6">
-                    <h4 className="font-black text-xl text-slate-900 dark:text-white">Card Details</h4>
+                    <h4 className="font-black text-lg text-slate-900 dark:text-white">Card Details</h4>
                     <button onClick={() => setActivePaymentDrawer(null)} className="text-slate-400"><X size={24} /></button>
                 </div>
                 <div className="space-y-4">
-                    <input type="text" placeholder="Card Number" className="w-full bg-slate-100 dark:bg-slate-800 border-none rounded-xl px-4 py-4 font-black outline-none dark:text-white" />
+                    <input type="text" placeholder="Card Number" className="w-full bg-slate-100 dark:bg-slate-800 border-none rounded-xl px-4 py-4 font-black outline-none dark:text-white text-base" />
                     <div className="grid grid-cols-2 gap-4">
-                        <input type="text" placeholder="MM / YY" className="w-full bg-slate-100 dark:bg-slate-800 border-none rounded-xl px-4 py-4 font-black outline-none dark:text-white" />
-                        <input type="text" placeholder="CVV" className="w-full bg-slate-100 dark:bg-slate-800 border-none rounded-xl px-4 py-4 font-black outline-none dark:text-white" />
+                        <input type="text" placeholder="MM / YY" className="w-full bg-slate-100 dark:bg-slate-800 border-none rounded-xl px-4 py-4 font-black outline-none dark:text-white text-base" />
+                        <input type="text" placeholder="CVV" className="w-full bg-slate-100 dark:bg-slate-800 border-none rounded-xl px-4 py-4 font-black outline-none dark:text-white text-base" />
                     </div>
                     <button 
                         onClick={handleCardVerify}
@@ -674,25 +641,24 @@ const CheckoutView: React.FC<{ data: SalesPage; onClose: () => void }> = ({ data
           </>
       )}
 
-      {/* 4. STICKY BOTTOM SUMMARY */}
       <div className="p-6 border-t border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-950 shrink-0 shadow-[0_-10px_30px_-15px_rgba(0,0,0,0.1)]">
           <div className="space-y-2 mb-6">
-              <div className="flex justify-between text-sm text-slate-500 dark:text-slate-400 font-bold">
+              <div className="flex justify-between text-xs text-slate-500 dark:text-slate-400 font-bold">
                   <span>Subtotal ({quantity}x)</span>
                   <span>{data.currency} {subtotal.toLocaleString()}</span>
               </div>
-              <div className="flex justify-between text-sm text-slate-500 dark:text-slate-400 font-bold">
+              <div className="flex justify-between text-xs text-slate-500 dark:text-slate-400 font-bold">
                   <span>Shipping</span>
                   <span>{shippingFee > 0 ? `${data.currency} ${shippingFee}` : 'Free'}</span>
               </div>
-              <div className="flex justify-between text-xl font-black text-slate-900 dark:text-white pt-2 border-t border-slate-50 dark:border-slate-900">
+              <div className="flex justify-between text-lg font-black text-slate-900 dark:text-white pt-2 border-t border-slate-50 dark:border-slate-900">
                   <span>Total</span>
                   <span>{data.currency} {total.toLocaleString()}</span>
               </div>
           </div>
           <button 
             disabled={!isFormValid}
-            className="w-full clean-btn text-white py-5 text-xl shadow-xl shadow-emerald-900/20"
+            className="w-full clean-btn text-white py-5 text-lg shadow-xl shadow-emerald-900/20"
             style={{ backgroundColor: isFormValid ? data.themeColor : '#94a3b8' }}
           >
             Complete Order
@@ -712,21 +678,25 @@ const PaymentOption: React.FC<{
 }> = ({ label, icon, selected, onSelect, status }) => (
     <div 
         onClick={onSelect}
-        className={`p-4 rounded-2xl border-2 flex items-center justify-between cursor-pointer transition-all ${selected ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20' : 'border-slate-100 bg-slate-50 dark:bg-slate-900 dark:border-slate-800'}`}
+        className={`p-3 rounded-2xl border-2 flex items-center justify-between cursor-pointer transition-all ${selected ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20' : 'border-slate-100 bg-slate-50 dark:bg-slate-900 dark:border-slate-800'}`}
     >
         <div className="flex items-center gap-3">
             <div className={`p-2 rounded-xl ${selected ? 'bg-emerald-200 text-emerald-800' : 'bg-white dark:bg-slate-800 text-slate-400 shadow-sm'}`}>
                 {icon}
             </div>
             <div>
-                <span className={`font-bold text-sm block ${selected ? 'text-emerald-900 dark:text-emerald-200' : 'text-slate-600 dark:text-slate-400'}`}>{label}</span>
-                {status === 'VERIFIED' && <span className="text-[9px] text-emerald-600 font-black uppercase tracking-widest">Verified & Ready</span>}
+                <span className={`font-bold text-[13px] block ${selected ? 'text-emerald-900 dark:text-emerald-200' : 'text-slate-600 dark:text-slate-400'}`}>{label}</span>
+                {status === 'VERIFIED' && <span className="text-[8px] text-emerald-600 font-black uppercase tracking-widest">Verified</span>}
             </div>
         </div>
-        <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${selected ? 'border-emerald-500 bg-emerald-500 text-white' : 'border-slate-200 bg-white dark:bg-slate-800 dark:border-slate-700'}`}>
-            {selected && <Check size={14} strokeWidth={4} />}
+        <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${selected ? 'border-emerald-500 bg-emerald-500 text-white' : 'border-slate-200 bg-white dark:bg-slate-800 dark:border-slate-700'}`}>
+            {selected && <Check size={12} strokeWidth={4} />}
         </div>
     </div>
+);
+
+const X = ({ size, className }: { size: number, className?: string }) => (
+    <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
 );
 
 export default PreviewPanel;

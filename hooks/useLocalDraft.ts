@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { SalesPage } from '../types/salesPage';
 
@@ -36,9 +35,8 @@ const EMPTY_PAGE: SalesPage = {
       buttonSize: 'md'
   },
 
-  description: '',
+  description: '', // Persuasive story
   shortStoryTitle: 'Why this product?',
-  shortStory: '',
   features: [],
   testimonials: [],
   
@@ -88,6 +86,7 @@ const EMPTY_PAGE: SalesPage = {
           freeShippingThreshold: 0,
           pickupOption: true
       },
+      // Removed unsupported 'settings' property to fix the TypeScript error
       notifications: {
           emailOrderAlert: true,
           whatsappOrderAlert: true
@@ -123,7 +122,6 @@ export const useLocalDraft = () => {
         if (!merged.cardBgColor) merged.cardBgColor = EMPTY_PAGE.cardBgColor;
         if (merged.fullPackPrice === undefined) merged.fullPackPrice = EMPTY_PAGE.fullPackPrice;
         if (merged.shortStoryTitle === undefined) merged.shortStoryTitle = EMPTY_PAGE.shortStoryTitle;
-        if (merged.shortStory === undefined) merged.shortStory = EMPTY_PAGE.shortStory;
         
         return merged;
       }

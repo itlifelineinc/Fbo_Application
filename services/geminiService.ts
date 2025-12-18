@@ -1,4 +1,3 @@
-
 import { GoogleGenAI, Type } from "@google/genai";
 import { Module, Chapter } from '../types';
 
@@ -111,22 +110,20 @@ export const analyzeReceipt = async (base64Image: string): Promise<{ amount: num
     // Remove data URL prefix if present
     const cleanBase64 = base64Image.split(',')[1] || base64Image;
 
-    // Fix: Updated model to gemini-3-flash-preview for multimodal analysis tasks
+    // Updated: Following guideline for multiple parts using object format in contents
     const response = await ai.models.generateContent({
       model: 'gemini-3-flash-preview',
-      contents: [
-        {
-          parts: [
-            {
-                inlineData: {
-                    mimeType: 'image/jpeg', 
-                    data: cleanBase64
-                }
-            },
-            { text: "Analyze this receipt. Extract the Total Amount Paid (as a number) and the Transaction ID (or Receipt Number). Return JSON." }
-          ]
-        }
-      ],
+      contents: {
+        parts: [
+          {
+            inlineData: {
+              mimeType: 'image/jpeg',
+              data: cleanBase64
+            }
+          },
+          { text: "Analyze this receipt. Extract the Total Amount Paid (as a number) and the Transaction ID (or Receipt Number). Return JSON." }
+        ]
+      },
       config: {
         responseMimeType: "application/json",
         responseSchema: {

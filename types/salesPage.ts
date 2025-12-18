@@ -122,9 +122,8 @@ export interface SalesPage {
   mobileOverrides?: MobileDesignOverrides;
   
   // Content
-  description: string; 
+  description: string; // Used for persuasive story
   shortStoryTitle?: string;
-  shortStory?: string;
   features: string[]; 
   testimonials: Testimonial[];
   

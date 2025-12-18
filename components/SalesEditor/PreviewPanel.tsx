@@ -43,6 +43,8 @@ const PreviewPanel: React.FC<PreviewPanelProps> = ({ data, device }) => {
     '--btn-radius': radius,
   } as React.CSSProperties;
 
+  const whatsappMsg = data.whatsappMessage?.replace('{title}', data.title) || "";
+
   return (
     <>
       <style>{`
@@ -67,13 +69,17 @@ const PreviewPanel: React.FC<PreviewPanelProps> = ({ data, device }) => {
         
         .clean-btn {
           border-radius: var(--btn-radius);
-          padding: 0.75rem 1.5rem;
-          font-weight: 700;
-          transition: all 0.2s ease;
+          padding: 0.85rem 1.5rem;
+          font-weight: 800;
+          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
           display: inline-flex;
           align-items: center;
           justify-content: center;
-          gap: 0.5rem;
+          gap: 0.75rem;
+          text-transform: uppercase;
+          letter-spacing: 0.05em;
+          font-size: 0.85rem;
+          box-shadow: 0 4px 14px 0 rgba(0,0,0,0.1);
         }
         .clean-btn:active { transform: scale(0.96); }
 
@@ -101,13 +107,12 @@ const PreviewPanel: React.FC<PreviewPanelProps> = ({ data, device }) => {
             box-shadow: 0 4px 10px -2px rgba(0,0,0,0.2);
         }
 
-        .fade-in-slide {
-            animation: fadeInSlide 0.8s ease-out forwards;
+        @keyframes subtle-bounce {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-5px); }
         }
-
-        @keyframes fadeInSlide {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
+        .animate-bounce-subtle {
+          animation: subtle-bounce 3s ease-in-out infinite;
         }
 
         .no-scrollbar::-webkit-scrollbar { display: none; }
@@ -117,12 +122,33 @@ const PreviewPanel: React.FC<PreviewPanelProps> = ({ data, device }) => {
       {isMobile ? (
         <div className="mx-auto w-full max-w-[375px] h-full max-h-[850px] bg-slate-900 rounded-[2.5rem] shadow-2xl border-[12px] border-slate-900 overflow-hidden relative">
            <div className="absolute top-0 left-1/2 -translate-x-1/2 h-6 w-32 bg-slate-900 rounded-b-xl z-20"></div>
+           
+           {/* Floating WhatsApp Button inside the mobile frame */}
+           {data.ctaDisplay.showFloatingWhatsapp && (
+             <div className="absolute bottom-32 right-5 z-50 animate-bounce-subtle">
+                <WhatsAppFloatingButton 
+                  phoneNumber={data.whatsappNumber} 
+                  message={whatsappMsg} 
+                  isVisible={true} 
+                  className="!static" 
+                />
+             </div>
+           )}
+
            <div className="h-full overflow-y-auto no-scrollbar preview-wrapper bg-white dark:bg-slate-950" style={previewStyle}>
               <CleanThemeContent data={data} isMobile={true} />
            </div>
         </div>
       ) : (
-        <div className="w-full h-full bg-white shadow-lg overflow-y-auto no-scrollbar preview-wrapper" style={previewStyle}>
+        <div className="w-full h-full bg-white shadow-lg overflow-y-auto no-scrollbar preview-wrapper relative" style={previewStyle}>
+            {data.ctaDisplay.showFloatingWhatsapp && (
+              <WhatsAppFloatingButton 
+                phoneNumber={data.whatsappNumber} 
+                message={whatsappMsg} 
+                isVisible={true} 
+                className="fixed bottom-10 right-10 z-50 animate-bounce-subtle"
+              />
+            )}
             <CleanThemeContent data={data} isMobile={false} />
         </div>
       )}
@@ -148,7 +174,7 @@ const CleanThemeContent: React.FC<{ data: SalesPage; isMobile: boolean }> = ({ d
   // Curated logic for text color on background
   const isDarkBg = data.pageBgColor === '#064e3b' || data.pageBgColor === '#111827' || data.pageBgColor === '#1e1b4b' || data.pageBgColor === '#4c0519' || data.pageBgColor === '#000000';
   const textColorClass = isDarkBg ? 'text-white' : 'text-slate-900';
-  const subtextColorClass = isDarkBg ? 'text-white/60' : 'text-slate-500';
+  const secondaryTextColorClass = isDarkBg ? 'text-white/80' : 'text-slate-700';
 
   // Per instructions: catchy headline = problem/solution field (product.name), support phrase = promise/support field (product.category)
   const mainHeadline = product?.name || data.title || 'Main Catchy Headline';
@@ -209,7 +235,7 @@ const CleanThemeContent: React.FC<{ data: SalesPage; isMobile: boolean }> = ({ d
         </div>
 
         {/* CREDIBILITY BADGES - In mini arched frames, matching cardBgColor */}
-        <div className="flex flex-wrap justify-center gap-4 w-full px-4 mt-4">
+        <div className="flex flex-wrap justify-center gap-4 w-full px-4 mb-10">
             {data.badges.map((badgeId, idx) => (
                 <div key={badgeId} className="flex flex-col items-center gap-1.5 animate-fade-in" style={{ animationDelay: `${idx * 100}ms` }}>
                     <div className="mini-arch">
@@ -222,8 +248,34 @@ const CleanThemeContent: React.FC<{ data: SalesPage; isMobile: boolean }> = ({ d
             ))}
         </div>
 
+        {/* HERO CTA BUTTONS - Placed after badges on the solid background */}
+        <div className="flex flex-col gap-3 w-full px-8 max-w-[340px] animate-slide-up delay-300">
+            {/* Direct Message on WhatsApp (Primary) */}
+            <a 
+                href={`https://wa.me/${data.whatsappNumber?.replace(/\D/g, '')}?text=${encodeURIComponent(whatsappMsg)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="clean-btn w-full text-white"
+                style={{ backgroundColor: data.themeColor }}
+            >
+                <MessageCircle size={18} fill="white" />
+                Message on WhatsApp
+            </a>
+
+            {/* Direct Checkout (Only if enabled) */}
+            {data.checkoutConfig.enabled && (
+                <button 
+                    className={`clean-btn w-full border-2 ${isDarkBg ? 'bg-white/10 text-white border-white/20 hover:bg-white/20' : 'bg-slate-900/5 text-slate-900 border-slate-900/10 hover:bg-slate-900/10'}`}
+                    style={{ backdropFilter: 'blur(8px)' }}
+                >
+                    <ShoppingCart size={18} className={textColorClass} />
+                    Direct Checkout
+                </button>
+            )}
+        </div>
+
         {/* Scroll Hint */}
-        <div className="mt-10 animate-bounce opacity-40">
+        <div className="mt-12 animate-bounce opacity-40">
             <ArrowDown className={`${textColorClass}`} size={20} />
         </div>
       </header>
@@ -258,24 +310,6 @@ const CleanThemeContent: React.FC<{ data: SalesPage; isMobile: boolean }> = ({ d
                         <span className="text-sm font-bold text-slate-700 dark:text-slate-200">{b}</span>
                     </div>
                   ))}
-              </div>
-
-              <div className="pt-8 space-y-4">
-                {data.ctaDisplay.showHero && data.ctas.map(cta => (
-                    <a 
-                        key={cta.id}
-                        href={cta.actionType === 'WHATSAPP' ? `https://wa.me/${data.whatsappNumber}?text=${encodeURIComponent(whatsappMsg)}` : '#'}
-                        className="clean-btn w-full py-5 text-lg shadow-xl"
-                        style={{ 
-                            backgroundColor: cta.style === 'primary' ? data.themeColor : 'transparent',
-                            color: cta.style === 'primary' ? 'white' : data.themeColor,
-                            border: cta.style === 'outline' ? `2px solid ${data.themeColor}` : 'none'
-                        }}
-                    >
-                        {cta.actionType === 'WHATSAPP' && <MessageCircle size={20} fill="white" />}
-                        {cta.label}
-                    </a>
-                ))}
               </div>
           </div>
       </section>

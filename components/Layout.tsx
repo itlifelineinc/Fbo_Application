@@ -7,7 +7,7 @@ import {
   LayoutTemplate, X, Menu, Home, BookOpen, Globe, Users, 
   MessageCircle, DollarSign, Rocket, Layers, User,
   Facebook, Instagram, Linkedin, Github, Slack, ShoppingCart, 
-  ChevronRight, LayoutGrid
+  ChevronRight, LayoutGrid, CheckCircle
 } from 'lucide-react';
 import { Logo } from './Logo';
 
@@ -38,6 +38,7 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
   const dockTimeoutRef = useRef<any>(null);
 
   const profileMenuRef = useRef<HTMLDivElement>(null);
+  const notificationMenuRef = useRef<HTMLDivElement>(null);
   const profileBtnRef = useRef<HTMLButtonElement>(null);
   const sidebarRef = useRef<HTMLDivElement>(null);
   const dockRef = useRef<HTMLDivElement>(null);
@@ -61,16 +62,16 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
       if (isProfileMenuOpen && profileMenuRef.current && !profileMenuRef.current.contains(target) && profileBtnRef.current && !profileBtnRef.current.contains(target)) {
         setIsProfileMenuOpen(false);
       }
-      
-      // 3. Close Sidebar (handled primarily by its own backdrop, but safe to keep)
-      if (isSidebarOpen && sidebarRef.current && !sidebarRef.current.contains(target)) {
-        // Only close if not clicking a trigger that opens it
+
+      // 3. Close Notification Menu
+      if (isNotificationMenuOpen && notificationMenuRef.current && !notificationMenuRef.current.contains(target)) {
+          setIsNotificationMenuOpen(false);
       }
     };
 
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [isProfileMenuOpen, isSidebarOpen, isDockExpanded]);
+  }, [isProfileMenuOpen, isNotificationMenuOpen, isSidebarOpen, isDockExpanded]);
 
   useEffect(() => {
     setIsSidebarOpen(false);
@@ -100,7 +101,6 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
       setIsSidebarOpen(!isSidebarOpen);
   }
 
-  // --- UI RULE: Hide default header on mobile for these custom portals ---
   const customHeaderPages = [
     '/sales-builder', 
     '/builder', 
@@ -156,10 +156,7 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
   return (
     <div className="flex h-screen bg-[#f3f4f6] dark:bg-[#0f172a] overflow-hidden transition-colors duration-300 font-sans">
       
-      {/* 
-          MODERN FLOATING SIDEBAR 
-          Boosted Z-index to z-[200]
-      */}
+      {/* MODERN FLOATING SIDEBAR (z-200) */}
       <div 
         className={`fixed inset-0 z-[200] transition-all duration-500 ${isSidebarOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}
       >
@@ -252,7 +249,7 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
                 <div className="relative">
                     <button 
                         onClick={() => setIsNotificationMenuOpen(!isNotificationMenuOpen)}
-                        className="p-2.5 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400 transition-colors relative"
+                        className={`p-2.5 rounded-full transition-colors relative ${isNotificationMenuOpen ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400' : 'hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400'}`}
                     >
                         <Bell size={22} strokeWidth={2.5} />
                         {unreadCount > 0 && (
@@ -261,18 +258,86 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
                             </span>
                         )}
                     </button>
+
+                    {/* NOTIFICATION DROPDOWN */}
+                    {isNotificationMenuOpen && (
+                        <div ref={notificationMenuRef} className="absolute right-0 mt-3 w-[320px] md:w-[380px] bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border border-slate-100 dark:border-slate-800 z-[150] overflow-hidden animate-fade-in">
+                            <div className="p-5 border-b border-slate-50 dark:border-slate-800 flex justify-between items-center bg-slate-50/50 dark:bg-slate-800/50">
+                                <h3 className="font-bold text-slate-900 dark:text-white font-heading">Notifications</h3>
+                                <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full dark:bg-emerald-900 dark:text-emerald-300">{unreadCount} New</span>
+                            </div>
+                            <div className="max-h-[400px] overflow-y-auto no-scrollbar">
+                                {notifications.length > 0 ? (
+                                    notifications.map((n) => (
+                                        <Link key={n.id} to={n.link} className="block p-4 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors border-b border-slate-50 dark:border-slate-800 last:border-0" onClick={() => setIsNotificationMenuOpen(false)}>
+                                            <div className="flex gap-3">
+                                                <div className="w-10 h-10 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center text-emerald-600 shrink-0">
+                                                    {n.avatarUrl ? <img src={n.avatarUrl} className="w-full h-full rounded-full object-cover" /> : <Bell size={18} />}
+                                                </div>
+                                                <div className="flex-1 min-w-0">
+                                                    <p className={`text-sm ${n.isRead ? 'text-slate-600 dark:text-slate-400' : 'font-bold text-slate-900 dark:text-white'}`}>{n.title}</p>
+                                                    <p className="text-xs text-slate-500 dark:text-slate-500 truncate">{n.subtitle}</p>
+                                                    <p className="text-[9px] text-slate-400 mt-1 uppercase font-bold">{new Date(n.timestamp).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</p>
+                                                </div>
+                                                {!n.isRead && <div className="w-2 h-2 bg-emerald-500 rounded-full mt-1.5 shrink-0"></div>}
+                                            </div>
+                                        </Link>
+                                    ))
+                                ) : (
+                                    <div className="p-10 text-center text-slate-400">
+                                        <Bell size={48} className="mx-auto mb-3 opacity-20" />
+                                        <p className="text-sm font-medium">No notifications yet</p>
+                                    </div>
+                                )}
+                            </div>
+                            <button className="w-full py-3 text-xs font-bold text-slate-500 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors bg-slate-50/50 dark:bg-slate-800/50">Mark all as read</button>
+                        </div>
+                    )}
                 </div>
 
                 <div className="relative">
                     <button 
                         ref={profileBtnRef}
                         onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
-                        className="flex items-center justify-center rounded-full hover:ring-4 ring-slate-100 dark:ring-slate-800 transition-all focus:outline-none"
+                        className={`flex items-center justify-center rounded-full transition-all focus:outline-none ${isProfileMenuOpen ? 'ring-4 ring-emerald-500/20' : 'hover:ring-4 ring-slate-100 dark:ring-slate-800'}`}
                     >
-                        <div className="w-10 h-10 rounded-full bg-emerald-600 text-white flex items-center justify-center font-bold text-sm shadow-md ring-2 ring-white dark:ring-slate-900 overflow-hidden">
+                        <div className="w-10 h-10 rounded-full bg-emerald-600 text-white flex items-center justify-center font-bold text-sm shadow-md ring-2 ring-white dark:ring-slate-900 overflow-hidden transition-transform active:scale-95">
                             {currentUser.avatarUrl ? <img src={currentUser.avatarUrl} className="w-full h-full object-cover" /> : currentUser.name.charAt(0)}
                         </div>
                     </button>
+
+                    {/* PROFILE DROPDOWN */}
+                    {isProfileMenuOpen && (
+                        <div ref={profileMenuRef} className="absolute right-0 mt-3 w-64 bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border border-slate-100 dark:border-slate-800 z-[150] overflow-hidden animate-fade-in">
+                            <div className="p-2 pt-4">
+                                <Link to={`/students/${currentUser.id}`} className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 text-sm font-bold text-slate-700 dark:text-slate-300 transition-colors" onClick={() => setIsProfileMenuOpen(false)}>
+                                    <User size={18} className="text-slate-400" /> View Profile
+                                </Link>
+                                
+                                {/* THEME TOGGLE WITH SWITCH */}
+                                <div className="flex items-center justify-between px-4 py-3 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors group">
+                                    <div className="flex items-center gap-3 text-sm font-bold text-slate-700 dark:text-slate-300">
+                                        {theme === 'light' ? <Sun size={18} className="text-amber-500" /> : <Moon size={18} className="text-slate-400" />}
+                                        {theme === 'light' ? 'Light Mode' : 'Dark Mode'}
+                                    </div>
+                                    <button 
+                                        onClick={(e) => { e.stopPropagation(); onToggleTheme(); }}
+                                        className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none ${theme === 'dark' ? 'bg-emerald-600' : 'bg-slate-200 dark:bg-slate-700'}`}
+                                    >
+                                        <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform ${theme === 'dark' ? 'translate-x-4.5' : 'translate-x-1'}`} />
+                                    </button>
+                                </div>
+
+                                <button className="w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 text-sm font-bold text-slate-700 dark:text-slate-300 transition-colors">
+                                    <Settings size={18} className="text-slate-400" /> Settings
+                                </button>
+                                <div className="h-px bg-slate-50 dark:bg-slate-800 my-2 mx-2"></div>
+                                <button onClick={() => { onLogout(); setIsProfileMenuOpen(false); }} className="w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-red-50 dark:hover:bg-red-900/20 text-sm font-bold text-red-600 transition-colors">
+                                    <LogOut size={18} /> Sign Out
+                                </button>
+                            </div>
+                        </div>
+                    )}
                 </div>
             </div>
         </header>
@@ -281,10 +346,7 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
             {children}
         </main>
 
-        {/* 
-            FLOATING DOCK 
-            Boosted Z-index to z-[160] to clear Community overlays (z-150)
-        */}
+        {/* FLOATING DOCK (z-160) */}
         <div className="md:hidden fixed bottom-6 left-0 right-0 z-[160] flex justify-center pointer-events-none">
             <div 
                 ref={dockRef}

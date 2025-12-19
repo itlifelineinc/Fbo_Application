@@ -783,7 +783,7 @@ const CheckoutView: React.FC<{ data: SalesPage; onClose: () => void }> = ({ data
                   <User size={14} color={iconColor} strokeWidth={4} /> Delivery Information
               </h3>
               <div className="space-y-4 bg-slate-50/50 dark:bg-slate-900/50 p-4 rounded-3xl border border-slate-100 dark:border-slate-800">
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="flex flex-col gap-3">
                       <div>
                           <label className={LABEL_CLASS}>First Name*</label>
                           <input 
@@ -805,7 +805,7 @@ const CheckoutView: React.FC<{ data: SalesPage; onClose: () => void }> = ({ data
                           />
                       </div>
                   </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div className="flex flex-col gap-3">
                       <div>
                           <label className={LABEL_CLASS}>Phone Number*</label>
                           <div className="relative">
@@ -836,8 +836,8 @@ const CheckoutView: React.FC<{ data: SalesPage; onClose: () => void }> = ({ data
 
                   <div className="h-px bg-slate-100 dark:bg-slate-700 my-2"></div>
 
-                  <div className="grid grid-cols-2 gap-3">
-                      <div className="col-span-1">
+                  <div className="flex flex-col gap-3">
+                      <div>
                           <label className={LABEL_CLASS}>House / Flat No.*</label>
                           <input 
                             type="text" 
@@ -847,7 +847,7 @@ const CheckoutView: React.FC<{ data: SalesPage; onClose: () => void }> = ({ data
                             onChange={e => setCustomerInfo({...customerInfo, houseNo: e.target.value})}
                           />
                       </div>
-                      <div className="col-span-1">
+                      <div>
                           <label className={LABEL_CLASS}>Postal Code</label>
                           <input 
                             type="text" 
@@ -857,7 +857,7 @@ const CheckoutView: React.FC<{ data: SalesPage; onClose: () => void }> = ({ data
                             onChange={e => setCustomerInfo({...customerInfo, zip: e.target.value})}
                           />
                       </div>
-                      <div className="col-span-2 relative">
+                      <div className="relative">
                           <label className={LABEL_CLASS}>Street Name / Area*</label>
                           <div className="relative">
                               <Search size={16} color={iconColor} className="absolute left-3 top-3.5" />
@@ -880,7 +880,7 @@ const CheckoutView: React.FC<{ data: SalesPage; onClose: () => void }> = ({ data
                               )}
                           </div>
                       </div>
-                      <div className="col-span-1">
+                      <div>
                           <label className={LABEL_CLASS}>City*</label>
                           <input 
                             type="text" 
@@ -890,7 +890,7 @@ const CheckoutView: React.FC<{ data: SalesPage; onClose: () => void }> = ({ data
                             onChange={e => setCustomerInfo({...customerInfo, city: e.target.value})}
                           />
                       </div>
-                      <div className="col-span-1">
+                      <div>
                           <label className={LABEL_CLASS}>State / Region*</label>
                           <input 
                             type="text" 
@@ -918,7 +918,7 @@ const CheckoutView: React.FC<{ data: SalesPage; onClose: () => void }> = ({ data
                   <h3 className="text-[10px] font-black uppercase text-slate-400 tracking-widest flex items-center gap-2">
                       <Tag size={14} color={iconColor} strokeWidth={4} /> Select Offer
                   </h3>
-                  <div className="grid grid-cols-1 gap-3">
+                  <div className="flex flex-col gap-3">
                       <div 
                           onClick={() => setPackageType('single')}
                           className={`p-5 rounded-3xl border-2 flex items-center justify-between cursor-pointer transition-all ${packageType === 'single' ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20 shadow-sm' : 'border-slate-100 bg-slate-50 dark:bg-slate-800'}`}
@@ -979,6 +979,13 @@ const CheckoutView: React.FC<{ data: SalesPage; onClose: () => void }> = ({ data
                         <span className="font-bold text-slate-500 uppercase tracking-widest">Shipping</span>
                         <span className="font-bold text-emerald-600">{shipping === 0 ? 'FREE' : `${data.currency} ${shipping}`}</span>
                     </div>
+                    {data.checkoutConfig.shipping.freeShippingThreshold ? (
+                        <p className="text-[10px] text-slate-400 italic">
+                            {unitPrice >= data.checkoutConfig.shipping.freeShippingThreshold 
+                                ? '🎉 You unlocked FREE shipping!' 
+                                : `Add ${data.currency} ${(data.checkoutConfig.shipping.freeShippingThreshold - unitPrice).toLocaleString()} more for FREE shipping.`}
+                        </p>
+                    ) : null}
                     <div className="flex justify-between pt-2 border-t border-slate-200 dark:border-slate-700 items-end">
                         <span className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-tighter">Grand Total</span>
                         <span className="text-xl font-black text-emerald-600">{data.currency} {total.toLocaleString()}</span>
@@ -992,7 +999,7 @@ const CheckoutView: React.FC<{ data: SalesPage; onClose: () => void }> = ({ data
               <h3 className="text-[10px] font-black uppercase text-slate-400 tracking-widest flex items-center gap-2">
                   <CreditCard size={14} color={iconColor} strokeWidth={4} /> Payment Method
               </h3>
-              <div className="grid grid-cols-1 gap-2">
+              <div className="flex flex-col gap-2">
                   {data.checkoutConfig.paymentMethods.mobileMoney && (
                       <button onClick={() => setSelectedPayment('momo')} className={`p-5 rounded-3xl border-2 flex items-center justify-between transition-all ${selectedPayment === 'momo' ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20' : 'border-slate-100 bg-white dark:bg-slate-800'}`}>
                           <div className="flex items-center gap-3">

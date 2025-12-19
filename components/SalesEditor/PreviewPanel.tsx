@@ -1,10 +1,10 @@
 
 import React, { useState, useEffect } from 'react';
-import { SalesPage, Product } from '../../types/salesPage';
+import { SalesPage, Product, FaqItem } from '../../types/salesPage';
 import WhatsAppFloatingButton from '../Shared/WhatsAppFloatingButton';
 import { 
   Check, User, ShoppingCart, MessageCircle, ChevronLeft,
-  Image as ImageIcon, CreditCard, Smartphone, Truck, Minus, Send, Loader2, Package, Quote, ShieldCheck, ArrowDown, Plus, X, ChevronUp, Sparkles, Zap, Star, HelpCircle, Tag, ArrowRight, ShoppingBag, BookOpen, ListChecks, Shield, CheckCircle
+  Image as ImageIcon, CreditCard, Smartphone, Truck, Minus, Send, Loader2, Package, Quote, ShieldCheck, ArrowDown, Plus, X, ChevronUp, Sparkles, Zap, Star, HelpCircle, Tag, ArrowRight, ShoppingBag, BookOpen, ListChecks, Shield, CheckCircle, ChevronDown
 } from 'lucide-react';
 
 interface PreviewPanelProps {
@@ -18,7 +18,8 @@ const PreviewPanel: React.FC<PreviewPanelProps> = ({ data, device }) => {
   const [isStoryDrawerOpen, setIsStoryDrawerOpen] = useState(false);
   const [isBenefitsDrawerOpen, setIsBenefitsDrawerOpen] = useState(false);
   const [isUsageDrawerOpen, setIsUsageDrawerOpen] = useState(false);
-  const [isFaqDrawerOpen, setIsFaqDrawerOpen] = useState(false);
+  const [activeFaqForDrawer, setActiveFaqForDrawer] = useState<FaqItem | null>(null);
+  const [isAllFaqsDrawerOpen, setIsAllFaqsDrawerOpen] = useState(false);
   
   // Design System Calculations
   const settings = isMobile && data.mobileOverrides ? { ...data, ...data.mobileOverrides } : data;
@@ -88,7 +89,7 @@ const PreviewPanel: React.FC<PreviewPanelProps> = ({ data, device }) => {
 
         .attachment-card {
             background-color: white;
-            border-radius: 2rem;
+            border-radius: 2.5rem;
             border: 1px solid #e2e8f0;
             padding: 2rem;
             transition: all 0.3s ease;
@@ -131,6 +132,34 @@ const PreviewPanel: React.FC<PreviewPanelProps> = ({ data, device }) => {
         }
         .dark .step-connector { background-color: #334155; }
 
+        .custom-story-drawer {
+            position: absolute;
+            left: 0;
+            right: 0;
+            bottom: -110%;
+            background: white;
+            z-index: 500;
+            border-top-left-radius: 2.5rem;
+            border-top-right-radius: 2.5rem;
+            box-shadow: 0 -10px 40px -10px rgba(0,0,0,0.3);
+            max-height: 85%;
+            display: flex;
+            flex-direction: column;
+            transform: translateY(110%);
+            visibility: hidden;
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.5s cubic-bezier(0.32, 0.72, 0, 1);
+        }
+        .custom-story-drawer.open {
+            bottom: 0;
+            transform: translateY(0);
+            visibility: visible;
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .dark .custom-story-drawer { background: #0f172a; border-top: 1px solid #334155; }
+
         .checkout-drawer {
             position: absolute;
             top: 0;
@@ -166,12 +195,87 @@ const PreviewPanel: React.FC<PreviewPanelProps> = ({ data, device }) => {
                 onReadMoreStory={() => setIsStoryDrawerOpen(true)}
                 onReadMoreBenefits={() => setIsBenefitsDrawerOpen(true)}
                 onReadMoreUsage={() => setIsUsageDrawerOpen(true)}
-                onReadMoreFaq={() => setIsFaqDrawerOpen(true)}
+                onOpenFaq={(faq) => setActiveFaqForDrawer(faq)}
+                onViewAllFaqs={() => setIsAllFaqsDrawerOpen(true)}
               />
            </div>
 
            <div className={`checkout-drawer ${isCheckoutOpen ? 'open' : ''}`}>
               <CheckoutView data={data} onClose={() => setIsCheckoutOpen(false)} />
+           </div>
+
+           {/* Generic Bottom Drawer for Expanded Content */}
+           <div className={`custom-story-drawer ${isStoryDrawerOpen ? 'open' : ''}`}>
+              <div className="w-12 h-1 bg-slate-200 dark:bg-slate-800 rounded-full mx-auto mt-4"></div>
+              <div className="flex justify-between items-center px-6 pt-4 pb-2">
+                  <h3 className="text-lg font-black text-slate-900 dark:text-white uppercase tracking-wider">{data.shortStoryTitle || 'The Story'}</h3>
+                  <button onClick={() => setIsStoryDrawerOpen(false)} className="p-2 bg-slate-100 dark:bg-slate-800 rounded-full"><X size={20} /></button>
+              </div>
+              <div className="flex-1 overflow-y-auto p-6 no-scrollbar pt-2 text-left">
+                  <p className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed whitespace-pre-wrap">{data.description}</p>
+              </div>
+           </div>
+
+           <div className={`custom-story-drawer ${isBenefitsDrawerOpen ? 'open' : ''}`}>
+              <div className="w-12 h-1 bg-slate-200 dark:bg-slate-800 rounded-full mx-auto mt-4"></div>
+              <div className="flex justify-between items-center px-6 pt-4 pb-2">
+                  <h3 className="text-lg font-black text-slate-900 dark:text-white uppercase tracking-wider">Benefits</h3>
+                  <button onClick={() => setIsBenefitsDrawerOpen(false)} className="p-2 bg-slate-100 dark:bg-slate-800 rounded-full"><X size={20} /></button>
+              </div>
+              <div className="flex-1 overflow-y-auto p-6 no-scrollbar pt-2 space-y-4">
+                  {data.products[0]?.benefits.map((b, i) => (
+                    <div key={i} className="flex items-start gap-4">
+                        <div className="w-6 h-6 rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: data.pageBgColor }}><Check size={14} className="text-white" strokeWidth={4} /></div>
+                        <p className="text-sm font-bold text-slate-700 dark:text-slate-200 leading-tight">{b}</p>
+                    </div>
+                  ))}
+              </div>
+           </div>
+
+           <div className={`custom-story-drawer ${isUsageDrawerOpen ? 'open' : ''}`}>
+              <div className="w-12 h-1 bg-slate-200 dark:bg-slate-800 rounded-full mx-auto mt-4"></div>
+              <div className="flex justify-between items-center px-6 pt-4 pb-2">
+                  <h3 className="text-lg font-black text-slate-900 dark:text-white uppercase tracking-wider">Usage Steps</h3>
+                  <button onClick={() => setIsUsageDrawerOpen(false)} className="p-2 bg-slate-100 dark:bg-slate-800 rounded-full"><X size={20} /></button>
+              </div>
+              <div className="flex-1 overflow-y-auto p-6 no-scrollbar pt-2 space-y-8 relative">
+                  {data.products[0]?.usageSteps.map((step, idx) => (
+                      <div key={idx} className="flex items-start gap-5 relative">
+                          <div className="w-9 h-9 rounded-full flex items-center justify-center shrink-0 border-2 font-black text-sm" style={{ borderColor: data.pageBgColor, color: data.pageBgColor }}>
+                              {idx + 1}
+                          </div>
+                          <p className="text-sm font-bold text-slate-700 dark:text-slate-200 pt-1.5 leading-relaxed">{step}</p>
+                      </div>
+                  ))}
+              </div>
+           </div>
+
+           <div className={`custom-story-drawer ${activeFaqForDrawer ? 'open' : ''}`}>
+              <div className="w-12 h-1 bg-slate-200 dark:bg-slate-800 rounded-full mx-auto mt-4"></div>
+              <div className="flex justify-between items-center px-6 pt-4 pb-2">
+                  <h3 className="text-lg font-black text-slate-900 dark:text-white uppercase tracking-wider">Question</h3>
+                  <button onClick={() => setActiveFaqForDrawer(null)} className="p-2 bg-slate-100 dark:bg-slate-800 rounded-full"><X size={20} /></button>
+              </div>
+              <div className="flex-1 overflow-y-auto p-6 no-scrollbar pt-2 text-left">
+                  <p className="text-base font-black text-slate-900 dark:text-white mb-4">{activeFaqForDrawer?.question}</p>
+                  <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed whitespace-pre-wrap">{activeFaqForDrawer?.answer}</p>
+              </div>
+           </div>
+
+           <div className={`custom-story-drawer ${isAllFaqsDrawerOpen ? 'open' : ''}`}>
+              <div className="w-12 h-1 bg-slate-200 dark:bg-slate-800 rounded-full mx-auto mt-4"></div>
+              <div className="flex justify-between items-center px-6 pt-4 pb-2">
+                  <h3 className="text-lg font-black text-slate-900 dark:text-white uppercase tracking-wider">All FAQs</h3>
+                  <button onClick={() => setIsAllFaqsDrawerOpen(false)} className="p-2 bg-slate-100 dark:bg-slate-800 rounded-full"><X size={20} /></button>
+              </div>
+              <div className="flex-1 overflow-y-auto p-6 no-scrollbar pt-2 space-y-6">
+                  {data.faqs.map((faq, i) => (
+                    <div key={i} className="space-y-1">
+                        <p className="text-sm font-black text-slate-900 dark:text-white flex items-center gap-2"><span style={{ color: data.pageBgColor }}>Q.</span> {faq.question}</p>
+                        <p className="text-xs text-slate-500 dark:text-slate-400 pl-6">{faq.answer}</p>
+                    </div>
+                  ))}
+              </div>
            </div>
         </div>
       ) : (
@@ -182,7 +286,8 @@ const PreviewPanel: React.FC<PreviewPanelProps> = ({ data, device }) => {
                 onReadMoreStory={() => alert('Full Story View')}
                 onReadMoreBenefits={() => alert('All Benefits View')}
                 onReadMoreUsage={() => alert('Full Usage Path View')}
-                onReadMoreFaq={() => alert('All FAQs View')}
+                onOpenFaq={(faq) => alert(`FAQ: ${faq.answer}`)}
+                onViewAllFaqs={() => alert('All FAQs')}
             />
             <div className={`checkout-drawer ${isCheckoutOpen ? 'open' : ''} max-w-sm border-l border-slate-100 shadow-2xl`}>
                 <CheckoutView data={data} onClose={() => setIsCheckoutOpen(false)} />
@@ -199,12 +304,15 @@ const CleanThemeContent: React.FC<{
     onReadMoreStory: () => void;
     onReadMoreBenefits: () => void;
     onReadMoreUsage: () => void;
-    onReadMoreFaq: () => void;
-}> = ({ data, onOpenCheckout, onReadMoreStory, onReadMoreBenefits, onReadMoreUsage, onReadMoreFaq }) => {
+    onOpenFaq: (faq: FaqItem) => void;
+    onViewAllFaqs: () => void;
+}> = ({ data, onOpenCheckout, onReadMoreStory, onReadMoreBenefits, onReadMoreUsage, onOpenFaq, onViewAllFaqs }) => {
   const [activeImg, setActiveImg] = useState(0);
+  const [activeTestimonial, setActiveTestimonial] = useState(0);
   const product = data.products[0];
   const images = product?.images || [];
   const faqs = data.faqs || [];
+  const testimonials = data.testimonials || [];
 
   useEffect(() => {
     if (images.length <= 1) return;
@@ -212,10 +320,14 @@ const CleanThemeContent: React.FC<{
     return () => clearInterval(timer);
   }, [images.length]);
 
+  useEffect(() => {
+    if (testimonials.length <= 1) return;
+    const timer = setInterval(() => setActiveTestimonial((prev) => (prev + 1) % testimonials.length), 5000);
+    return () => clearInterval(timer);
+  }, [testimonials.length]);
+
   const isDarkBg = data.pageBgColor === '#064e3b' || data.pageBgColor === '#111827' || data.pageBgColor === '#000000' || data.pageBgColor === '#1e1b4b' || data.pageBgColor === '#4c0519';
   const textColorClass = isDarkBg ? 'text-white' : 'text-slate-900';
-
-  // The requested icon color matches the Main Page Background
   const iconColor = data.pageBgColor;
 
   return (
@@ -233,7 +345,7 @@ const CleanThemeContent: React.FC<{
             </div>
         </div>
 
-        {/* 1.5 CREDIBILITY BADGES */}
+        {/* CREDIBILITY BADGES */}
         <div className="flex flex-wrap justify-center gap-6 mb-12 w-full px-6">
             <div className="flex flex-col items-center gap-1.5 opacity-80">
                 <div className="w-9 h-9 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center border border-white/10">
@@ -255,7 +367,6 @@ const CleanThemeContent: React.FC<{
             </div>
         </div>
         
-        {/* Buttons Row - Equal width, no wrap */}
         <div className="flex flex-row gap-3 w-full px-5 max-w-[440px]">
             <button className="clean-btn flex-1 bg-white text-slate-900 shadow-xl border border-slate-100">
                 <MessageCircle size={16} strokeWidth={4} color={iconColor} /> WhatsApp
@@ -268,7 +379,7 @@ const CleanThemeContent: React.FC<{
         </div>
       </header>
 
-      {/* 2. STORY - FIRST AFTER HERO */}
+      {/* 2. STORY */}
       {data.description && (
           <div className="px-6 py-6 bg-white dark:bg-slate-950">
               <div className="attachment-card text-left">
@@ -278,9 +389,11 @@ const CleanThemeContent: React.FC<{
                   </div>
                   <div className="title-underline" style={{ backgroundColor: data.themeColor }}></div>
                   <p className="text-sm text-slate-700 dark:text-slate-200 leading-relaxed line-clamp-[10]">{data.description}</p>
-                  <button onClick={onReadMoreStory} className="flex items-center gap-2 font-black uppercase text-[10px] tracking-widest mt-8" style={{ color: iconColor }}>
-                      Keep Reading <ArrowRight size={14} strokeWidth={4} />
-                  </button>
+                  {data.description.length > 500 && (
+                      <button onClick={onReadMoreStory} className="flex items-center gap-2 font-black uppercase text-[10px] tracking-widest mt-8" style={{ color: iconColor }}>
+                        Read More <ChevronDown size={14} strokeWidth={4} />
+                      </button>
+                  )}
               </div>
           </div>
       )}
@@ -295,7 +408,7 @@ const CleanThemeContent: React.FC<{
                   </div>
                   <div className="title-underline" style={{ backgroundColor: data.themeColor }}></div>
                   <div className="grid grid-cols-1 gap-5">
-                      {product.benefits.slice(0, 5).map((benefit, idx) => (
+                      {product.benefits.slice(0, 4).map((benefit, idx) => (
                           <div key={idx} className="flex items-center gap-4">
                               <div className="w-7 h-7 rounded-full flex items-center justify-center shrink-0 bg-emerald-50 dark:bg-emerald-900/20">
                                   <Check size={14} color={iconColor} strokeWidth={4} />
@@ -304,6 +417,11 @@ const CleanThemeContent: React.FC<{
                           </div>
                       ))}
                   </div>
+                  {product.benefits.length > 4 && (
+                      <button onClick={onReadMoreBenefits} className="flex items-center gap-2 font-black uppercase text-[10px] tracking-widest mt-8" style={{ color: iconColor }}>
+                        View More <ChevronDown size={14} strokeWidth={4} />
+                      </button>
+                  )}
               </div>
           </div>
       )}
@@ -318,9 +436,9 @@ const CleanThemeContent: React.FC<{
                   </div>
                   <div className="title-underline" style={{ backgroundColor: data.themeColor }}></div>
                   <div className="space-y-8 relative">
-                      {product.usageSteps.map((step, idx) => (
+                      {product.usageSteps.slice(0, 3).map((step, idx) => (
                           <div key={idx} className="flex items-start gap-5 relative">
-                              {idx < product.usageSteps.length - 1 && <div className="step-connector"></div>}
+                              {idx < Math.min(product.usageSteps.length, 3) - 1 && <div className="step-connector"></div>}
                               <div className="w-9 h-9 rounded-full flex items-center justify-center shrink-0 bg-blue-50 border-2 border-blue-100 text-blue-600 font-black text-sm z-10 dark:bg-blue-900/30 dark:border-blue-800 dark:text-blue-300" style={{ borderColor: iconColor, color: iconColor }}>
                                   {idx + 1}
                               </div>
@@ -328,11 +446,47 @@ const CleanThemeContent: React.FC<{
                           </div>
                       ))}
                   </div>
+                  {product.usageSteps.length > 3 && (
+                      <button onClick={onReadMoreUsage} className="flex items-center gap-2 font-black uppercase text-[10px] tracking-widest mt-10" style={{ color: iconColor }}>
+                        View Full Steps <ChevronDown size={14} strokeWidth={4} />
+                      </button>
+                  )}
               </div>
           </div>
       )}
 
-      {/* 5. FAQ */}
+      {/* 5. TESTIMONIALS (Sliding Card) */}
+      {testimonials.length > 0 && (
+          <div className="px-6 py-4 bg-white dark:bg-slate-950">
+              <div className="attachment-card text-center flex flex-col items-center">
+                  <div className="w-20 h-20 rounded-full overflow-hidden border-4 border-slate-50 dark:border-slate-800 shadow-xl mb-4">
+                      {testimonials[activeTestimonial]?.photoUrl ? (
+                          <img src={testimonials[activeTestimonial].photoUrl} className="w-full h-full object-cover" />
+                      ) : (
+                          <div className="w-full h-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-2xl font-black text-slate-400">{testimonials[activeTestimonial]?.name?.charAt(0)}</div>
+                      )}
+                  </div>
+                  <h4 className="text-base font-black text-slate-900 dark:text-white mb-0.5">{testimonials[activeTestimonial]?.name}</h4>
+                  <div className="flex items-center gap-1.5 mb-5">
+                      <div className="bg-emerald-500 text-white text-[8px] font-black px-2 py-0.5 rounded-full uppercase tracking-tighter flex items-center gap-1">
+                          <CheckCircle size={8} /> Verified Buyer
+                      </div>
+                  </div>
+                  <p className="text-sm text-slate-700 dark:text-slate-300 italic font-bold leading-relaxed">
+                      "{testimonials[activeTestimonial]?.quote}"
+                  </p>
+                  {testimonials.length > 1 && (
+                      <div className="flex gap-1.5 mt-6">
+                          {testimonials.map((_, i) => (
+                              <div key={i} className={`h-1 rounded-full transition-all duration-300 ${activeTestimonial === i ? 'w-4 bg-emerald-500' : 'w-1 bg-slate-200 dark:bg-slate-700'}`} />
+                          ))}
+                      </div>
+                  )}
+              </div>
+          </div>
+      )}
+
+      {/* 6. FAQ */}
       {faqs.length > 0 && (
           <div className="px-6 py-4 bg-white dark:bg-slate-950">
               <div className="attachment-card text-left">
@@ -341,26 +495,30 @@ const CleanThemeContent: React.FC<{
                       <h3 className="text-[10px] font-black text-slate-900 dark:text-white uppercase tracking-widest">Common Questions</h3>
                   </div>
                   <div className="title-underline" style={{ backgroundColor: data.themeColor }}></div>
-                  <div className="space-y-6">
-                      {faqs.slice(0, 3).map((faq, idx) => (
-                          <div key={idx} className="space-y-1">
-                              <p className="text-sm font-black text-slate-900 dark:text-white flex items-center gap-2">
+                  <div className="space-y-4">
+                      {faqs.slice(0, 4).map((faq, idx) => (
+                          <button 
+                            key={idx} 
+                            onClick={() => onOpenFaq(faq)}
+                            className="w-full flex items-center justify-between text-left group"
+                          >
+                              <p className="text-sm font-black text-slate-900 dark:text-white flex items-start gap-2 leading-tight group-active:text-emerald-600 transition-colors">
                                   <span style={{ color: iconColor }}>Q.</span> {faq.question}
                               </p>
-                              <p className="text-xs text-slate-500 dark:text-slate-400 pl-6 leading-relaxed">{faq.answer}</p>
-                          </div>
+                              <ChevronDown size={18} className="text-slate-300 shrink-0 ml-4 group-active:text-emerald-500" />
+                          </button>
                       ))}
                   </div>
-                  {faqs.length > 3 && (
-                    <button onClick={onReadMoreFaq} className="flex items-center gap-2 font-black uppercase text-[10px] tracking-widest mt-8" style={{ color: iconColor }}>
-                        See All Questions <ArrowRight size={14} strokeWidth={4} />
+                  {faqs.length > 4 && (
+                    <button onClick={onViewAllFaqs} className="flex items-center gap-2 font-black uppercase text-[10px] tracking-widest mt-8" style={{ color: iconColor }}>
+                        See All Questions <ChevronDown size={14} strokeWidth={4} />
                     </button>
                   )}
               </div>
           </div>
       )}
 
-      {/* 6. PRICE CARD */}
+      {/* 7. PRICE CARD */}
       <div className="px-6 py-10 bg-white dark:bg-slate-950">
           <div className="bg-slate-900 rounded-[2.5rem] p-8 shadow-2xl relative overflow-hidden text-left border border-slate-800">
               <div className="relative z-10 space-y-8">

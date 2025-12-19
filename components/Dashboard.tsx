@@ -7,7 +7,7 @@ import {
     Users, TrendingUp, Calendar, ArrowUpRight, Award, 
     BookOpen, DollarSign, CircleDollarSign, Target, MessageSquare, PlusCircle, 
     BarChart2, Zap, ArrowRight, Layout, ArrowLeft, Clock, Globe, UserPlus, Shield,
-    ShoppingCart, GraduationCap, Bell, Flag, Store, Lock, CheckCircle, X, PieChart as PieChartIcon, Activity, Lightbulb, ChevronLeft, HelpCircle, Hand, Medal, Gift, Hourglass, Megaphone, MessageCircle, Sparkles, Rocket, UserCheck, LayoutTemplate, CreditCard, Phone, MousePointerClick, Smartphone, Eye, Filter, ArrowDown, ExternalLink, Share2, Trash2, MoreHorizontal, Wallet, Check, Edit3
+    ShoppingCart, GraduationCap, Bell, Flag, Store, Lock, CheckCircle, X, PieChart as PieChartIcon, Activity, Lightbulb, ChevronLeft, HelpCircle, Hand, Medal, Gift, Hourglass, Megaphone, MessageCircle, Sparkles, Rocket, UserCheck, LayoutTemplate, CreditCard, Phone, MousePointerClick, Smartphone, Eye, Filter, ArrowDown, ExternalLink, Share2, Trash2, MoreHorizontal, Wallet, Check, Edit3, Trophy, Network, Book
 } from 'lucide-react';
 import { RANKS, RANK_ORDER } from '../constants';
 
@@ -118,24 +118,34 @@ const AutoStoriesIcon = ({ size, strokeWidth, className }: { size: number, strok
 
 // --- SUB-COMPONENTS ---
 
-// A. Left Column Card (Compact & Responsive)
+// A. Left Column Card (Compact & Responsive) - Enhanced with Ghost Icon
 const InfoCard = ({ 
     title, 
     children, 
     icon: Icon, 
     colorClass, 
     className = "", 
-    iconStyle = 'FILLED' 
+    iconStyle = 'FILLED',
+    bgIcon: BgIcon
 }: { 
     title: string, 
     children?: React.ReactNode, 
     icon: any, 
     colorClass: string, 
     className?: string,
-    iconStyle?: 'FILLED' | 'OUTLINE' 
+    iconStyle?: 'FILLED' | 'OUTLINE',
+    bgIcon?: any
 }) => (
-    <div className={`bg-white dark:bg-slate-800 rounded-[1.25rem] p-4 lg:p-5 shadow-sm border border-slate-100 dark:border-slate-700 flex flex-col gap-2 ${className}`}>
-        <div className="flex items-center gap-3 mb-0 shrink-0">
+    <div className={`bg-white dark:bg-slate-800 rounded-[1.25rem] p-4 lg:p-5 shadow-sm border border-slate-100 dark:border-slate-700 flex flex-col gap-2 relative overflow-hidden ${className}`}>
+        
+        {/* Ghost Background Icon */}
+        {BgIcon && (
+            <div className="absolute -right-4 -bottom-4 opacity-[0.04] dark:opacity-[0.06] rotate-12 pointer-events-none">
+                <BgIcon size={112} strokeWidth={1} className="text-slate-900 dark:text-white" />
+            </div>
+        )}
+
+        <div className="flex items-center gap-3 mb-0 shrink-0 relative z-10">
             <div className={`w-7 h-7 lg:w-8 lg:h-8 rounded-full flex items-center justify-center shrink-0 ${colorClass}`}>
                 {iconStyle === 'FILLED' ? (
                     <Icon size={16} strokeWidth={3} fill="currentColor" className="opacity-90 lg:w-[18px] lg:h-[18px]" />
@@ -145,7 +155,7 @@ const InfoCard = ({
             </div>
             <h3 className="font-bold text-slate-700 dark:text-slate-200 text-[10px] lg:text-xs uppercase tracking-wide truncate">{title}</h3>
         </div>
-        <div className="pl-1 w-full flex-1 flex flex-col justify-center">
+        <div className="pl-1 w-full flex-1 flex flex-col justify-center relative z-10">
             {children}
         </div>
     </div>
@@ -184,7 +194,7 @@ const ShortcutItem = ({
         `}>
             <div className={`
                 p-3 lg:p-5 rounded-2xl transition-all duration-300 relative
-                ${disabled ? 'text-slate-300' : 'text-slate-600 group-hover:text-slate-800 group-hover:scale-110 dark:text-slate-400 dark:group-hover:text-white'}
+                ${disabled ? 'text-slate-300' : 'text-slate-500 group-hover:text-slate-800 group-hover:scale-110 dark:text-slate-400 dark:group-hover:text-white'}
             `}>
                 <Icon 
                     strokeWidth={3}
@@ -1684,7 +1694,7 @@ const Dashboard: React.FC<DashboardProps> = ({
   // --- DRAWER COMPONENT: SALES PAGES ---
   const renderSalesDrawer = () => {
       return (
-          <div className={`fixed inset-0 z-[200] bg-slate-50 dark:bg-slate-950 overflow-y-auto transform transition-transform duration-300 ease-in-out ${isSalesDrawerOpen ? 'translate-x-0' : 'translate-x-full'}`}>
+          <div className={`fixed inset-0 z-[200] bg-slate-50 dark:bg-slate-950 overflow-y-auto transform transition-transform duration-300 ease-in-out ${isSalesDrawerOpen ? 'translate-x-0' : '-translate-x-full'}`}>
               
               {/* Sticky Header */}
               <div className="sticky top-0 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md px-4 py-3 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center z-10">
@@ -1875,7 +1885,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                 
                 {/* Card 1: Rank Progress */}
                 <div className="min-w-[85vw] snap-center">
-                    <InfoCard title="Rank Progress" icon={Award} colorClass="bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400" className="h-48 justify-between">
+                    <InfoCard title="Rank Progress" icon={Award} bgIcon={Trophy} colorClass="bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400" className="h-48 justify-between">
                         <div>
                             <div className="flex justify-between items-end mb-2">
                                 <span className="text-xl font-bold text-slate-900 dark:text-white font-heading">{currentRankDef.name}</span>
@@ -1900,7 +1910,7 @@ const Dashboard: React.FC<DashboardProps> = ({
 
                 {/* Card 2: Team Snapshot */}
                 <div className="min-w-[85vw] snap-center">
-                    <InfoCard title="Team Snapshot" icon={Users} colorClass="bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400" className="h-48 justify-between">
+                    <InfoCard title="Team Snapshot" icon={Users} bgIcon={Network} colorClass="bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400" className="h-48 justify-between">
                         <div className="flex justify-between items-center mb-4">
                             <div>
                                 <span className="text-2xl font-bold text-slate-900 dark:text-white font-heading">{activeDownlines.length}</span>
@@ -1929,7 +1939,7 @@ const Dashboard: React.FC<DashboardProps> = ({
 
                 {/* Card 3: Earnings & Rewards */}
                 <div className="min-w-[85vw] snap-center">
-                    <InfoCard title="Earnings & Rewards" icon={MoneyBagIcon} iconStyle="OUTLINE" colorClass="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400" className="h-48 justify-between">
+                    <InfoCard title="Earnings & Rewards" icon={MoneyBagIcon} bgIcon={Wallet} iconStyle="OUTLINE" colorClass="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400" className="h-48 justify-between">
                         <div className="mb-3">
                             <span className="text-2xl font-bold text-slate-900 dark:text-white font-heading">${monthlyEarnings.toLocaleString()}</span>
                             <p className="text-[10px] text-slate-400 uppercase font-bold mt-0.5">Est. Earnings</p>
@@ -1956,7 +1966,7 @@ const Dashboard: React.FC<DashboardProps> = ({
 
                 {/* Card 4: Learning Status */}
                 <div className="min-w-[85vw] snap-center">
-                    <InfoCard title="Learning Status" icon={AutoStoriesIcon} iconStyle="OUTLINE" colorClass="bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400" className="h-48 justify-between">
+                    <InfoCard title="Learning Status" icon={AutoStoriesIcon} bgIcon={Book} iconStyle="OUTLINE" colorClass="bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400" className="h-48 justify-between">
                         <div className="grid grid-cols-3 gap-2 mb-3 text-center">
                             <div className="bg-purple-50 rounded-lg p-2 dark:bg-purple-900/10">
                                 <span className="block text-lg font-bold text-purple-700 dark:text-purple-300">{inProgressCourses}</span>
@@ -1982,8 +1992,13 @@ const Dashboard: React.FC<DashboardProps> = ({
             {/* 3. Shortcuts (Updated for Mobile) */}
             <div>
                 <SectionHeader title="Shortcuts" />
-                <div className="bg-white dark:bg-slate-800 rounded-[2rem] p-4 shadow-sm border border-slate-100 dark:border-slate-700">
-                    <div className="grid grid-cols-2 gap-y-6 gap-x-6">
+                <div className="bg-white dark:bg-slate-800 rounded-[2rem] p-4 shadow-sm border border-slate-100 dark:border-slate-700 relative overflow-hidden">
+                    {/* Ghost Icon for Shortcuts Mobile */}
+                    <div className="absolute -right-6 bottom-0 opacity-[0.03] pointer-events-none rotate-12">
+                        <Rocket size={180} strokeWidth={1} className="text-slate-900 dark:text-white" />
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-y-6 gap-x-6 relative z-10">
                         <ShortcutItem 
                             title="My Business" 
                             desc="Track CC"
@@ -2037,7 +2052,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                 <div className="lg:col-span-1 space-y-4">
                     
                     {/* 1. Rank Card (Height approx 200px) */}
-                    <InfoCard title="Rank Progress" icon={Award} colorClass="bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400" className="h-44 lg:h-48 justify-between">
+                    <InfoCard title="Rank Progress" icon={Award} bgIcon={Trophy} colorClass="bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400" className="h-44 lg:h-48 justify-between">
                         <div>
                             <div className="flex justify-between items-end mb-2">
                                 <span className="text-lg lg:text-xl font-bold text-slate-900 dark:text-white font-heading">{currentRankDef.name}</span>
@@ -2060,7 +2075,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                     </InfoCard>
 
                     {/* 2. Team Performance Snapshot */}
-                    <InfoCard title="Team Snapshot" icon={Users} colorClass="bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400" className="h-40 lg:h-44 justify-between">
+                    <InfoCard title="Team Snapshot" icon={Users} bgIcon={Network} colorClass="bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400" className="h-40 lg:h-44 justify-between">
                         <div className="flex justify-between items-center mb-2">
                             <div>
                                 <span className="text-xl lg:text-2xl font-bold text-slate-900 dark:text-white font-heading">{activeDownlines.length}</span>
@@ -2087,7 +2102,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                     </InfoCard>
 
                     {/* 3. Earnings & Rewards (Updated Icon Style) */}
-                    <InfoCard title="Earnings & Rewards" icon={MoneyBagIcon} iconStyle="OUTLINE" colorClass="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400" className="h-40 lg:h-44 justify-between">
+                    <InfoCard title="Earnings & Rewards" icon={MoneyBagIcon} bgIcon={Wallet} iconStyle="OUTLINE" colorClass="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400" className="h-40 lg:h-44 justify-between">
                         <div className="mb-2 lg:mb-3">
                             <span className="text-xl lg:text-2xl font-bold text-slate-900 dark:text-white font-heading">${monthlyEarnings.toLocaleString()}</span>
                             <p className="text-[9px] lg:text-[10px] text-slate-400 uppercase font-bold mt-0.5">Est. Earnings</p>
@@ -2112,7 +2127,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                     </InfoCard>
 
                     {/* 4. Learning & Activity (Updated Icon Style) */}
-                    <InfoCard title="Learning Status" icon={AutoStoriesIcon} iconStyle="OUTLINE" colorClass="bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400" className="h-40 lg:h-44 justify-between">
+                    <InfoCard title="Learning Status" icon={AutoStoriesIcon} bgIcon={Book} iconStyle="OUTLINE" colorClass="bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400" className="h-40 lg:h-44 justify-between">
                         <div className="grid grid-cols-3 gap-2 mb-2 lg:mb-3 text-center">
                             <div className="bg-purple-50 rounded-lg p-1.5 lg:p-2 dark:bg-purple-900/10">
                                 <span className="block text-base lg:text-lg font-bold text-purple-700 dark:text-purple-300">{inProgressCourses}</span>
@@ -2192,11 +2207,17 @@ const Dashboard: React.FC<DashboardProps> = ({
                     </div>
 
                     {/* B. Shortcuts Grid (Increased Height - matches 3 side cards height) */}
-                    <div>
+                    <div className="relative">
                         <SectionHeader title="Shortcuts" />
                         
-                        <div className="bg-white dark:bg-slate-800 rounded-[2rem] p-6 lg:p-8 shadow-sm border border-slate-100 dark:border-slate-700 h-[30rem] lg:h-[35rem] flex flex-col justify-center">
-                            <div className="grid grid-cols-3 grid-rows-2 gap-4 lg:gap-6 h-full">
+                        <div className="bg-white dark:bg-slate-800 rounded-[2rem] p-6 lg:p-8 shadow-sm border border-slate-100 dark:border-slate-700 h-[30rem] lg:h-[35rem] flex flex-col justify-center relative overflow-hidden">
+                            
+                            {/* Massive Ghost Rocket Icon for Shortcuts Container */}
+                            <div className="absolute -right-20 -bottom-20 opacity-[0.02] dark:opacity-[0.03] pointer-events-none rotate-[45deg]">
+                                <Rocket size={450} strokeWidth={1} className="text-slate-900 dark:text-white" />
+                            </div>
+
+                            <div className="grid grid-cols-3 grid-rows-2 gap-4 lg:gap-6 h-full relative z-10">
                                 
                                 <ShortcutItem 
                                     title="My Business" 

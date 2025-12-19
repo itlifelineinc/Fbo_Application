@@ -1,7 +1,7 @@
+
 import React, { useState, useEffect } from 'react';
 import { SalesPage, Product } from '../../types/salesPage';
 import WhatsAppFloatingButton from '../Shared/WhatsAppFloatingButton';
-// Fix: Added CheckCircle to the imports from lucide-react
 import { 
   Check, User, ShoppingCart, MessageCircle, ChevronLeft,
   Image as ImageIcon, CreditCard, Smartphone, Truck, Minus, Send, Loader2, Package, Quote, ShieldCheck, ArrowDown, Plus, X, ChevronUp, Sparkles, Zap, Star, HelpCircle, Tag, ArrowRight, ShoppingBag, BookOpen, ListChecks, Shield, CheckCircle
@@ -86,7 +86,6 @@ const PreviewPanel: React.FC<PreviewPanelProps> = ({ data, device }) => {
           min-height: 3.5rem;
         }
 
-        /* Reference Image Card Style: Flat, Rounded, Simple Border */
         .attachment-card {
             background-color: white;
             border-radius: 2rem;
@@ -121,7 +120,6 @@ const PreviewPanel: React.FC<PreviewPanelProps> = ({ data, device }) => {
             position: relative;
         }
 
-        /* Timeline Connector Line */
         .step-connector {
             position: absolute;
             left: 17px;
@@ -133,36 +131,6 @@ const PreviewPanel: React.FC<PreviewPanelProps> = ({ data, device }) => {
         }
         .dark .step-connector { background-color: #334155; }
 
-        /* Drawer: Bottom Up Logic */
-        .custom-story-drawer {
-            position: absolute;
-            left: 0;
-            right: 0;
-            bottom: -110%;
-            background: white;
-            z-index: 500;
-            border-top-left-radius: 2.5rem;
-            border-top-right-radius: 2.5rem;
-            box-shadow: 0 -10px 40px -10px rgba(0,0,0,0.3);
-            max-height: 85%;
-            display: flex;
-            flex-direction: column;
-            transform: translateY(110%);
-            visibility: hidden;
-            opacity: 0;
-            pointer-events: none;
-            transition: all 0.5s cubic-bezier(0.32, 0.72, 0, 1);
-        }
-        .custom-story-drawer.open {
-            bottom: 0;
-            transform: translateY(0);
-            visibility: visible;
-            opacity: 1;
-            pointer-events: auto;
-        }
-        .dark .custom-story-drawer { background: #0f172a; border-top: 1px solid #334155; }
-
-        /* Checkout Drawer: Slide from Right */
         .checkout-drawer {
             position: absolute;
             top: 0;
@@ -180,7 +148,6 @@ const PreviewPanel: React.FC<PreviewPanelProps> = ({ data, device }) => {
         }
         .dark .checkout-drawer { background: #0f172a; }
 
-        /* Hide scrollbars but keep functionality */
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
       `}</style>
@@ -190,10 +157,8 @@ const PreviewPanel: React.FC<PreviewPanelProps> = ({ data, device }) => {
           className="mx-auto w-full max-w-[375px] h-full max-h-[850px] rounded-[2.5rem] shadow-2xl border-[12px] border-slate-900 overflow-hidden relative transition-colors duration-500"
           style={{ backgroundColor: data.pageBgColor }}
         >
-           {/* Notch */}
            <div className="absolute top-0 left-1/2 -translate-x-1/2 h-6 w-32 bg-slate-900 rounded-b-xl z-[150]"></div>
            
-           {/* Page Content */}
            <div className="absolute inset-0 overflow-y-auto no-scrollbar preview-wrapper bg-white dark:bg-slate-950 z-[1]" style={previewStyle}>
               <CleanThemeContent 
                 data={data} 
@@ -205,21 +170,8 @@ const PreviewPanel: React.FC<PreviewPanelProps> = ({ data, device }) => {
               />
            </div>
 
-           {/* Checkout Side Drawer */}
            <div className={`checkout-drawer ${isCheckoutOpen ? 'open' : ''}`}>
               <CheckoutView data={data} onClose={() => setIsCheckoutOpen(false)} />
-           </div>
-
-           {/* Drawers (Slide from bottom) */}
-           <div className={`custom-story-drawer ${isStoryDrawerOpen ? 'open' : ''}`}>
-              <div className="w-12 h-1 bg-slate-200 dark:bg-slate-800 rounded-full mx-auto mt-4"></div>
-              <div className="flex justify-between items-center px-6 pt-4 pb-2">
-                  <h3 className="text-lg font-black text-slate-900 dark:text-white uppercase tracking-wider">{data.shortStoryTitle}</h3>
-                  <button onClick={() => setIsStoryDrawerOpen(false)} className="p-2 bg-slate-100 dark:bg-slate-800 rounded-full"><X size={20} /></button>
-              </div>
-              <div className="flex-1 overflow-y-auto p-6 no-scrollbar pt-2 text-left">
-                  <p className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed whitespace-pre-wrap">{data.description}</p>
-              </div>
            </div>
         </div>
       ) : (
@@ -232,7 +184,6 @@ const PreviewPanel: React.FC<PreviewPanelProps> = ({ data, device }) => {
                 onReadMoreUsage={() => alert('Full Usage Path View')}
                 onReadMoreFaq={() => alert('All FAQs View')}
             />
-            {/* Desktop Side Drawer */}
             <div className={`checkout-drawer ${isCheckoutOpen ? 'open' : ''} max-w-sm border-l border-slate-100 shadow-2xl`}>
                 <CheckoutView data={data} onClose={() => setIsCheckoutOpen(false)} />
             </div>
@@ -253,7 +204,6 @@ const CleanThemeContent: React.FC<{
   const [activeImg, setActiveImg] = useState(0);
   const product = data.products[0];
   const images = product?.images || [];
-  const testimonials = data.testimonials || [];
   const faqs = data.faqs || [];
 
   useEffect(() => {
@@ -264,6 +214,9 @@ const CleanThemeContent: React.FC<{
 
   const isDarkBg = data.pageBgColor === '#064e3b' || data.pageBgColor === '#111827' || data.pageBgColor === '#000000' || data.pageBgColor === '#1e1b4b' || data.pageBgColor === '#4c0519';
   const textColorClass = isDarkBg ? 'text-white' : 'text-slate-900';
+
+  // The requested icon color matches the Main Page Background
+  const iconColor = data.pageBgColor;
 
   return (
     <div className="flex flex-col">
@@ -280,7 +233,7 @@ const CleanThemeContent: React.FC<{
             </div>
         </div>
 
-        {/* 1.5 CREDIBILITY BADGES (New Section under hero image) */}
+        {/* 1.5 CREDIBILITY BADGES */}
         <div className="flex flex-wrap justify-center gap-6 mb-12 w-full px-6">
             <div className="flex flex-col items-center gap-1.5 opacity-80">
                 <div className="w-9 h-9 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center border border-white/10">
@@ -302,10 +255,10 @@ const CleanThemeContent: React.FC<{
             </div>
         </div>
         
-        {/* Buttons Row */}
+        {/* Buttons Row - Equal width, no wrap */}
         <div className="flex flex-row gap-3 w-full px-5 max-w-[440px]">
             <button className="clean-btn flex-1 bg-white text-slate-900 shadow-xl border border-slate-100">
-                <MessageCircle size={16} strokeWidth={4} /> WhatsApp
+                <MessageCircle size={16} strokeWidth={4} color={iconColor} /> WhatsApp
             </button>
             {data.checkoutConfig?.enabled && (
                 <button onClick={onOpenCheckout} className="clean-btn flex-1 bg-white/20 backdrop-blur-md text-white border border-white/20 shadow-lg">
@@ -315,20 +268,37 @@ const CleanThemeContent: React.FC<{
         </div>
       </header>
 
-      {/* 2. BENEFITS - ATTACHMENT STYLE */}
+      {/* 2. STORY - FIRST AFTER HERO */}
+      {data.description && (
+          <div className="px-6 py-6 bg-white dark:bg-slate-950">
+              <div className="attachment-card text-left">
+                  <div className="flex items-center gap-3">
+                      <BookOpen size={18} color={iconColor} strokeWidth={4} />
+                      <h3 className="text-[10px] font-black text-slate-900 dark:text-white uppercase tracking-widest">{data.shortStoryTitle || 'The Story'}</h3>
+                  </div>
+                  <div className="title-underline" style={{ backgroundColor: data.themeColor }}></div>
+                  <p className="text-sm text-slate-700 dark:text-slate-200 leading-relaxed line-clamp-[10]">{data.description}</p>
+                  <button onClick={onReadMoreStory} className="flex items-center gap-2 font-black uppercase text-[10px] tracking-widest mt-8" style={{ color: iconColor }}>
+                      Keep Reading <ArrowRight size={14} strokeWidth={4} />
+                  </button>
+              </div>
+          </div>
+      )}
+
+      {/* 3. BENEFITS */}
       {product?.benefits?.length > 0 && (
           <div className="px-6 py-4 bg-white dark:bg-slate-950">
               <div className="attachment-card text-left">
                   <div className="flex items-center gap-3">
-                      <Zap size={18} className="text-emerald-500" strokeWidth={4} />
+                      <Zap size={18} color={iconColor} strokeWidth={4} />
                       <h3 className="text-[10px] font-black text-slate-900 dark:text-white uppercase tracking-widest">Exclusive Benefits</h3>
                   </div>
-                  <div className="title-underline"></div>
+                  <div className="title-underline" style={{ backgroundColor: data.themeColor }}></div>
                   <div className="grid grid-cols-1 gap-5">
                       {product.benefits.slice(0, 5).map((benefit, idx) => (
                           <div key={idx} className="flex items-center gap-4">
                               <div className="w-7 h-7 rounded-full flex items-center justify-center shrink-0 bg-emerald-50 dark:bg-emerald-900/20">
-                                  <Check size={14} className="text-emerald-500" strokeWidth={4} />
+                                  <Check size={14} color={iconColor} strokeWidth={4} />
                               </div>
                               <p className="text-sm font-bold text-slate-700 dark:text-slate-200 leading-tight">{benefit}</p>
                           </div>
@@ -338,20 +308,20 @@ const CleanThemeContent: React.FC<{
           </div>
       )}
 
-      {/* 3. USAGE STEPS - VISUAL TIMELINE */}
+      {/* 4. USAGE STEPS */}
       {product?.usageSteps?.length > 0 && (
           <div className="px-6 py-4 bg-white dark:bg-slate-950">
               <div className="attachment-card text-left">
                   <div className="flex items-center gap-3">
-                      <ListChecks size={18} className="text-blue-500" strokeWidth={4} />
+                      <ListChecks size={18} color={iconColor} strokeWidth={4} />
                       <h3 className="text-[10px] font-black text-slate-900 dark:text-white uppercase tracking-widest">Usage Guide</h3>
                   </div>
-                  <div className="title-underline" style={{ backgroundColor: '#3b82f6' }}></div>
+                  <div className="title-underline" style={{ backgroundColor: data.themeColor }}></div>
                   <div className="space-y-8 relative">
                       {product.usageSteps.map((step, idx) => (
                           <div key={idx} className="flex items-start gap-5 relative">
                               {idx < product.usageSteps.length - 1 && <div className="step-connector"></div>}
-                              <div className="w-9 h-9 rounded-full flex items-center justify-center shrink-0 bg-blue-50 border-2 border-blue-100 text-blue-600 font-black text-sm z-10 dark:bg-blue-900/30 dark:border-blue-800 dark:text-blue-300">
+                              <div className="w-9 h-9 rounded-full flex items-center justify-center shrink-0 bg-blue-50 border-2 border-blue-100 text-blue-600 font-black text-sm z-10 dark:bg-blue-900/30 dark:border-blue-800 dark:text-blue-300" style={{ borderColor: iconColor, color: iconColor }}>
                                   {idx + 1}
                               </div>
                               <p className="text-sm font-bold text-slate-700 dark:text-slate-200 pt-1.5 leading-relaxed">{step}</p>
@@ -362,44 +332,27 @@ const CleanThemeContent: React.FC<{
           </div>
       )}
 
-      {/* 4. STORY - ATTACHMENT STYLE */}
-      {data.description && (
-          <div className="px-6 py-6 bg-white dark:bg-slate-950">
-              <div className="attachment-card text-left">
-                  <div className="flex items-center gap-3">
-                      <BookOpen size={18} className="text-purple-500" strokeWidth={4} />
-                      <h3 className="text-[10px] font-black text-slate-900 dark:text-white uppercase tracking-widest">{data.shortStoryTitle || 'The Story'}</h3>
-                  </div>
-                  <div className="title-underline" style={{ backgroundColor: '#8b5cf6' }}></div>
-                  <p className="text-sm text-slate-700 dark:text-slate-200 leading-relaxed line-clamp-[10]">{data.description}</p>
-                  <button onClick={onReadMoreStory} className="flex items-center gap-2 text-purple-600 font-black uppercase text-[10px] tracking-widest mt-8">
-                      Keep Reading <ArrowRight size={14} strokeWidth={4} />
-                  </button>
-              </div>
-          </div>
-      )}
-
-      {/* 5. FAQ - ATTACHMENT STYLE */}
+      {/* 5. FAQ */}
       {faqs.length > 0 && (
           <div className="px-6 py-4 bg-white dark:bg-slate-950">
               <div className="attachment-card text-left">
                   <div className="flex items-center gap-3">
-                      <HelpCircle size={18} className="text-orange-500" strokeWidth={4} />
+                      <HelpCircle size={18} color={iconColor} strokeWidth={4} />
                       <h3 className="text-[10px] font-black text-slate-900 dark:text-white uppercase tracking-widest">Common Questions</h3>
                   </div>
-                  <div className="title-underline" style={{ backgroundColor: '#f97316' }}></div>
+                  <div className="title-underline" style={{ backgroundColor: data.themeColor }}></div>
                   <div className="space-y-6">
                       {faqs.slice(0, 3).map((faq, idx) => (
                           <div key={idx} className="space-y-1">
                               <p className="text-sm font-black text-slate-900 dark:text-white flex items-center gap-2">
-                                  <span className="text-orange-500">Q.</span> {faq.question}
+                                  <span style={{ color: iconColor }}>Q.</span> {faq.question}
                               </p>
                               <p className="text-xs text-slate-500 dark:text-slate-400 pl-6 leading-relaxed">{faq.answer}</p>
                           </div>
                       ))}
                   </div>
                   {faqs.length > 3 && (
-                    <button onClick={onReadMoreFaq} className="flex items-center gap-2 text-orange-600 font-black uppercase text-[10px] tracking-widest mt-8">
+                    <button onClick={onReadMoreFaq} className="flex items-center gap-2 font-black uppercase text-[10px] tracking-widest mt-8" style={{ color: iconColor }}>
                         See All Questions <ArrowRight size={14} strokeWidth={4} />
                     </button>
                   )}
@@ -418,9 +371,6 @@ const CleanThemeContent: React.FC<{
                             <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Standard Unit</p>
                             <p className="text-4xl font-black text-white">{data.currency} {product?.price?.toLocaleString()}</p>
                           </div>
-                          {product?.discountPrice && (
-                              <div className="bg-emerald-500 text-white text-[9px] font-black px-2 py-1 rounded-full uppercase">Deal Active</div>
-                          )}
                       </div>
                       {data.fullPackPrice > 0 && (
                           <div className="p-5 bg-white/5 border border-white/10 rounded-3xl flex justify-between items-center">
@@ -453,6 +403,7 @@ const CheckoutView: React.FC<{ data: SalesPage; onClose: () => void }> = ({ data
   const [selectedPayment, setSelectedPayment] = useState<string | null>(null);
   const product = data.products[0];
   const total = (product?.price || 0) * quantity;
+  const iconColor = data.pageBgColor;
 
   return (
     <div className="flex flex-col h-full bg-white dark:bg-slate-950">
@@ -462,7 +413,6 @@ const CheckoutView: React.FC<{ data: SalesPage; onClose: () => void }> = ({ data
       </div>
       
       <div className="flex-1 overflow-y-auto p-6 space-y-10 no-scrollbar">
-          {/* Product Summary */}
           <div className="flex gap-5 items-start">
               <div className="w-20 h-20 bg-slate-50 rounded-2xl border border-slate-100 p-2 shrink-0 overflow-hidden dark:bg-slate-800">
                   <img src={product?.images[0]} className="w-full h-full object-contain" />
@@ -473,17 +423,15 @@ const CheckoutView: React.FC<{ data: SalesPage; onClose: () => void }> = ({ data
               </div>
           </div>
 
-          {/* Quantity Selector */}
           <div className="flex items-center justify-between p-4 bg-slate-50 rounded-3xl dark:bg-slate-800 border border-slate-100 dark:border-slate-700">
               <span className="text-xs font-black uppercase text-slate-500">Order Amount</span>
               <div className="flex items-center gap-4 bg-white dark:bg-slate-700 border border-slate-100 rounded-full px-2 py-1 shadow-sm">
-                  <button onClick={() => setQuantity(Math.max(1, quantity - 1))} className="w-8 h-8 flex items-center justify-center rounded-full bg-slate-50 dark:bg-slate-600 text-slate-900 dark:text-white transition-colors active:bg-slate-200"><Minus size={14} strokeWidth={4}/></button>
+                  <button onClick={() => setQuantity(Math.max(1, quantity - 1))} className="w-8 h-8 flex items-center justify-center rounded-full bg-slate-50 dark:bg-slate-600 text-slate-900 dark:text-white transition-colors active:bg-slate-200"><Minus size={14} strokeWidth={4} color={iconColor}/></button>
                   <span className="text-base font-black w-6 text-center dark:text-white">{quantity}</span>
-                  <button onClick={() => setQuantity(quantity + 1)} className="w-8 h-8 flex items-center justify-center rounded-full bg-emerald-50 text-white transition-colors active:bg-emerald-600 shadow-sm"><Plus size={14} strokeWidth={4}/></button>
+                  <button onClick={() => setQuantity(quantity + 1)} className="w-8 h-8 flex items-center justify-center rounded-full bg-emerald-500 text-white transition-colors active:bg-emerald-600 shadow-sm"><Plus size={14} strokeWidth={4}/></button>
               </div>
           </div>
 
-          {/* Payments */}
           <div className="space-y-4">
               <h3 className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Select Payment Method</h3>
               <div className="space-y-2">

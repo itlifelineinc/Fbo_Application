@@ -4,7 +4,7 @@ import { SalesPage, Product, FaqItem } from '../../types/salesPage';
 import WhatsAppFloatingButton from '../Shared/WhatsAppFloatingButton';
 import { 
   Check, User, ShoppingCart, MessageCircle, ChevronLeft,
-  Image as ImageIcon, CreditCard, Smartphone, Truck, Minus, Send, Loader2, Package, Quote, ShieldCheck, ArrowDown, Plus, X, ChevronUp, Sparkles, Zap, Star, HelpCircle, Tag, ArrowRight, ShoppingBag, BookOpen, ListChecks, Shield, CheckCircle, ChevronDown
+  Image as ImageIcon, CreditCard, Smartphone, Truck, Minus, Send, Loader2, Package, Quote, ShieldCheck, ArrowDown, Plus, X, ChevronUp, Sparkles, Zap, Star, HelpCircle, Tag, ArrowRight, ShoppingBag, BookOpen, ListChecks, Shield, CheckCircle, ChevronDown, Wallet, Building2, CreditCard as CardIcon
 } from 'lucide-react';
 
 interface PreviewPanelProps {
@@ -138,7 +138,7 @@ const PreviewPanel: React.FC<PreviewPanelProps> = ({ data, device }) => {
             right: 0;
             bottom: -110%;
             background: white;
-            z-index: 500;
+            z-index: 700;
             border-top-left-radius: 2.5rem;
             border-top-right-radius: 2.5rem;
             box-shadow: 0 -10px 40px -10px rgba(0,0,0,0.3);
@@ -557,58 +557,258 @@ const CleanThemeContent: React.FC<{
 };
 
 const CheckoutView: React.FC<{ data: SalesPage; onClose: () => void }> = ({ data, onClose }) => {
-  const [quantity, setQuantity] = useState(1);
+  const [packageType, setPackageType] = useState<'single' | 'full'>('single');
   const [selectedPayment, setSelectedPayment] = useState<string | null>(null);
+  const [paymentStep, setPaymentStep] = useState<string | null>(null); // 'momo' | 'card' | 'bank' | 'processing' | 'success'
+  const [momoNumber, setMomoNumber] = useState('');
+  
   const product = data.products[0];
-  const total = (product?.price || 0) * quantity;
+  const unitPrice = packageType === 'full' ? (data.fullPackPrice || product?.price) : product?.price || 0;
+  const shipping = data.checkoutConfig.shipping.enabled ? (data.checkoutConfig.shipping.flatRate || 0) : 0;
+  const total = unitPrice + shipping;
   const iconColor = data.pageBgColor;
 
+  const handlePaymentSubmit = (method: string) => {
+      setSelectedPayment(method);
+      if (['momo', 'card', 'bank'].includes(method)) {
+          setPaymentStep(method);
+      } else if (method === 'cod') {
+          // Instant success for COD simulation
+          setPaymentStep('success');
+      }
+  };
+
+  const handleConfirmAction = () => {
+      setPaymentStep('processing');
+      setTimeout(() => setPaymentStep('success'), 2000);
+  };
+
+  if (paymentStep === 'success') {
+      return (
+          <div className="flex flex-col h-full bg-white dark:bg-slate-950 items-center justify-center p-8 text-center animate-fade-in">
+              <div className="w-24 h-24 bg-emerald-100 rounded-full flex items-center justify-center text-emerald-600 mb-6 dark:bg-emerald-900/30">
+                  <CheckCircle size={64} />
+              </div>
+              <h2 className="text-2xl font-black text-slate-900 dark:text-white uppercase tracking-tight mb-2">Order Success!</h2>
+              <p className="text-slate-500 dark:text-slate-400 text-sm mb-10">Your order has been placed successfully. You will receive a confirmation message shortly.</p>
+              <button onClick={onClose} className="w-full py-4 bg-slate-900 text-white rounded-2xl font-black uppercase tracking-widest text-sm dark:bg-emerald-600">Back to Page</button>
+          </div>
+      );
+  }
+
+  if (paymentStep === 'processing') {
+      return (
+          <div className="flex flex-col h-full bg-white dark:bg-slate-950 items-center justify-center p-8 text-center">
+              <Loader2 size={48} className="text-emerald-500 animate-spin mb-4" />
+              <p className="text-slate-600 dark:text-slate-300 font-bold uppercase tracking-widest text-xs">Processing Payment...</p>
+          </div>
+      );
+  }
+
   return (
-    <div className="flex flex-col h-full bg-white dark:bg-slate-950">
-      <div className="flex items-center px-6 py-6 border-b border-slate-100 dark:border-slate-800 shrink-0">
+    <div className="flex flex-col h-full bg-white dark:bg-slate-950 relative">
+      {/* Drawer Overlay for Inputs */}
+      <div className={`absolute inset-x-0 bottom-0 z-[800] bg-white dark:bg-slate-900 rounded-t-[2.5rem] shadow-2xl transition-transform duration-500 ease-in-out border-t border-slate-100 dark:border-slate-800 ${paymentStep ? 'translate-y-0' : 'translate-y-full'}`}>
+          <div className="w-12 h-1 bg-slate-200 dark:bg-slate-700 rounded-full mx-auto mt-4 mb-2"></div>
+          <div className="p-8 pb-12">
+              <div className="flex justify-between items-center mb-8">
+                  <h3 className="text-lg font-black text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-2">
+                      {paymentStep === 'momo' ? <Smartphone size={20}/> : paymentStep === 'card' ? <CardIcon size={20}/> : <Building2 size={20}/>}
+                      {paymentStep === 'momo' ? 'Mobile Money' : paymentStep === 'card' ? 'Card Details' : 'Bank Transfer'}
+                  </h3>
+                  <button onClick={() => setPaymentStep(null)} className="p-2 bg-slate-100 dark:bg-slate-800 rounded-full"><X size={20} /></button>
+              </div>
+
+              {paymentStep === 'momo' && (
+                  <div className="space-y-6">
+                      <div>
+                          <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">MoMo Number</label>
+                          <div className="relative">
+                              <input 
+                                type="tel" 
+                                value={momoNumber}
+                                onChange={e => setMomoNumber(e.target.value)}
+                                placeholder="0XX XXX XXXX"
+                                className="w-full p-5 bg-slate-50 dark:bg-slate-800 border-2 border-slate-100 dark:border-slate-700 rounded-2xl outline-none focus:border-emerald-500 font-mono text-lg dark:text-white"
+                              />
+                              <button onClick={handleConfirmAction} className="absolute right-3 top-3 p-3 bg-emerald-500 text-white rounded-xl shadow-lg active:scale-90 transition-transform">
+                                  <Send size={20} />
+                              </button>
+                          </div>
+                      </div>
+                      <p className="text-[10px] text-slate-400 italic">You will receive a prompt on your phone to authorize the payment.</p>
+                  </div>
+              )}
+
+              {paymentStep === 'card' && (
+                  <div className="space-y-4">
+                      <div>
+                          <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Card Number</label>
+                          <input type="text" placeholder="XXXX XXXX XXXX XXXX" className="w-full p-4 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl outline-none dark:text-white font-mono" />
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                          <div>
+                              <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Expiry</label>
+                              <input type="text" placeholder="MM/YY" className="w-full p-4 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl outline-none dark:text-white font-mono" />
+                          </div>
+                          <div>
+                              <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">CVV</label>
+                              <input type="text" placeholder="123" className="w-full p-4 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl outline-none dark:text-white font-mono" />
+                          </div>
+                      </div>
+                      <button onClick={handleConfirmAction} className="w-full py-5 bg-slate-900 text-white rounded-2xl font-black uppercase tracking-widest text-sm mt-4 dark:bg-emerald-600">Pay {data.currency} {total.toLocaleString()}</button>
+                  </div>
+              )}
+
+              {paymentStep === 'bank' && (
+                  <div className="space-y-6">
+                      <div className="bg-slate-50 dark:bg-slate-800 p-5 rounded-2xl border border-slate-100 dark:border-slate-700 space-y-4">
+                          <div className="flex justify-between border-b border-slate-200 dark:border-slate-700 pb-2">
+                              <span className="text-[10px] font-bold text-slate-400 uppercase">Bank Name</span>
+                              <span className="text-sm font-black dark:text-white">EcoBank Ghana</span>
+                          </div>
+                          <div className="flex justify-between border-b border-slate-200 dark:border-slate-700 pb-2">
+                              <span className="text-[10px] font-bold text-slate-400 uppercase">Account Name</span>
+                              <span className="text-sm font-black dark:text-white">Nexu Growth Academy</span>
+                          </div>
+                          <div className="flex justify-between">
+                              <span className="text-[10px] font-bold text-slate-400 uppercase">Account Number</span>
+                              <span className="text-sm font-black font-mono dark:text-white">144100234567</span>
+                          </div>
+                      </div>
+                      <p className="text-[10px] text-slate-400 italic text-center px-4 leading-relaxed">Please make the transfer and tap the button below. Your order will be processed after confirmation.</p>
+                      <button onClick={handleConfirmAction} className="w-full py-5 bg-emerald-500 text-slate-900 rounded-2xl font-black uppercase tracking-widest text-sm">I have made the transfer</button>
+                  </div>
+              )}
+          </div>
+      </div>
+
+      <div className="flex items-center px-6 py-6 border-b border-slate-100 dark:border-slate-800 shrink-0 bg-white dark:bg-slate-950 z-10">
           <button onClick={onClose} className="p-2 -ml-2 text-slate-800 dark:text-white"><ChevronLeft size={28} strokeWidth={3} /></button>
-          <h2 className="text-xl font-black text-slate-900 dark:text-white ml-2 uppercase tracking-tight font-heading">Shopping Cart</h2>
+          <h2 className="text-xl font-black text-slate-900 dark:text-white ml-2 uppercase tracking-tight font-heading">Secure Checkout</h2>
       </div>
       
       <div className="flex-1 overflow-y-auto p-6 space-y-10 no-scrollbar">
-          <div className="flex gap-5 items-start">
-              <div className="w-20 h-20 bg-slate-50 rounded-2xl border border-slate-100 p-2 shrink-0 overflow-hidden dark:bg-slate-800">
-                  <img src={product?.images[0]} className="w-full h-full object-contain" />
-              </div>
-              <div className="flex-1 min-w-0">
-                  <h3 className="font-black text-sm text-slate-900 dark:text-white uppercase leading-tight truncate">{product?.name}</h3>
-                  <p className="text-xl font-black text-emerald-600 mt-1">{data.currency} {product?.price?.toLocaleString()}</p>
-              </div>
-          </div>
-
-          <div className="flex items-center justify-between p-4 bg-slate-50 rounded-3xl dark:bg-slate-800 border border-slate-100 dark:border-slate-700">
-              <span className="text-xs font-black uppercase text-slate-500">Order Amount</span>
-              <div className="flex items-center gap-4 bg-white dark:bg-slate-700 border border-slate-100 rounded-full px-2 py-1 shadow-sm">
-                  <button onClick={() => setQuantity(Math.max(1, quantity - 1))} className="w-8 h-8 flex items-center justify-center rounded-full bg-slate-50 dark:bg-slate-600 text-slate-900 dark:text-white transition-colors active:bg-slate-200"><Minus size={14} strokeWidth={4} color={iconColor}/></button>
-                  <span className="text-base font-black w-6 text-center dark:text-white">{quantity}</span>
-                  <button onClick={() => setQuantity(quantity + 1)} className="w-8 h-8 flex items-center justify-center rounded-full bg-emerald-500 text-white transition-colors active:bg-emerald-600 shadow-sm"><Plus size={14} strokeWidth={4}/></button>
-              </div>
-          </div>
-
-          <div className="space-y-4">
-              <h3 className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Select Payment Method</h3>
-              <div className="space-y-2">
-                  {['momo', 'card', 'cod'].map(method => (
-                      <div key={method} onClick={() => setSelectedPayment(method)} className={`p-5 rounded-3xl border-2 flex items-center justify-between cursor-pointer transition-all ${selectedPayment === method ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20 shadow-sm' : 'border-slate-100 bg-white dark:bg-slate-800 hover:border-emerald-200'}`}>
-                          <span className="font-bold text-sm text-slate-800 dark:text-white capitalize">{method === 'momo' ? 'Mobile Money' : method === 'card' ? 'Credit Card' : 'Cash on Delivery'}</span>
-                          <div className={`w-5 h-5 rounded-full border-2 transition-colors ${selectedPayment === method ? 'border-emerald-500 bg-emerald-500' : 'border-slate-200'}`} />
+          {/* Package Selection */}
+          {data.fullPackPrice > 0 && (
+              <div className="space-y-4">
+                  <h3 className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Select Offer</h3>
+                  <div className="grid grid-cols-1 gap-3">
+                      <div 
+                          onClick={() => setPackageType('single')}
+                          className={`p-5 rounded-3xl border-2 flex items-center justify-between cursor-pointer transition-all ${packageType === 'single' ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20 shadow-sm' : 'border-slate-100 bg-slate-50 dark:bg-slate-800'}`}
+                      >
+                          <div className="flex items-center gap-3">
+                              <div className={`p-2 rounded-xl ${packageType === 'single' ? 'bg-emerald-500 text-white' : 'bg-slate-200 text-slate-500 dark:bg-slate-700'}`}><ShoppingCart size={18}/></div>
+                              <div>
+                                  <p className="font-black text-sm text-slate-900 dark:text-white">Single Unit</p>
+                                  <p className="text-xs text-slate-500">{data.currency} {product?.price.toLocaleString()}</p>
+                              </div>
+                          </div>
+                          <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${packageType === 'single' ? 'border-emerald-500 bg-emerald-500' : 'border-slate-200'}`}>
+                              {packageType === 'single' && <Check size={14} className="text-white" strokeWidth={4} />}
+                          </div>
                       </div>
-                  ))}
+
+                      <div 
+                          onClick={() => setPackageType('full')}
+                          className={`p-5 rounded-3xl border-2 flex items-center justify-between cursor-pointer transition-all ${packageType === 'full' ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20 shadow-sm' : 'border-slate-100 bg-slate-50 dark:bg-slate-800'}`}
+                      >
+                          <div className="flex items-center gap-3">
+                              <div className={`p-2 rounded-xl ${packageType === 'full' ? 'bg-emerald-500 text-white' : 'bg-slate-200 text-slate-500 dark:bg-slate-700'}`}><Package size={18}/></div>
+                              <div>
+                                  <p className="font-black text-sm text-slate-900 dark:text-white">Full Pack Case</p>
+                                  <p className="text-xs text-slate-500">{data.currency} {data.fullPackPrice.toLocaleString()}</p>
+                              </div>
+                          </div>
+                          <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${packageType === 'full' ? 'border-emerald-500 bg-emerald-500' : 'border-slate-200'}`}>
+                              {packageType === 'full' && <Check size={14} className="text-white" strokeWidth={4} />}
+                          </div>
+                      </div>
+                  </div>
+              </div>
+          )}
+
+          {/* Item Breakdown Card */}
+          <div className="bg-slate-50 dark:bg-slate-800 rounded-3xl p-6 border border-slate-100 dark:border-slate-700 space-y-4">
+              <div className="flex justify-between items-center pb-4 border-b border-slate-200 dark:border-slate-700">
+                  <div className="flex gap-3 items-center">
+                    <img src={product?.images[0]} className="w-12 h-12 object-contain bg-white rounded-lg border border-slate-100 p-1" />
+                    <div>
+                        <p className="text-xs font-black text-slate-900 dark:text-white uppercase truncate max-w-[150px]">{product?.name}</p>
+                        <p className="text-[10px] text-slate-500 font-bold uppercase">{packageType === 'full' ? 'Full Pack' : 'Single Unit'}</p>
+                    </div>
+                  </div>
+                  <p className="text-sm font-black dark:text-white">{data.currency} {unitPrice.toLocaleString()}</p>
+              </div>
+              <div className="space-y-2">
+                  <div className="flex justify-between text-xs">
+                      <span className="font-bold text-slate-500 uppercase tracking-widest">Subtotal</span>
+                      <span className="font-bold dark:text-slate-300">{data.currency} {unitPrice.toLocaleString()}</span>
+                  </div>
+                  <div className="flex justify-between text-xs">
+                      <span className="font-bold text-slate-500 uppercase tracking-widest">Shipping</span>
+                      <span className="font-bold text-emerald-600">{shipping === 0 ? 'FREE' : `${data.currency} ${shipping}`}</span>
+                  </div>
+                  <div className="flex justify-between pt-2 border-t border-slate-200 dark:border-slate-700 items-end">
+                      <span className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-tighter">Grand Total</span>
+                      <span className="text-xl font-black text-emerald-600">{data.currency} {total.toLocaleString()}</span>
+                  </div>
+              </div>
+          </div>
+
+          {/* Payments */}
+          <div className="space-y-4 pb-10">
+              <h3 className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Payment Method</h3>
+              <div className="grid grid-cols-1 gap-2">
+                  {data.checkoutConfig.paymentMethods.mobileMoney && (
+                      <button onClick={() => setSelectedPayment('momo')} className={`p-5 rounded-3xl border-2 flex items-center justify-between transition-all ${selectedPayment === 'momo' ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20' : 'border-slate-100 bg-white dark:bg-slate-800'}`}>
+                          <div className="flex items-center gap-3">
+                              <Smartphone size={20} className="text-yellow-600"/>
+                              <span className="font-bold text-sm text-slate-800 dark:text-white">Mobile Money</span>
+                          </div>
+                          <div className={`w-5 h-5 rounded-full border-2 ${selectedPayment === 'momo' ? 'border-emerald-500 bg-emerald-500' : 'border-slate-200'}`} />
+                      </button>
+                  )}
+                  {data.checkoutConfig.paymentMethods.card && (
+                      <button onClick={() => setSelectedPayment('card')} className={`p-5 rounded-3xl border-2 flex items-center justify-between transition-all ${selectedPayment === 'card' ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20' : 'border-slate-100 bg-white dark:bg-slate-800'}`}>
+                          <div className="flex items-center gap-3">
+                              <CardIcon size={20} className="text-indigo-600"/>
+                              <span className="font-bold text-sm text-slate-800 dark:text-white">Credit / Debit Card</span>
+                          </div>
+                          <div className={`w-5 h-5 rounded-full border-2 ${selectedPayment === 'card' ? 'border-emerald-500 bg-emerald-500' : 'border-slate-200'}`} />
+                      </button>
+                  )}
+                  {data.checkoutConfig.paymentMethods.bankTransfer && (
+                      <button onClick={() => setSelectedPayment('bank')} className={`p-5 rounded-3xl border-2 flex items-center justify-between transition-all ${selectedPayment === 'bank' ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20' : 'border-slate-100 bg-white dark:bg-slate-800'}`}>
+                          <div className="flex items-center gap-3">
+                              <Building2 size={20} className="text-blue-600"/>
+                              <span className="font-bold text-sm text-slate-800 dark:text-white">Bank Transfer</span>
+                          </div>
+                          <div className={`w-5 h-5 rounded-full border-2 ${selectedPayment === 'bank' ? 'border-emerald-500 bg-emerald-500' : 'border-slate-200'}`} />
+                      </button>
+                  )}
+                  {data.checkoutConfig.paymentMethods.cashOnDelivery && (
+                      <button onClick={() => setSelectedPayment('cod')} className={`p-5 rounded-3xl border-2 flex items-center justify-between transition-all ${selectedPayment === 'cod' ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20' : 'border-slate-100 bg-white dark:bg-slate-800'}`}>
+                          <div className="flex items-center gap-3">
+                              <Wallet size={20} className="text-green-600"/>
+                              <span className="font-bold text-sm text-slate-800 dark:text-white">Cash on Delivery</span>
+                          </div>
+                          <div className={`w-5 h-5 rounded-full border-2 ${selectedPayment === 'cod' ? 'border-emerald-500 bg-emerald-500' : 'border-slate-200'}`} />
+                      </button>
+                  )}
               </div>
           </div>
       </div>
 
       <div className="p-8 border-t border-slate-100 dark:border-slate-800 shrink-0 bg-slate-50 dark:bg-slate-900/30">
-          <div className="flex justify-between items-end mb-6">
-              <span className="text-xs font-black text-slate-400 uppercase tracking-widest">Order Summary</span>
-              <span className="text-2xl font-black text-slate-900 dark:text-white">{data.currency} {total.toLocaleString()}</span>
-          </div>
-          <button disabled={!selectedPayment} className="w-full py-5 rounded-2xl font-black text-sm bg-slate-900 text-white uppercase tracking-widest shadow-xl disabled:opacity-30 transition-all active:scale-95 dark:bg-emerald-600">Secure Checkout</button>
+          <button 
+              disabled={!selectedPayment} 
+              onClick={() => selectedPayment && handlePaymentSubmit(selectedPayment)}
+              className="w-full py-5 rounded-2xl font-black text-sm bg-slate-900 text-white uppercase tracking-widest shadow-xl disabled:opacity-30 transition-all active:scale-95 dark:bg-emerald-600"
+          >
+              Place Order Now
+          </button>
       </div>
     </div>
   );

@@ -1,10 +1,10 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { SalesPage, Product, FaqItem } from '../../types/salesPage';
 import WhatsAppFloatingButton from '../Shared/WhatsAppFloatingButton';
 import { 
   Check, User, ShoppingCart, MessageCircle, ChevronLeft,
-  Image as ImageIcon, CreditCard, Smartphone, Truck, Minus, Send, Loader2, Package, Quote, ShieldCheck, ArrowDown, Plus, X, ChevronUp, Sparkles, Zap, Star, HelpCircle, Tag, ArrowRight, ShoppingBag, BookOpen, ListChecks, Shield, CheckCircle, ChevronDown, Wallet, Building2, CreditCard as CardIcon
+  Image as ImageIcon, CreditCard, Smartphone, Truck, Minus, Send, Loader2, Package, Quote, ShieldCheck, ArrowDown, Plus, X, ChevronUp, Sparkles, Zap, Star, HelpCircle, Tag, ArrowRight, ShoppingBag, BookOpen, ListChecks, Shield, CheckCircle, ChevronDown, Wallet, Building2, CreditCard as CardIcon, MapPin, Mail, LayoutGrid, Map as MapIcon, Navigation, Search
 } from 'lucide-react';
 
 interface PreviewPanelProps {
@@ -47,8 +47,6 @@ const PreviewPanel: React.FC<PreviewPanelProps> = ({ data, device }) => {
     '--section-padding': `${sectionPaddingRem}rem`,
     '--btn-radius': radius,
   } as React.CSSProperties;
-
-  const whatsappMsg = data.whatsappMessage?.replace('{title}', data.title) || "";
 
   return (
     <>
@@ -204,7 +202,6 @@ const PreviewPanel: React.FC<PreviewPanelProps> = ({ data, device }) => {
               <CheckoutView data={data} onClose={() => setIsCheckoutOpen(false)} />
            </div>
 
-           {/* Generic Bottom Drawer for Expanded Content */}
            <div className={`custom-story-drawer ${isStoryDrawerOpen ? 'open' : ''}`}>
               <div className="w-12 h-1 bg-slate-200 dark:bg-slate-800 rounded-full mx-auto mt-4"></div>
               <div className="flex justify-between items-center px-6 pt-4 pb-2">
@@ -559,21 +556,73 @@ const CleanThemeContent: React.FC<{
 const CheckoutView: React.FC<{ data: SalesPage; onClose: () => void }> = ({ data, onClose }) => {
   const [packageType, setPackageType] = useState<'single' | 'full'>('single');
   const [selectedPayment, setSelectedPayment] = useState<string | null>(null);
-  const [paymentStep, setPaymentStep] = useState<string | null>(null); // 'momo' | 'card' | 'bank' | 'processing' | 'success'
+  const [paymentStep, setPaymentStep] = useState<string | null>(null); 
   const [momoNumber, setMomoNumber] = useState('');
   
+  // Granular Customer Info
+  const [customerInfo, setCustomerInfo] = useState({
+    firstName: '',
+    lastName: '',
+    phone: '',
+    email: '',
+    houseNo: '',
+    street: '',
+    city: '',
+    state: '',
+    zip: ''
+  });
+
+  // Mock Address Suggestions
+  const [addressSuggestions, setAddressSuggestions] = useState<string[]>([]);
+  const [showMapPicker, setShowMapPicker] = useState(false);
+
   const product = data.products[0];
   const unitPrice = packageType === 'full' ? (data.fullPackPrice || product?.price) : product?.price || 0;
   const shipping = data.checkoutConfig.shipping.enabled ? (data.checkoutConfig.shipping.flatRate || 0) : 0;
   const total = unitPrice + shipping;
   const iconColor = data.pageBgColor;
 
+  const handleAddressSearch = (query: string) => {
+    setCustomerInfo({ ...customerInfo, street: query });
+    if (query.length > 2) {
+      // Simulate real search results
+      const mocks = [
+        `${query} Avenue, East Legon, Accra`,
+        `${query} Road, Kumasi Central`,
+        `${query} Street, Osu, Accra`,
+        `${query} Crescent, Tema Community 25`
+      ];
+      setAddressSuggestions(mocks);
+    } else {
+      setAddressSuggestions([]);
+    }
+  };
+
+  const selectSuggestion = (suggestion: string) => {
+    const parts = suggestion.split(', ');
+    setCustomerInfo({
+        ...customerInfo,
+        street: parts[0] || '',
+        city: parts[1] || '',
+        state: parts[2] || ''
+    });
+    setAddressSuggestions([]);
+  };
+
   const handlePaymentSubmit = (method: string) => {
+      // Mandatory validation
+      const mandatory = ['firstName', 'lastName', 'phone', 'houseNo', 'street', 'city', 'state'];
+      const isMissing = mandatory.some(key => !customerInfo[key as keyof typeof customerInfo]);
+
+      if (isMissing) {
+          alert("Please fill in all mandatory delivery information marked with *.");
+          return;
+      }
+
       setSelectedPayment(method);
       if (['momo', 'card', 'bank'].includes(method)) {
           setPaymentStep(method);
       } else if (method === 'cod') {
-          // Instant success for COD simulation
           setPaymentStep('success');
       }
   };
@@ -590,7 +639,7 @@ const CheckoutView: React.FC<{ data: SalesPage; onClose: () => void }> = ({ data
                   <CheckCircle size={64} />
               </div>
               <h2 className="text-2xl font-black text-slate-900 dark:text-white uppercase tracking-tight mb-2">Order Success!</h2>
-              <p className="text-slate-500 dark:text-slate-400 text-sm mb-10">Your order has been placed successfully. You will receive a confirmation message shortly.</p>
+              <p className="text-slate-500 dark:text-slate-400 text-sm mb-10">Hi {customerInfo.firstName}, your order has been placed successfully. You will receive a confirmation message shortly.</p>
               <button onClick={onClose} className="w-full py-4 bg-slate-900 text-white rounded-2xl font-black uppercase tracking-widest text-sm dark:bg-emerald-600">Back to Page</button>
           </div>
       );
@@ -605,15 +654,49 @@ const CheckoutView: React.FC<{ data: SalesPage; onClose: () => void }> = ({ data
       );
   }
 
+  const INPUT_CLASS = "w-full p-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm outline-none focus:border-emerald-500 transition-all dark:text-white";
+  const LABEL_CLASS = "text-[10px] font-black uppercase text-slate-400 tracking-widest mb-1.5 block";
+
   return (
     <div className="flex flex-col h-full bg-white dark:bg-slate-950 relative">
-      {/* Drawer Overlay for Inputs */}
+      
+      {/* Map Picker Simulation */}
+      {showMapPicker && (
+          <div className="absolute inset-0 z-[900] bg-white dark:bg-slate-900 flex flex-col">
+              <div className="flex items-center justify-between p-4 border-b border-slate-100 dark:border-slate-800">
+                  <h3 className="font-bold uppercase text-xs tracking-widest">Pin your location</h3>
+                  <button onClick={() => setShowMapPicker(false)} className="p-2 bg-slate-100 rounded-full dark:bg-slate-800"><X size={18}/></button>
+              </div>
+              <div className="flex-1 bg-slate-200 dark:bg-slate-800 relative flex items-center justify-center">
+                  <MapIcon size={64} className="text-slate-400 opacity-20" />
+                  <div className="absolute animate-bounce" style={{ color: iconColor }}>
+                      <MapPin size={48} strokeWidth={3} />
+                  </div>
+                  <div className="absolute bottom-10 left-6 right-6 bg-white/90 backdrop-blur-md p-4 rounded-2xl shadow-2xl dark:bg-slate-900/90 border border-white/20">
+                      <p className="text-xs font-bold text-slate-800 dark:text-white mb-2">Precise Location Detected</p>
+                      <p className="text-[10px] text-slate-500 truncate">East Legon, Boundary Rd., Accra, Ghana</p>
+                      <button 
+                        onClick={() => {
+                            setCustomerInfo({...customerInfo, street: 'Boundary Rd.', city: 'Accra', state: 'Greater Accra'});
+                            setShowMapPicker(false);
+                        }} 
+                        className="w-full mt-3 py-3 rounded-xl bg-slate-900 text-white font-black text-[10px] uppercase tracking-widest"
+                        style={{ backgroundColor: iconColor }}
+                      >
+                        Confirm Location
+                      </button>
+                  </div>
+              </div>
+          </div>
+      )}
+
+      {/* Payment Interaction Drawers */}
       <div className={`absolute inset-x-0 bottom-0 z-[800] bg-white dark:bg-slate-900 rounded-t-[2.5rem] shadow-2xl transition-transform duration-500 ease-in-out border-t border-slate-100 dark:border-slate-800 ${paymentStep ? 'translate-y-0' : 'translate-y-full'}`}>
           <div className="w-12 h-1 bg-slate-200 dark:bg-slate-700 rounded-full mx-auto mt-4 mb-2"></div>
           <div className="p-8 pb-12">
               <div className="flex justify-between items-center mb-8">
                   <h3 className="text-lg font-black text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-2">
-                      {paymentStep === 'momo' ? <Smartphone size={20}/> : paymentStep === 'card' ? <CardIcon size={20}/> : <Building2 size={20}/>}
+                      {paymentStep === 'momo' ? <Smartphone size={20} color={iconColor}/> : paymentStep === 'card' ? <CardIcon size={20} color={iconColor}/> : <Building2 size={20} color={iconColor}/>}
                       {paymentStep === 'momo' ? 'Mobile Money' : paymentStep === 'card' ? 'Card Details' : 'Bank Transfer'}
                   </h3>
                   <button onClick={() => setPaymentStep(null)} className="p-2 bg-slate-100 dark:bg-slate-800 rounded-full"><X size={20} /></button>
@@ -622,7 +705,7 @@ const CheckoutView: React.FC<{ data: SalesPage; onClose: () => void }> = ({ data
               {paymentStep === 'momo' && (
                   <div className="space-y-6">
                       <div>
-                          <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">MoMo Number</label>
+                          <label className={LABEL_CLASS}>MoMo Number</label>
                           <div className="relative">
                               <input 
                                 type="tel" 
@@ -631,7 +714,7 @@ const CheckoutView: React.FC<{ data: SalesPage; onClose: () => void }> = ({ data
                                 placeholder="0XX XXX XXXX"
                                 className="w-full p-5 bg-slate-50 dark:bg-slate-800 border-2 border-slate-100 dark:border-slate-700 rounded-2xl outline-none focus:border-emerald-500 font-mono text-lg dark:text-white"
                               />
-                              <button onClick={handleConfirmAction} className="absolute right-3 top-3 p-3 bg-emerald-500 text-white rounded-xl shadow-lg active:scale-90 transition-transform">
+                              <button onClick={handleConfirmAction} className="absolute right-3 top-3 p-3 text-white rounded-xl shadow-lg active:scale-90 transition-transform" style={{ backgroundColor: iconColor }}>
                                   <Send size={20} />
                               </button>
                           </div>
@@ -643,20 +726,22 @@ const CheckoutView: React.FC<{ data: SalesPage; onClose: () => void }> = ({ data
               {paymentStep === 'card' && (
                   <div className="space-y-4">
                       <div>
-                          <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Card Number</label>
+                          <label className={LABEL_CLASS}>Card Number</label>
                           <input type="text" placeholder="XXXX XXXX XXXX XXXX" className="w-full p-4 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl outline-none dark:text-white font-mono" />
                       </div>
                       <div className="grid grid-cols-2 gap-4">
                           <div>
-                              <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Expiry</label>
+                              <label className={LABEL_CLASS}>Expiry</label>
                               <input type="text" placeholder="MM/YY" className="w-full p-4 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl outline-none dark:text-white font-mono" />
                           </div>
                           <div>
-                              <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">CVV</label>
+                              <label className={LABEL_CLASS}>CVV</label>
                               <input type="text" placeholder="123" className="w-full p-4 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl outline-none dark:text-white font-mono" />
                           </div>
                       </div>
-                      <button onClick={handleConfirmAction} className="w-full py-5 bg-slate-900 text-white rounded-2xl font-black uppercase tracking-widest text-sm mt-4 dark:bg-emerald-600">Pay {data.currency} {total.toLocaleString()}</button>
+                      <button onClick={handleConfirmAction} className="w-full py-5 text-white rounded-2xl font-black uppercase tracking-widest text-sm mt-4" style={{ backgroundColor: iconColor }}>
+                        Pay {data.currency} {total.toLocaleString()}
+                      </button>
                   </div>
               )}
 
@@ -677,7 +762,9 @@ const CheckoutView: React.FC<{ data: SalesPage; onClose: () => void }> = ({ data
                           </div>
                       </div>
                       <p className="text-[10px] text-slate-400 italic text-center px-4 leading-relaxed">Please make the transfer and tap the button below. Your order will be processed after confirmation.</p>
-                      <button onClick={handleConfirmAction} className="w-full py-5 bg-emerald-500 text-slate-900 rounded-2xl font-black uppercase tracking-widest text-sm">I have made the transfer</button>
+                      <button onClick={handleConfirmAction} className="w-full py-5 text-white rounded-2xl font-black uppercase tracking-widest text-sm" style={{ backgroundColor: iconColor }}>
+                        I have made the transfer
+                      </button>
                   </div>
               )}
           </div>
@@ -689,10 +776,148 @@ const CheckoutView: React.FC<{ data: SalesPage; onClose: () => void }> = ({ data
       </div>
       
       <div className="flex-1 overflow-y-auto p-6 space-y-10 no-scrollbar">
-          {/* Package Selection */}
+          
+          {/* SECTION 1: CUSTOMER INFORMATION */}
+          <div className="space-y-4">
+              <h3 className="text-[10px] font-black uppercase text-slate-400 tracking-widest flex items-center gap-2">
+                  <User size={14} color={iconColor} strokeWidth={4} /> Delivery Information
+              </h3>
+              <div className="space-y-4 bg-slate-50/50 dark:bg-slate-900/50 p-4 rounded-3xl border border-slate-100 dark:border-slate-800">
+                  <div className="grid grid-cols-2 gap-3">
+                      <div>
+                          <label className={LABEL_CLASS}>First Name*</label>
+                          <input 
+                            type="text" 
+                            className={INPUT_CLASS} 
+                            placeholder="Jane"
+                            value={customerInfo.firstName}
+                            onChange={e => setCustomerInfo({...customerInfo, firstName: e.target.value})}
+                          />
+                      </div>
+                      <div>
+                          <label className={LABEL_CLASS}>Last Name*</label>
+                          <input 
+                            type="text" 
+                            className={INPUT_CLASS} 
+                            placeholder="Doe"
+                            value={customerInfo.lastName}
+                            onChange={e => setCustomerInfo({...customerInfo, lastName: e.target.value})}
+                          />
+                      </div>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      <div>
+                          <label className={LABEL_CLASS}>Phone Number*</label>
+                          <div className="relative">
+                            <Smartphone size={16} color={iconColor} className="absolute left-3 top-3.5" />
+                            <input 
+                                type="tel" 
+                                className={INPUT_CLASS + " pl-10"} 
+                                placeholder="0XX XXX XXXX"
+                                value={customerInfo.phone}
+                                onChange={e => setCustomerInfo({...customerInfo, phone: e.target.value})}
+                            />
+                          </div>
+                      </div>
+                      <div>
+                          <label className={LABEL_CLASS}>Email Address (Optional)</label>
+                          <div className="relative">
+                            <Mail size={16} color={iconColor} className="absolute left-3 top-3.5" />
+                            <input 
+                                type="email" 
+                                className={INPUT_CLASS + " pl-10"} 
+                                placeholder="jane@example.com"
+                                value={customerInfo.email}
+                                onChange={e => setCustomerInfo({...customerInfo, email: e.target.value})}
+                            />
+                          </div>
+                      </div>
+                  </div>
+
+                  <div className="h-px bg-slate-100 dark:bg-slate-700 my-2"></div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                      <div className="col-span-1">
+                          <label className={LABEL_CLASS}>House / Flat No.*</label>
+                          <input 
+                            type="text" 
+                            className={INPUT_CLASS} 
+                            placeholder="B12"
+                            value={customerInfo.houseNo}
+                            onChange={e => setCustomerInfo({...customerInfo, houseNo: e.target.value})}
+                          />
+                      </div>
+                      <div className="col-span-1">
+                          <label className={LABEL_CLASS}>Postal Code</label>
+                          <input 
+                            type="text" 
+                            className={INPUT_CLASS} 
+                            placeholder="00233"
+                            value={customerInfo.zip}
+                            onChange={e => setCustomerInfo({...customerInfo, zip: e.target.value})}
+                          />
+                      </div>
+                      <div className="col-span-2 relative">
+                          <label className={LABEL_CLASS}>Street Name / Area*</label>
+                          <div className="relative">
+                              <Search size={16} color={iconColor} className="absolute left-3 top-3.5" />
+                              <input 
+                                type="text" 
+                                className={INPUT_CLASS + " pl-10"} 
+                                placeholder="Start typing address..."
+                                value={customerInfo.street}
+                                onChange={e => handleAddressSearch(e.target.value)}
+                              />
+                              {addressSuggestions.length > 0 && (
+                                  <div className="absolute top-full left-0 right-0 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl mt-1 shadow-2xl z-50 max-h-40 overflow-y-auto">
+                                      {addressSuggestions.map((s, i) => (
+                                          <div key={i} onClick={() => selectSuggestion(s)} className="p-3 text-[10px] hover:bg-slate-50 dark:hover:bg-slate-700 cursor-pointer flex items-center gap-2 border-b border-slate-50 dark:border-slate-700 last:border-0">
+                                              <Navigation size={12} color={iconColor}/>
+                                              <span className="truncate">{s}</span>
+                                          </div>
+                                      ))}
+                                  </div>
+                              )}
+                          </div>
+                      </div>
+                      <div className="col-span-1">
+                          <label className={LABEL_CLASS}>City*</label>
+                          <input 
+                            type="text" 
+                            className={INPUT_CLASS} 
+                            placeholder="Accra"
+                            value={customerInfo.city}
+                            onChange={e => setCustomerInfo({...customerInfo, city: e.target.value})}
+                          />
+                      </div>
+                      <div className="col-span-1">
+                          <label className={LABEL_CLASS}>State / Region*</label>
+                          <input 
+                            type="text" 
+                            className={INPUT_CLASS} 
+                            placeholder="Greater Accra"
+                            value={customerInfo.state}
+                            onChange={e => setCustomerInfo({...customerInfo, state: e.target.value})}
+                          />
+                      </div>
+                  </div>
+
+                  <button 
+                    onClick={() => setShowMapPicker(true)}
+                    className="w-full mt-2 py-3.5 border-2 border-dashed rounded-xl flex items-center justify-center gap-2 text-[10px] font-black uppercase tracking-widest transition-colors hover:bg-slate-50 dark:hover:bg-slate-800"
+                    style={{ color: iconColor, borderColor: iconColor }}
+                  >
+                      <MapIcon size={16} /> Pin exact location on Map
+                  </button>
+              </div>
+          </div>
+
+          {/* SECTION 2: OFFER SELECTION */}
           {data.fullPackPrice > 0 && (
               <div className="space-y-4">
-                  <h3 className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Select Offer</h3>
+                  <h3 className="text-[10px] font-black uppercase text-slate-400 tracking-widest flex items-center gap-2">
+                      <Tag size={14} color={iconColor} strokeWidth={4} /> Select Offer
+                  </h3>
                   <div className="grid grid-cols-1 gap-3">
                       <div 
                           onClick={() => setPackageType('single')}
@@ -729,42 +954,49 @@ const CheckoutView: React.FC<{ data: SalesPage; onClose: () => void }> = ({ data
               </div>
           )}
 
-          {/* Item Breakdown Card */}
-          <div className="bg-slate-50 dark:bg-slate-800 rounded-3xl p-6 border border-slate-100 dark:border-slate-700 space-y-4">
-              <div className="flex justify-between items-center pb-4 border-b border-slate-200 dark:border-slate-700">
-                  <div className="flex gap-3 items-center">
-                    <img src={product?.images[0]} className="w-12 h-12 object-contain bg-white rounded-lg border border-slate-100 p-1" />
-                    <div>
-                        <p className="text-xs font-black text-slate-900 dark:text-white uppercase truncate max-w-[150px]">{product?.name}</p>
-                        <p className="text-[10px] text-slate-500 font-bold uppercase">{packageType === 'full' ? 'Full Pack' : 'Single Unit'}</p>
+          {/* SECTION 3: ITEM BREAKDOWN */}
+          <div className="space-y-4">
+            <h3 className="text-[10px] font-black uppercase text-slate-400 tracking-widest flex items-center gap-2">
+                <LayoutGrid size={14} color={iconColor} strokeWidth={4} /> Order Summary
+            </h3>
+            <div className="bg-slate-50 dark:bg-slate-800 rounded-3xl p-6 border border-slate-100 dark:border-slate-700 space-y-4">
+                <div className="flex justify-between items-center pb-4 border-b border-slate-200 dark:border-slate-700">
+                    <div className="flex gap-3 items-center">
+                        <img src={product?.images[0]} className="w-12 h-12 object-contain bg-white rounded-lg border border-slate-100 p-1" />
+                        <div>
+                            <p className="text-xs font-black text-slate-900 dark:text-white uppercase truncate max-w-[150px]">{product?.name}</p>
+                            <p className="text-[10px] text-slate-500 font-bold uppercase">{packageType === 'full' ? 'Full Pack' : 'Single Unit'}</p>
+                        </div>
                     </div>
-                  </div>
-                  <p className="text-sm font-black dark:text-white">{data.currency} {unitPrice.toLocaleString()}</p>
-              </div>
-              <div className="space-y-2">
-                  <div className="flex justify-between text-xs">
-                      <span className="font-bold text-slate-500 uppercase tracking-widest">Subtotal</span>
-                      <span className="font-bold dark:text-slate-300">{data.currency} {unitPrice.toLocaleString()}</span>
-                  </div>
-                  <div className="flex justify-between text-xs">
-                      <span className="font-bold text-slate-500 uppercase tracking-widest">Shipping</span>
-                      <span className="font-bold text-emerald-600">{shipping === 0 ? 'FREE' : `${data.currency} ${shipping}`}</span>
-                  </div>
-                  <div className="flex justify-between pt-2 border-t border-slate-200 dark:border-slate-700 items-end">
-                      <span className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-tighter">Grand Total</span>
-                      <span className="text-xl font-black text-emerald-600">{data.currency} {total.toLocaleString()}</span>
-                  </div>
-              </div>
+                    <p className="text-sm font-black dark:text-white">{data.currency} {unitPrice.toLocaleString()}</p>
+                </div>
+                <div className="space-y-2">
+                    <div className="flex justify-between text-xs">
+                        <span className="font-bold text-slate-500 uppercase tracking-widest">Subtotal</span>
+                        <span className="font-bold dark:text-slate-300">{data.currency} {unitPrice.toLocaleString()}</span>
+                    </div>
+                    <div className="flex justify-between text-xs">
+                        <span className="font-bold text-slate-500 uppercase tracking-widest">Shipping</span>
+                        <span className="font-bold text-emerald-600">{shipping === 0 ? 'FREE' : `${data.currency} ${shipping}`}</span>
+                    </div>
+                    <div className="flex justify-between pt-2 border-t border-slate-200 dark:border-slate-700 items-end">
+                        <span className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-tighter">Grand Total</span>
+                        <span className="text-xl font-black text-emerald-600">{data.currency} {total.toLocaleString()}</span>
+                    </div>
+                </div>
+            </div>
           </div>
 
-          {/* Payments */}
+          {/* SECTION 4: PAYMENT METHODS */}
           <div className="space-y-4 pb-10">
-              <h3 className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Payment Method</h3>
+              <h3 className="text-[10px] font-black uppercase text-slate-400 tracking-widest flex items-center gap-2">
+                  <CreditCard size={14} color={iconColor} strokeWidth={4} /> Payment Method
+              </h3>
               <div className="grid grid-cols-1 gap-2">
                   {data.checkoutConfig.paymentMethods.mobileMoney && (
                       <button onClick={() => setSelectedPayment('momo')} className={`p-5 rounded-3xl border-2 flex items-center justify-between transition-all ${selectedPayment === 'momo' ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20' : 'border-slate-100 bg-white dark:bg-slate-800'}`}>
                           <div className="flex items-center gap-3">
-                              <Smartphone size={20} className="text-yellow-600"/>
+                              <Smartphone size={20} color={iconColor}/>
                               <span className="font-bold text-sm text-slate-800 dark:text-white">Mobile Money</span>
                           </div>
                           <div className={`w-5 h-5 rounded-full border-2 ${selectedPayment === 'momo' ? 'border-emerald-500 bg-emerald-500' : 'border-slate-200'}`} />
@@ -773,7 +1005,7 @@ const CheckoutView: React.FC<{ data: SalesPage; onClose: () => void }> = ({ data
                   {data.checkoutConfig.paymentMethods.card && (
                       <button onClick={() => setSelectedPayment('card')} className={`p-5 rounded-3xl border-2 flex items-center justify-between transition-all ${selectedPayment === 'card' ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20' : 'border-slate-100 bg-white dark:bg-slate-800'}`}>
                           <div className="flex items-center gap-3">
-                              <CardIcon size={20} className="text-indigo-600"/>
+                              <CardIcon size={20} color={iconColor}/>
                               <span className="font-bold text-sm text-slate-800 dark:text-white">Credit / Debit Card</span>
                           </div>
                           <div className={`w-5 h-5 rounded-full border-2 ${selectedPayment === 'card' ? 'border-emerald-500 bg-emerald-500' : 'border-slate-200'}`} />
@@ -782,7 +1014,7 @@ const CheckoutView: React.FC<{ data: SalesPage; onClose: () => void }> = ({ data
                   {data.checkoutConfig.paymentMethods.bankTransfer && (
                       <button onClick={() => setSelectedPayment('bank')} className={`p-5 rounded-3xl border-2 flex items-center justify-between transition-all ${selectedPayment === 'bank' ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20' : 'border-slate-100 bg-white dark:bg-slate-800'}`}>
                           <div className="flex items-center gap-3">
-                              <Building2 size={20} className="text-blue-600"/>
+                              <Building2 size={20} color={iconColor}/>
                               <span className="font-bold text-sm text-slate-800 dark:text-white">Bank Transfer</span>
                           </div>
                           <div className={`w-5 h-5 rounded-full border-2 ${selectedPayment === 'bank' ? 'border-emerald-500 bg-emerald-500' : 'border-slate-200'}`} />
@@ -791,7 +1023,7 @@ const CheckoutView: React.FC<{ data: SalesPage; onClose: () => void }> = ({ data
                   {data.checkoutConfig.paymentMethods.cashOnDelivery && (
                       <button onClick={() => setSelectedPayment('cod')} className={`p-5 rounded-3xl border-2 flex items-center justify-between transition-all ${selectedPayment === 'cod' ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20' : 'border-slate-100 bg-white dark:bg-slate-800'}`}>
                           <div className="flex items-center gap-3">
-                              <Wallet size={20} className="text-green-600"/>
+                              <Wallet size={20} color={iconColor}/>
                               <span className="font-bold text-sm text-slate-800 dark:text-white">Cash on Delivery</span>
                           </div>
                           <div className={`w-5 h-5 rounded-full border-2 ${selectedPayment === 'cod' ? 'border-emerald-500 bg-emerald-500' : 'border-slate-200'}`} />
@@ -806,6 +1038,7 @@ const CheckoutView: React.FC<{ data: SalesPage; onClose: () => void }> = ({ data
               disabled={!selectedPayment} 
               onClick={() => selectedPayment && handlePaymentSubmit(selectedPayment)}
               className="w-full py-5 rounded-2xl font-black text-sm bg-slate-900 text-white uppercase tracking-widest shadow-xl disabled:opacity-30 transition-all active:scale-95 dark:bg-emerald-600"
+              style={selectedPayment ? { backgroundColor: iconColor } : {}}
           >
               Place Order Now
           </button>

@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useLocalDraft } from '../hooks/useLocalDraft';
 import { PageType } from '../types/salesPage';
@@ -6,10 +5,10 @@ import EditorToolbar from '../components/SalesEditor/EditorToolbar';
 import EditorLayout from '../components/SalesEditor/Layout';
 import PreviewPanel from '../components/SalesEditor/PreviewPanel';
 import { ResponsiveModal } from '../components/Shared/ResponsiveModal';
-import { LayoutTemplate, ShoppingBag, Package, Heart, MessageCircle, User, Briefcase, Check, Lock } from 'lucide-react';
+import { LayoutTemplate, ShoppingBag, Package, Heart, MessageCircle, User, Briefcase, Check, Lock, Loader2 } from 'lucide-react';
 
 const SalesPageBuilder: React.FC = () => {
-  const { page, updateField, publish, lastSaved } = useLocalDraft();
+  const { page, updateField, publish, lastSaved, isLoaded } = useLocalDraft();
   const [isPreviewMode, setIsPreviewMode] = useState(false); // Controls Mobile View mainly
   const [previewDevice, setPreviewDevice] = useState<'mobile' | 'desktop'>('desktop');
   const [showSplitView, setShowSplitView] = useState(true);
@@ -84,6 +83,17 @@ const SalesPageBuilder: React.FC = () => {
           setShowTypeSelection(false);
       }, 400);
   };
+
+  if (!isLoaded) {
+    return (
+        <div className="flex h-screen w-full items-center justify-center bg-slate-50 dark:bg-slate-950">
+            <div className="flex flex-col items-center gap-4">
+                <Loader2 className="animate-spin text-emerald-600" size={48} />
+                <p className="text-slate-500 font-bold animate-pulse uppercase tracking-widest text-xs">Loading Draft...</p>
+            </div>
+        </div>
+    );
+  }
 
   const activePageType = pageTypes.find(t => t.id === page.type);
   const pageTypeTitle = activePageType ? activePageType.title : 'Page Builder';

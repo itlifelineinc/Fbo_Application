@@ -1,10 +1,11 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { SalesPage, Product, FaqItem } from '../../types/salesPage';
 import WhatsAppFloatingButton from '../Shared/WhatsAppFloatingButton';
 import { 
   Check, User, ShoppingCart, MessageCircle, ChevronLeft,
-  Image as ImageIcon, CreditCard, Smartphone, Truck, Minus, Send, Loader2, Package, Quote, ShieldCheck, ArrowDown, Plus, X, ChevronUp, Sparkles, Zap, Star, HelpCircle, Tag, ArrowRight, ShoppingBag, BookOpen, ListChecks, Shield, CheckCircle, ChevronDown, Wallet, Building2, CreditCard as CardIcon, MapPin, Mail, LayoutGrid, Map as MapIcon, Navigation, Search
+  Image as ImageIcon, CreditCard, Smartphone, Truck, Minus, Send, Loader2, Package, Quote, ShieldCheck, ArrowDown, Plus, X, ChevronUp, Sparkles, Zap, Star, HelpCircle, Tag, ArrowRight, ShoppingBag, BookOpen, ListChecks, Shield, CheckCircle, ChevronDown, Wallet, Building2, CreditCard as CardIcon, MapPin, Mail, LayoutGrid, Map as MapIcon, Navigation, Search, Award, CalendarDays,
+  // Added AlertCircle to fix the error on line 797
+  AlertCircle
 } from 'lucide-react';
 
 interface PreviewPanelProps {
@@ -21,7 +22,6 @@ const PreviewPanel: React.FC<PreviewPanelProps> = ({ data, device }) => {
   const [activeFaqForDrawer, setActiveFaqForDrawer] = useState<FaqItem | null>(null);
   const [isAllFaqsDrawerOpen, setIsAllFaqsDrawerOpen] = useState(false);
   
-  // Design System Calculations
   const settings = isMobile && data.mobileOverrides ? { ...data, ...data.mobileOverrides } : data;
   const baseSize = settings.baseFontSize || 16;
   const scaleRatio = settings.typeScale || 1.25;
@@ -181,7 +181,7 @@ const PreviewPanel: React.FC<PreviewPanelProps> = ({ data, device }) => {
 
       {isMobile ? (
         <div 
-          className="mx-auto w-full max-w-[375px] h-full max-h-[850px] rounded-[2.5rem] shadow-2xl border-[12px] border-slate-900 overflow-hidden relative transition-colors duration-500"
+          className="mx-auto w-full max-w-[375px] h-full max-h-[850px] rounded-[2.5rem] shadow-2xl border-[12px] border-slate-900 overflow-hidden relative transition-all duration-500"
           style={{ backgroundColor: data.pageBgColor }}
         >
            <div className="absolute top-0 left-1/2 -translate-x-1/2 h-6 w-32 bg-slate-900 rounded-b-xl z-[150]"></div>
@@ -330,7 +330,7 @@ const CleanThemeContent: React.FC<{
   return (
     <div className="flex flex-col">
       {/* 1. HERO */}
-      <header className="clean-section pt-16 pb-12 flex flex-col items-center text-center transition-colors duration-500 overflow-hidden" style={{ backgroundColor: data.pageBgColor }}>
+      <header className="clean-section pt-16 pb-12 flex flex-col items-center text-center transition-all duration-500 overflow-hidden" style={{ backgroundColor: data.pageBgColor }}>
         <span className={`text-[10px] font-black uppercase tracking-[0.3em] mb-4 opacity-70 ${textColorClass}`}>{product?.category || 'Quality Wellness'}</span>
         <h1 className={`max-w-[95%] mx-auto mb-10 leading-[1.1] ${textColorClass}`}>{product?.name || data.title}</h1>
         
@@ -515,29 +515,103 @@ const CleanThemeContent: React.FC<{
           </div>
       )}
 
-      {/* 7. PRICE CARD */}
+      {/* 7. PRICE CARD (REDESIGNED: Modern Asymmetrical Layout) */}
       <div className="px-6 py-10 bg-white dark:bg-slate-950">
-          <div className="bg-slate-900 rounded-[2.5rem] p-8 shadow-2xl relative overflow-hidden text-left border border-slate-800">
-              <div className="relative z-10 space-y-8">
-                  <h3 className="text-[10px] font-black text-emerald-400 uppercase tracking-widest">Store Official Pricing</h3>
-                  <div className="space-y-6">
-                      <div className="flex justify-between items-end">
-                          <div>
-                            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Standard Unit</p>
-                            <p className="text-4xl font-black text-white">{data.currency} {product?.price?.toLocaleString()}</p>
+          <div className="bg-slate-900 rounded-[3rem] p-10 shadow-2xl relative overflow-hidden text-left border border-slate-800">
+              {/* Modern Glass Background Decor */}
+              <div className="absolute top-0 right-0 w-48 h-48 bg-emerald-500/20 rounded-full blur-3xl -mr-20 -mt-20"></div>
+              <div className="absolute bottom-0 left-0 w-32 h-32 bg-blue-500/10 rounded-full blur-2xl -ml-10 -mb-10"></div>
+              
+              <div className="relative z-10">
+                  <div className="flex flex-col gap-8">
+                      <div>
+                          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 mb-4">
+                              <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></div>
+                              <span className="text-[9px] font-black text-emerald-400 uppercase tracking-widest">Official Store Pricing</span>
+                          </div>
+                          
+                          <div className="flex flex-col gap-1">
+                            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em]">Standard Selection</p>
+                            <div className="flex items-baseline gap-2">
+                                <span className="text-emerald-500 text-lg font-black">{data.currency}</span>
+                                <span className="text-5xl font-black text-white tracking-tighter">{product?.price?.toLocaleString()}</span>
+                            </div>
                           </div>
                       </div>
+
                       {data.fullPackPrice > 0 && (
-                          <div className="p-5 bg-white/5 border border-white/10 rounded-3xl flex justify-between items-center">
-                              <div>
-                                <p className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest mb-1">Full Pack Box</p>
-                                <p className="text-2xl font-black text-white">{data.currency} {data.fullPackPrice.toLocaleString()}</p>
+                          <div className="flex items-center justify-between p-6 bg-white/5 border border-white/10 rounded-[2rem] hover:bg-white/10 transition-colors cursor-default">
+                              <div className="space-y-1">
+                                <p className="text-[10px] font-black text-emerald-400 uppercase tracking-widest">Exclusive Full Pack</p>
+                                <p className="text-3xl font-black text-white">{data.currency} {data.fullPackPrice.toLocaleString()}</p>
+                                <p className="text-[9px] text-slate-400 font-bold uppercase tracking-wider">Save more with our bulk case</p>
                               </div>
-                              <Package size={24} className="text-emerald-500 opacity-50" />
+                              <div className="p-4 bg-emerald-500/20 rounded-2xl">
+                                <Package size={32} className="text-emerald-500" />
+                              </div>
                           </div>
                       )}
+                      
+                      <button 
+                        onClick={onOpenCheckout} 
+                        className="w-full py-5 rounded-[1.5rem] font-black text-sm bg-emerald-500 text-slate-950 shadow-[0_15px_30px_-5px_rgba(16,185,129,0.4)] transition-all active:scale-95 hover:bg-emerald-400 uppercase tracking-[0.2em] flex items-center justify-center gap-2 group"
+                      >
+                        Checkout <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
+                      </button>
                   </div>
-                  <button onClick={onOpenCheckout} className="w-full py-5 rounded-2xl font-black text-sm bg-emerald-500 text-slate-900 shadow-xl transition-transform active:scale-95 uppercase tracking-widest">Complete Purchase</button>
+              </div>
+          </div>
+      </div>
+
+      {/* 8. WHY BUY FROM ME (Modern Asymmetrical Design) */}
+      <div className="px-6 py-6 mb-12 bg-white dark:bg-slate-950">
+          <div className="relative pt-12 pb-8 px-8 rounded-[3rem] bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 overflow-hidden">
+              <div className="absolute top-0 right-0 p-8 opacity-5">
+                  <Star size={120} strokeWidth={1} className="text-slate-900 dark:text-white" />
+              </div>
+
+              <div className="relative z-10 flex flex-col items-center">
+                  {/* Floating Avatar Interaction */}
+                  <div className="relative mb-8">
+                      <div className="w-32 h-32 rounded-3xl overflow-hidden border-4 border-white dark:border-slate-800 shadow-2xl rotate-3 transform group-hover:rotate-0 transition-transform">
+                          {data.personalBranding?.photoUrl ? (
+                              <img src={data.personalBranding.photoUrl} className="w-full h-full object-cover" alt="Mentor" />
+                          ) : (
+                              <div className="w-full h-full bg-emerald-100 flex items-center justify-center text-4xl font-black text-emerald-600">
+                                  {data.personalBranding?.rank?.charAt(0) || 'N'}
+                              </div>
+                          )}
+                      </div>
+                      <div className="absolute -bottom-3 -right-3 bg-emerald-500 text-white p-2.5 rounded-2xl shadow-xl border-4 border-white dark:border-slate-900">
+                          <Check size={20} strokeWidth={4} />
+                      </div>
+                  </div>
+
+                  <div className="text-center space-y-4 w-full">
+                      <div>
+                          <p className="text-[10px] font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-widest mb-1">Your Certified Mentor</p>
+                          <h3 className="text-2xl font-black text-slate-900 dark:text-white uppercase leading-none font-heading tracking-tight">{data.authorHandle || 'Official Partner'}</h3>
+                      </div>
+
+                      {/* Info Pills */}
+                      <div className="flex flex-wrap justify-center gap-2">
+                          <div className="px-4 py-2 bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 flex items-center gap-2 shadow-sm">
+                              <Award size={14} className="text-emerald-500" />
+                              <span className="text-[10px] font-black text-slate-700 dark:text-slate-200 uppercase">{data.personalBranding?.rank || 'FBO Member'}</span>
+                          </div>
+                          <div className="px-4 py-2 bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 flex items-center gap-2 shadow-sm">
+                              <CalendarDays size={14} className="text-blue-500" />
+                              <span className="text-[10px] font-black text-slate-700 dark:text-slate-200 uppercase">{data.personalBranding?.yearsExperience || '0'}+ Years Experience</span>
+                          </div>
+                      </div>
+
+                      <div className="relative px-4">
+                          <Quote size={20} className="absolute -top-2 -left-2 text-slate-200 dark:text-slate-700 opacity-50" />
+                          <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed font-medium italic">
+                              {data.personalBranding?.bio || "Committed to helping you achieve your wellness goals through nature's finest ingredients."}
+                          </p>
+                      </div>
+                  </div>
               </div>
           </div>
       </div>
@@ -559,7 +633,6 @@ const CheckoutView: React.FC<{ data: SalesPage; onClose: () => void }> = ({ data
   const [paymentStep, setPaymentStep] = useState<string | null>(null); 
   const [momoNumber, setMomoNumber] = useState('');
   
-  // Granular Customer Info
   const [customerInfo, setCustomerInfo] = useState({
     firstName: '',
     lastName: '',
@@ -572,20 +645,23 @@ const CheckoutView: React.FC<{ data: SalesPage; onClose: () => void }> = ({ data
     zip: ''
   });
 
-  // Mock Address Suggestions
   const [addressSuggestions, setAddressSuggestions] = useState<string[]>([]);
   const [showMapPicker, setShowMapPicker] = useState(false);
 
   const product = data.products[0];
   const unitPrice = packageType === 'full' ? (data.fullPackPrice || product?.price) : product?.price || 0;
-  const shipping = data.checkoutConfig.shipping.enabled ? (data.checkoutConfig.shipping.flatRate || 0) : 0;
+  
+  // Dynamic Shipping Logic
+  const threshold = data.checkoutConfig.shipping.freeShippingThreshold || 0;
+  const flatRate = data.checkoutConfig.shipping.flatRate || 0;
+  const shipping = (data.checkoutConfig.shipping.enabled && unitPrice >= threshold && threshold > 0) ? 0 : (data.checkoutConfig.shipping.enabled ? flatRate : 0);
+  
   const total = unitPrice + shipping;
   const iconColor = data.pageBgColor;
 
   const handleAddressSearch = (query: string) => {
     setCustomerInfo({ ...customerInfo, street: query });
     if (query.length > 2) {
-      // Simulate real search results
       const mocks = [
         `${query} Avenue, East Legon, Accra`,
         `${query} Road, Kumasi Central`,
@@ -609,21 +685,20 @@ const CheckoutView: React.FC<{ data: SalesPage; onClose: () => void }> = ({ data
     setAddressSuggestions([]);
   };
 
-  const handlePaymentSubmit = (method: string) => {
-      // Mandatory validation
+  const handlePaymentSelect = (method: string) => {
       const mandatory = ['firstName', 'lastName', 'phone', 'houseNo', 'street', 'city', 'state'];
       const isMissing = mandatory.some(key => !customerInfo[key as keyof typeof customerInfo]);
 
       if (isMissing) {
-          alert("Please fill in all mandatory delivery information marked with *.");
+          alert("Please complete the delivery information above before choosing a payment method.");
           return;
       }
 
       setSelectedPayment(method);
-      if (['momo', 'card', 'bank'].includes(method)) {
-          setPaymentStep(method);
-      } else if (method === 'cod') {
+      if (method === 'cod') {
           setPaymentStep('success');
+      } else {
+          setPaymentStep(method);
       }
   };
 
@@ -654,13 +729,13 @@ const CheckoutView: React.FC<{ data: SalesPage; onClose: () => void }> = ({ data
       );
   }
 
-  const INPUT_CLASS = "w-full p-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm outline-none focus:border-emerald-500 transition-all dark:text-white";
-  const LABEL_CLASS = "text-[10px] font-black uppercase text-slate-400 tracking-widest mb-1.5 block";
+  const INPUT_CLASS = "w-full p-4 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl text-sm font-bold outline-none focus:border-emerald-500 transition-all dark:text-white placeholder-slate-400";
+  const LABEL_CLASS = "text-[10px] font-black uppercase text-slate-400 tracking-[0.2em] mb-2 block";
 
   return (
-    <div className="flex flex-col h-full bg-white dark:bg-slate-950 relative">
+    <div className="flex flex-col h-full bg-white dark:bg-slate-950 relative overflow-hidden">
       
-      {/* Map Picker Simulation */}
+      {/* MAP PICKER */}
       {showMapPicker && (
           <div className="absolute inset-0 z-[900] bg-white dark:bg-slate-900 flex flex-col">
               <div className="flex items-center justify-between p-4 border-b border-slate-100 dark:border-slate-800">
@@ -672,15 +747,15 @@ const CheckoutView: React.FC<{ data: SalesPage; onClose: () => void }> = ({ data
                   <div className="absolute animate-bounce" style={{ color: iconColor }}>
                       <MapPin size={48} strokeWidth={3} />
                   </div>
-                  <div className="absolute bottom-10 left-6 right-6 bg-white/90 backdrop-blur-md p-4 rounded-2xl shadow-2xl dark:bg-slate-900/90 border border-white/20">
-                      <p className="text-xs font-bold text-slate-800 dark:text-white mb-2">Precise Location Detected</p>
-                      <p className="text-[10px] text-slate-500 truncate">East Legon, Boundary Rd., Accra, Ghana</p>
+                  <div className="absolute bottom-10 left-6 right-6 bg-white/90 backdrop-blur-md p-6 rounded-[2rem] shadow-2xl dark:bg-slate-900/90 border border-white/20">
+                      <p className="text-xs font-bold text-slate-800 dark:text-white mb-2">Location Found</p>
+                      <p className="text-[10px] text-slate-500 truncate mb-4">Boundary Rd., Accra, Ghana</p>
                       <button 
                         onClick={() => {
                             setCustomerInfo({...customerInfo, street: 'Boundary Rd.', city: 'Accra', state: 'Greater Accra'});
                             setShowMapPicker(false);
                         }} 
-                        className="w-full mt-3 py-3 rounded-xl bg-slate-900 text-white font-black text-[10px] uppercase tracking-widest"
+                        className="w-full py-4 rounded-xl bg-slate-900 text-white font-black text-[10px] uppercase tracking-widest"
                         style={{ backgroundColor: iconColor }}
                       >
                         Confirm Location
@@ -690,153 +765,153 @@ const CheckoutView: React.FC<{ data: SalesPage; onClose: () => void }> = ({ data
           </div>
       )}
 
-      {/* Payment Interaction Drawers */}
-      <div className={`absolute inset-x-0 bottom-0 z-[800] bg-white dark:bg-slate-900 rounded-t-[2.5rem] shadow-2xl transition-transform duration-500 ease-in-out border-t border-slate-100 dark:border-slate-800 ${paymentStep ? 'translate-y-0' : 'translate-y-full'}`}>
-          <div className="w-12 h-1 bg-slate-200 dark:bg-slate-700 rounded-full mx-auto mt-4 mb-2"></div>
-          <div className="p-8 pb-12">
+      {/* PAYMENT SUB-DRAWERS (Triggered when method is selected) */}
+      <div className={`absolute inset-x-0 bottom-0 z-[800] bg-white dark:bg-slate-900 rounded-t-[3rem] shadow-[0_-20px_50px_-20px_rgba(0,0,0,0.3)] transition-transform duration-500 ease-in-out border-t border-slate-100 dark:border-slate-800 ${paymentStep ? 'translate-y-0' : 'translate-y-full'}`}>
+          <div className="w-12 h-1 bg-slate-200 dark:bg-slate-700 rounded-full mx-auto mt-6 mb-2"></div>
+          <div className="p-10 pb-16">
               <div className="flex justify-between items-center mb-8">
-                  <h3 className="text-lg font-black text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-2">
-                      {paymentStep === 'momo' ? <Smartphone size={20} color={iconColor}/> : paymentStep === 'card' ? <CardIcon size={20} color={iconColor}/> : <Building2 size={20} color={iconColor}/>}
-                      {paymentStep === 'momo' ? 'Mobile Money' : paymentStep === 'card' ? 'Card Details' : 'Bank Transfer'}
+                  <h3 className="text-xl font-black text-slate-900 dark:text-white uppercase tracking-tighter flex items-center gap-3">
+                      {paymentStep === 'momo' ? <Smartphone size={24} color={iconColor}/> : paymentStep === 'card' ? <CardIcon size={24} color={iconColor}/> : <Building2 size={24} color={iconColor}/>}
+                      {paymentStep === 'momo' ? 'Mobile Money' : paymentStep === 'card' ? 'Secure Card Pay' : 'Bank Confirmation'}
                   </h3>
                   <button onClick={() => setPaymentStep(null)} className="p-2 bg-slate-100 dark:bg-slate-800 rounded-full"><X size={20} /></button>
               </div>
 
               {paymentStep === 'momo' && (
-                  <div className="space-y-6">
+                  <div className="space-y-8">
                       <div>
-                          <label className={LABEL_CLASS}>MoMo Number</label>
+                          <label className={LABEL_CLASS}>Enter MoMo Number</label>
                           <div className="relative">
                               <input 
                                 type="tel" 
                                 value={momoNumber}
                                 onChange={e => setMomoNumber(e.target.value)}
                                 placeholder="0XX XXX XXXX"
-                                className="w-full p-5 bg-slate-50 dark:bg-slate-800 border-2 border-slate-100 dark:border-slate-700 rounded-2xl outline-none focus:border-emerald-500 font-mono text-lg dark:text-white"
+                                className="w-full p-6 bg-slate-50 dark:bg-slate-800 border-2 border-slate-100 dark:border-slate-700 rounded-[1.5rem] outline-none focus:border-emerald-500 font-black text-xl dark:text-white placeholder-slate-300"
                               />
-                              <button onClick={handleConfirmAction} className="absolute right-3 top-3 p-3 text-white rounded-xl shadow-lg active:scale-90 transition-transform" style={{ backgroundColor: iconColor }}>
-                                  <Send size={20} />
+                              <button onClick={handleConfirmAction} className="absolute right-3 top-3 p-4 bg-emerald-500 text-white rounded-2xl shadow-xl active:scale-90 transition-transform flex items-center justify-center">
+                                  <Send size={24} />
                               </button>
                           </div>
                       </div>
-                      <p className="text-[10px] text-slate-400 italic">You will receive a prompt on your phone to authorize the payment.</p>
+                      <div className="flex items-center gap-3 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-2xl">
+                        <AlertCircle size={20} className="text-blue-500" />
+                        <p className="text-[10px] font-bold text-blue-700 dark:text-blue-300 uppercase tracking-wider leading-relaxed">Check your phone screen for the prompt to confirm.</p>
+                      </div>
                   </div>
               )}
 
               {paymentStep === 'card' && (
                   <div className="space-y-4">
-                      <div>
-                          <label className={LABEL_CLASS}>Card Number</label>
-                          <input type="text" placeholder="XXXX XXXX XXXX XXXX" className="w-full p-4 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl outline-none dark:text-white font-mono" />
-                      </div>
-                      <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-4">
                           <div>
-                              <label className={LABEL_CLASS}>Expiry</label>
-                              <input type="text" placeholder="MM/YY" className="w-full p-4 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl outline-none dark:text-white font-mono" />
+                              <label className={LABEL_CLASS}>Card Number</label>
+                              <input type="text" placeholder="XXXX XXXX XXXX XXXX" className={INPUT_CLASS} />
                           </div>
-                          <div>
-                              <label className={LABEL_CLASS}>CVV</label>
-                              <input type="text" placeholder="123" className="w-full p-4 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl outline-none dark:text-white font-mono" />
+                          <div className="grid grid-cols-2 gap-4">
+                              <div>
+                                  <label className={LABEL_CLASS}>Expiry</label>
+                                  <input type="text" placeholder="MM/YY" className={INPUT_CLASS} />
+                              </div>
+                              <div>
+                                  <label className={LABEL_CLASS}>CVV</label>
+                                  <input type="text" placeholder="123" className={INPUT_CLASS} />
+                              </div>
                           </div>
                       </div>
-                      <button onClick={handleConfirmAction} className="w-full py-5 text-white rounded-2xl font-black uppercase tracking-widest text-sm mt-4" style={{ backgroundColor: iconColor }}>
-                        Pay {data.currency} {total.toLocaleString()}
+                      <button onClick={handleConfirmAction} className="w-full py-5 text-white rounded-[1.5rem] font-black uppercase tracking-widest text-sm mt-6 shadow-xl" style={{ backgroundColor: iconColor }}>
+                        Verify & Pay {data.currency} {total.toLocaleString()}
                       </button>
                   </div>
               )}
 
               {paymentStep === 'bank' && (
-                  <div className="space-y-6">
-                      <div className="bg-slate-50 dark:bg-slate-800 p-5 rounded-2xl border border-slate-100 dark:border-slate-700 space-y-4">
-                          <div className="flex justify-between border-b border-slate-200 dark:border-slate-700 pb-2">
-                              <span className="text-[10px] font-bold text-slate-400 uppercase">Bank Name</span>
-                              <span className="text-sm font-black dark:text-white">EcoBank Ghana</span>
+                  <div className="space-y-6 text-center">
+                      <div className="bg-slate-50 dark:bg-slate-800 p-8 rounded-[2rem] border border-slate-100 dark:border-slate-700 space-y-4">
+                          <div className="flex justify-between border-b border-slate-200 dark:border-slate-700 pb-3">
+                              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Bank</span>
+                              <span className="text-sm font-black dark:text-white uppercase">Nexu Growth Bank</span>
                           </div>
-                          <div className="flex justify-between border-b border-slate-200 dark:border-slate-700 pb-2">
-                              <span className="text-[10px] font-bold text-slate-400 uppercase">Account Name</span>
-                              <span className="text-sm font-black dark:text-white">Nexu Growth Academy</span>
+                          <div className="flex justify-between border-b border-slate-200 dark:border-slate-700 pb-3">
+                              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">A/C Name</span>
+                              <span className="text-sm font-black dark:text-white uppercase">Nexu Academy Ltd</span>
                           </div>
-                          <div className="flex justify-between">
-                              <span className="text-[10px] font-bold text-slate-400 uppercase">Account Number</span>
-                              <span className="text-sm font-black font-mono dark:text-white">144100234567</span>
+                          <div className="flex justify-between pb-1">
+                              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Number</span>
+                              <span className="text-sm font-black font-mono dark:text-white">099100234567</span>
                           </div>
                       </div>
-                      <p className="text-[10px] text-slate-400 italic text-center px-4 leading-relaxed">Please make the transfer and tap the button below. Your order will be processed after confirmation.</p>
-                      <button onClick={handleConfirmAction} className="w-full py-5 text-white rounded-2xl font-black uppercase tracking-widest text-sm" style={{ backgroundColor: iconColor }}>
-                        I have made the transfer
+                      <button onClick={handleConfirmAction} className="w-full py-5 text-white rounded-[1.5rem] font-black uppercase tracking-widest text-sm shadow-xl" style={{ backgroundColor: iconColor }}>
+                        I've made the transfer
                       </button>
                   </div>
               )}
           </div>
       </div>
 
-      <div className="flex items-center px-6 py-6 border-b border-slate-100 dark:border-slate-800 shrink-0 bg-white dark:bg-slate-950 z-10">
+      <div className="flex items-center px-6 py-8 border-b border-slate-100 dark:border-slate-800 shrink-0 bg-white dark:bg-slate-950 z-10">
           <button onClick={onClose} className="p-2 -ml-2 text-slate-800 dark:text-white"><ChevronLeft size={28} strokeWidth={3} /></button>
           <h2 className="text-xl font-black text-slate-900 dark:text-white ml-2 uppercase tracking-tight font-heading">Secure Checkout</h2>
       </div>
       
-      <div className="flex-1 overflow-y-auto p-6 space-y-10 no-scrollbar">
+      <div className="flex-1 overflow-y-auto p-6 space-y-12 no-scrollbar">
           
-          {/* SECTION 1: CUSTOMER INFORMATION */}
-          <div className="space-y-4">
-              <h3 className="text-[10px] font-black uppercase text-slate-400 tracking-widest flex items-center gap-2">
-                  <User size={14} color={iconColor} strokeWidth={4} /> Delivery Information
+          {/* SECTION 1: CUSTOMER INFORMATION (PURELY VERTICAL) */}
+          <div className="space-y-6">
+              <h3 className="text-[10px] font-black uppercase text-slate-400 tracking-[0.3em] flex items-center gap-2">
+                  <User size={14} color={iconColor} strokeWidth={4} /> Delivery Destination
               </h3>
-              <div className="space-y-4 bg-slate-50/50 dark:bg-slate-900/50 p-4 rounded-3xl border border-slate-100 dark:border-slate-800">
-                  <div className="flex flex-col gap-3">
-                      <div>
-                          <label className={LABEL_CLASS}>First Name*</label>
-                          <input 
-                            type="text" 
-                            className={INPUT_CLASS} 
-                            placeholder="Jane"
-                            value={customerInfo.firstName}
-                            onChange={e => setCustomerInfo({...customerInfo, firstName: e.target.value})}
-                          />
-                      </div>
-                      <div>
-                          <label className={LABEL_CLASS}>Last Name*</label>
-                          <input 
-                            type="text" 
-                            className={INPUT_CLASS} 
-                            placeholder="Doe"
-                            value={customerInfo.lastName}
-                            onChange={e => setCustomerInfo({...customerInfo, lastName: e.target.value})}
-                          />
+              <div className="space-y-4">
+                  <div>
+                      <label className={LABEL_CLASS}>First Name*</label>
+                      <input 
+                        type="text" 
+                        className={INPUT_CLASS} 
+                        placeholder="Jane"
+                        value={customerInfo.firstName}
+                        onChange={e => setCustomerInfo({...customerInfo, firstName: e.target.value})}
+                      />
+                  </div>
+                  <div>
+                      <label className={LABEL_CLASS}>Last Name*</label>
+                      <input 
+                        type="text" 
+                        className={INPUT_CLASS} 
+                        placeholder="Doe"
+                        value={customerInfo.lastName}
+                        onChange={e => setCustomerInfo({...customerInfo, lastName: e.target.value})}
+                      />
+                  </div>
+                  <div>
+                      <label className={LABEL_CLASS}>Phone Number*</label>
+                      <div className="relative">
+                        <Smartphone size={16} color={iconColor} className="absolute left-4 top-4.5" />
+                        <input 
+                            type="tel" 
+                            className={INPUT_CLASS + " pl-12"} 
+                            placeholder="0XX XXX XXXX"
+                            value={customerInfo.phone}
+                            onChange={e => setCustomerInfo({...customerInfo, phone: e.target.value})}
+                        />
                       </div>
                   </div>
-                  <div className="flex flex-col gap-3">
-                      <div>
-                          <label className={LABEL_CLASS}>Phone Number*</label>
-                          <div className="relative">
-                            <Smartphone size={16} color={iconColor} className="absolute left-3 top-3.5" />
-                            <input 
-                                type="tel" 
-                                className={INPUT_CLASS + " pl-10"} 
-                                placeholder="0XX XXX XXXX"
-                                value={customerInfo.phone}
-                                onChange={e => setCustomerInfo({...customerInfo, phone: e.target.value})}
-                            />
-                          </div>
-                      </div>
-                      <div>
-                          <label className={LABEL_CLASS}>Email Address (Optional)</label>
-                          <div className="relative">
-                            <Mail size={16} color={iconColor} className="absolute left-3 top-3.5" />
-                            <input 
-                                type="email" 
-                                className={INPUT_CLASS + " pl-10"} 
-                                placeholder="jane@example.com"
-                                value={customerInfo.email}
-                                onChange={e => setCustomerInfo({...customerInfo, email: e.target.value})}
-                            />
-                          </div>
+                  <div>
+                      <label className={LABEL_CLASS}>Email (Optional)</label>
+                      <div className="relative">
+                        <Mail size={16} color={iconColor} className="absolute left-4 top-4.5" />
+                        <input 
+                            type="email" 
+                            className={INPUT_CLASS + " pl-12"} 
+                            placeholder="jane@example.com"
+                            value={customerInfo.email}
+                            onChange={e => setCustomerInfo({...customerInfo, email: e.target.value})}
+                        />
                       </div>
                   </div>
 
-                  <div className="h-px bg-slate-100 dark:bg-slate-700 my-2"></div>
+                  <div className="h-px bg-slate-100 dark:bg-slate-700 my-4"></div>
 
-                  <div className="flex flex-col gap-3">
+                  <div className="space-y-4">
                       <div>
                           <label className={LABEL_CLASS}>House / Flat No.*</label>
                           <input 
@@ -848,7 +923,7 @@ const CheckoutView: React.FC<{ data: SalesPage; onClose: () => void }> = ({ data
                           />
                       </div>
                       <div>
-                          <label className={LABEL_CLASS}>Postal Code</label>
+                          <label className={LABEL_CLASS}>Postal / Zip Code</label>
                           <input 
                             type="text" 
                             className={INPUT_CLASS} 
@@ -860,19 +935,19 @@ const CheckoutView: React.FC<{ data: SalesPage; onClose: () => void }> = ({ data
                       <div className="relative">
                           <label className={LABEL_CLASS}>Street Name / Area*</label>
                           <div className="relative">
-                              <Search size={16} color={iconColor} className="absolute left-3 top-3.5" />
+                              <Search size={16} color={iconColor} className="absolute left-4 top-4.5" />
                               <input 
                                 type="text" 
-                                className={INPUT_CLASS + " pl-10"} 
+                                className={INPUT_CLASS + " pl-12"} 
                                 placeholder="Start typing address..."
                                 value={customerInfo.street}
                                 onChange={e => handleAddressSearch(e.target.value)}
                               />
                               {addressSuggestions.length > 0 && (
-                                  <div className="absolute top-full left-0 right-0 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl mt-1 shadow-2xl z-50 max-h-40 overflow-y-auto">
+                                  <div className="absolute top-full left-0 right-0 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl mt-2 shadow-2xl z-50 max-h-40 overflow-y-auto">
                                       {addressSuggestions.map((s, i) => (
-                                          <div key={i} onClick={() => selectSuggestion(s)} className="p-3 text-[10px] hover:bg-slate-50 dark:hover:bg-slate-700 cursor-pointer flex items-center gap-2 border-b border-slate-50 dark:border-slate-700 last:border-0">
-                                              <Navigation size={12} color={iconColor}/>
+                                          <div key={i} onClick={() => selectSuggestion(s)} className="p-4 text-[11px] font-bold hover:bg-slate-50 dark:hover:bg-slate-700 cursor-pointer flex items-center gap-3 border-b border-slate-50 dark:border-slate-700 last:border-0">
+                                              <Navigation size={14} color={iconColor}/>
                                               <span className="truncate">{s}</span>
                                           </div>
                                       ))}
@@ -904,150 +979,154 @@ const CheckoutView: React.FC<{ data: SalesPage; onClose: () => void }> = ({ data
 
                   <button 
                     onClick={() => setShowMapPicker(true)}
-                    className="w-full mt-2 py-3.5 border-2 border-dashed rounded-xl flex items-center justify-center gap-2 text-[10px] font-black uppercase tracking-widest transition-colors hover:bg-slate-50 dark:hover:bg-slate-800"
+                    className="w-full mt-4 py-4 border-2 border-dashed rounded-2xl flex items-center justify-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] transition-all hover:bg-slate-50 dark:hover:bg-slate-800"
                     style={{ color: iconColor, borderColor: iconColor }}
                   >
-                      <MapIcon size={16} /> Pin exact location on Map
+                      <MapIcon size={16} /> Use My Precise Map Location
                   </button>
               </div>
           </div>
 
           {/* SECTION 2: OFFER SELECTION */}
           {data.fullPackPrice > 0 && (
-              <div className="space-y-4">
-                  <h3 className="text-[10px] font-black uppercase text-slate-400 tracking-widest flex items-center gap-2">
-                      <Tag size={14} color={iconColor} strokeWidth={4} /> Select Offer
+              <div className="space-y-6">
+                  <h3 className="text-[10px] font-black uppercase text-slate-400 tracking-[0.3em] flex items-center gap-2">
+                      <Tag size={14} color={iconColor} strokeWidth={4} /> Choose Your Package
                   </h3>
-                  <div className="flex flex-col gap-3">
+                  <div className="flex flex-col gap-4">
                       <div 
                           onClick={() => setPackageType('single')}
-                          className={`p-5 rounded-3xl border-2 flex items-center justify-between cursor-pointer transition-all ${packageType === 'single' ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20 shadow-sm' : 'border-slate-100 bg-slate-50 dark:bg-slate-800'}`}
+                          className={`p-6 rounded-[2rem] border-2 flex items-center justify-between cursor-pointer transition-all ${packageType === 'single' ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20 shadow-lg' : 'border-slate-100 bg-slate-50 dark:bg-slate-800'}`}
                       >
-                          <div className="flex items-center gap-3">
-                              <div className={`p-2 rounded-xl ${packageType === 'single' ? 'bg-emerald-500 text-white' : 'bg-slate-200 text-slate-500 dark:bg-slate-700'}`}><ShoppingCart size={18}/></div>
+                          <div className="flex items-center gap-4">
+                              <div className={`p-3 rounded-2xl ${packageType === 'single' ? 'bg-emerald-500 text-white' : 'bg-slate-200 text-slate-500 dark:bg-slate-700'}`}><ShoppingCart size={22}/></div>
                               <div>
-                                  <p className="font-black text-sm text-slate-900 dark:text-white">Single Unit</p>
-                                  <p className="text-xs text-slate-500">{data.currency} {product?.price.toLocaleString()}</p>
+                                  <p className="font-black text-sm text-slate-900 dark:text-white uppercase tracking-tight">Standard Unit</p>
+                                  <p className="text-xs text-slate-500 font-bold">{data.currency} {product?.price.toLocaleString()}</p>
                               </div>
                           </div>
-                          <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${packageType === 'single' ? 'border-emerald-500 bg-emerald-500' : 'border-slate-200'}`}>
-                              {packageType === 'single' && <Check size={14} className="text-white" strokeWidth={4} />}
+                          <div className={`w-7 h-7 rounded-full border-2 flex items-center justify-center ${packageType === 'single' ? 'border-emerald-500 bg-emerald-500 shadow-md shadow-emerald-500/20' : 'border-slate-200'}`}>
+                              {packageType === 'single' && <Check size={16} className="text-white" strokeWidth={4} />}
                           </div>
                       </div>
 
                       <div 
                           onClick={() => setPackageType('full')}
-                          className={`p-5 rounded-3xl border-2 flex items-center justify-between cursor-pointer transition-all ${packageType === 'full' ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20 shadow-sm' : 'border-slate-100 bg-slate-50 dark:bg-slate-800'}`}
+                          className={`p-6 rounded-[2rem] border-2 flex items-center justify-between cursor-pointer transition-all ${packageType === 'full' ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20 shadow-lg' : 'border-slate-100 bg-slate-50 dark:bg-slate-800'}`}
                       >
-                          <div className="flex items-center gap-3">
-                              <div className={`p-2 rounded-xl ${packageType === 'full' ? 'bg-emerald-500 text-white' : 'bg-slate-200 text-slate-500 dark:bg-slate-700'}`}><Package size={18}/></div>
+                          <div className="flex items-center gap-4">
+                              <div className={`p-3 rounded-2xl ${packageType === 'full' ? 'bg-emerald-500 text-white' : 'bg-slate-200 text-slate-500 dark:bg-slate-700'}`}><Package size={22}/></div>
                               <div>
-                                  <p className="font-black text-sm text-slate-900 dark:text-white">Full Pack Case</p>
-                                  <p className="text-xs text-slate-500">{data.currency} {data.fullPackPrice.toLocaleString()}</p>
+                                  <p className="font-black text-sm text-slate-900 dark:text-white uppercase tracking-tight">Full Case Pack</p>
+                                  <p className="text-xs text-slate-500 font-bold">{data.currency} {data.fullPackPrice.toLocaleString()}</p>
                               </div>
                           </div>
-                          <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${packageType === 'full' ? 'border-emerald-500 bg-emerald-500' : 'border-slate-200'}`}>
-                              {packageType === 'full' && <Check size={14} className="text-white" strokeWidth={4} />}
+                          <div className={`w-7 h-7 rounded-full border-2 flex items-center justify-center ${packageType === 'full' ? 'border-emerald-500 bg-emerald-500 shadow-md shadow-emerald-500/20' : 'border-slate-200'}`}>
+                              {packageType === 'full' && <Check size={16} className="text-white" strokeWidth={4} />}
                           </div>
                       </div>
                   </div>
               </div>
           )}
 
-          {/* SECTION 3: ITEM BREAKDOWN */}
-          <div className="space-y-4">
-            <h3 className="text-[10px] font-black uppercase text-slate-400 tracking-widest flex items-center gap-2">
-                <LayoutGrid size={14} color={iconColor} strokeWidth={4} /> Order Summary
+          {/* SECTION 3: ORDER SUMMARY (WITH THRESHOLD LOGIC) */}
+          <div className="space-y-6">
+            <h3 className="text-[10px] font-black uppercase text-slate-400 tracking-[0.3em] flex items-center gap-2">
+                <LayoutGrid size={14} color={iconColor} strokeWidth={4} /> Checkout Summary
             </h3>
-            <div className="bg-slate-50 dark:bg-slate-800 rounded-3xl p-6 border border-slate-100 dark:border-slate-700 space-y-4">
-                <div className="flex justify-between items-center pb-4 border-b border-slate-200 dark:border-slate-700">
-                    <div className="flex gap-3 items-center">
-                        <img src={product?.images[0]} className="w-12 h-12 object-contain bg-white rounded-lg border border-slate-100 p-1" />
+            <div className="bg-slate-50 dark:bg-slate-800 rounded-[2.5rem] p-8 border border-slate-100 dark:border-slate-700 space-y-6 shadow-sm">
+                <div className="flex justify-between items-center pb-6 border-b border-slate-200 dark:border-slate-700">
+                    <div className="flex gap-4 items-center">
+                        <img src={product?.images[0]} className="w-16 h-16 object-contain bg-white rounded-2xl border border-slate-100 p-2 shadow-sm" />
                         <div>
-                            <p className="text-xs font-black text-slate-900 dark:text-white uppercase truncate max-w-[150px]">{product?.name}</p>
-                            <p className="text-[10px] text-slate-500 font-bold uppercase">{packageType === 'full' ? 'Full Pack' : 'Single Unit'}</p>
+                            <p className="text-xs font-black text-slate-900 dark:text-white uppercase truncate max-w-[120px] tracking-tight">{product?.name}</p>
+                            <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest">{packageType === 'full' ? 'Bulk Case' : 'Individual'}</p>
                         </div>
                     </div>
-                    <p className="text-sm font-black dark:text-white">{data.currency} {unitPrice.toLocaleString()}</p>
+                    <p className="text-lg font-black text-slate-900 dark:text-white">{data.currency} {unitPrice.toLocaleString()}</p>
                 </div>
-                <div className="space-y-2">
-                    <div className="flex justify-between text-xs">
-                        <span className="font-bold text-slate-500 uppercase tracking-widest">Subtotal</span>
-                        <span className="font-bold dark:text-slate-300">{data.currency} {unitPrice.toLocaleString()}</span>
+                <div className="space-y-3">
+                    <div className="flex justify-between text-xs font-black">
+                        <span className="text-slate-400 uppercase tracking-widest">Subtotal</span>
+                        <span className="text-slate-700 dark:text-slate-300">{data.currency} {unitPrice.toLocaleString()}</span>
                     </div>
-                    <div className="flex justify-between text-xs">
-                        <span className="font-bold text-slate-500 uppercase tracking-widest">Shipping</span>
-                        <span className="font-bold text-emerald-600">{shipping === 0 ? 'FREE' : `${data.currency} ${shipping}`}</span>
+                    <div className="flex justify-between text-xs font-black">
+                        <span className="text-slate-400 uppercase tracking-widest">Delivery</span>
+                        <span className={`uppercase ${shipping === 0 ? 'text-emerald-500' : 'text-slate-700 dark:text-slate-300'}`}>{shipping === 0 ? 'FREE' : `${data.currency} ${shipping}`}</span>
                     </div>
+                    
+                    {/* Free Shipping Alert */}
                     {data.checkoutConfig.shipping.freeShippingThreshold ? (
-                        <p className="text-[10px] text-slate-400 italic">
-                            {unitPrice >= data.checkoutConfig.shipping.freeShippingThreshold 
-                                ? '🎉 You unlocked FREE shipping!' 
-                                : `Add ${data.currency} ${(data.checkoutConfig.shipping.freeShippingThreshold - unitPrice).toLocaleString()} more for FREE shipping.`}
-                        </p>
+                        <div className={`p-4 rounded-2xl text-[10px] font-black uppercase tracking-wider text-center ${unitPrice >= threshold ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30' : 'bg-blue-50 text-blue-700 dark:bg-blue-900/20'}`}>
+                            {unitPrice >= threshold 
+                                ? '🎉 Free Delivery Unlocked!' 
+                                : `Add ${data.currency} ${(threshold - unitPrice).toLocaleString()} more for FREE Delivery`}
+                        </div>
                     ) : null}
-                    <div className="flex justify-between pt-2 border-t border-slate-200 dark:border-slate-700 items-end">
-                        <span className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-tighter">Grand Total</span>
-                        <span className="text-xl font-black text-emerald-600">{data.currency} {total.toLocaleString()}</span>
+
+                    <div className="flex justify-between pt-6 border-t border-slate-200 dark:border-slate-700 items-end">
+                        <span className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-[0.2em]">Total Amount</span>
+                        <span className="text-3xl font-black text-emerald-500 tracking-tighter">{data.currency} {total.toLocaleString()}</span>
                     </div>
                 </div>
             </div>
           </div>
 
-          {/* SECTION 4: PAYMENT METHODS */}
-          <div className="space-y-4 pb-10">
-              <h3 className="text-[10px] font-black uppercase text-slate-400 tracking-widest flex items-center gap-2">
-                  <CreditCard size={14} color={iconColor} strokeWidth={4} /> Payment Method
+          {/* SECTION 4: PAYMENT OPTIONS */}
+          <div className="space-y-6 pb-20">
+              <h3 className="text-[10px] font-black uppercase text-slate-400 tracking-[0.3em] flex items-center gap-2">
+                  <CreditCard size={14} color={iconColor} strokeWidth={4} /> Payment Destination
               </h3>
-              <div className="flex flex-col gap-2">
+              <div className="flex flex-col gap-3">
                   {data.checkoutConfig.paymentMethods.mobileMoney && (
-                      <button onClick={() => setSelectedPayment('momo')} className={`p-5 rounded-3xl border-2 flex items-center justify-between transition-all ${selectedPayment === 'momo' ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20' : 'border-slate-100 bg-white dark:bg-slate-800'}`}>
-                          <div className="flex items-center gap-3">
-                              <Smartphone size={20} color={iconColor}/>
-                              <span className="font-bold text-sm text-slate-800 dark:text-white">Mobile Money</span>
+                      <button onClick={() => handlePaymentSelect('momo')} className={`p-6 rounded-[2rem] border-2 flex items-center justify-between transition-all ${selectedPayment === 'momo' ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20' : 'border-slate-100 bg-white dark:bg-slate-800'}`}>
+                          <div className="flex items-center gap-4">
+                              <Smartphone size={24} className="text-yellow-600"/>
+                              <span className="font-black text-sm text-slate-800 dark:text-white uppercase tracking-tight">Mobile Money</span>
                           </div>
-                          <div className={`w-5 h-5 rounded-full border-2 ${selectedPayment === 'momo' ? 'border-emerald-500 bg-emerald-500' : 'border-slate-200'}`} />
+                          <div className={`w-6 h-6 rounded-full border-2 ${selectedPayment === 'momo' ? 'border-emerald-500 bg-emerald-500 shadow-md' : 'border-slate-200'}`} />
                       </button>
                   )}
                   {data.checkoutConfig.paymentMethods.card && (
-                      <button onClick={() => setSelectedPayment('card')} className={`p-5 rounded-3xl border-2 flex items-center justify-between transition-all ${selectedPayment === 'card' ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20' : 'border-slate-100 bg-white dark:bg-slate-800'}`}>
-                          <div className="flex items-center gap-3">
-                              <CardIcon size={20} color={iconColor}/>
-                              <span className="font-bold text-sm text-slate-800 dark:text-white">Credit / Debit Card</span>
+                      <button onClick={() => handlePaymentSelect('card')} className={`p-6 rounded-[2rem] border-2 flex items-center justify-between transition-all ${selectedPayment === 'card' ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20' : 'border-slate-100 bg-white dark:bg-slate-800'}`}>
+                          <div className="flex items-center gap-4">
+                              <CardIcon size={24} className="text-indigo-600"/>
+                              <span className="font-black text-sm text-slate-800 dark:text-white uppercase tracking-tight">Credit / Debit Card</span>
                           </div>
-                          <div className={`w-5 h-5 rounded-full border-2 ${selectedPayment === 'card' ? 'border-emerald-500 bg-emerald-500' : 'border-slate-200'}`} />
+                          <div className={`w-6 h-6 rounded-full border-2 ${selectedPayment === 'card' ? 'border-emerald-500 bg-emerald-500 shadow-md' : 'border-slate-200'}`} />
                       </button>
                   )}
                   {data.checkoutConfig.paymentMethods.bankTransfer && (
-                      <button onClick={() => setSelectedPayment('bank')} className={`p-5 rounded-3xl border-2 flex items-center justify-between transition-all ${selectedPayment === 'bank' ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20' : 'border-slate-100 bg-white dark:bg-slate-800'}`}>
-                          <div className="flex items-center gap-3">
-                              <Building2 size={20} color={iconColor}/>
-                              <span className="font-bold text-sm text-slate-800 dark:text-white">Bank Transfer</span>
+                      <button onClick={() => handlePaymentSelect('bank')} className={`p-6 rounded-[2rem] border-2 flex items-center justify-between transition-all ${selectedPayment === 'bank' ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20' : 'border-slate-100 bg-white dark:bg-slate-800'}`}>
+                          <div className="flex items-center gap-4">
+                              <Building2 size={24} className="text-blue-600"/>
+                              <span className="font-black text-sm text-slate-800 dark:text-white uppercase tracking-tight">Direct Bank Transfer</span>
                           </div>
-                          <div className={`w-5 h-5 rounded-full border-2 ${selectedPayment === 'bank' ? 'border-emerald-500 bg-emerald-500' : 'border-slate-200'}`} />
+                          <div className={`w-6 h-6 rounded-full border-2 ${selectedPayment === 'bank' ? 'border-emerald-500 bg-emerald-500 shadow-md' : 'border-slate-200'}`} />
                       </button>
                   )}
                   {data.checkoutConfig.paymentMethods.cashOnDelivery && (
-                      <button onClick={() => setSelectedPayment('cod')} className={`p-5 rounded-3xl border-2 flex items-center justify-between transition-all ${selectedPayment === 'cod' ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20' : 'border-slate-100 bg-white dark:bg-slate-800'}`}>
-                          <div className="flex items-center gap-3">
-                              <Wallet size={20} color={iconColor}/>
-                              <span className="font-bold text-sm text-slate-800 dark:text-white">Cash on Delivery</span>
+                      <button onClick={() => handlePaymentSelect('cod')} className={`p-6 rounded-[2rem] border-2 flex items-center justify-between transition-all ${selectedPayment === 'cod' ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20' : 'border-slate-100 bg-white dark:bg-slate-800'}`}>
+                          <div className="flex items-center gap-4">
+                              <Wallet size={24} className="text-green-600"/>
+                              <span className="font-black text-sm text-slate-800 dark:text-white uppercase tracking-tight">Cash on Delivery</span>
                           </div>
-                          <div className={`w-5 h-5 rounded-full border-2 ${selectedPayment === 'cod' ? 'border-emerald-500 bg-emerald-500' : 'border-slate-200'}`} />
+                          <div className={`w-6 h-6 rounded-full border-2 ${selectedPayment === 'cod' ? 'border-emerald-500 bg-emerald-500 shadow-md' : 'border-slate-200'}`} />
                       </button>
                   )}
               </div>
           </div>
       </div>
 
-      <div className="p-8 border-t border-slate-100 dark:border-slate-800 shrink-0 bg-slate-50 dark:bg-slate-900/30">
+      {/* FINAL STICKY CTA */}
+      <div className="p-8 border-t border-slate-100 dark:border-slate-800 shrink-0 bg-white dark:bg-slate-900 z-10">
           <button 
               disabled={!selectedPayment} 
-              onClick={() => selectedPayment && handlePaymentSubmit(selectedPayment)}
-              className="w-full py-5 rounded-2xl font-black text-sm bg-slate-900 text-white uppercase tracking-widest shadow-xl disabled:opacity-30 transition-all active:scale-95 dark:bg-emerald-600"
+              onClick={() => selectedPayment && handlePaymentSelect(selectedPayment)}
+              className="w-full py-5 rounded-2xl font-black text-sm bg-slate-900 text-white uppercase tracking-widest shadow-2xl disabled:opacity-30 transition-all active:scale-95 dark:bg-emerald-600 flex items-center justify-center gap-2"
               style={selectedPayment ? { backgroundColor: iconColor } : {}}
           >
-              Place Order Now
+              Complete Order Now <ArrowRight size={18} />
           </button>
       </div>
     </div>

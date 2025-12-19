@@ -42,7 +42,7 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
   const sidebarRef = useRef<HTMLDivElement>(null);
 
   const isActive = (path: string) => location.pathname === path;
-  const isAdminOrSuper = currentUser.role === UserRole.ADMIN || currentUser.role === UserRole.SUPER_ADMIN;
+  const isAdminOrSuper = currentUser.role === UserRole.SUPER_ADMIN || currentUser.role === UserRole.ADMIN;
   const canBuildCourses = isAdminOrSuper || currentUser.role === UserRole.SPONSOR;
   const unreadCount = notifications.filter(n => !n.isRead).length;
 
@@ -96,6 +96,9 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
       e.stopPropagation();
       setIsSidebarOpen(!isSidebarOpen);
   }
+
+  // --- UI RULE: Hide default header on builder pages which have custom toolbars ---
+  const hideDefaultHeader = location.pathname.startsWith('/sales-builder') || location.pathname.startsWith('/builder');
 
   const NavItem = ({ to, label, icon: Icon, active, onClick }: { to: string, label: string, icon: any, active: boolean, onClick?: () => void }) => (
     <Link
@@ -219,7 +222,7 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
       </div>
 
       <div className="flex-1 flex flex-col h-full overflow-hidden relative">
-        <header className="h-16 md:h-20 bg-white dark:bg-slate-900 items-center justify-between px-4 md:px-8 shrink-0 z-40 relative shadow-md flex transition-all duration-300">
+        <header className={`${hideDefaultHeader ? 'hidden' : 'flex'} h-16 md:h-20 bg-white dark:bg-slate-900 items-center justify-between px-4 md:px-8 shrink-0 z-40 relative shadow-md transition-all duration-300`}>
             <div className="flex items-center gap-4">
                 <button 
                     onClick={toggleSidebar}

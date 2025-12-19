@@ -431,9 +431,6 @@ const CommunityPortal: React.FC<CommunityPortalProps> = ({
               {/* Custom Header */}
               <div className="flex justify-between items-center px-4 py-3 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 shrink-0">
                    <div className="flex items-center gap-3">
-                       <button onClick={() => setIsSidebarOpen(true)} className="p-1 text-slate-800 dark:text-slate-200 hover:bg-slate-100 rounded-lg">
-                          <LayoutGrid size={24} />
-                       </button>
                        <h1 className="text-2xl font-bold font-heading text-slate-900 dark:text-white tracking-tight">ForYou</h1>
                    </div>
                    <div className="flex items-center gap-4">
@@ -535,7 +532,7 @@ const CommunityPortal: React.FC<CommunityPortalProps> = ({
       <div className={`
           fixed inset-0 z-[150] bg-white border-r border-slate-200 flex flex-col shadow-2xl transition-transform duration-300 ease-in-out
           md:translate-x-0 md:static md:z-0 md:shadow-none md:border-0 md:bg-transparent md:w-64 md:h-[calc(100vh-6rem)] md:sticky md:top-4 dark:bg-slate-900 dark:border-slate-800
-          ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}
+          ${isSidebarOpen ? 'translate-x-0' : '-translate-x-[110%]'}
       `}>
         {/* NEW: Custom Mobile Sidebar Header */}
         <div className="p-4 border-b border-slate-100 md:hidden flex items-center gap-3 bg-white dark:bg-slate-900 dark:border-slate-800">

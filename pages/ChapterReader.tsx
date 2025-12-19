@@ -80,9 +80,7 @@ const ChapterReader: React.FC = () => {
              <ArrowLeft size={20} />
            </button>
            <span className="font-bold text-slate-800 truncate w-48 text-center">{module.title}</span>
-           <button className="p-2 -mr-2 text-slate-500">
-             <Menu size={20} />
-           </button>
+           <div className="w-10"></div> {/* Placeholder to keep title centered since Menu is removed */}
         </header>
 
         <div className="flex-1 overflow-y-auto">

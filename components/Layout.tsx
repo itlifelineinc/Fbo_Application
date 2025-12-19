@@ -226,13 +226,13 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
             <div className="flex items-center gap-4">
                 <button 
                     onClick={toggleSidebar}
-                    className="p-2.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-900 dark:text-white transition-all active:scale-95"
+                    className="hidden md:flex p-2.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-900 dark:text-white transition-all active:scale-95"
                 >
                     <Menu size={28} strokeWidth={3} />
                 </button>
                 
                 <div className="md:hidden">
-                    <Logo className="w-8 h-8" showText={false} />
+                    <Logo className="w-10 h-10" showText={false} />
                 </div>
 
                 <div className="flex flex-col">
@@ -282,25 +282,16 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
                 className={`
                     pointer-events-auto transition-all duration-500 cubic-bezier(0.34, 1.56, 0.64, 1) shadow-2xl backdrop-blur-2xl
                     ${isDockExpanded 
-                        ? 'w-[90%] max-w-sm bg-white/95 dark:bg-slate-900/95 border border-slate-200/50 dark:border-slate-700/50 rounded-3xl p-3 translate-y-0 opacity-100' 
+                        ? 'w-[80%] max-w-sm bg-white/95 dark:bg-slate-900/95 border border-slate-200/50 dark:border-slate-700/50 rounded-3xl p-3 translate-y-0 opacity-100' 
                         : 'w-14 h-3 bg-slate-400/30 dark:bg-slate-500/30 rounded-full cursor-pointer opacity-60 hover:opacity-100 translate-y-4 mb-2'
                     }
                 `}
             >
                 {isDockExpanded ? (
-                    <div className="flex justify-between items-center w-full px-2">
+                    <div className="flex justify-around items-center w-full px-2">
                         <DockItem to="/dashboard" icon={<Home size={22} strokeWidth={3} />} label="Home" active={isActive('/dashboard')} onClick={resetDockTimer} />
                         <DockItem to="/classroom" icon={<BookOpen size={22} strokeWidth={3} />} label="Learn" active={isActive('/classroom') || location.pathname.startsWith('/training')} onClick={resetDockTimer} />
                         <DockItem to="/chat" icon={<MessageCircle size={22} strokeWidth={3} />} label="Chat" active={isActive('/chat')} onClick={resetDockTimer} />
-                        <button 
-                            onClick={(e) => { setIsSidebarOpen(true); resetDockTimer(); }}
-                            className="flex flex-col items-center gap-1 min-w-[56px] text-slate-400"
-                        >
-                            <div className="p-2 rounded-2xl transition-all hover:bg-slate-100 dark:hover:bg-slate-800">
-                                <Menu size={22} strokeWidth={3} />
-                            </div>
-                            <span className="text-[9px] font-bold">Menu</span>
-                        </button>
                     </div>
                 ) : (
                     <div className="w-full h-full flex items-center justify-center gap-1">

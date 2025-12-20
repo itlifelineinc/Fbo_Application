@@ -143,9 +143,9 @@ const StudentProfile: React.FC<StudentProfileProps> = ({ students, courses, curr
   return (
     <div className="h-full flex flex-col bg-white dark:bg-[#0f0f0f] overflow-y-auto no-scrollbar animate-fade-in relative">
       
-      {/* 1. CHANNEL BANNER - Centered Frame on Desktop */}
-      <div className="w-full bg-slate-100 dark:bg-[#181818] shrink-0">
-        <div className="max-w-[1284px] mx-auto relative w-full h-[160px] md:h-[260px] bg-slate-200 dark:bg-[#272727] overflow-hidden group">
+      {/* 1. CHANNEL BANNER - Centered Frame on Desktop with Rounded Corners */}
+      <div className="w-full bg-slate-100 dark:bg-[#181818] shrink-0 md:pt-4">
+        <div className="max-w-[1284px] mx-auto relative w-full h-[160px] md:h-[260px] bg-slate-200 dark:bg-[#272727] overflow-hidden group md:rounded-2xl shadow-sm">
             {student.bannerUrl ? (
                 <img 
                   src={student.bannerUrl} 
@@ -289,19 +289,19 @@ const StudentProfile: React.FC<StudentProfileProps> = ({ students, courses, curr
                     </div>
                 )}
 
-                {/* Action Buttons (YouTube Style) */}
-                <div className="flex flex-wrap gap-2">
+                {/* Action Buttons (YouTube Style) - Horizontal on Mobile */}
+                <div className="flex flex-row flex-nowrap gap-2">
                     {isOwnProfile ? (
                         <>
-                            <button onClick={() => setActiveTab('Settings')} className="bg-slate-100 hover:bg-slate-200 text-slate-800 px-4 md:px-5 py-2 rounded-full font-bold text-xs md:text-sm transition-colors dark:bg-[#272727] dark:hover:bg-[#3f3f3f] dark:text-[#f1f1f1]">
+                            <button onClick={() => setActiveTab('Settings')} className="bg-slate-100 hover:bg-slate-200 text-slate-800 px-3 md:px-5 py-2 rounded-full font-bold text-[10px] sm:text-xs md:text-sm transition-colors dark:bg-[#272727] dark:hover:bg-[#3f3f3f] dark:text-[#f1f1f1] whitespace-nowrap">
                                 Customize channel
                             </button>
-                            <button onClick={() => setActiveTab('Courses')} className="bg-slate-100 hover:bg-slate-200 text-slate-800 px-4 md:px-5 py-2 rounded-full font-bold text-xs md:text-sm transition-colors dark:bg-[#272727] dark:hover:bg-[#3f3f3f] dark:text-[#f1f1f1]">
+                            <button onClick={() => setActiveTab('Courses')} className="bg-slate-100 hover:bg-slate-200 text-slate-800 px-3 md:px-5 py-2 rounded-full font-bold text-[10px] sm:text-xs md:text-sm transition-colors dark:bg-[#272727] dark:hover:bg-[#3f3f3f] dark:text-[#f1f1f1] whitespace-nowrap">
                                 Manage courses
                             </button>
                         </>
                     ) : (
-                        <button className="bg-slate-900 text-white px-6 py-2.5 rounded-full font-bold text-sm hover:opacity-90 transition-opacity dark:bg-[#f1f1f1] dark:text-[#0f0f0f]">
+                        <button className="bg-slate-900 text-white px-6 py-2.5 rounded-full font-bold text-xs md:text-sm hover:opacity-90 transition-opacity dark:bg-[#f1f1f1] dark:text-[#0f0f0f]">
                             Connect
                         </button>
                     )}
@@ -320,7 +320,7 @@ const StudentProfile: React.FC<StudentProfileProps> = ({ students, courses, curr
           )}
       </div>
 
-      {/* 3. CHANNEL TABS */}
+      {/* 3. CHANNEL TABS - Search icon removed */}
       <div className="max-w-[1284px] mx-auto w-full border-b border-slate-100 dark:border-white/10 shrink-0">
           <div className="flex items-center gap-1 md:gap-4 px-4 overflow-x-auto no-scrollbar">
               {TABS.map(tab => (
@@ -340,9 +340,6 @@ const StudentProfile: React.FC<StudentProfileProps> = ({ students, courses, curr
                       )}
                   </button>
               ))}
-              <div className="ml-auto flex items-center px-4">
-                  <button className="p-2 text-slate-500 dark:text-[#f1f1f1]"><Search size={20}/></button>
-              </div>
           </div>
       </div>
 
@@ -421,113 +418,117 @@ const StudentProfile: React.FC<StudentProfileProps> = ({ students, courses, curr
           )}
 
           {activeTab === 'Settings' && (
-              <div className="max-w-2xl space-y-12 animate-fade-in pb-10">
-                  {/* Basic Info Editing */}
-                  {isOwnProfile && (
-                      <section className="space-y-6">
-                           <div className="flex items-center gap-2 border-b border-slate-100 dark:border-white/10 pb-2">
-                              <User size={18} className="text-emerald-500" />
-                              <h3 className="font-black dark:text-white uppercase text-sm tracking-widest">Channel Basics</h3>
-                          </div>
-                          
-                          <div className="space-y-5">
-                              <div>
-                                  <label className="block text-xs font-bold text-slate-500 uppercase mb-2 ml-1">Channel Name</label>
-                                  <input 
-                                    type="text"
-                                    value={editName}
-                                    onChange={(e) => setEditName(e.target.value)}
-                                    className="w-full bg-slate-50 dark:bg-[#1f1f1f] border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-emerald-500 text-slate-900 dark:text-white font-medium"
-                                  />
-                                  <p className="text-[10px] text-slate-400 mt-1 ml-1">Limit: Once every 14 days.</p>
+              <div className="w-full animate-fade-in pb-10">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-12">
+                      {/* Section: Channel Basics */}
+                      {isOwnProfile && (
+                          <section className="space-y-6">
+                              <div className="flex items-center gap-2 border-b border-slate-100 dark:border-white/10 pb-2">
+                                  <User size={18} className="text-emerald-500" />
+                                  <h3 className="font-black dark:text-white uppercase text-sm tracking-widest">Channel Basics</h3>
                               </div>
-
-                              <div>
-                                  <label className="block text-xs font-bold text-slate-500 uppercase mb-2 ml-1">Channel Handle</label>
-                                  <div className="relative">
+                              
+                              <div className="space-y-5">
+                                  <div>
+                                      <label className="block text-xs font-bold text-slate-500 uppercase mb-2 ml-1">Channel Name</label>
                                       <input 
                                         type="text"
-                                        value={editHandle}
-                                        onChange={(e) => setEditHandle(e.target.value)}
-                                        className={`w-full bg-slate-50 dark:bg-[#1f1f1f] border rounded-xl px-4 py-3 outline-none focus:ring-2 font-mono text-sm ${handleStatus === 'TAKEN' ? 'border-red-500 focus:ring-red-200 text-red-600' : 'border-slate-200 dark:border-slate-800 focus:ring-emerald-500 text-slate-900 dark:text-white'}`}
+                                        value={editName}
+                                        onChange={(e) => setEditName(e.target.value)}
+                                        className="w-full bg-slate-50 dark:bg-[#1f1f1f] border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-emerald-500 text-slate-900 dark:text-white font-medium"
                                       />
-                                      <div className="absolute right-3 top-3.5">
-                                          {handleStatus === 'CHECKING' && <Loader2 className="animate-spin text-slate-400" size={16} />}
-                                          {handleStatus === 'AVAILABLE' && <Check size={16} className="text-emerald-500" />}
-                                          {handleStatus === 'TAKEN' && <X size={16} className="text-red-500" />}
-                                      </div>
+                                      <p className="text-[10px] text-slate-400 mt-1 ml-1">Limit: Once every 14 days.</p>
                                   </div>
-                                  {handleStatus === 'TAKEN' && <p className="text-[10px] text-red-500 mt-1 ml-1 font-bold">This handle is already taken.</p>}
-                                  <p className="text-[10px] text-slate-400 mt-1 ml-1">Limit: Once every 2 months. Changes cascade to your team.</p>
+
+                                  <div>
+                                      <label className="block text-xs font-bold text-slate-500 uppercase mb-2 ml-1">Channel Handle</label>
+                                      <div className="relative">
+                                          <input 
+                                            type="text"
+                                            value={editHandle}
+                                            onChange={(e) => setEditHandle(e.target.value)}
+                                            className={`w-full bg-slate-50 dark:bg-[#1f1f1f] border rounded-xl px-4 py-3 outline-none focus:ring-2 font-mono text-sm ${handleStatus === 'TAKEN' ? 'border-red-500 focus:ring-red-200 text-red-600' : 'border-slate-200 dark:border-slate-800 focus:ring-emerald-500 text-slate-900 dark:text-white'}`}
+                                          />
+                                          <div className="absolute right-3 top-3.5">
+                                              {handleStatus === 'CHECKING' && <Loader2 className="animate-spin text-slate-400" size={16} />}
+                                              {handleStatus === 'AVAILABLE' && <Check size={16} className="text-emerald-500" />}
+                                              {handleStatus === 'TAKEN' && <X size={16} className="text-red-500" />}
+                                          </div>
+                                      </div>
+                                      {handleStatus === 'TAKEN' && <p className="text-[10px] text-red-500 mt-1 ml-1 font-bold">This handle is already taken.</p>}
+                                      <p className="text-[10px] text-slate-400 mt-1 ml-1">Limit: Once every 2 months. Changes cascade to your team.</p>
+                                  </div>
+
+                                  <button 
+                                    onClick={saveProfileSettings}
+                                    className="bg-slate-900 dark:bg-emerald-600 text-white px-8 py-3 rounded-xl font-bold text-sm shadow-lg hover:brightness-110 active:scale-95 transition-all"
+                                  >
+                                    Save Changes
+                                  </button>
                               </div>
+                          </section>
+                      )}
 
-                              <button 
-                                onClick={saveProfileSettings}
-                                className="bg-slate-900 dark:bg-emerald-600 text-white px-8 py-3 rounded-xl font-bold text-sm shadow-lg hover:brightness-110 active:scale-95 transition-all"
-                              >
-                                Save Changes
-                              </button>
-                          </div>
-                      </section>
-                  )}
-
-                  {canViewCredentials && (
-                      <section className="space-y-6">
-                          <div className="flex items-center gap-2 border-b border-slate-100 dark:border-white/10 pb-2">
-                              <Shield size={18} className="text-emerald-500" />
-                              <h3 className="font-black dark:text-white uppercase text-sm tracking-widest">Security</h3>
-                          </div>
-                          
-                          <div className="space-y-4">
-                              {isEditingPassword ? (
-                                  <div className="flex gap-2">
-                                      <input 
-                                          type="password" 
-                                          value={newPassword}
-                                          onChange={(e) => setNewPassword(e.target.value)}
-                                          placeholder="New Password"
-                                          className="flex-1 bg-slate-100 dark:bg-[#272727] border-none rounded-lg px-4 py-2 text-white outline-none focus:ring-2 focus:ring-emerald-500"
-                                      />
-                                      <button onClick={handlePasswordChange} className="bg-emerald-600 text-white px-4 py-2 rounded-lg font-bold">Save</button>
-                                      <button onClick={() => setIsEditingPassword(false)} className="px-4 py-2 text-slate-500">Cancel</button>
-                                  </div>
-                              ) : (
-                                  <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-[#1f1f1f] rounded-xl border border-slate-100 dark:border-white/5">
-                                      <div>
-                                          <p className="text-xs text-slate-500 dark:text-[#aaaaaa] uppercase font-bold">Account Password</p>
-                                          <p className="font-mono mt-1 dark:text-white">{showPassword ? student.password : '••••••••'}</p>
-                                      </div>
+                      {/* Section: Security */}
+                      {canViewCredentials && (
+                          <section className="space-y-6">
+                              <div className="flex items-center gap-2 border-b border-slate-100 dark:border-white/10 pb-2">
+                                  <Shield size={18} className="text-emerald-500" />
+                                  <h3 className="font-black dark:text-white uppercase text-sm tracking-widest">Security</h3>
+                              </div>
+                              
+                              <div className="space-y-4">
+                                  {isEditingPassword ? (
                                       <div className="flex gap-2">
-                                          <button onClick={() => setShowPassword(!showPassword)} className="p-2 hover:bg-white dark:hover:bg-[#333] rounded-full transition-colors dark:text-[#f1f1f1]">{showPassword ? <EyeOff size={18}/> : <Eye size={18}/>}</button>
-                                          {isOwnProfile && <button onClick={() => setIsEditingPassword(true)} className="p-2 hover:bg-white dark:hover:bg-[#333] rounded-full transition-colors dark:text-[#f1f1f1]"><Edit2 size={18}/></button>}
+                                          <input 
+                                              type="password" 
+                                              value={newPassword}
+                                              onChange={(e) => setNewPassword(e.target.value)}
+                                              placeholder="New Password"
+                                              className="flex-1 bg-slate-100 dark:bg-[#272727] border-none rounded-lg px-4 py-2 text-white outline-none focus:ring-2 focus:ring-emerald-500"
+                                          />
+                                          <button onClick={handlePasswordChange} className="bg-emerald-600 text-white px-4 py-2 rounded-lg font-bold">Save</button>
+                                          <button onClick={() => setIsEditingPassword(false)} className="px-4 py-2 text-slate-500">Cancel</button>
                                       </div>
-                                  </div>
-                              )}
-                          </div>
-                      </section>
-                  )}
-
-                  {isOwnProfile && (
-                      <section className="space-y-6">
-                           <div className="flex items-center gap-2 border-b border-slate-100 dark:border-white/10 pb-2">
-                              <Settings size={18} className="text-blue-500" />
-                              <h3 className="font-black dark:text-white uppercase text-sm tracking-widest">Interface</h3>
-                          </div>
-                          <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-[#1f1f1f] rounded-xl border border-slate-100 dark:border-white/5">
-                              <div>
-                                  <p className="text-sm font-bold dark:text-white">Visual Appearance</p>
-                                  <p className="text-xs text-slate-500 dark:text-[#aaaaaa]">{theme === 'dark' ? 'Dark theme is active' : 'Light theme is active'}</p>
+                                  ) : (
+                                      <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-[#1f1f1f] rounded-xl border border-slate-100 dark:border-white/5">
+                                          <div>
+                                              <p className="text-xs text-slate-500 dark:text-[#aaaaaa] uppercase font-bold">Account Password</p>
+                                              <p className="font-mono mt-1 dark:text-white">{showPassword ? student.password : '••••••••'}</p>
+                                          </div>
+                                          <div className="flex gap-2">
+                                              <button onClick={() => setShowPassword(!showPassword)} className="p-2 hover:bg-white dark:hover:bg-[#333] rounded-full transition-colors dark:text-[#f1f1f1]">{showPassword ? <EyeOff size={18}/> : <Eye size={18}/>}</button>
+                                              {isOwnProfile && <button onClick={() => setIsEditingPassword(true)} className="p-2 hover:bg-white dark:hover:bg-[#333] rounded-full transition-colors dark:text-[#f1f1f1]"><Edit2 size={18}/></button>}
+                                          </div>
+                                      </div>
+                                  )}
                               </div>
-                              <button 
-                                  onClick={onToggleTheme}
-                                  className="flex items-center gap-2 px-4 py-2 bg-slate-200 dark:bg-[#3f3f3f] rounded-full text-sm font-bold dark:text-[#f1f1f1]"
-                              >
-                                  {theme === 'dark' ? <Moon size={16}/> : <Sun size={16}/>}
-                                  Switch
-                              </button>
-                          </div>
-                      </section>
-                  )}
+                          </section>
+                      )}
+
+                      {/* Section: Interface */}
+                      {isOwnProfile && (
+                          <section className="space-y-6">
+                              <div className="flex items-center gap-2 border-b border-slate-100 dark:border-white/10 pb-2">
+                                  <Settings size={18} className="text-blue-500" />
+                                  <h3 className="font-black dark:text-white uppercase text-sm tracking-widest">Interface</h3>
+                              </div>
+                              <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-[#1f1f1f] rounded-xl border border-slate-100 dark:border-white/5">
+                                  <div>
+                                      <p className="text-sm font-bold dark:text-white">Visual Appearance</p>
+                                      <p className="text-xs text-slate-500 dark:text-[#aaaaaa]">{theme === 'dark' ? 'Dark theme is active' : 'Light theme is active'}</p>
+                                  </div>
+                                  <button 
+                                      onClick={onToggleTheme}
+                                      className="flex items-center gap-2 px-4 py-2 bg-slate-200 dark:bg-[#3f3f3f] rounded-full text-sm font-bold dark:text-[#f1f1f1]"
+                                  >
+                                      {theme === 'dark' ? <Moon size={16}/> : <Sun size={16}/>}
+                                      Switch
+                                  </button>
+                              </div>
+                          </section>
+                      )}
+                  </div>
               </div>
           )}
 

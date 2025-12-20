@@ -26,6 +26,17 @@ const BADGES_MAP: Record<string, { label: string, icon: any }> = {
     'natural': { label: 'Natural Ingredients', icon: Sparkles },
 };
 
+// Helper to determine if text should be black or white based on background hex
+const getContrastColor = (hexcolor: string) => {
+    if (!hexcolor || hexcolor === 'transparent') return 'text-slate-900';
+    const hex = hexcolor.replace('#', '');
+    const r = parseInt(hex.substr(0, 2), 16);
+    const g = parseInt(hex.substr(2, 2), 16);
+    const b = parseInt(hex.substr(4, 2), 16);
+    const yiq = ((r * 299) + (g * 587) + (b * 114)) / 1000;
+    return (yiq >= 128) ? 'text-slate-900' : 'text-white';
+};
+
 const ProductClean: React.FC<ProductCleanProps> = ({ 
     data, onOpenCheckout, onReadMoreStory, onReadMoreBenefits, onReadMoreUsage, onOpenFaq, onViewAllFaqs 
 }) => {
@@ -73,6 +84,9 @@ const ProductClean: React.FC<ProductCleanProps> = ({
   const isDarkBg = data.pageBgColor === '#064e3b' || data.pageBgColor === '#111827' || data.pageBgColor === '#000000' || data.pageBgColor === '#1e1b4b' || data.pageBgColor === '#4c0519';
   const textColorClass = isDarkBg ? 'text-white' : 'text-slate-900';
   const iconColor = data.pageBgColor;
+  
+  // Footer visibility check
+  const footerTextColor = getContrastColor(data.themeColor);
 
   return (
     <div className="flex flex-col">
@@ -322,7 +336,7 @@ const ProductClean: React.FC<ProductCleanProps> = ({
           </div>
       </div>
 
-      {/* 8. WHY BUY FROM ME - REMOVED BOTTOM PADDING & MARGIN */}
+      {/* 8. WHY BUY FROM ME - NO BOTTOM PADDING */}
       <div className="px-6 pt-6 pb-0 bg-white dark:bg-slate-950">
           <div className="relative pt-12 pb-10 px-8 rounded-t-[3rem] bg-slate-50 dark:bg-slate-900 border-x border-t border-slate-100 dark:border-slate-800 overflow-hidden">
               <div className="absolute top-0 right-0 p-8 opacity-5">
@@ -366,12 +380,12 @@ const ProductClean: React.FC<ProductCleanProps> = ({
           </div>
       </div>
 
-      {/* MODERNIZED FOOTER - INTEGRATED WITH LAST CARD */}
-      <footer className="text-center space-y-4 pb-32 pt-8 bg-slate-50 dark:bg-slate-900 border-x border-b border-slate-100 dark:border-slate-800 mx-6 rounded-b-[3rem] shadow-sm">
-          <p className="text-[9px] text-slate-400 uppercase font-black tracking-[0.2em] max-w-[80%] mx-auto leading-relaxed opacity-60 px-6">{data.disclaimer}</p>
-          <div className="pt-6 border-t border-slate-100 dark:border-slate-800/50 mx-10">
-              <p className="text-[10px] text-slate-800 dark:text-white font-black uppercase tracking-widest mb-1">{data.title}</p>
-              <p className="text-[9px] text-slate-400 font-bold uppercase tracking-widest">&copy; {new Date().getFullYear()} Nexu Growth Academy</p>
+      {/* MODERNIZED BRANDED FOOTER - FLUSH WITH ABOVE CARD */}
+      <footer className={`text-center space-y-4 pb-32 pt-10 px-6 transition-all duration-500 ${footerTextColor}`} style={{ backgroundColor: data.themeColor }}>
+          <p className="text-[9px] uppercase font-black tracking-[0.2em] max-w-[85%] mx-auto leading-relaxed opacity-80">{data.disclaimer}</p>
+          <div className="pt-8 border-t border-current/10 mx-6">
+              <p className="text-[10px] font-black uppercase tracking-widest mb-1">{data.title}</p>
+              <p className="text-[9px] font-bold uppercase tracking-widest opacity-60">&copy; {new Date().getFullYear()} Nexu Growth Academy</p>
           </div>
       </footer>
     </div>

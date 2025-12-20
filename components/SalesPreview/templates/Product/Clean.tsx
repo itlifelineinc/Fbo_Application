@@ -26,7 +26,7 @@ const BADGES_MAP: Record<string, { label: string, icon: any }> = {
     'natural': { label: 'Natural Ingredients', icon: Sparkles },
 };
 
-// Helper to determine if text should be black or white based on background hex
+// Helper to determine text contrast
 const getContrastColor = (hexcolor: string) => {
     if (!hexcolor || hexcolor === 'transparent') return 'text-slate-900';
     const hex = hexcolor.replace('#', '');
@@ -83,10 +83,10 @@ const ProductClean: React.FC<ProductCleanProps> = ({
 
   const isDarkBg = data.pageBgColor === '#064e3b' || data.pageBgColor === '#111827' || data.pageBgColor === '#000000' || data.pageBgColor === '#1e1b4b' || data.pageBgColor === '#4c0519';
   const textColorClass = isDarkBg ? 'text-white' : 'text-slate-900';
-  const iconColor = data.pageBgColor;
   
-  // Footer visibility check
-  const footerTextColor = getContrastColor(data.themeColor);
+  // Dynamic Contrast for Buttons & Footers
+  const accentContrast = getContrastColor(data.themeColor);
+  const footerContrast = getContrastColor(data.pageBgColor);
 
   return (
     <div className="flex flex-col">
@@ -103,6 +103,7 @@ const ProductClean: React.FC<ProductCleanProps> = ({
             </div>
         </div>
 
+        {/* TRUST BADGES: Under image */}
         {activeBadges.length > 0 && (
             <div className="flex flex-wrap justify-center gap-4 mb-10 px-6 max-w-[400px]">
                 {activeBadges.map((badge, i) => (
@@ -117,8 +118,8 @@ const ProductClean: React.FC<ProductCleanProps> = ({
         )}
         
         <div className="flex flex-row gap-3 w-full px-5 max-w-[440px]">
-            <button className="clean-btn flex-1 bg-white text-slate-900 shadow-xl border border-slate-100 active:scale-95">
-                <MessageCircle size={16} strokeWidth={4} color={iconColor} /> WhatsApp
+            <button className={`clean-btn flex-1 shadow-xl border border-white/10 active:scale-95 ${accentContrast}`} style={{ backgroundColor: data.themeColor }}>
+                <MessageCircle size={16} strokeWidth={4} /> WhatsApp
             </button>
             {data.checkoutConfig?.enabled && (
                 <button onClick={onOpenCheckout} className="clean-btn flex-1 bg-white/20 backdrop-blur-md text-white border border-white/20 shadow-lg active:scale-95">
@@ -133,13 +134,13 @@ const ProductClean: React.FC<ProductCleanProps> = ({
           <div className="px-6 py-6 bg-white dark:bg-slate-950">
               <div className="attachment-card text-left">
                   <div className="flex items-center gap-3">
-                      <BookOpen size={18} color={iconColor} strokeWidth={4} />
+                      <BookOpen size={18} style={{ color: data.themeColor }} strokeWidth={4} />
                       <h3 className="text-[10px] font-black text-slate-900 dark:text-white uppercase tracking-widest">{data.shortStoryTitle || 'The Story'}</h3>
                   </div>
                   <div className="title-underline" style={{ backgroundColor: data.themeColor }}></div>
                   <p className="text-sm text-slate-700 dark:text-slate-200 leading-relaxed line-clamp-[10]">{data.description}</p>
                   {data.description.length > 500 && (
-                      <button onClick={onReadMoreStory} className="flex items-center gap-2 font-black uppercase text-[10px] tracking-widest mt-8" style={{ color: iconColor }}>
+                      <button onClick={onReadMoreStory} className="flex items-center gap-2 font-black uppercase text-[10px] tracking-widest mt-8" style={{ color: data.themeColor }}>
                         Read More <ChevronDown size={14} strokeWidth={4} />
                       </button>
                   )}
@@ -152,22 +153,22 @@ const ProductClean: React.FC<ProductCleanProps> = ({
           <div className="px-6 py-4 bg-white dark:bg-slate-950">
               <div className="attachment-card text-left">
                   <div className="flex items-center gap-3">
-                      <Zap size={18} color={iconColor} strokeWidth={4} />
+                      <Zap size={18} style={{ color: data.themeColor }} strokeWidth={4} />
                       <h3 className="text-[10px] font-black text-slate-900 dark:text-white uppercase tracking-widest">Exclusive Benefits</h3>
                   </div>
                   <div className="title-underline" style={{ backgroundColor: data.themeColor }}></div>
                   <div className="grid grid-cols-1 gap-5">
                       {product.benefits.slice(0, 4).map((benefit, idx) => (
                           <div key={idx} className="flex items-center gap-4">
-                              <div className="w-7 h-7 rounded-full flex items-center justify-center shrink-0 bg-emerald-50 dark:bg-emerald-900/20">
-                                  <Check size={14} color={iconColor} strokeWidth={4} />
+                              <div className="w-7 h-7 rounded-full flex items-center justify-center shrink-0 bg-slate-50 dark:bg-slate-900">
+                                  <Check size={14} style={{ color: data.themeColor }} strokeWidth={4} />
                               </div>
                               <p className="text-sm font-bold text-slate-700 dark:text-slate-200 leading-tight">{benefit}</p>
                           </div>
                       ))}
                   </div>
                   {product.benefits.length > 4 && (
-                      <button onClick={onReadMoreBenefits} className="flex items-center gap-2 font-black uppercase text-[10px] tracking-widest mt-8" style={{ color: iconColor }}>
+                      <button onClick={onReadMoreBenefits} className="flex items-center gap-2 font-black uppercase text-[10px] tracking-widest mt-8" style={{ color: data.themeColor }}>
                         View More <ChevronDown size={14} strokeWidth={4} />
                       </button>
                   )}
@@ -180,7 +181,7 @@ const ProductClean: React.FC<ProductCleanProps> = ({
           <div className="px-6 py-4 bg-white dark:bg-slate-950">
               <div className="attachment-card text-left">
                   <div className="flex items-center gap-3">
-                      <ListChecks size={18} color={iconColor} strokeWidth={4} />
+                      <ListChecks size={18} style={{ color: data.themeColor }} strokeWidth={4} />
                       <h3 className="text-[10px] font-black text-slate-900 dark:text-white uppercase tracking-widest">Usage Guide</h3>
                   </div>
                   <div className="title-underline" style={{ backgroundColor: data.themeColor }}></div>
@@ -188,7 +189,7 @@ const ProductClean: React.FC<ProductCleanProps> = ({
                       {product.usageSteps.slice(0, 3).map((step, idx) => (
                           <div key={idx} className="flex items-start gap-5 relative">
                               {idx < Math.min(product.usageSteps.length, 3) - 1 && <div className="step-connector"></div>}
-                              <div className="w-9 h-9 rounded-full flex items-center justify-center shrink-0 bg-blue-50 border-2 border-blue-100 text-blue-600 font-black text-sm z-10 dark:bg-blue-900/30 dark:border-blue-800 dark:text-blue-300" style={{ borderColor: iconColor, color: iconColor }}>
+                              <div className="w-9 h-9 rounded-full flex items-center justify-center shrink-0 bg-white border-2 text-blue-600 font-black text-sm z-10 dark:bg-slate-900" style={{ borderColor: data.themeColor, color: data.themeColor }}>
                                   {idx + 1}
                               </div>
                               <p className="text-sm font-bold text-slate-700 dark:text-slate-200 pt-1.5 leading-relaxed">{step}</p>
@@ -196,7 +197,7 @@ const ProductClean: React.FC<ProductCleanProps> = ({
                       ))}
                   </div>
                   {product.usageSteps.length > 3 && (
-                      <button onClick={onReadMoreUsage} className="flex items-center gap-2 font-black uppercase text-[10px] tracking-widest mt-10" style={{ color: iconColor }}>
+                      <button onClick={onReadMoreUsage} className="flex items-center gap-2 font-black uppercase text-[10px] tracking-widest mt-10" style={{ color: data.themeColor }}>
                         View Full Steps <ChevronDown size={14} strokeWidth={4} />
                       </button>
                   )}
@@ -232,13 +233,6 @@ const ProductClean: React.FC<ProductCleanProps> = ({
                           <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider truncate">Verified Customer</p>
                       </div>
                   </div>
-                  {testimonials.length > 1 && (
-                      <div className="flex gap-1 mt-6">
-                          {testimonials.map((_, i) => (
-                              <div key={i} className={`h-1 rounded-full transition-all duration-300 ${activeTestimonial === i ? 'w-4 bg-emerald-500' : 'w-1 bg-slate-200 dark:bg-slate-700'}`} />
-                          ))}
-                      </div>
-                  )}
               </div>
           </div>
       )}
@@ -248,7 +242,7 @@ const ProductClean: React.FC<ProductCleanProps> = ({
           <div className="px-6 py-4 bg-white dark:bg-slate-950">
               <div className="attachment-card text-left">
                   <div className="flex items-center gap-3">
-                      <HelpCircle size={18} color={iconColor} strokeWidth={4} />
+                      <HelpCircle size={18} style={{ color: data.themeColor }} strokeWidth={4} />
                       <h3 className="text-[10px] font-black text-slate-900 dark:text-white uppercase tracking-widest">Common Questions</h3>
                   </div>
                   <div className="title-underline" style={{ backgroundColor: data.themeColor }}></div>
@@ -260,17 +254,12 @@ const ProductClean: React.FC<ProductCleanProps> = ({
                             className="w-full flex items-center justify-between text-left group"
                           >
                               <p className="text-sm font-black text-slate-900 dark:text-white flex items-start gap-2 leading-tight group-active:text-emerald-600 transition-colors">
-                                  <span style={{ color: iconColor }}>Q.</span> {faq.question}
+                                  <span style={{ color: data.themeColor }}>Q.</span> {faq.question}
                               </p>
-                              <ChevronDown size={18} className="text-slate-300 shrink-0 ml-4 group-active:text-emerald-500" />
+                              <ChevronDown size={18} className="text-slate-300 shrink-0 ml-4" />
                           </button>
                       ))}
                   </div>
-                  {faqs.length > 4 && (
-                    <button onClick={onViewAllFaqs} className="flex items-center gap-2 font-black uppercase text-[10px] tracking-widest mt-8" style={{ color: iconColor }}>
-                        See All Questions <ChevronDown size={14} strokeWidth={4} />
-                    </button>
-                  )}
               </div>
           </div>
       )}
@@ -278,8 +267,7 @@ const ProductClean: React.FC<ProductCleanProps> = ({
       {/* 7. PRICE CARD */}
       <div className="px-6 py-10 bg-white dark:bg-slate-950">
           <div className="bg-slate-900 rounded-[3rem] p-10 shadow-2xl relative overflow-hidden text-left border border-slate-800">
-              <div className="absolute top-0 right-0 w-48 h-48 bg-emerald-500/20 rounded-full blur-3xl -mr-20 -mt-20"></div>
-              <div className="absolute bottom-0 left-0 w-32 h-32 bg-blue-500/10 rounded-full blur-2xl -ml-10 -mb-10"></div>
+              <div className="absolute top-0 right-0 w-48 h-48 bg-emerald-500/10 rounded-full blur-3xl -mr-20 -mt-20"></div>
               
               <div className="relative z-10">
                   <div className="flex flex-col gap-8">
@@ -309,25 +297,11 @@ const ProductClean: React.FC<ProductCleanProps> = ({
                             )}
                           </div>
                       </div>
-                      {data.fullPackPrice > 0 && (
-                          <div className="flex items-center justify-between p-6 bg-white/5 border border-white/10 rounded-[2rem] hover:bg-white/10 transition-colors cursor-default">
-                              <div className="space-y-1">
-                                <p className="text-[10px] font-black text-emerald-400 uppercase tracking-widest">Exclusive Full Pack</p>
-                                <p className="text-3xl font-black text-white">
-                                    {convertedPackPrice?.isConverted 
-                                        ? `${convertedPackPrice.currency} ${Math.round(convertedPackPrice.amount).toLocaleString()}` 
-                                        : `${data.currency} ${data.fullPackPrice.toLocaleString()}`}
-                                </p>
-                                <p className="text-[9px] text-slate-400 font-bold uppercase tracking-wider">Save more with our bulk case</p>
-                              </div>
-                              <div className="p-4 bg-emerald-500/20 rounded-2xl">
-                                <Package size={32} className="text-emerald-500" />
-                              </div>
-                          </div>
-                      )}
+
                       <button 
                         onClick={onOpenCheckout} 
-                        className="w-full py-5 rounded-[1.5rem] font-black text-sm bg-emerald-500 text-slate-950 shadow-[0_15px_30px_-5px_rgba(16,185,129,0.4)] transition-all active:scale-95 hover:bg-emerald-400 uppercase tracking-[0.2em] flex items-center justify-center gap-2 group"
+                        className={`w-full py-5 rounded-[1.5rem] font-black text-sm shadow-xl transition-all active:scale-95 hover:brightness-110 uppercase tracking-[0.2em] flex items-center justify-center gap-2 group ${accentContrast}`}
+                        style={{ backgroundColor: data.themeColor }}
                       >
                         Checkout <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
                       </button>
@@ -336,7 +310,7 @@ const ProductClean: React.FC<ProductCleanProps> = ({
           </div>
       </div>
 
-      {/* 8. WHY BUY FROM ME - NO BOTTOM PADDING */}
+      {/* 8. WHY BUY FROM ME - NO GAP WITH FOOTER */}
       <div className="px-6 pt-6 pb-0 bg-white dark:bg-slate-950">
           <div className="relative pt-12 pb-10 px-8 rounded-t-[3rem] bg-slate-50 dark:bg-slate-900 border-x border-t border-slate-100 dark:border-slate-800 overflow-hidden">
               <div className="absolute top-0 right-0 p-8 opacity-5">
@@ -360,12 +334,12 @@ const ProductClean: React.FC<ProductCleanProps> = ({
                   </div>
 
                   <div className="text-center space-y-6 w-full">
-                      <div>
+                      <div className="px-2">
                           <p className="text-[10px] font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-widest mb-1">Nexu Verified Expert</p>
-                          <h3 className="text-lg md:text-2xl font-black text-slate-900 dark:text-white uppercase leading-none font-heading tracking-tight">Verified Forever Business Owner</h3>
+                          <h3 className="text-base sm:text-lg md:text-xl font-black text-slate-900 dark:text-white uppercase leading-tight font-heading tracking-tight">Verified Forever Business Owner</h3>
                       </div>
                       <div className="flex items-center justify-center gap-3 text-slate-700 dark:text-slate-300 font-bold uppercase text-[10px] tracking-[0.1em]">
-                          <span className="flex items-center gap-1.5"><Award size={14} className="text-emerald-500" /> {data.personalBranding?.rank || 'FBO Member'}</span>
+                          <span className="flex items-center gap-1.5"><Award size={14} style={{ color: data.themeColor }} /> {data.personalBranding?.rank || 'FBO Member'}</span>
                           <span className="w-px h-3 bg-slate-200 dark:bg-slate-700"></span>
                           <span className="flex items-center gap-1.5"><CalendarDays size={14} className="text-blue-500" /> {data.personalBranding?.yearsExperience || '0'}+ Years As FBO</span>
                       </div>
@@ -380,20 +354,20 @@ const ProductClean: React.FC<ProductCleanProps> = ({
           </div>
       </div>
 
-      {/* MODERNIZED BRANDED FOOTER - FLUSH WITH ABOVE CARD */}
-      <footer className={`text-center space-y-4 pb-32 pt-10 px-6 transition-all duration-500 ${footerTextColor}`} style={{ backgroundColor: data.themeColor }}>
-          <p className="text-[9px] uppercase font-black tracking-[0.2em] max-w-[85%] mx-auto leading-relaxed opacity-80">{data.disclaimer}</p>
+      {/* MODERNIZED FOOTER: Matching Headline Background */}
+      <footer className={`text-center space-y-4 pb-32 pt-10 px-6 transition-all duration-500 ${footerContrast}`} style={{ backgroundColor: data.pageBgColor }}>
+          <p className="text-[9px] uppercase font-black tracking-[0.25em] max-w-[85%] mx-auto leading-relaxed opacity-70">{data.disclaimer}</p>
           <div className="pt-8 border-t border-current/10 mx-6">
               <p className="text-[10px] font-black uppercase tracking-widest mb-1">{data.title}</p>
-              <p className="text-[9px] font-bold uppercase tracking-widest opacity-60">&copy; {new Date().getFullYear()} Nexu Growth Academy</p>
+              <p className="text-[9px] font-bold uppercase tracking-widest opacity-50">&copy; {new Date().getFullYear()} Nexu Growth Academy</p>
           </div>
       </footer>
     </div>
   );
 };
 
-const HelpCircle = ({ size, color, strokeWidth }: { size: number, color?: string, strokeWidth?: number }) => (
-    <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color || "currentColor"} strokeWidth={strokeWidth || 2} strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg>
+const HelpCircle = ({ size, color, style, strokeWidth }: { size: number, color?: string, style?: any, strokeWidth?: number }) => (
+    <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color || "currentColor"} style={style} strokeWidth={strokeWidth || 2} strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg>
 );
 
 export default ProductClean;

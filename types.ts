@@ -189,6 +189,7 @@ export interface Student {
   foreverId?: string;
   bio?: string;
   avatarUrl?: string;
+  bannerUrl?: string;
   enrolledDate: string;
   progress: number;
   completedModules: string[];

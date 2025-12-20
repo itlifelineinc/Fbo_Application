@@ -1,6 +1,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { SalesPage, PageType, CurrencyCode } from '../../types/salesPage';
+import { Student } from '../../types';
 import MetaForm from './MetaForm';
 import MediaUploader from './MediaUploader';
 import ProductSectionEditor from './ProductSectionEditor';
@@ -25,6 +26,7 @@ interface EditorLayoutProps {
   onDeletePage: (id: string) => void;
   isPreviewMode: boolean;
   previewDevice?: 'mobile' | 'desktop'; 
+  currentUser: Student;
 }
 
 const TAB_HELP_CONTENT: Record<string, React.ReactNode> = {
@@ -45,7 +47,8 @@ const EditorLayout: React.FC<EditorLayoutProps> = ({
     onCreatePage, 
     onDeletePage,
     isPreviewMode, 
-    previewDevice = 'desktop' 
+    previewDevice = 'desktop',
+    currentUser
 }) => {
   const portalType = data?.type || 'product';
   const tabs = PAGE_TAB_CONFIG[portalType] || PAGE_TAB_CONFIG['product'];
@@ -55,7 +58,6 @@ const EditorLayout: React.FC<EditorLayoutProps> = ({
 
   useEffect(() => {
     if (data) {
-        // Only switch tabs if the current tab doesn't exist for the new type
         const exists = tabs.some(t => t.id === activeTabId);
         if (!exists) setActiveTabId(tabs[0].id);
     }
@@ -91,12 +93,9 @@ const EditorLayout: React.FC<EditorLayoutProps> = ({
       }
   };
 
-  // --- CONTEXT-AWARE DISPATCHER ---
   const renderContent = () => {
       if (activeTabId === 'OVERVIEW') {
-          // Filter pages shown in Overview by the current Portal Type
           const filteredPages = pages.filter(p => p.type === portalType);
-          
           return (
             <Overview 
                 pages={filteredPages} 
@@ -144,7 +143,7 @@ const EditorLayout: React.FC<EditorLayoutProps> = ({
               case 'CONTENT':
                   return <PageContentEditor data={data} onChange={updateField} />;
               case 'TRUST_PROOF':
-                  return <TrustProofEditor data={data} onChange={updateField} />;
+                  return <TrustProofEditor data={data} onChange={updateField} currentUser={currentUser} />;
           }
       }
 

@@ -1,12 +1,15 @@
 
-import React, { useRef } from 'react';
+import React, { useRef, useEffect } from 'react';
 import { SalesPage, FaqItem } from '../../types/salesPage';
+import { Student } from '../../types';
 import TestimonialsEditor from './TestimonialsEditor';
 import { ShieldCheck, User, HelpCircle, Plus, Trash2, CheckCircle, Leaf, Sparkles, Heart, AlertTriangle, Image as ImageIcon } from 'lucide-react';
+import { RANKS } from '../../constants';
 
 interface TrustProofEditorProps {
   data: SalesPage;
   onChange: <K extends keyof SalesPage>(field: K, value: SalesPage[K]) => void;
+  currentUser: Student;
 }
 
 const INPUT_STYLE = "w-full bg-transparent border border-slate-300 rounded-xl px-4 py-3 text-slate-900 font-bold focus:border-emerald-600 focus:ring-0 outline-none transition-all dark:border-slate-700 dark:text-white placeholder-slate-400";
@@ -21,8 +24,16 @@ const BADGES_CONFIG = [
     { id: 'natural', label: 'Natural Ingredients', icon: Sparkles },
 ];
 
-const TrustProofEditor: React.FC<TrustProofEditorProps> = ({ data, onChange }) => {
+const TrustProofEditor: React.FC<TrustProofEditorProps> = ({ data, onChange, currentUser }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Auto-fill rank from currentUser if empty
+  useEffect(() => {
+      if (!data.personalBranding?.rank && currentUser.rankProgress?.currentRankId) {
+          const officialRank = RANKS[currentUser.rankProgress.currentRankId]?.name || currentUser.rankProgress.currentRankId;
+          updatePersonalBrand('rank', officialRank);
+      }
+  }, []);
 
   // --- Handlers ---
 
@@ -122,7 +133,7 @@ const TrustProofEditor: React.FC<TrustProofEditorProps> = ({ data, onChange }) =
                 <div className="flex-1 space-y-3">
                     <div className="grid grid-cols-2 gap-3">
                         <div>
-                            <label className={LABEL_STYLE}>Years as FBO</label>
+                            <label className={LABEL_STYLE}>Years As FBO</label>
                             <input 
                                 type="number" 
                                 value={data.personalBranding?.yearsExperience || ''}
@@ -132,7 +143,7 @@ const TrustProofEditor: React.FC<TrustProofEditorProps> = ({ data, onChange }) =
                             />
                         </div>
                         <div>
-                            <label className={LABEL_STYLE}>Current Rank</label>
+                            <label className={LABEL_STYLE}>FBO Rank</label>
                             <input 
                                 type="text" 
                                 value={data.personalBranding?.rank || ''}
@@ -156,7 +167,7 @@ const TrustProofEditor: React.FC<TrustProofEditorProps> = ({ data, onChange }) =
             </div>
         </section>
 
-        {/* 3. Testimonials (Moved Here) */}
+        {/* 3. Testimonials */}
         <section className="space-y-5">
             <div className="flex items-center gap-2 mb-2 pb-2 border-b border-slate-100 dark:border-slate-800">
                 <Sparkles className="text-yellow-500" size={18} />

@@ -29,7 +29,6 @@ const SalesPageBuilder: React.FC<SalesPageBuilderProps> = ({ currentUser }) => {
   const [showSplitView, setShowSplitView] = useState(true);
   const [showTypeSelection, setShowTypeSelection] = useState(false);
 
-  // Trigger type selection immediately on entry if no page is active
   useEffect(() => {
       if (isLoaded && !currentPage) {
           setShowTypeSelection(true);
@@ -153,6 +152,7 @@ const SalesPageBuilder: React.FC<SalesPageBuilderProps> = ({ currentUser }) => {
               onDeletePage={deletePage}
               isPreviewMode={false} 
               previewDevice={previewDevice} 
+              currentUser={currentUser}
           />
         </div>
 

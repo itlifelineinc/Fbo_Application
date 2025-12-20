@@ -3,7 +3,9 @@ import React, { useState } from 'react';
 import { SalesPage, FaqItem } from '../../types/salesPage';
 import { 
   X, ChevronLeft, ShoppingBag, CreditCard, Smartphone, Banknote, 
-  Truck, ArrowRight, ShieldCheck, MapPin, Tag, Package
+  Truck, ArrowRight, ShieldCheck, MapPin, Tag, Package, Building2,
+  Calendar, CreditCard as CardIcon, Lock, CheckCircle2, User, Mail, Phone,
+  Wallet
 } from 'lucide-react';
 
 // Import Templates
@@ -64,11 +66,12 @@ const PreviewPanel: React.FC<PreviewPanelProps> = ({ data, device }) => {
     <div className="absolute inset-0 overflow-y-auto no-scrollbar preview-wrapper bg-white dark:bg-slate-950 z-[1] relative" style={previewStyle}>
         {renderActiveTemplate()}
         
-        {/* Drawers Local to frame */}
+        {/* Main Checkout Drawer */}
         <div className={`checkout-drawer ${isCheckoutOpen ? 'open' : ''}`}>
             <CheckoutView data={data} onClose={() => setIsCheckoutOpen(false)} />
         </div>
 
+        {/* Story Drawer */}
         <div className={`custom-story-drawer ${isStoryDrawerOpen ? 'open' : ''}`}>
             <div className="w-12 h-1 bg-slate-200 dark:bg-slate-800 rounded-full mx-auto mt-4"></div>
             <div className="flex justify-between items-center px-6 pt-4 pb-2">
@@ -129,98 +132,257 @@ const PreviewPanel: React.FC<PreviewPanelProps> = ({ data, device }) => {
 const CheckoutView: React.FC<{ data: SalesPage; onClose: () => void }> = ({ data, onClose }) => {
     const product = data.products[0];
     const config = data.checkoutConfig;
+    
+    const [selectedMethod, setSelectedMethod] = useState<string | null>(null);
+    const [activePaymentAction, setActivePaymentAction] = useState<'MOMO' | 'CARD' | null>(null);
+    
+    // Form States
+    const [momoNumber, setMomoNumber] = useState('');
+    const [cardDetails, setCardDetails] = useState({ number: '', expiry: '', cvv: '', name: '' });
 
-    return (
-        <div className="flex flex-col h-full bg-white dark:bg-[#0f172a] text-slate-900 dark:text-white font-sans no-scrollbar overflow-y-auto">
-            <div className="p-6 flex items-center gap-4 sticky top-0 bg-white dark:bg-[#0f172a] z-10 border-b border-slate-100 dark:border-slate-800">
-                <button onClick={onClose} className="p-2 -ml-2 text-slate-500"><ChevronLeft size={24}/></button>
-                <h2 className="text-xl font-black font-heading">Order Summary</h2>
-            </div>
-            
-            <div className="p-6 space-y-8">
-                {/* 1. Item Details */}
-                <div className="bg-slate-50 dark:bg-slate-900/50 p-4 rounded-2xl border border-slate-100 dark:border-slate-800 flex items-center gap-4">
-                    <div className="w-20 h-20 bg-white dark:bg-slate-800 rounded-xl overflow-hidden shadow-sm flex-shrink-0">
-                        {product?.images?.[0] && <img src={product.images[0]} className="w-full h-full object-cover" />}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                        <h4 className="font-bold text-sm truncate">{product?.name || data.title}</h4>
-                        <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Quantity: 1</p>
-                        <p className="text-sm font-black text-emerald-600 mt-2">{data.currency} {product?.price}</p>
-                    </div>
-                </div>
+    const subtotal = product?.price || 0;
+    const shippingCost = config.shipping.flatRate || 0;
+    const total = subtotal + shippingCost;
 
-                {/* 2. Customer Fields */}
-                <div className="space-y-4">
-                    <h3 className="text-xs font-black uppercase tracking-[0.2em] text-slate-400">Delivery Information</h3>
-                    <div className="space-y-3">
-                        <div className="relative">
-                            <input type="text" placeholder="Full Name" className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-3 rounded-xl text-sm focus:ring-1 focus:ring-emerald-500 outline-none" />
-                        </div>
-                        <div className="relative">
-                            <input type="tel" placeholder="Phone Number" className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-3 rounded-xl text-sm focus:ring-1 focus:ring-emerald-500 outline-none" />
-                        </div>
-                        {config.shipping.enabled && (
-                            <div className="relative">
-                                <MapPin className="absolute left-3 top-3 text-slate-400" size={16}/>
-                                <input type="text" placeholder="Delivery Address" className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-3 pl-10 rounded-xl text-sm focus:ring-1 focus:ring-emerald-500 outline-none" />
-                            </div>
-                        )}
-                    </div>
-                </div>
+    const handleMethodSelect = (id: string) => {
+        setSelectedMethod(id);
+        if (id === 'momo') setActivePaymentAction('MOMO');
+        else if (id === 'card') setActivePaymentAction('CARD');
+        else setActivePaymentAction(null);
+    };
 
-                {/* 3. Payment Methods */}
-                <div className="space-y-4">
-                    <h3 className="text-xs font-black uppercase tracking-[0.2em] text-slate-400">Payment Method</h3>
-                    <div className="grid grid-cols-1 gap-2">
-                        {config.paymentMethods.mobileMoney && (
-                            <button className="flex items-center gap-3 p-4 rounded-xl border-2 border-emerald-500 bg-emerald-50/50 dark:bg-emerald-900/20 text-left">
-                                <Smartphone size={18} className="text-emerald-600"/>
-                                <span className="font-bold text-sm">Mobile Money</span>
-                            </button>
-                        )}
-                        {config.paymentMethods.cashOnDelivery && (
-                            <button className="flex items-center gap-3 p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-left">
-                                <Banknote size={18} className="text-slate-500"/>
-                                <span className="font-bold text-sm">Cash on Delivery</span>
-                            </button>
-                        )}
-                        {config.paymentMethods.card && (
-                            <button className="flex items-center gap-3 p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-left">
-                                <CreditCard size={18} className="text-slate-500"/>
-                                <span className="font-bold text-sm">Debit/Credit Card</span>
-                            </button>
-                        )}
-                    </div>
-                </div>
-
-                {/* 4. Total Card */}
-                <div className="bg-slate-900 text-white rounded-3xl p-6 space-y-3 shadow-xl">
-                    <div className="flex justify-between items-center text-sm opacity-70">
-                        <span>Subtotal</span>
-                        <span>{data.currency} {product?.price}</span>
-                    </div>
-                    <div className="flex justify-between items-center text-sm opacity-70">
-                        <span>Shipping</span>
-                        <span>{config.shipping.flatRate ? `${data.currency} ${config.shipping.flatRate}` : 'FREE'}</span>
-                    </div>
-                    <div className="pt-3 border-t border-white/10 flex justify-between items-center">
-                        <span className="font-bold">Total Amount</span>
-                        <span className="text-2xl font-black text-emerald-400">{data.currency} {(product?.price || 0) + (config.shipping.flatRate || 0)}</span>
-                    </div>
-                </div>
-
-                <div className="space-y-4 pt-4 pb-10">
-                    <button className="w-full bg-emerald-600 text-white py-5 rounded-[1.5rem] font-black uppercase tracking-widest flex items-center justify-center gap-2 shadow-lg active:scale-95 transition-all">
-                        Complete Order <ArrowRight size={18}/>
-                    </button>
-                    <div className="flex items-center justify-center gap-2 text-[10px] text-slate-400 font-bold uppercase tracking-wider">
-                        <ShieldCheck size={14} className="text-emerald-500"/> Secure SSL Encrypted Checkout
-                    </div>
-                </div>
+    const InputField = ({ label, placeholder, icon: Icon, type = "text" }: any) => (
+        <div className="space-y-1.5">
+            <label className="text-[10px] font-black uppercase text-slate-400 tracking-wider ml-1">{label}</label>
+            <div className="relative">
+                {Icon && <Icon className="absolute left-3.5 top-3.5 text-slate-400" size={16} />}
+                <input 
+                    type={type} 
+                    placeholder={placeholder} 
+                    className={`w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-3.5 rounded-xl text-sm focus:ring-1 focus:ring-emerald-500 outline-none transition-all ${Icon ? 'pl-11' : ''}`}
+                />
             </div>
         </div>
     );
+
+    return (
+        <div className="flex flex-col h-full bg-white dark:bg-[#0b141a] text-slate-900 dark:text-white font-sans relative">
+            {/* 1. AMAZON-STYLE STICKY HEADER */}
+            <div className="p-5 flex items-center justify-between sticky top-0 bg-white/95 dark:bg-[#0b141a]/95 backdrop-blur-md z-40 border-b border-slate-100 dark:border-slate-800">
+                <div className="flex items-center gap-3">
+                    <button onClick={onClose} className="p-2 -ml-2 text-slate-500 hover:bg-slate-100 rounded-full transition-colors"><ChevronLeft size={24}/></button>
+                    <div>
+                        <h2 className="text-lg font-black leading-none">Checkout</h2>
+                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">Review & Place Order</p>
+                    </div>
+                </div>
+                <div className="w-10 h-10 bg-emerald-50 dark:bg-emerald-900/30 rounded-xl flex items-center justify-center text-emerald-600">
+                    <ShieldCheck size={24} />
+                </div>
+            </div>
+            
+            <div className="flex-1 overflow-y-auto no-scrollbar pb-32">
+                {/* 2. ORDER PREVIEW (Amazon-style brief) */}
+                <div className="p-6 bg-slate-50 dark:bg-slate-900/40 border-b border-slate-100 dark:border-slate-800">
+                    <div className="flex items-center gap-4">
+                        <div className="w-16 h-16 bg-white dark:bg-slate-800 rounded-xl overflow-hidden shadow-sm flex-shrink-0 border border-slate-100 dark:border-slate-700">
+                            {product?.images?.[0] && <img src={product.images[0]} className="w-full h-full object-cover" />}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                            <h4 className="font-bold text-sm truncate">{product?.name || data.title}</h4>
+                            <p className="text-[10px] font-black text-emerald-600 uppercase tracking-widest mt-1">{data.currency} {product?.price}</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="p-6 space-y-10">
+                    {/* 3. PERSONAL INFORMATION */}
+                    <div className="space-y-5">
+                        <div className="flex items-center gap-2 mb-2">
+                            <User size={18} className="text-emerald-500" />
+                            <h3 className="font-black text-sm uppercase tracking-wider">Recipient Details</h3>
+                        </div>
+                        <div className="grid grid-cols-2 gap-3">
+                            <InputField label="First Name" placeholder="John" />
+                            <InputField label="Last Name" placeholder="Doe" />
+                        </div>
+                        <InputField label="Email Address" placeholder="john@example.com" icon={Mail} type="email" />
+                        <InputField label="Phone Number" placeholder="54 123 4567" icon={Phone} type="tel" />
+                    </div>
+
+                    {/* 4. SHIPPING ADDRESS (Detailed) */}
+                    {config.shipping.enabled && (
+                        <div className="space-y-5 animate-in fade-in slide-in-from-bottom-2">
+                            <div className="flex items-center gap-2 mb-2">
+                                <MapPin size={18} className="text-blue-500" />
+                                <h3 className="font-black text-sm uppercase tracking-wider">Shipping Address</h3>
+                            </div>
+                            <InputField label="Street Address" placeholder="123 Aloe Street" />
+                            <InputField label="Apartment, suite, etc. (optional)" placeholder="Apt 4B" />
+                            <div className="grid grid-cols-2 gap-3">
+                                <InputField label="City" placeholder="Accra" />
+                                <InputField label="State / Region" placeholder="Greater Accra" />
+                            </div>
+                            <InputField label="ZIP / Postal Code" placeholder="GA-123-4567" />
+                        </div>
+                    )}
+
+                    {/* 5. PAYMENT METHODS */}
+                    <div className="space-y-5">
+                        <div className="flex items-center gap-2 mb-2">
+                            {/* Fix: Use Wallet icon which is now imported */}
+                            <Wallet size={18} className="text-amber-500" />
+                            <h3 className="font-black text-sm uppercase tracking-wider">Payment Method</h3>
+                        </div>
+                        <div className="grid grid-cols-1 gap-3">
+                            {config.paymentMethods.mobileMoney && (
+                                <PaymentCard 
+                                    id="momo"
+                                    label="Mobile Money" 
+                                    desc="MTN, Vodafone, AirtelTigo" 
+                                    icon={Smartphone} 
+                                    active={selectedMethod === 'momo'} 
+                                    onClick={() => handleMethodSelect('momo')} 
+                                />
+                            )}
+                            {config.paymentMethods.card && (
+                                <PaymentCard 
+                                    id="card"
+                                    label="Credit / Debit Card" 
+                                    desc="Visa, Mastercard, Amex" 
+                                    icon={CardIcon} 
+                                    active={selectedMethod === 'card'} 
+                                    onClick={() => handleMethodSelect('card')} 
+                                />
+                            )}
+                            {config.paymentMethods.cashOnDelivery && (
+                                <PaymentCard 
+                                    id="cod"
+                                    label="Cash on Delivery" 
+                                    desc="Pay when you receive" 
+                                    icon={Banknote} 
+                                    active={selectedMethod === 'cod'} 
+                                    onClick={() => handleMethodSelect('cod')} 
+                                />
+                            )}
+                            {config.paymentMethods.bankTransfer && (
+                                <PaymentCard 
+                                    id="bank"
+                                    label="Bank Transfer" 
+                                    desc="Direct wire to account" 
+                                    icon={Building2} 
+                                    active={selectedMethod === 'bank'} 
+                                    onClick={() => handleMethodSelect('bank')} 
+                                />
+                            )}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* 6. FIXED ORDER SUMMARY & BUTTON (Amazon-like) */}
+            <div className="absolute bottom-0 left-0 right-0 p-5 bg-white dark:bg-[#0b141a] border-t border-slate-100 dark:border-slate-800 z-40 shadow-[0_-10px_30px_rgba(0,0,0,0.05)]">
+                <div className="flex justify-between items-end mb-4">
+                    <div className="space-y-1">
+                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Order Total</p>
+                        <div className="flex items-baseline gap-1">
+                            <span className="text-xl font-black text-slate-900 dark:text-white leading-none">{data.currency} {total.toLocaleString()}</span>
+                            <span className="text-[9px] text-slate-400 font-bold uppercase">(Inc. VAT)</span>
+                        </div>
+                    </div>
+                    <div className="text-right">
+                        <p className="text-[9px] text-slate-400 font-bold uppercase">Shipping</p>
+                        <p className="text-xs font-bold text-emerald-600">{shippingCost === 0 ? 'FREE' : `${data.currency} ${shippingCost}`}</p>
+                    </div>
+                </div>
+                <button className="w-full bg-emerald-600 text-white py-4.5 rounded-2xl font-black uppercase tracking-[0.15em] text-sm flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/20 active:scale-95 transition-all">
+                    Complete Purchase <ArrowRight size={20}/>
+                </button>
+            </div>
+
+            {/* 7. BOTTOM ACTION DRAWERS (For MoMo / Card) */}
+            
+            {/* Mobile Money Input Drawer */}
+            <PaymentSubDrawer 
+                isOpen={activePaymentAction === 'MOMO'} 
+                onClose={() => setActivePaymentAction(null)}
+                title="Mobile Money Details"
+                icon={Smartphone}
+            >
+                <div className="space-y-6">
+                    <div className="p-4 bg-emerald-50 dark:bg-emerald-900/20 rounded-2xl border border-emerald-100 dark:border-emerald-800 flex items-start gap-3">
+                        <AlertCircle className="text-emerald-600 shrink-0 mt-0.5" size={18} />
+                        <p className="text-xs text-emerald-800 dark:text-emerald-300 leading-relaxed">
+                            A prompt will be sent to this number. Please authorize the payment on your phone.
+                        </p>
+                    </div>
+                    <InputField label="Enter MoMo Number" placeholder="054 XXXXXXX" icon={Smartphone} type="tel" />
+                    <button onClick={() => setActivePaymentAction(null)} className="w-full bg-slate-900 dark:bg-white dark:text-slate-900 text-white py-4 rounded-xl font-bold">Confirm Number</button>
+                </div>
+            </PaymentSubDrawer>
+
+            {/* Credit Card Input Drawer */}
+            <PaymentSubDrawer 
+                isOpen={activePaymentAction === 'CARD'} 
+                onClose={() => setActivePaymentAction(null)}
+                title="Secure Card Payment"
+                icon={CardIcon}
+            >
+                <div className="space-y-5">
+                    <InputField label="Cardholder Name" placeholder="John Doe" icon={User} />
+                    <InputField label="Card Number" placeholder="0000 0000 0000 0000" icon={CardIcon} type="tel" />
+                    <div className="grid grid-cols-2 gap-4">
+                        <InputField label="Expiry Date" placeholder="MM/YY" icon={Calendar} type="tel" />
+                        <InputField label="CVV" placeholder="123" icon={Lock} type="password" />
+                    </div>
+                    <div className="flex items-center gap-2 justify-center py-2 text-[10px] text-slate-400 font-bold uppercase tracking-widest">
+                        <ShieldCheck size={14} className="text-emerald-500" /> PCI-DSS Compliant Secure
+                    </div>
+                    <button onClick={() => setActivePaymentAction(null)} className="w-full bg-slate-900 dark:bg-white dark:text-slate-900 text-white py-4 rounded-xl font-bold">Securely Save Card</button>
+                </div>
+            </PaymentSubDrawer>
+        </div>
+    );
 };
+
+const PaymentCard = ({ label, desc, icon: Icon, active, onClick }: any) => (
+    <button 
+        onClick={onClick}
+        className={`flex items-center gap-4 p-4 rounded-2xl border-2 transition-all text-left ${active ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20 shadow-sm' : 'border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/40 hover:border-slate-200 dark:hover:border-slate-700'}`}
+    >
+        <div className={`p-3 rounded-xl ${active ? 'bg-emerald-500 text-white shadow-md shadow-emerald-500/20' : 'bg-white dark:bg-slate-800 text-slate-400 border border-slate-100 dark:border-slate-700'}`}>
+            <Icon size={22} />
+        </div>
+        <div className="flex-1 min-w-0">
+            <h4 className={`font-bold text-sm leading-none mb-1 ${active ? 'text-emerald-900 dark:text-white' : 'text-slate-800 dark:text-slate-200'}`}>{label}</h4>
+            <p className={`text-[10px] font-medium uppercase tracking-wider ${active ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400'}`}>{desc}</p>
+        </div>
+        {active && <CheckCircle2 className="text-emerald-500" size={20} />}
+    </button>
+);
+
+const PaymentSubDrawer = ({ isOpen, onClose, title, icon: Icon, children }: any) => (
+    <div className={`absolute inset-0 z-[100] transition-all duration-300 ${isOpen ? 'visible' : 'invisible pointer-events-none'}`}>
+        <div className={`absolute inset-0 bg-black/40 backdrop-blur-[2px] transition-opacity duration-300 ${isOpen ? 'opacity-100' : 'opacity-0'}`} onClick={onClose} />
+        <div className={`absolute bottom-0 left-0 right-0 bg-white dark:bg-[#1a1a1a] rounded-t-[2.5rem] shadow-2xl p-8 transform transition-transform duration-500 cubic-bezier(0.32, 0.72, 0, 1) ${isOpen ? 'translate-y-0' : 'translate-y-full'}`}>
+            <div className="w-12 h-1.5 bg-slate-100 dark:bg-slate-800 rounded-full mx-auto mb-8"></div>
+            <div className="flex items-center gap-4 mb-8">
+                <div className="w-12 h-12 rounded-2xl bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center text-emerald-600">
+                    <Icon size={24} />
+                </div>
+                <div>
+                    <h3 className="text-xl font-black font-heading dark:text-white">{title}</h3>
+                    <p className="text-xs text-slate-400 font-bold uppercase tracking-widest mt-1">Payment Authorization</p>
+                </div>
+                <button onClick={onClose} className="ml-auto p-2 bg-slate-100 dark:bg-slate-800 rounded-full text-slate-500"><X size={20}/></button>
+            </div>
+            {children}
+        </div>
+    </div>
+);
+
+const AlertCircle = ({ size, className }: any) => (
+    <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+);
 
 export default PreviewPanel;

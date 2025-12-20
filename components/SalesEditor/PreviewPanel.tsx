@@ -2,13 +2,12 @@
 import React, { useState, useEffect, Suspense } from 'react';
 import { SalesPage, Product, FaqItem } from '../../types/salesPage';
 import WhatsAppFloatingButton from '../Shared/WhatsAppFloatingButton';
-// Added missing Tag and ArrowRight icons to the lucide-react imports
 import { 
   Check, User, ShoppingCart, MessageCircle, ChevronLeft,
   Image as ImageIcon, CreditCard, Smartphone, Truck, Send, Loader2, Package, 
   ShoppingBag, CheckCircle, ChevronDown, Wallet, Building2, CreditCard as CardIcon, 
   MapPin, Mail, LayoutGrid, Map as MapIcon, Navigation, Search, X, AlertCircle,
-  Tag, ArrowRight
+  Tag, ArrowRight, Box, Home, Clock
 } from 'lucide-react';
 
 // Import Templates
@@ -74,7 +73,6 @@ const PreviewPanel: React.FC<PreviewPanelProps> = ({ data, device }) => {
           return <ProductClean {...handlers} />;
       }
 
-      // Default Placeholder for all other combinations
       return <Placeholder data={data} type={type} theme={theme} />;
   };
 
@@ -207,6 +205,20 @@ const PreviewPanel: React.FC<PreviewPanelProps> = ({ data, device }) => {
 
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+        /* Stepper styles for Tracking */
+        .track-line {
+            width: 2px;
+            background-color: #e2e8f0;
+            height: 100%;
+            position: absolute;
+            left: 15px;
+            top: 24px;
+            z-index: 1;
+        }
+        .track-line-active {
+            background-color: #10b981;
+        }
       `}</style>
 
       {isMobile ? (
@@ -314,6 +326,7 @@ const CheckoutView: React.FC<{ data: SalesPage; onClose: () => void }> = ({ data
   const [selectedPayment, setSelectedPayment] = useState<string | null>(null);
   const [paymentStep, setPaymentStep] = useState<string | null>(null); 
   const [momoNumber, setMomoNumber] = useState('');
+  const [orderId] = useState(() => `NX-${Math.floor(100000 + Math.random() * 900000)}`);
   
   const [customerInfo, setCustomerInfo] = useState({
     firstName: '',
@@ -388,15 +401,106 @@ const CheckoutView: React.FC<{ data: SalesPage; onClose: () => void }> = ({ data
       setTimeout(() => setPaymentStep('success'), 2000);
   };
 
+  if (paymentStep === 'tracking') {
+      const estArrival = new Date();
+      estArrival.setDate(estArrival.getDate() + 3);
+      const arrivalStr = estArrival.toLocaleDateString('en-US', { month: 'short', day: 'numeric', weekday: 'long' });
+
+      return (
+          <div className="flex flex-col h-full bg-slate-50 dark:bg-slate-950 animate-fade-in overflow-hidden">
+              <div className="px-6 py-8 border-b border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 shrink-0 flex items-center gap-3">
+                  <button onClick={() => setPaymentStep('success')} className="p-2 -ml-2 text-slate-500"><ChevronLeft size={24}/></button>
+                  <h2 className="text-xl font-black text-slate-900 dark:text-white uppercase tracking-tight font-heading">Track Order</h2>
+              </div>
+              <div className="flex-1 overflow-y-auto p-6 space-y-6 no-scrollbar">
+                  <div className="bg-emerald-500 rounded-3xl p-6 text-white shadow-xl relative overflow-hidden">
+                      <div className="relative z-10">
+                        <p className="text-[10px] font-black uppercase tracking-widest opacity-80 mb-1">Arriving By</p>
+                        <h3 className="text-2xl font-black">{arrivalStr}</h3>
+                        <p className="text-xs font-bold mt-4 bg-white/20 inline-block px-3 py-1 rounded-full backdrop-blur-sm">Order ID: {orderId}</p>
+                      </div>
+                      <Box size={80} className="absolute -bottom-4 -right-4 opacity-20 rotate-12" />
+                  </div>
+
+                  <div className="bg-white dark:bg-slate-900 rounded-[2rem] p-8 border border-slate-100 dark:border-slate-800 space-y-10 relative">
+                      <div className="flex items-start gap-6 relative">
+                          <div className="track-line track-line-active"></div>
+                          <div className="w-8 h-8 rounded-full bg-emerald-500 flex items-center justify-center text-white z-10 shrink-0">
+                              <Check size={16} strokeWidth={4}/>
+                          </div>
+                          <div>
+                              <p className="text-sm font-black text-slate-900 dark:text-white uppercase">Ordered</p>
+                              <p className="text-xs text-slate-500">Today, {new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</p>
+                          </div>
+                      </div>
+
+                      <div className="flex items-start gap-6 relative">
+                          <div className="track-line"></div>
+                          <div className="w-8 h-8 rounded-full bg-emerald-500 flex items-center justify-center text-white z-10 shrink-0 shadow-lg shadow-emerald-500/30 animate-pulse">
+                              <Package size={16} strokeWidth={3}/>
+                          </div>
+                          <div>
+                              <p className="text-sm font-black text-slate-900 dark:text-white uppercase">Processing</p>
+                              <p className="text-xs text-slate-500 font-medium italic">Preparing your wellness items...</p>
+                          </div>
+                      </div>
+
+                      <div className="flex items-start gap-6 relative opacity-30 grayscale">
+                          <div className="track-line"></div>
+                          <div className="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-800 flex items-center justify-center text-slate-500 z-10 shrink-0">
+                              <Truck size={16} />
+                          </div>
+                          <div>
+                              <p className="text-sm font-black text-slate-900 dark:text-white uppercase">Shipped</p>
+                          </div>
+                      </div>
+
+                      <div className="flex items-start gap-6 relative opacity-30 grayscale">
+                          <div className="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-800 flex items-center justify-center text-slate-500 z-10 shrink-0">
+                              <Home size={16} />
+                          </div>
+                          <div>
+                              <p className="text-sm font-black text-slate-900 dark:text-white uppercase">Delivered</p>
+                          </div>
+                      </div>
+                  </div>
+
+                  <div className="bg-white dark:bg-slate-900 rounded-[2rem] p-6 border border-slate-100 dark:border-slate-800">
+                      <h4 className="text-[10px] font-black uppercase text-slate-400 tracking-widest mb-4">Delivery Address</h4>
+                      <p className="text-sm font-bold text-slate-800 dark:text-slate-200">{customerInfo.firstName} {customerInfo.lastName}</p>
+                      <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed mt-1">
+                          {customerInfo.houseNo}, {customerInfo.street}<br/>
+                          {customerInfo.city}, {customerInfo.state}<br/>
+                          {customerInfo.phone}
+                      </p>
+                  </div>
+              </div>
+              <div className="p-6 bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800">
+                  <button onClick={onClose} className="w-full py-4 bg-slate-900 text-white rounded-2xl font-black uppercase tracking-widest text-xs dark:bg-emerald-600">Back to Page</button>
+              </div>
+          </div>
+      );
+  }
+
   if (paymentStep === 'success') {
       return (
           <div className="flex flex-col h-full bg-white dark:bg-slate-950 items-center justify-center p-8 text-center animate-fade-in">
               <div className="w-24 h-24 bg-emerald-100 rounded-full flex items-center justify-center text-emerald-600 mb-6 dark:bg-emerald-900/30">
                   <CheckCircle size={64} />
               </div>
-              <h2 className="text-2xl font-black text-slate-900 dark:text-white uppercase tracking-tight mb-2">Order Success!</h2>
-              <p className="text-slate-500 dark:text-slate-400 text-sm mb-10">Hi {customerInfo.firstName}, your order has been placed successfully. You will receive a confirmation message shortly.</p>
-              <button onClick={onClose} className="w-full py-4 bg-slate-900 text-white rounded-2xl font-black uppercase tracking-widest text-sm dark:bg-emerald-600">Back to Page</button>
+              <h2 className="text-2xl font-black text-slate-900 dark:text-white uppercase tracking-tight mb-1">Order Placed!</h2>
+              <p className="text-xs font-black text-slate-400 uppercase tracking-widest mb-4">Order ID: {orderId}</p>
+              <p className="text-slate-500 dark:text-slate-400 text-sm mb-10">Hi {customerInfo.firstName}, we've received your order. We'll message you once it ships.</p>
+              
+              <div className="flex flex-col w-full gap-3">
+                <button 
+                    onClick={() => setPaymentStep('tracking')} 
+                    className="w-full py-4 bg-emerald-600 text-white rounded-2xl font-black uppercase tracking-widest text-xs shadow-lg flex items-center justify-center gap-2 group"
+                >
+                    <Truck size={18} /> Track Your Order <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
+                </button>
+                <button onClick={onClose} className="w-full py-4 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-2xl font-bold uppercase tracking-widest text-[10px]">Return to Store</button>
+              </div>
           </div>
       );
   }
@@ -470,7 +574,7 @@ const CheckoutView: React.FC<{ data: SalesPage; onClose: () => void }> = ({ data
                                 placeholder="0XX XXX XXXX"
                                 className="w-full p-6 bg-slate-50 dark:bg-slate-800 border-2 border-slate-100 dark:border-slate-700 rounded-[1.5rem] outline-none focus:border-emerald-500 font-black text-xl dark:text-white placeholder-slate-300"
                               />
-                              <button onClick={handleConfirmAction} className="absolute right-3 top-3 p-4 bg-emerald-500 text-white rounded-2xl shadow-xl active:scale-90 transition-transform flex items-center justify-center">
+                              <button onClick={handleConfirmAction} className="absolute right-3 top-1/2 -translate-y-1/2 p-4 bg-emerald-500 text-white rounded-2xl shadow-xl active:scale-90 transition-transform flex items-center justify-center">
                                   <Send size={24} />
                               </button>
                           </div>
@@ -564,7 +668,7 @@ const CheckoutView: React.FC<{ data: SalesPage; onClose: () => void }> = ({ data
                   <div>
                       <label className={LABEL_CLASS}>Phone Number*</label>
                       <div className="relative">
-                        <Smartphone size={16} color={iconColor} className="absolute left-4 top-4.5" />
+                        <Smartphone size={16} color={iconColor} className="absolute left-4 top-1/2 -translate-y-1/2" />
                         <input 
                             type="tel" 
                             className={INPUT_CLASS + " pl-12"} 
@@ -577,7 +681,7 @@ const CheckoutView: React.FC<{ data: SalesPage; onClose: () => void }> = ({ data
                   <div>
                       <label className={LABEL_CLASS}>Email (Optional)</label>
                       <div className="relative">
-                        <Mail size={16} color={iconColor} className="absolute left-4 top-4.5" />
+                        <Mail size={16} color={iconColor} className="absolute left-4 top-1/2 -translate-y-1/2" />
                         <input 
                             type="email" 
                             className={INPUT_CLASS + " pl-12"} 
@@ -614,7 +718,7 @@ const CheckoutView: React.FC<{ data: SalesPage; onClose: () => void }> = ({ data
                       <div className="relative">
                           <label className={LABEL_CLASS}>Street Name / Area*</label>
                           <div className="relative">
-                              <Search size={16} color={iconColor} className="absolute left-4 top-4.5" />
+                              <Search size={16} color={iconColor} className="absolute left-4 top-1/2 -translate-y-1/2" />
                               <input 
                                 type="text" 
                                 className={INPUT_CLASS + " pl-12"} 

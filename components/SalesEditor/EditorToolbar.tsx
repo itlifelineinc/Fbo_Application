@@ -30,8 +30,6 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({
   onToggleSplitView,
   onToggleTypeSelection
 }) => {
-  const isMobileScreen = window.innerWidth < 768;
-
   return (
     <div className="bg-white dark:bg-slate-900 flex items-center justify-between px-4 md:px-6 h-16 md:h-20 shrink-0 z-40 sticky top-0 border-b border-slate-100 dark:border-slate-800 transition-all">
       
@@ -78,8 +76,8 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({
       </div>
 
       <div className="flex items-center gap-2 md:gap-4">
-        {/* View Options (Desktop Only) */}
-        {!isPreviewMode && !isMobileScreen && (
+        {/* View Options (Desktop) */}
+        {!isPreviewMode && (
             <div className="hidden md:flex items-center gap-1">
                 <button 
                     onClick={onToggleSplitView}
@@ -98,10 +96,10 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({
             </div>
         )}
 
-        {(isPreviewMode || showSplitView) && !isMobileScreen && <div className="w-px h-6 bg-slate-200 dark:bg-slate-800 hidden md:block"></div>}
+        {(isPreviewMode || showSplitView) && <div className="w-px h-6 bg-slate-200 dark:bg-slate-800 hidden md:block"></div>}
 
-        {/* Device Toggles (Only visible on Desktop) */}
-        {(isPreviewMode || showSplitView) && !isMobileScreen && (
+        {/* Device Toggles (Only relevant if Preview is active or screen is large) */}
+        {(isPreviewMode || showSplitView) && (
             <div className="hidden md:flex items-center gap-1">
             <button 
                 onClick={() => onSetPreviewDevice('desktop')}

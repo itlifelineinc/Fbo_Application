@@ -1,11 +1,13 @@
 
-import React, { useState } from 'react';
-import { SalesPage, FaqItem } from '../../types/salesPage';
+import React, { useState, useEffect, useRef, Suspense } from 'react';
+import { SalesPage, Product, FaqItem } from '../../types/salesPage';
+import WhatsAppFloatingButton from '../Shared/WhatsAppFloatingButton';
 import { 
-  X, ChevronLeft, ShoppingBag, CreditCard, Smartphone, Banknote, 
-  Truck, ArrowRight, ShieldCheck, MapPin, Tag, Package, Building2,
-  Calendar, CreditCard as CardIcon, Lock, CheckCircle2, User, Mail, Phone,
-  Wallet, AlertCircle
+  Check, User, ShoppingCart, MessageCircle, ChevronLeft,
+  Image as ImageIcon, CreditCard, Smartphone, Truck, Send, Loader2, Package, 
+  ShoppingBag, CheckCircle, ChevronDown, Wallet, Building2, CreditCard as CardIcon, 
+  MapPin, Mail, LayoutGrid, Map as MapIcon, Navigation, Search, X, AlertCircle,
+  Tag, ArrowRight, Box, Home, Clock, Plus, Minus, Crosshair
 } from 'lucide-react';
 
 // Import Templates
@@ -21,6 +23,10 @@ const PreviewPanel: React.FC<PreviewPanelProps> = ({ data, device }) => {
   const isMobile = device === 'mobile';
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
   const [isStoryDrawerOpen, setIsStoryDrawerOpen] = useState(false);
+  const [isBenefitsDrawerOpen, setIsBenefitsDrawerOpen] = useState(false);
+  const [isUsageDrawerOpen, setIsUsageDrawerOpen] = useState(false);
+  const [activeFaqForDrawer, setActiveFaqForDrawer] = useState<FaqItem | null>(null);
+  const [isAllFaqsDrawerOpen, setIsAllFaqsDrawerOpen] = useState(false);
   
   const settings = isMobile && data.mobileOverrides ? { ...data, ...data.mobileOverrides } : data;
   const baseSize = settings.baseFontSize || 16;
@@ -28,6 +34,10 @@ const PreviewPanel: React.FC<PreviewPanelProps> = ({ data, device }) => {
   const spacingValue = settings.sectionSpacing ?? 5;
   
   const h1Size = isMobile ? Math.round(baseSize * 1.5) : Math.round(baseSize * Math.pow(scaleRatio, 4)); 
+  const h2Size = isMobile ? Math.round(baseSize * 1.3) : Math.round(baseSize * Math.pow(scaleRatio, 3)); 
+  const h3Size = isMobile ? Math.round(baseSize * 1.1) : Math.round(baseSize * Math.pow(scaleRatio, 2)); 
+
+  const sectionPaddingRem = 1 + (spacingValue * 0.5); 
   const radius = data.buttonCorner === 'pill' ? '9999px' : data.buttonCorner === 'rounded' ? '0.75rem' : '0px';
 
   const previewStyle = {
@@ -35,13 +45,16 @@ const PreviewPanel: React.FC<PreviewPanelProps> = ({ data, device }) => {
     '--font-body': `'${data.bodyFont}', sans-serif`,
     '--base-size': `${baseSize}px`,
     '--h1-size': `${h1Size}px`,
+    '--h2-size': `${h2Size}px`,
+    '--h3-size': `${h3Size}px`,
     '--theme-color': data.themeColor || '#10b981',
     '--page-bg': data.pageBgColor || '#064e3b',
     '--card-bg': data.cardBgColor || '#fcd34d',
-    '--section-padding': `${1 + (spacingValue * 0.5)}rem`,
+    '--section-padding': `${sectionPaddingRem}rem`,
     '--btn-radius': radius,
   } as React.CSSProperties;
 
+  // --- TEMPLATE DISPATCHER ---
   const renderActiveTemplate = () => {
       const type = data.type;
       const theme = data.layoutStyle;
@@ -50,80 +63,266 @@ const PreviewPanel: React.FC<PreviewPanelProps> = ({ data, device }) => {
           data,
           onOpenCheckout: () => setIsCheckoutOpen(true),
           onReadMoreStory: () => setIsStoryDrawerOpen(true),
-          onReadMoreBenefits: () => {},
-          onReadMoreUsage: () => {},
-          onOpenFaq: (faq: FaqItem) => {},
-          onViewAllFaqs: () => {},
+          onReadMoreBenefits: () => setIsBenefitsDrawerOpen(true),
+          onReadMoreUsage: () => setIsUsageDrawerOpen(true),
+          onOpenFaq: (faq: FaqItem) => setActiveFaqForDrawer(faq),
+          onViewAllFaqs: () => setIsAllFaqsDrawerOpen(true),
       };
 
       if (type === 'product' && theme === 'clean') {
           return <ProductClean {...handlers} />;
       }
+
       return <Placeholder data={data} type={type} theme={theme} />;
   };
-
-  const ContentShell = (
-    <div className="absolute inset-0 overflow-y-auto no-scrollbar preview-wrapper bg-white dark:bg-slate-950 z-[1]" style={previewStyle}>
-        <div className="min-h-full flex flex-col">
-            {renderActiveTemplate()}
-        </div>
-        
-        {/* Main Checkout Drawer */}
-        <div className={`checkout-drawer ${isCheckoutOpen ? 'open' : ''}`}>
-            <CheckoutView data={data} onClose={() => setIsCheckoutOpen(false)} />
-        </div>
-
-        {/* Story Drawer */}
-        <div className={`custom-story-drawer ${isStoryDrawerOpen ? 'open' : ''}`}>
-            <div className="w-12 h-1 bg-slate-200 dark:bg-slate-800 rounded-full mx-auto mt-4"></div>
-            <div className="flex justify-between items-center px-6 pt-4 pb-2">
-                <h3 className="text-lg font-black text-slate-900 dark:text-white uppercase tracking-wider">{data.shortStoryTitle || 'The Story'}</h3>
-                <button onClick={() => setIsStoryDrawerOpen(false)} className="p-2 bg-slate-100 dark:bg-slate-800 rounded-full"><X size={20} /></button>
-            </div>
-            <div className="flex-1 overflow-y-auto p-6 pt-2 text-left">
-                <p className="text-sm text-slate-700 dark:text-slate-200 leading-relaxed whitespace-pre-wrap">{data.description}</p>
-            </div>
-        </div>
-    </div>
-  );
 
   return (
     <>
       <style>{`
-        .preview-wrapper { font-family: var(--font-body); font-size: var(--base-size); line-height: 1.6; color: #334155; width: 100%; height: 100%; position: relative; }
-        .preview-wrapper h1 { font-family: var(--font-heading); line-height: 1.1; font-weight: 800; font-size: var(--h1-size); margin-bottom: 1rem; }
+        .preview-wrapper {
+          font-family: var(--font-body);
+          font-size: var(--base-size);
+          line-height: 1.6;
+          color: #334155;
+          width: 100%;
+          height: 100%;
+        }
+        .preview-wrapper h1 { 
+            font-family: var(--font-heading);
+            line-height: 1.1;
+            font-weight: 800;
+            font-size: var(--h1-size); 
+            margin-bottom: 1rem; 
+        }
+        
         .clean-section { padding: var(--section-padding) 1.5rem; }
-        .clean-btn { border-radius: var(--btn-radius); padding: 0.85rem 1rem; font-weight: 800; display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; text-transform: uppercase; letter-spacing: 0.05em; font-size: 0.72rem; min-height: 3.5rem; }
-        .attachment-card { background-color: white; border-radius: 2.5rem; border: 1px solid #e2e8f0; padding: 2rem; position: relative; }
-        .dark .attachment-card { background-color: #111827; border-color: #334155; }
-        .arch-frame { border-radius: 12rem; width: 100%; aspect-ratio: 4 / 5; background-color: var(--card-bg); overflow: hidden; display: flex; align-items: center; justify-content: center; position: relative; }
-        .custom-story-drawer { position: absolute; left: 0; right: 0; bottom: -110%; background: white; z-index: 700; border-top-left-radius: 2.5rem; border-top-right-radius: 2.5rem; box-shadow: 0 -10px 40px -10px rgba(0,0,0,0.3); max-height: 85%; display: flex; flex-direction: column; transform: translateY(110%); visibility: hidden; opacity: 0; transition: all 0.5s cubic-bezier(0.32, 0.72, 0, 1); }
-        .custom-story-drawer.open { bottom: 0; transform: translateY(0); visibility: visible; opacity: 1; pointer-events: auto; }
+        
+        .clean-btn {
+          border-radius: var(--btn-radius);
+          padding: 0.85rem 1rem;
+          font-weight: 800;
+          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          gap: 0.5rem;
+          text-transform: uppercase;
+          letter-spacing: 0.05em;
+          font-size: 0.72rem;
+          white-space: nowrap;
+          min-height: 3.5rem;
+        }
+
+        .attachment-card {
+            background-color: white;
+            border-radius: 2.5rem;
+            border: 1px solid #e2e8f0;
+            padding: 2rem;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        .dark .attachment-card {
+            background-color: #111827;
+            border-color: #334155;
+        }
+
+        .title-underline {
+            height: 4px;
+            width: 32px;
+            border-radius: 999px;
+            background-color: var(--theme-color);
+            margin-top: 6px;
+            margin-bottom: 1.5rem;
+        }
+
+        .arch-frame {
+            border-radius: 12rem 12rem 12rem 12rem;
+            width: 100%;
+            aspect-ratio: 4 / 5;
+            background-color: var(--card-bg);
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .step-connector {
+            position: absolute;
+            left: 17px;
+            top: 24px;
+            bottom: -24px;
+            width: 2px;
+            background-color: #e2e8f0;
+            z-index: 0;
+        }
+        .dark .step-connector { background-color: #334155; }
+
+        .custom-story-drawer {
+            position: absolute;
+            left: 0;
+            right: 0;
+            bottom: -110%;
+            background: white;
+            z-index: 700;
+            border-top-left-radius: 2.5rem;
+            border-top-right-radius: 2.5rem;
+            box-shadow: 0 -10px 40px -10px rgba(0,0,0,0.3);
+            max-height: 85%;
+            display: flex;
+            flex-direction: column;
+            transform: translateY(110%);
+            visibility: hidden;
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.5s cubic-bezier(0.32, 0.72, 0, 1);
+        }
+        .custom-story-drawer.open {
+            bottom: 0;
+            transform: translateY(0);
+            visibility: visible;
+            opacity: 1;
+            pointer-events: auto;
+        }
         .dark .custom-story-drawer { background: #0f172a; border-top: 1px solid #334155; }
-        .checkout-drawer { position: absolute; top: 0; right: -100%; bottom: 0; width: 100%; background: white; z-index: 600; transition: right 0.4s cubic-bezier(0.32, 0.72, 0, 1); display: flex; flex-direction: column; overflow: hidden; }
-        .checkout-drawer.open { right: 0; }
-        .dark .checkout-drawer { background: #0b141a; }
+
+        .checkout-drawer {
+            position: absolute;
+            top: 0;
+            right: -100%;
+            bottom: 0;
+            width: 100%;
+            background: white;
+            z-index: 600;
+            transition: right 0.4s cubic-bezier(0.32, 0.72, 0, 1);
+            display: flex;
+            flex-direction: column;
+        }
+        .checkout-drawer.open {
+            right: 0;
+        }
+        .dark .checkout-drawer { background: #0f172a; }
+
         .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+        .track-line {
+            width: 2px;
+            background-color: #e2e8f0;
+            height: 100%;
+            position: absolute;
+            left: 15px;
+            top: 24px;
+            z-index: 1;
+        }
+        .track-line-active {
+            background-color: #10b981;
+        }
+
+        .map-real-bg {
+            background-image: url('https://api.mapbox.com/styles/v1/mapbox/light-v10/static/0,0,1,0/1000x1000?access_token=pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4NXVycTA2emYycXBndHRqcmZ3N3gifQ.r_68_f3YXYByJ9as-kyMsA');
+            background-size: cover;
+            background-position: center;
+            transition: transform 0.5s cubic-bezier(0.23, 1, 0.32, 1), filter 0.3s ease;
+        }
+        .dark .map-real-bg {
+            background-image: url('https://api.mapbox.com/styles/v1/mapbox/dark-v10/static/0,0,1,0/1000x1000?access_token=pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4NXVycTA2emYycXBndHRqcmZ3N3gifQ.r_68_f3YXYByJ9as-kyMsA');
+        }
       `}</style>
 
       {isMobile ? (
-        <div className="mx-auto w-full max-w-[375px] h-full max-h-[850px] rounded-[2.5rem] shadow-2xl border-[12px] border-slate-900 overflow-hidden relative" style={{ backgroundColor: data.pageBgColor }}>
+        <div 
+          className="mx-auto w-full max-w-[375px] h-full max-h-[850px] rounded-[2.5rem] shadow-2xl border-[12px] border-slate-900 overflow-hidden relative transition-all duration-500"
+          style={{ backgroundColor: data.pageBgColor }}
+        >
            <div className="absolute top-0 left-1/2 -translate-x-1/2 h-6 w-32 bg-slate-900 rounded-b-xl z-[150]"></div>
-           {ContentShell}
+           
+           <div className="absolute inset-0 overflow-y-auto no-scrollbar preview-wrapper bg-white dark:bg-slate-950 z-[1]" style={previewStyle}>
+              {renderActiveTemplate()}
+           </div>
+
+           <div className={`checkout-drawer ${isCheckoutOpen ? 'open' : ''}`}>
+              <CheckoutView data={data} onClose={() => setIsCheckoutOpen(false)} />
+           </div>
+
+           <div className={`custom-story-drawer ${isStoryDrawerOpen ? 'open' : ''}`}>
+              <div className="w-12 h-1 bg-slate-200 dark:bg-slate-800 rounded-full mx-auto mt-4"></div>
+              <div className="flex justify-between items-center px-6 pt-4 pb-2">
+                  <h3 className="text-lg font-black text-slate-900 dark:text-white uppercase tracking-wider">{data.shortStoryTitle || 'The Story'}</h3>
+                  <button onClick={() => setIsStoryDrawerOpen(false)} className="p-2 bg-slate-100 dark:bg-slate-800 rounded-full"><X size={20} /></button>
+              </div>
+              <div className="flex-1 overflow-y-auto p-6 no-scrollbar pt-2 text-left">
+                  <p className="text-sm text-slate-700 dark:text-slate-200 leading-relaxed whitespace-pre-wrap">{data.description}</p>
+              </div>
+           </div>
+
+           <div className={`custom-story-drawer ${isBenefitsDrawerOpen ? 'open' : ''}`}>
+              <div className="w-12 h-1 bg-slate-200 dark:bg-slate-800 rounded-full mx-auto mt-4"></div>
+              <div className="flex justify-between items-center px-6 pt-4 pb-2">
+                  <h3 className="text-lg font-black text-slate-900 dark:text-white uppercase tracking-wider">Benefits</h3>
+                  <button onClick={() => setIsBenefitsDrawerOpen(false)} className="p-2 bg-slate-100 dark:bg-slate-800 rounded-full"><X size={20} /></button>
+              </div>
+              <div className="flex-1 overflow-y-auto p-6 no-scrollbar pt-2 space-y-4">
+                  {data.products[0]?.benefits.map((b, i) => (
+                    <div key={i} className="flex items-start gap-4">
+                        <div className="w-6 h-6 rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: data.pageBgColor }}><Check size={14} className="text-white" strokeWidth={4} /></div>
+                        <p className="text-sm font-bold text-slate-700 dark:text-slate-200 leading-tight">{b}</p>
+                    </div>
+                  ))}
+              </div>
+           </div>
+
+           <div className={`custom-story-drawer ${isUsageDrawerOpen ? 'open' : ''}`}>
+              <div className="w-12 h-1 bg-slate-200 dark:bg-slate-800 rounded-full mx-auto mt-4"></div>
+              <div className="flex justify-between items-center px-6 pt-4 pb-2">
+                  <h3 className="text-lg font-black text-slate-900 dark:text-white uppercase tracking-wider">Usage Steps</h3>
+                  <button onClick={() => setIsUsageDrawerOpen(false)} className="p-2 bg-slate-100 dark:bg-slate-800 rounded-full"><X size={20} /></button>
+              </div>
+              <div className="flex-1 overflow-y-auto p-6 no-scrollbar pt-2 space-y-8 relative">
+                  {data.products[0]?.usageSteps.map((step, idx) => (
+                      <div key={idx} className="flex items-start gap-5 relative">
+                          <div className="w-9 h-9 rounded-full flex items-center justify-center shrink-0 border-2 font-black text-sm" style={{ borderColor: data.pageBgColor, color: data.pageBgColor }}>
+                              {idx + 1}
+                          </div>
+                          <p className="text-sm font-bold text-slate-700 dark:text-slate-200 pt-1.5 leading-relaxed">{step}</p>
+                      </div>
+                  ))}
+              </div>
+           </div>
+
+           <div className={`custom-story-drawer ${activeFaqForDrawer ? 'open' : ''}`}>
+              <div className="w-12 h-1 bg-slate-200 dark:bg-slate-800 rounded-full mx-auto mt-4"></div>
+              <div className="flex justify-between items-center px-6 pt-4 pb-2">
+                  <h3 className="text-lg font-black text-slate-900 dark:text-white uppercase tracking-wider">Question</h3>
+                  <button onClick={() => setActiveFaqForDrawer(null)} className="p-2 bg-slate-100 dark:bg-slate-800 rounded-full"><X size={20} /></button>
+              </div>
+              <div className="flex-1 overflow-y-auto p-6 no-scrollbar pt-2 text-left">
+                  <p className="text-base font-black text-slate-900 dark:text-white mb-4">{activeFaqForDrawer?.question}</p>
+                  <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed whitespace-pre-wrap">{activeFaqForDrawer?.answer}</p>
+              </div>
+           </div>
+
+           <div className={`custom-story-drawer ${isAllFaqsDrawerOpen ? 'open' : ''}`}>
+              <div className="w-12 h-1 bg-slate-200 dark:bg-slate-800 rounded-full mx-auto mt-4"></div>
+              <div className="flex justify-between items-center px-6 pt-4 pb-2">
+                  <h3 className="text-lg font-black text-slate-900 dark:text-white uppercase tracking-wider">All FAQs</h3>
+                  <button onClick={() => setIsAllFaqsDrawerOpen(false)} className="p-2 bg-slate-100 dark:bg-slate-800 rounded-full"><X size={20} /></button>
+              </div>
+              <div className="flex-1 overflow-y-auto p-6 no-scrollbar pt-2 space-y-6">
+                  {data.faqs.map((faq, i) => (
+                    <div key={i} className="space-y-1">
+                        <p className="text-sm font-black text-slate-900 dark:text-white flex items-center gap-2"><span style={{ color: data.pageBgColor }}>Q.</span> {faq.question}</p>
+                        <p className="text-xs text-slate-500 dark:text-slate-400 pl-6">{faq.answer}</p>
+                    </div>
+                  ))}
+              </div>
+           </div>
         </div>
       ) : (
-        <div className="hidden md:block relative w-[410px] aspect-[9/19.5] max-h-[92vh] group scale-95 lg:scale-100">
-            <div className="absolute -left-[3px] top-28 w-[4px] h-14 bg-slate-800 rounded-l-md border-r border-white/5"></div>
-            <div className="absolute -left-[3px] top-48 w-[4px] h-20 bg-slate-800 rounded-l-md border-r border-white/5"></div>
-            <div className="absolute -right-[3px] top-44 w-[4px] h-24 bg-slate-800 rounded-r-md border-l border-white/5"></div>
-            <div className="w-full h-full bg-slate-950 rounded-[3.5rem] p-[12px] shadow-[0_50px_100px_-20px_rgba(0,0,0,0.7)] border-[4px] border-slate-800 relative ring-1 ring-white/10 overflow-hidden">
-                <div className="absolute top-0 left-1/2 -translate-x-1/2 h-8 w-32 bg-slate-950 rounded-b-3xl z-[250] flex items-center justify-end px-6 gap-2">
-                    <div className="w-2 h-2 rounded-full bg-slate-800"></div>
-                    <div className="w-3 h-3 rounded-full bg-[#111] border border-white/5"></div>
-                </div>
-                <div className="w-full h-full rounded-[2.8rem] overflow-hidden bg-white relative">
-                    {ContentShell}
-                </div>
+        <div className="w-full h-full bg-white shadow-lg overflow-y-auto no-scrollbar preview-wrapper relative" style={previewStyle}>
+            {renderActiveTemplate()}
+            <div className={`checkout-drawer ${isCheckoutOpen ? 'open' : ''} max-w-sm border-l border-slate-100 shadow-2xl`}>
+                <CheckoutView data={data} onClose={() => setIsCheckoutOpen(false)} />
             </div>
         </div>
       )}
@@ -132,251 +331,743 @@ const PreviewPanel: React.FC<PreviewPanelProps> = ({ data, device }) => {
 };
 
 const CheckoutView: React.FC<{ data: SalesPage; onClose: () => void }> = ({ data, onClose }) => {
-    const product = data.products[0];
-    const config = data.checkoutConfig;
-    
-    const [selectedMethod, setSelectedMethod] = useState<string | null>(null);
-    const [activePaymentAction, setActivePaymentAction] = useState<'MOMO' | 'CARD' | null>(null);
-    
-    // Form States (Simulated)
-    const [momoNumber, setMomoNumber] = useState('');
-    const [cardDetails, setCardDetails] = useState({ number: '', expiry: '', cvv: '', name: '' });
+  const [packageType, setPackageType] = useState<'single' | 'full'>('single');
+  const [selectedPayment, setSelectedPayment] = useState<string | null>(null);
+  const [paymentStep, setPaymentStep] = useState<string | null>(null); 
+  const [momoNumber, setMomoNumber] = useState('');
+  const [orderId] = useState(() => `NX-${Math.floor(100000 + Math.random() * 900000)}`);
+  
+  const [customerInfo, setCustomerInfo] = useState({
+    firstName: '',
+    lastName: '',
+    phone: '',
+    email: '',
+    houseNo: '',
+    street: '',
+    city: '',
+    state: '',
+    zip: ''
+  });
 
-    const subtotal = product?.price || 0;
-    const shippingCost = config.shipping.flatRate || 0;
-    const total = subtotal + shippingCost;
+  // --- MAP PICKER STATE ---
+  const [showMapPicker, setShowMapPicker] = useState(false);
+  const [zoom, setZoom] = useState(1);
+  const [isLocating, setIsLocating] = useState(false);
+  const [mapSearch, setMapSearch] = useState('');
+  const [mapResults, setMapResults] = useState<any[]>([]);
+  const [selectedLocation, setSelectedLocation] = useState({
+      name: 'Boundary Rd., East Legon, Accra',
+      details: 'Greater Accra Region, Ghana',
+      street: 'Boundary Rd.',
+      city: 'Accra',
+      state: 'Greater Accra'
+  });
 
-    const handleMethodSelect = (id: string) => {
-        setSelectedMethod(id);
-        if (id === 'momo') setActivePaymentAction('MOMO');
-        else if (id === 'card') setActivePaymentAction('CARD');
-        else setActivePaymentAction(null);
-    };
+  const product = data.products[0];
+  const unitPrice = packageType === 'full' ? (data.fullPackPrice || product?.price) : product?.price || 0;
+  
+  const threshold = data.checkoutConfig.shipping.freeShippingThreshold || 0;
+  const flatRate = data.checkoutConfig.shipping.flatRate || 0;
+  const shipping = (data.checkoutConfig.shipping.enabled && unitPrice >= threshold && threshold > 0) ? 0 : (data.checkoutConfig.shipping.enabled ? flatRate : 0);
+  
+  const total = unitPrice + shipping;
+  const iconColor = data.pageBgColor;
 
-    const InputField = ({ label, placeholder, icon: Icon, type = "text", value, onChange }: any) => (
-        <div className="space-y-1.5 w-full">
-            <label className="text-[10px] font-black uppercase text-slate-400 tracking-wider ml-1">{label}</label>
-            <div className="relative">
-                {Icon && <Icon className="absolute left-3.5 top-3.5 text-slate-400" size={16} />}
-                <input 
-                    type={type} 
-                    value={value}
-                    onChange={(e) => onChange?.(e.target.value)}
-                    placeholder={placeholder} 
-                    className={`w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-3.5 rounded-xl text-sm focus:ring-1 focus:ring-emerald-500 outline-none transition-all ${Icon ? 'pl-11' : ''} dark:text-white`}
-                />
-            </div>
-        </div>
-    );
+  // --- MAP LOGIC ---
+  const handleMapSearch = (query: string) => {
+      setMapSearch(query);
+      if (query.length > 2) {
+          const mockResults = [
+              { name: 'East Legon Mall', details: 'East Legon, Accra', street: 'Mall Link Rd.', city: 'Accra', state: 'Greater Accra' },
+              { name: 'University of Ghana', details: 'Legon, Accra', street: 'Legon Bypass', city: 'Accra', state: 'Greater Accra' },
+              { name: 'Marina Mall', details: 'Airport Residential Area, Accra', street: 'Liberation Rd.', city: 'Accra', state: 'Greater Accra' },
+              { name: 'Kumasi City Mall', details: 'Lake Rd, Kumasi', street: 'Lake Rd.', city: 'Kumasi', state: 'Ashanti' }
+          ].filter(l => l.name.toLowerCase().includes(query.toLowerCase()));
+          setMapResults(mockResults);
+      } else {
+          setMapResults([]);
+      }
+  };
 
-    return (
-        <div className="flex flex-col h-full bg-white dark:bg-[#0b141a] text-slate-900 dark:text-white font-sans relative">
-            {/* Header */}
-            <div className="p-5 flex items-center justify-between sticky top-0 bg-white/95 dark:bg-[#0b141a]/95 backdrop-blur-md z-40 border-b border-slate-100 dark:border-slate-800">
-                <div className="flex items-center gap-3">
-                    <button onClick={onClose} className="p-2 -ml-2 text-slate-500 hover:bg-slate-100 rounded-full transition-colors dark:hover:bg-slate-800"><ChevronLeft size={24}/></button>
-                    <div>
-                        <h2 className="text-lg font-black leading-none">Checkout</h2>
-                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">Place Your Order</p>
-                    </div>
-                </div>
-                <div className="w-10 h-10 bg-emerald-50 dark:bg-emerald-900/30 rounded-xl flex items-center justify-center text-emerald-600">
-                    <ShieldCheck size={24} />
-                </div>
-            </div>
-            
-            <div className="flex-1 overflow-y-auto no-scrollbar pb-40">
-                {/* Minimal Order Preview */}
-                <div className="p-6 bg-slate-50 dark:bg-slate-900/40 border-b border-slate-100 dark:border-slate-800">
-                    <div className="flex items-center gap-4">
-                        <div className="w-16 h-16 bg-white dark:bg-slate-800 rounded-xl overflow-hidden shadow-sm flex-shrink-0 border border-slate-100 dark:border-slate-700">
-                            {product?.images?.[0] && <img src={product.images[0]} className="w-full h-full object-cover" />}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                            <h4 className="font-bold text-sm truncate">{product?.name || data.title}</h4>
-                            <p className="text-[10px] font-black text-emerald-600 uppercase tracking-widest mt-1">{data.currency} {product?.price}</p>
-                        </div>
-                    </div>
-                </div>
+  const selectMapLocation = (loc: any) => {
+      setSelectedLocation(loc);
+      setMapSearch('');
+      setMapResults([]);
+      setZoom(2.5); // "Zoom in" to the selection
+  };
 
-                <div className="p-6 space-y-10">
-                    {/* Personal Info */}
-                    <div className="space-y-5">
-                        <div className="flex items-center gap-2 mb-2">
-                            <User size={18} className="text-emerald-500" />
-                            <h3 className="font-black text-sm uppercase tracking-wider">Contact Info</h3>
-                        </div>
-                        <div className="grid grid-cols-2 gap-3">
-                            <InputField label="First Name" placeholder="John" />
-                            <InputField label="Last Name" placeholder="Doe" />
-                        </div>
-                        <InputField label="Email" placeholder="john@example.com" icon={Mail} type="email" />
-                        <InputField label="Phone" placeholder="054 123 4567" icon={Phone} type="tel" />
-                    </div>
+  const handleLocateMe = () => {
+      setIsLocating(true);
+      if ("geolocation" in navigator) {
+          navigator.geolocation.getCurrentPosition(() => {
+              // Mock update to current area
+              setSelectedLocation({
+                  name: 'Your Current Position',
+                  details: 'Detected via GPS',
+                  street: 'Main Street',
+                  city: 'Accra',
+                  state: 'Greater Accra'
+              });
+              setZoom(2.8);
+              setIsLocating(false);
+          }, () => {
+              alert("Could not access location. Please check your browser permissions.");
+              setIsLocating(false);
+          });
+      }
+  };
 
-                    {/* Shipping Address */}
-                    {config.shipping.enabled && (
-                        <div className="space-y-5">
-                            <div className="flex items-center gap-2 mb-2">
-                                <MapPin size={18} className="text-blue-500" />
-                                <h3 className="font-black text-sm uppercase tracking-wider">Shipping Details</h3>
-                            </div>
-                            <InputField label="Street Address" placeholder="123 Aloevera Lane" />
-                            <InputField label="City" placeholder="Accra" />
-                            <div className="grid grid-cols-2 gap-3">
-                                <InputField label="State / Region" placeholder="Greater Accra" />
-                                <InputField label="Postal Code" placeholder="GA-123" />
-                            </div>
-                        </div>
-                    )}
+  const confirmMapSelection = () => {
+      setCustomerInfo({
+          ...customerInfo,
+          street: selectedLocation.street,
+          city: selectedLocation.city,
+          state: selectedLocation.state
+      });
+      setShowMapPicker(false);
+  };
 
-                    {/* Payment Method Selection */}
-                    <div className="space-y-5">
-                        <div className="flex items-center gap-2 mb-2">
-                            <Wallet size={18} className="text-amber-500" />
-                            <h3 className="font-black text-sm uppercase tracking-wider">Payment Method</h3>
-                        </div>
-                        <div className="grid grid-cols-1 gap-3">
-                            {config.paymentMethods.mobileMoney && (
-                                <PaymentCard 
-                                    id="momo"
-                                    label="Mobile Money" 
-                                    desc="MTN, Vodafone, Airtel" 
-                                    icon={Smartphone} 
-                                    active={selectedMethod === 'momo'} 
-                                    onClick={() => handleMethodSelect('momo')} 
-                                />
-                            )}
-                            {config.paymentMethods.card && (
-                                <PaymentCard 
-                                    id="card"
-                                    label="Credit / Debit Card" 
-                                    desc="Visa, Mastercard, Amex" 
-                                    icon={CardIcon} 
-                                    active={selectedMethod === 'card'} 
-                                    onClick={() => handleMethodSelect('card')} 
-                                />
-                            )}
-                            {config.paymentMethods.cashOnDelivery && (
-                                <PaymentCard 
-                                    id="cod"
-                                    label="Cash on Delivery" 
-                                    desc="Pay when receiving" 
-                                    icon={Banknote} 
-                                    active={selectedMethod === 'cod'} 
-                                    onClick={() => handleMethodSelect('cod')} 
-                                />
-                            )}
-                            {config.paymentMethods.bankTransfer && (
-                                <PaymentCard 
-                                    id="bank"
-                                    label="Bank Transfer" 
-                                    desc="Direct wire to bank" 
-                                    icon={Building2} 
-                                    active={selectedMethod === 'bank'} 
-                                    onClick={() => handleMethodSelect('bank')} 
-                                />
-                            )}
-                        </div>
-                    </div>
-                </div>
-            </div>
+  const handleAddressSearch = (query: string) => {
+    setCustomerInfo({ ...customerInfo, street: query });
+    if (query.length > 2) {
+      const mocks = [
+        `${query} Avenue, East Legon, Accra`,
+        `${query} Road, Kumasi Central`,
+        `${query} Street, Osu, Accra`,
+        `${query} Crescent, Tema Community 25`
+      ];
+      setAddressSuggestions(mocks);
+    } else {
+      setAddressSuggestions([]);
+    }
+  };
 
-            {/* Sticky Summary Bar */}
-            <div className="absolute bottom-0 left-0 right-0 p-5 bg-white dark:bg-[#0b141a] border-t border-slate-100 dark:border-slate-800 z-40 shadow-[0_-10px_30px_rgba(0,0,0,0.05)]">
-                <div className="flex justify-between items-end mb-4">
-                    <div className="space-y-1">
-                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Order Total</p>
-                        <div className="flex items-baseline gap-1">
-                            <span className="text-xl font-black text-slate-900 dark:text-white leading-none">{data.currency} {total.toLocaleString()}</span>
-                        </div>
-                    </div>
-                    <div className="text-right">
-                        <p className="text-[9px] text-slate-400 font-bold uppercase">Shipping</p>
-                        <p className="text-xs font-bold text-emerald-600">{shippingCost === 0 ? 'FREE' : `${data.currency} ${shippingCost}`}</p>
-                    </div>
-                </div>
-                <button className="w-full bg-emerald-600 text-white py-4.5 rounded-2xl font-black uppercase tracking-[0.15em] text-sm flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/20 active:scale-95 transition-all">
-                    Complete Order <ArrowRight size={20}/>
+  const [addressSuggestions, setAddressSuggestions] = useState<string[]>([]);
+
+  const selectSuggestion = (suggestion: string) => {
+    const parts = suggestion.split(', ');
+    setCustomerInfo({
+        ...customerInfo,
+        street: parts[0] || '',
+        city: parts[1] || '',
+        state: parts[2] || ''
+    });
+    setAddressSuggestions([]);
+  };
+
+  const handlePaymentSelect = (method: string) => {
+      const mandatory = ['firstName', 'lastName', 'phone', 'houseNo', 'street', 'city', 'state'];
+      const isMissing = mandatory.some(key => !customerInfo[key as keyof typeof customerInfo]);
+
+      if (isMissing) {
+          alert("Please complete the delivery information above before choosing a payment method.");
+          return;
+      }
+
+      setSelectedPayment(method);
+      if (method === 'cod') {
+          setPaymentStep('success');
+      } else {
+          setPaymentStep(method);
+      }
+  };
+
+  const handleConfirmAction = () => {
+      setPaymentStep('processing');
+      setTimeout(() => setPaymentStep('success'), 2000);
+  };
+
+  if (paymentStep === 'tracking') {
+      const estArrival = new Date();
+      estArrival.setDate(estArrival.getDate() + 3);
+      const arrivalStr = estArrival.toLocaleDateString('en-US', { month: 'short', day: 'numeric', weekday: 'long' });
+
+      return (
+          <div className="flex flex-col h-full bg-slate-50 dark:bg-slate-950 animate-fade-in overflow-hidden">
+              <div className="px-6 py-8 border-b border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 shrink-0 flex items-center gap-3">
+                  <button onClick={() => setPaymentStep('success')} className="p-2 -ml-2 text-slate-500"><ChevronLeft size={24}/></button>
+                  <h2 className="text-xl font-black text-slate-900 dark:text-white uppercase tracking-tight font-heading">Track Order</h2>
+              </div>
+              <div className="flex-1 overflow-y-auto p-6 space-y-6 no-scrollbar">
+                  <div className="bg-emerald-500 rounded-3xl p-6 text-white shadow-xl relative overflow-hidden">
+                      <div className="relative z-10">
+                        <p className="text-[10px] font-black uppercase tracking-widest opacity-80 mb-1">Arriving By</p>
+                        <h3 className="text-2xl font-black">{arrivalStr}</h3>
+                        <p className="text-xs font-bold mt-4 bg-white/20 inline-block px-3 py-1 rounded-full backdrop-blur-sm">Order ID: {orderId}</p>
+                      </div>
+                      <Box size={80} className="absolute -bottom-4 -right-4 opacity-20 rotate-12" />
+                  </div>
+
+                  <div className="bg-white dark:bg-slate-900 rounded-[2rem] p-8 border border-slate-100 dark:border-slate-800 space-y-10 relative">
+                      <div className="flex items-start gap-6 relative">
+                          <div className="track-line track-line-active"></div>
+                          <div className="w-8 h-8 rounded-full bg-emerald-500 flex items-center justify-center text-white z-10 shrink-0">
+                              <Check size={16} strokeWidth={4}/>
+                          </div>
+                          <div>
+                              <p className="text-sm font-black text-slate-900 dark:text-white uppercase">Ordered</p>
+                              <p className="text-xs text-slate-500">Today, {new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</p>
+                          </div>
+                      </div>
+
+                      <div className="flex items-start gap-6 relative">
+                          <div className="track-line"></div>
+                          <div className="w-8 h-8 rounded-full bg-emerald-500 flex items-center justify-center text-white z-10 shrink-0 shadow-lg shadow-emerald-500/30 animate-pulse">
+                              <Package size={16} strokeWidth={3}/>
+                          </div>
+                          <div>
+                              <p className="text-sm font-black text-slate-900 dark:text-white uppercase">Processing</p>
+                              <p className="text-xs text-slate-500 font-medium italic">Preparing your wellness items...</p>
+                          </div>
+                      </div>
+
+                      <div className="flex items-start gap-6 relative opacity-30 grayscale">
+                          <div className="track-line"></div>
+                          <div className="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-800 flex items-center justify-center text-slate-500 z-10 shrink-0">
+                              <Truck size={16} />
+                          </div>
+                          <div>
+                              <p className="text-sm font-black text-slate-900 dark:text-white uppercase">Shipped</p>
+                          </div>
+                      </div>
+
+                      <div className="flex items-start gap-6 relative opacity-30 grayscale">
+                          <div className="track-line"></div>
+                          <div className="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-800 flex items-center justify-center text-slate-500 z-10 shrink-0">
+                              <Home size={16} />
+                          </div>
+                          <div>
+                              <p className="text-sm font-black text-slate-900 dark:text-white uppercase">Delivered</p>
+                          </div>
+                      </div>
+                  </div>
+
+                  <div className="bg-white dark:bg-slate-900 rounded-[2rem] p-6 border border-slate-100 dark:border-slate-800">
+                      <h4 className="text-[10px] font-black uppercase text-slate-400 tracking-widest mb-4">Delivery Address</h4>
+                      <p className="text-sm font-bold text-slate-800 dark:text-slate-200">{customerInfo.firstName} {customerInfo.lastName}</p>
+                      <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed mt-1">
+                          {customerInfo.houseNo}, {customerInfo.street}<br/>
+                          {customerInfo.city}, {customerInfo.state}<br/>
+                          {customerInfo.phone}
+                      </p>
+                  </div>
+              </div>
+              <div className="p-6 bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800">
+                  <button onClick={onClose} className="w-full py-4 bg-slate-900 text-white rounded-2xl font-black uppercase tracking-widest text-xs dark:bg-emerald-600">Back to Page</button>
+              </div>
+          </div>
+      );
+  }
+
+  if (paymentStep === 'success') {
+      return (
+          <div className="flex flex-col h-full bg-white dark:bg-slate-950 items-center justify-center p-8 text-center animate-fade-in">
+              <div className="w-24 h-24 bg-emerald-100 rounded-full flex items-center justify-center text-emerald-600 mb-6 dark:bg-emerald-900/30">
+                  <CheckCircle size={64} />
+              </div>
+              <h2 className="text-2xl font-black text-slate-900 dark:text-white uppercase tracking-tight mb-1">Order Placed!</h2>
+              <p className="text-xs font-black text-slate-400 uppercase tracking-widest mb-4">Order ID: {orderId}</p>
+              <p className="text-slate-500 dark:text-slate-400 text-sm mb-10">Hi {customerInfo.firstName}, we've received your order. We'll message you once it ships.</p>
+              
+              <div className="flex flex-col w-full gap-3">
+                <button 
+                    onClick={() => setPaymentStep('tracking')} 
+                    className="w-full py-4 bg-emerald-600 text-white rounded-2xl font-black uppercase tracking-widest text-xs shadow-lg flex items-center justify-center gap-2 group"
+                >
+                    <Truck size={18} /> Track Your Order <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
                 </button>
+                <button onClick={onClose} className="w-full py-4 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-2xl font-bold uppercase tracking-widest text-[10px]">Return to Store</button>
+              </div>
+          </div>
+      );
+  }
+
+  if (paymentStep === 'processing') {
+      return (
+          <div className="flex flex-col h-full bg-white dark:bg-slate-950 items-center justify-center p-8 text-center">
+              <Loader2 size={48} className="text-emerald-500 animate-spin mb-4" />
+              <p className="text-slate-600 dark:text-slate-300 font-bold uppercase tracking-widest text-xs">Processing Payment...</p>
+          </div>
+      );
+  }
+
+  const INPUT_CLASS = "w-full p-4 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl text-sm font-bold outline-none focus:border-emerald-500 transition-all dark:text-white placeholder-slate-400";
+  const LABEL_CLASS = "text-[10px] font-black uppercase text-slate-400 tracking-[0.2em] mb-2 block";
+
+  return (
+    <div className="flex flex-col h-full bg-white dark:bg-slate-950 relative overflow-hidden">
+      
+      {/* FUNCTIONAL REFINED MAP PICKER UI */}
+      {showMapPicker && (
+          <div className="absolute inset-0 z-[900] bg-white dark:bg-slate-900 flex flex-col animate-in fade-in slide-in-from-bottom-full duration-500 cubic-bezier(0.32, 0.72, 0, 1)">
+              <div className="flex items-center justify-between p-5 border-b border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 shrink-0 shadow-sm">
+                  <div className="flex items-center gap-2">
+                    <MapIcon size={18} className="text-emerald-500" />
+                    <h3 className="font-black uppercase text-xs tracking-[0.2em] text-slate-800 dark:text-white">Pin Delivery Spot</h3>
+                  </div>
+                  <button onClick={() => setShowMapPicker(false)} className="p-2 bg-slate-100 dark:bg-slate-800 rounded-full transition-colors active:scale-95"><X size={20}/></button>
+              </div>
+              
+              <div className="flex-1 bg-slate-100 dark:bg-slate-950 relative overflow-hidden">
+                  {/* REAL MAP BACKGROUND SIMULATION */}
+                  <div 
+                    className="absolute inset-0 map-real-bg" 
+                    style={{ transform: `scale(${zoom})`, filter: isLocating ? 'blur(4px) grayscale(50%)' : 'none' }}
+                  />
+
+                  {/* Floating Map Controls */}
+                  <div className="absolute top-6 right-6 flex flex-col gap-2 z-20">
+                      <button 
+                        onClick={() => setZoom(prev => Math.min(3, prev + 0.5))}
+                        className="w-10 h-10 bg-white dark:bg-slate-800 rounded-xl shadow-lg flex items-center justify-center text-slate-600 dark:text-slate-300 hover:bg-slate-50 active:scale-95 transition-all border border-slate-100 dark:border-slate-700"
+                      >
+                          <Plus size={18} strokeWidth={3} />
+                      </button>
+                      <button 
+                        onClick={() => setZoom(prev => Math.max(1, prev - 0.5))}
+                        className="w-10 h-10 bg-white dark:bg-slate-800 rounded-xl shadow-lg flex items-center justify-center text-slate-600 dark:text-slate-300 hover:bg-slate-50 active:scale-95 transition-all border border-slate-100 dark:border-slate-700"
+                      >
+                          <Minus size={18} strokeWidth={3} />
+                      </button>
+                      <button 
+                        onClick={handleLocateMe}
+                        disabled={isLocating}
+                        className={`w-10 h-10 bg-white dark:bg-slate-800 rounded-xl shadow-lg flex items-center justify-center active:scale-95 transition-all border border-slate-100 dark:border-slate-700 ${isLocating ? 'text-slate-300' : 'text-emerald-600'}`}
+                      >
+                          {isLocating ? <Loader2 size={18} className="animate-spin" /> : <Crosshair size={18} strokeWidth={3} />}
+                      </button>
+                  </div>
+
+                  {/* FIXED Marker (Center of Screen) */}
+                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none pb-12 z-10">
+                      <div className="relative flex flex-col items-center">
+                          {/* Marker Shadow */}
+                          <div className="w-5 h-5 bg-black/20 rounded-full blur-[3px] absolute -bottom-1 scale-x-150"></div>
+                          {/* Animated Marker */}
+                          <div className={`relative ${isLocating ? 'animate-pulse' : 'animate-bounce'}`} style={{ color: iconColor }}>
+                              <MapPin size={52} strokeWidth={2.5} fill="currentColor" className="text-white filter drop-shadow-xl" style={{ color: iconColor }} />
+                              <div className="absolute inset-0 flex items-center justify-center">
+                                  <div className="w-3 h-3 bg-white rounded-full shadow-inner mb-4"></div>
+                              </div>
+                          </div>
+                      </div>
+                  </div>
+
+                  {/* Map Search Interface */}
+                  <div className="absolute top-6 left-6 right-20 z-30">
+                      <div className="relative flex flex-col gap-2">
+                          <div className="relative flex items-center">
+                              <Search size={18} className="absolute left-4 text-slate-400" />
+                              <input 
+                                  type="text" 
+                                  value={mapSearch}
+                                  onChange={(e) => handleMapSearch(e.target.value)}
+                                  placeholder="Search building or street..." 
+                                  className="w-full pl-12 pr-4 py-4 bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-100 dark:border-slate-800 outline-none text-sm font-bold dark:text-white focus:ring-2 focus:ring-emerald-500/50"
+                              />
+                              {mapSearch && (
+                                  <button onClick={() => { setMapSearch(''); setMapResults([]); }} className="absolute right-4 p-1 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-400">
+                                      <X size={14} />
+                                  </button>
+                              )}
+                          </div>
+
+                          {/* Search Results List */}
+                          {mapResults.length > 0 && (
+                              <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-100 dark:border-slate-800 overflow-hidden animate-in fade-in slide-in-from-top-2">
+                                  {mapResults.map((res, i) => (
+                                      <button 
+                                        key={i} 
+                                        onClick={() => selectMapLocation(res)}
+                                        className="w-full flex items-center gap-3 p-4 text-left hover:bg-slate-50 dark:hover:bg-slate-800 border-b border-slate-50 dark:border-slate-800 last:border-0"
+                                      >
+                                          <div className="p-2 bg-emerald-50 dark:bg-emerald-900/30 rounded-lg text-emerald-600">
+                                              <Navigation size={16} fill="currentColor" />
+                                          </div>
+                                          <div className="min-w-0">
+                                              <p className="text-sm font-black text-slate-800 dark:text-white truncate">{res.name}</p>
+                                              <p className="text-xs text-slate-500 dark:text-slate-400 truncate">{res.details}</p>
+                                          </div>
+                                      </button>
+                                  ))}
+                              </div>
+                          )}
+                      </div>
+                  </div>
+
+                  {/* Bottom Confirm Panel */}
+                  <div className="absolute bottom-6 left-6 right-6 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md p-6 rounded-[2.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.2)] border border-white/20 z-20">
+                      <div className="flex items-start gap-4 mb-5">
+                          <div className="w-12 h-12 bg-emerald-50 dark:bg-emerald-900/30 rounded-2xl flex items-center justify-center text-emerald-600 shrink-0">
+                              <Navigation size={24} fill="currentColor" className="opacity-80" />
+                          </div>
+                          <div className="min-w-0">
+                              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-0.5">Delivery Target</p>
+                              <p className="text-base font-black text-slate-800 dark:text-white truncate">{selectedLocation.name}</p>
+                              <p className="text-[11px] text-slate-500 font-bold dark:text-slate-400 uppercase tracking-wide">{selectedLocation.details}</p>
+                          </div>
+                      </div>
+                      <button 
+                        onClick={confirmMapSelection} 
+                        className="w-full py-5 rounded-[1.5rem] text-white font-black text-xs uppercase tracking-[0.2em] transition-all active:scale-95 shadow-xl flex items-center justify-center gap-2 group"
+                        style={{ backgroundColor: iconColor }}
+                      >
+                        Deliver Here <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
+                      </button>
+                  </div>
+              </div>
+          </div>
+      )}
+
+      {/* PAYMENT SUB-DRAWERS */}
+      <div className={`absolute inset-x-0 bottom-0 z-[800] bg-white dark:bg-slate-900 rounded-t-[3rem] shadow-[0_-20px_50px_-20px_rgba(0,0,0,0.3)] transition-transform duration-500 ease-in-out border-t border-slate-100 dark:border-slate-800 ${paymentStep ? 'translate-y-0' : 'translate-y-full'}`}>
+          <div className="w-12 h-1 bg-slate-200 dark:bg-slate-700 rounded-full mx-auto mt-6 mb-2"></div>
+          <div className="p-10 pb-16">
+              <div className="flex justify-between items-center mb-8">
+                  <h3 className="text-xl font-black text-slate-900 dark:text-white uppercase tracking-tighter flex items-center gap-3">
+                      {paymentStep === 'momo' ? <Smartphone size={24} color={iconColor}/> : paymentStep === 'card' ? <CardIcon size={24} color={iconColor}/> : <Building2 size={24} color={iconColor}/>}
+                      {paymentStep === 'momo' ? 'Mobile Money' : paymentStep === 'card' ? 'Secure Card Pay' : 'Bank Confirmation'}
+                  </h3>
+                  <button onClick={() => setPaymentStep(null)} className="p-2 bg-slate-100 dark:bg-slate-800 rounded-full"><X size={20} /></button>
+              </div>
+
+              {paymentStep === 'momo' && (
+                  <div className="space-y-8">
+                      <div>
+                          <label className={LABEL_CLASS}>Enter MoMo Number</label>
+                          <div className="relative">
+                              <input 
+                                type="tel" 
+                                value={momoNumber}
+                                onChange={e => setMomoNumber(e.target.value)}
+                                placeholder="0XX XXX XXXX"
+                                className="w-full p-6 bg-slate-50 dark:bg-slate-800 border-2 border-slate-100 dark:border-slate-700 rounded-[1.5rem] outline-none focus:border-emerald-500 font-black text-xl dark:text-white placeholder-slate-300"
+                              />
+                              <button onClick={handleConfirmAction} className="absolute right-3 top-1/2 -translate-y-1/2 p-4 bg-emerald-500 text-white rounded-2xl shadow-xl active:scale-90 transition-transform flex items-center justify-center">
+                                  <Send size={24} />
+                              </button>
+                          </div>
+                      </div>
+                      <div className="flex items-center gap-3 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-2xl">
+                        <AlertCircle size={20} className="text-blue-500" />
+                        <p className="text-[10px] font-bold text-blue-700 dark:text-blue-300 uppercase tracking-wider leading-relaxed">Check your phone screen for the prompt to confirm.</p>
+                      </div>
+                  </div>
+              )}
+
+              {paymentStep === 'card' && (
+                  <div className="space-y-4">
+                      <div className="space-y-4">
+                          <div>
+                              <label className={LABEL_CLASS}>Card Number</label>
+                              <input type="text" placeholder="XXXX XXXX XXXX XXXX" className={INPUT_CLASS} />
+                          </div>
+                          <div className="grid grid-cols-2 gap-4">
+                              <div>
+                                  <label className={LABEL_CLASS}>Expiry</label>
+                                  <input type="text" placeholder="MM/YY" className={INPUT_CLASS} />
+                              </div>
+                              <div>
+                                  <label className={LABEL_CLASS}>CVV</label>
+                                  <input type="text" placeholder="123" className={INPUT_CLASS} />
+                              </div>
+                          </div>
+                      </div>
+                      <button onClick={handleConfirmAction} className="w-full py-5 text-white rounded-[1.5rem] font-black uppercase tracking-widest text-sm mt-6 shadow-xl" style={{ backgroundColor: iconColor }}>
+                        Verify & Pay {data.currency} {total.toLocaleString()}
+                      </button>
+                  </div>
+              )}
+
+              {paymentStep === 'bank' && (
+                  <div className="space-y-6 text-center">
+                      <div className="bg-slate-50 dark:bg-slate-800 p-8 rounded-[2rem] border border-slate-100 dark:border-slate-700 space-y-4">
+                          <div className="flex justify-between border-b border-slate-200 dark:border-slate-700 pb-3">
+                              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Bank</span>
+                              <span className="text-sm font-black dark:text-white uppercase">Nexu Growth Bank</span>
+                          </div>
+                          <div className="flex justify-between border-b border-slate-200 dark:border-slate-700 pb-3">
+                              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">A/C Name</span>
+                              <span className="text-sm font-black dark:text-white uppercase">Nexu Academy Ltd</span>
+                          </div>
+                          <div className="flex justify-between pb-1">
+                              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Number</span>
+                              <span className="text-sm font-black font-mono dark:text-white">099100234567</span>
+                          </div>
+                      </div>
+                      <button onClick={handleConfirmAction} className="w-full py-5 text-white rounded-[1.5rem] font-black uppercase tracking-widest text-sm shadow-xl" style={{ backgroundColor: iconColor }}>
+                        I've made the transfer
+                      </button>
+                  </div>
+              )}
+          </div>
+      </div>
+
+      <div className="flex items-center px-6 py-8 border-b border-slate-100 dark:border-slate-800 shrink-0 bg-white dark:bg-slate-950 z-10">
+          <button onClick={onClose} className="p-2 -ml-2 text-slate-800 dark:text-white"><ChevronLeft size={28} strokeWidth={3} /></button>
+          <h2 className="text-xl font-black text-slate-900 dark:text-white ml-2 uppercase tracking-tight font-heading">Secure Checkout</h2>
+      </div>
+      
+      <div className="flex-1 overflow-y-auto p-6 space-y-12 no-scrollbar">
+          <div className="space-y-6">
+              <h3 className="text-[10px] font-black uppercase text-slate-400 tracking-[0.3em] flex items-center gap-2">
+                  <User size={14} color={iconColor} strokeWidth={4} /> Delivery Destination
+              </h3>
+              <div className="space-y-4">
+                  <div>
+                      <label className={LABEL_CLASS}>First Name*</label>
+                      <input 
+                        type="text" 
+                        className={INPUT_CLASS} 
+                        placeholder="Jane"
+                        value={customerInfo.firstName}
+                        onChange={e => setCustomerInfo({...customerInfo, firstName: e.target.value})}
+                      />
+                  </div>
+                  <div>
+                      <label className={LABEL_CLASS}>Last Name*</label>
+                      <input 
+                        type="text" 
+                        className={INPUT_CLASS} 
+                        placeholder="Doe"
+                        value={customerInfo.lastName}
+                        onChange={e => setCustomerInfo({...customerInfo, lastName: e.target.value})}
+                      />
+                  </div>
+                  <div>
+                      <label className={LABEL_CLASS}>Phone Number*</label>
+                      <div className="relative">
+                        <Smartphone size={16} color={iconColor} className="absolute left-4 top-1/2 -translate-y-1/2" />
+                        <input 
+                            type="tel" 
+                            className={INPUT_CLASS + " pl-12"} 
+                            placeholder="0XX XXX XXXX"
+                            value={customerInfo.phone}
+                            onChange={e => setCustomerInfo({...customerInfo, phone: e.target.value})}
+                        />
+                      </div>
+                  </div>
+                  <div>
+                      <label className={LABEL_CLASS}>Email (Optional)</label>
+                      <div className="relative">
+                        <Mail size={16} color={iconColor} className="absolute left-4 top-1/2 -translate-y-1/2" />
+                        <input 
+                            type="email" 
+                            className={INPUT_CLASS + " pl-12"} 
+                            placeholder="jane@example.com"
+                            value={customerInfo.email}
+                            onChange={e => setCustomerInfo({...customerInfo, email: e.target.value})}
+                        />
+                      </div>
+                  </div>
+
+                  <div className="h-px bg-slate-100 dark:bg-slate-700 my-4"></div>
+
+                  <div className="space-y-4">
+                      <div>
+                          <label className={LABEL_CLASS}>House / Flat No.*</label>
+                          <input 
+                            type="text" 
+                            className={INPUT_CLASS} 
+                            placeholder="B12"
+                            value={customerInfo.houseNo}
+                            onChange={e => setCustomerInfo({...customerInfo, houseNo: e.target.value})}
+                          />
+                      </div>
+                      <div>
+                          <label className={LABEL_CLASS}>Postal / Zip Code</label>
+                          <input 
+                            type="text" 
+                            className={INPUT_CLASS} 
+                            placeholder="00233"
+                            value={customerInfo.zip}
+                            onChange={e => setCustomerInfo({...customerInfo, zip: e.target.value})}
+                          />
+                      </div>
+                      <div className="relative">
+                          <label className={LABEL_CLASS}>Street Name / Area*</label>
+                          <div className="relative">
+                              <Search size={16} color={iconColor} className="absolute left-4 top-1/2 -translate-y-1/2" />
+                              <input 
+                                type="text" 
+                                className={INPUT_CLASS + " pl-12"} 
+                                placeholder="Start typing address..."
+                                value={customerInfo.street}
+                                onChange={e => handleAddressSearch(e.target.value)}
+                              />
+                          </div>
+                      </div>
+                      <div>
+                          <label className={LABEL_CLASS}>City*</label>
+                          <input 
+                            type="text" 
+                            className={INPUT_CLASS} 
+                            placeholder="Accra"
+                            value={customerInfo.city}
+                            onChange={e => setCustomerInfo({...customerInfo, city: e.target.value})}
+                          />
+                      </div>
+                      <div>
+                          <label className={LABEL_CLASS}>State / Region*</label>
+                          <input 
+                            type="text" 
+                            className={INPUT_CLASS} 
+                            placeholder="Greater Accra"
+                            value={customerInfo.state}
+                            onChange={e => setCustomerInfo({...customerInfo, state: e.target.value})}
+                          />
+                      </div>
+                  </div>
+
+                  <button 
+                    onClick={() => setShowMapPicker(true)}
+                    className="w-full mt-4 py-4 border-2 border-dashed rounded-2xl flex items-center justify-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] transition-all hover:bg-slate-50 dark:hover:bg-slate-800"
+                    style={{ color: iconColor, borderColor: iconColor }}
+                  >
+                      <MapIcon size={16} /> Use My Precise Map Location
+                  </button>
+              </div>
+          </div>
+
+          {data.fullPackPrice > 0 && (
+              <div className="space-y-6">
+                  <h3 className="text-[10px] font-black uppercase text-slate-400 tracking-[0.3em] flex items-center gap-2">
+                      <Tag size={14} color={iconColor} strokeWidth={4} /> Choose Your Package
+                  </h3>
+                  <div className="flex flex-col gap-4">
+                      <div 
+                          onClick={() => setPackageType('single')}
+                          className={`p-6 rounded-[2rem] border-2 flex items-center justify-between cursor-pointer transition-all ${packageType === 'single' ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20 shadow-lg' : 'border-slate-100 bg-slate-50 dark:bg-slate-800'}`}
+                      >
+                          <div className="flex items-center gap-4">
+                              <div className={`p-3 rounded-2xl ${packageType === 'single' ? 'bg-emerald-500 text-white' : 'bg-slate-200 text-slate-500 dark:bg-slate-700'}`}><ShoppingCart size={22}/></div>
+                              <div>
+                                  <p className="font-black text-sm text-slate-900 dark:text-white uppercase tracking-tight">Standard Unit</p>
+                                  <p className="text-xs text-slate-500 font-bold">{data.currency} {product?.price.toLocaleString()}</p>
+                              </div>
+                          </div>
+                          <div className={`w-7 h-7 rounded-full border-2 flex items-center justify-center ${packageType === 'single' ? 'border-emerald-500 bg-emerald-500 shadow-md shadow-emerald-500/20' : 'border-slate-200'}`}>
+                              {packageType === 'single' && <Check size={16} className="text-white" strokeWidth={4} />}
+                          </div>
+                      </div>
+
+                      <div 
+                          onClick={() => setPackageType('full')}
+                          className={`p-6 rounded-[2rem] border-2 flex items-center justify-between cursor-pointer transition-all ${packageType === 'full' ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20 shadow-lg' : 'border-slate-100 bg-slate-50 dark:bg-slate-800'}`}
+                      >
+                          <div className="flex items-center gap-4">
+                              <div className={`p-3 rounded-2xl ${packageType === 'full' ? 'bg-emerald-500 text-white' : 'bg-slate-200 text-slate-500 dark:bg-slate-700'}`}><Package size={22}/></div>
+                              <div>
+                                  <p className="font-black text-sm text-slate-900 dark:text-white uppercase tracking-tight">Full Case Pack</p>
+                                  <p className="text-xs text-slate-500 font-bold">{data.currency} {data.fullPackPrice.toLocaleString()}</p>
+                              </div>
+                          </div>
+                          <div className={`w-7 h-7 rounded-full border-2 flex items-center justify-center ${packageType === 'full' ? 'border-emerald-500 bg-emerald-500 shadow-md shadow-emerald-500/20' : 'border-slate-200'}`}>
+                              {packageType === 'full' && <Check size={16} className="text-white" strokeWidth={4} />}
+                          </div>
+                      </div>
+                  </div>
+              </div>
+          )}
+
+          <div className="space-y-6">
+            <h3 className="text-[10px] font-black uppercase text-slate-400 tracking-[0.3em] flex items-center gap-2">
+                <LayoutGrid size={14} color={iconColor} strokeWidth={4} /> Checkout Summary
+            </h3>
+            <div className="bg-slate-50 dark:bg-slate-800 rounded-[2.5rem] p-8 border border-slate-100 dark:border-slate-700 space-y-6 shadow-sm">
+                <div className="flex justify-between items-center pb-6 border-b border-slate-200 dark:border-slate-700">
+                    <div className="flex gap-4 items-center">
+                        <img src={product?.images[0]} className="w-16 h-16 object-contain bg-white rounded-2xl border border-slate-100 p-2 shadow-sm" />
+                        <div>
+                            <p className="text-xs font-black text-slate-900 dark:text-white uppercase truncate max-w-[120px] tracking-tight">{product?.name}</p>
+                            <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest">{packageType === 'full' ? 'Bulk Case' : 'Individual'}</p>
+                        </div>
+                    </div>
+                    <p className="text-lg font-black text-slate-900 dark:text-white">{data.currency} {unitPrice.toLocaleString()}</p>
+                </div>
+                <div className="space-y-3">
+                    <div className="flex justify-between text-xs font-black">
+                        <span className="text-slate-400 uppercase tracking-widest">Subtotal</span>
+                        <span className="text-slate-700 dark:text-slate-300">{data.currency} {unitPrice.toLocaleString()}</span>
+                    </div>
+                    <div className="flex justify-between text-xs font-black">
+                        <span className="text-slate-400 uppercase tracking-widest">Delivery</span>
+                        <span className={`uppercase ${shipping === 0 ? 'text-emerald-500' : 'text-slate-700 dark:text-slate-300'}`}>{shipping === 0 ? 'FREE' : `${data.currency} ${shipping}`}</span>
+                    </div>
+                    
+                    {data.checkoutConfig.shipping.freeShippingThreshold ? (
+                        <div className={`p-4 rounded-2xl text-[10px] font-black uppercase tracking-wider text-center ${unitPrice >= threshold ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30' : 'bg-blue-50 text-blue-700 dark:bg-blue-900/20'}`}>
+                            {unitPrice >= threshold 
+                                ? '🎉 Free Delivery Unlocked!' 
+                                : `Add ${data.currency} ${(threshold - unitPrice).toLocaleString()} more for FREE Delivery`}
+                        </div>
+                    ) : null}
+
+                    <div className="flex justify-between pt-6 border-t border-slate-200 dark:border-slate-700 items-end">
+                        <span className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-[0.2em]">Total Amount</span>
+                        <span className="text-3xl font-black text-emerald-500 tracking-tighter">{data.currency} {total.toLocaleString()}</span>
+                    </div>
+                </div>
             </div>
+          </div>
 
-            {/* Payment Detail Drawers */}
-            <PaymentSubDrawer 
-                isOpen={activePaymentAction === 'MOMO'} 
-                onClose={() => setActivePaymentAction(null)}
-                title="Mobile Money"
-                icon={Smartphone}
-            >
-                <div className="space-y-6">
-                    <div className="p-4 bg-emerald-50 dark:bg-emerald-900/20 rounded-2xl border border-emerald-100 dark:border-emerald-800 flex items-start gap-3">
-                        <AlertCircle className="text-emerald-600 shrink-0 mt-0.5" size={18} />
-                        <p className="text-xs text-emerald-800 dark:text-emerald-300 leading-relaxed font-medium">
-                            A payment prompt will be sent to this number. Please authorize the transaction on your phone.
-                        </p>
-                    </div>
-                    <InputField label="Enter Phone Number" placeholder="054 XXXXXXX" icon={Smartphone} type="tel" value={momoNumber} onChange={setMomoNumber} />
-                    <button onClick={() => setActivePaymentAction(null)} className="w-full bg-slate-900 dark:bg-emerald-600 text-white py-4.5 rounded-2xl font-bold uppercase tracking-widest text-sm transition-all active:scale-95">Send Confirmation</button>
-                </div>
-            </PaymentSubDrawer>
+          <div className="space-y-6 pb-20">
+              <h3 className="text-[10px] font-black uppercase text-slate-400 tracking-[0.3em] flex items-center gap-2">
+                  <CreditCard size={14} color={iconColor} strokeWidth={4} /> Payment Destination
+              </h3>
+              <div className="flex flex-col gap-3">
+                  {data.checkoutConfig.paymentMethods.mobileMoney && (
+                      <button onClick={() => handlePaymentSelect('momo')} className={`p-6 rounded-[2rem] border-2 flex items-center justify-between transition-all ${selectedPayment === 'momo' ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20' : 'border-slate-100 bg-white dark:bg-slate-800'}`}>
+                          <div className="flex items-center gap-4">
+                              <Smartphone size={24} className="text-yellow-600"/>
+                              <span className="font-black text-sm text-slate-800 dark:text-white uppercase tracking-tight">Mobile Money</span>
+                          </div>
+                          <div className={`w-6 h-6 rounded-full border-2 ${selectedPayment === 'momo' ? 'border-emerald-500 bg-emerald-500 shadow-md' : 'border-slate-200'}`} />
+                      </button>
+                  )}
+                  {data.checkoutConfig.paymentMethods.card && (
+                      <button onClick={() => handlePaymentSelect('card')} className={`p-6 rounded-[2rem] border-2 flex items-center justify-between transition-all ${selectedPayment === 'card' ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20' : 'border-slate-100 bg-white dark:bg-slate-800'}`}>
+                          <div className="flex items-center gap-4">
+                              <CardIcon size={24} className="text-indigo-600"/>
+                              <span className="font-black text-sm text-slate-800 dark:text-white uppercase tracking-tight">Credit / Debit Card</span>
+                          </div>
+                          <div className={`w-6 h-6 rounded-full border-2 ${selectedPayment === 'card' ? 'border-emerald-500 bg-emerald-500 shadow-md' : 'border-slate-200'}`} />
+                      </button>
+                  )}
+                  {data.checkoutConfig.paymentMethods.bankTransfer && (
+                      <button onClick={() => handlePaymentSelect('bank')} className={`p-6 rounded-[2rem] border-2 flex items-center justify-between transition-all ${selectedPayment === 'bank' ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20' : 'border-slate-100 bg-white dark:bg-slate-800'}`}>
+                          <div className="flex items-center gap-4">
+                              <Building2 size={24} className="text-blue-600"/>
+                              <span className="font-black text-sm text-slate-800 dark:text-white uppercase tracking-tight">Direct Bank Transfer</span>
+                          </div>
+                          <div className={`w-6 h-6 rounded-full border-2 ${selectedPayment === 'bank' ? 'border-emerald-500 bg-emerald-500 shadow-md' : 'border-slate-200'}`} />
+                      </button>
+                  )}
+                  {data.checkoutConfig.paymentMethods.cashOnDelivery && (
+                      <button onClick={() => handlePaymentSelect('cod')} className={`p-6 rounded-[2rem] border-2 flex items-center justify-between transition-all ${selectedPayment === 'cod' ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20' : 'border-slate-100 bg-white dark:bg-slate-800'}`}>
+                          <div className="flex items-center gap-4">
+                              <Wallet size={24} className="text-green-600"/>
+                              <span className="font-black text-sm text-slate-800 dark:text-white uppercase tracking-tight">Cash on Delivery</span>
+                          </div>
+                          <div className={`w-6 h-6 rounded-full border-2 ${selectedPayment === 'cod' ? 'border-emerald-500 bg-emerald-500 shadow-md' : 'border-slate-200'}`} />
+                      </button>
+                  )}
+              </div>
+          </div>
+      </div>
 
-            <PaymentSubDrawer 
-                isOpen={activePaymentAction === 'CARD'} 
-                onClose={() => setActivePaymentAction(null)}
-                title="Card Details"
-                icon={CardIcon}
-            >
-                <div className="space-y-5">
-                    <InputField label="Cardholder Name" placeholder="JOHN DOE" icon={User} />
-                    <InputField label="Card Number" placeholder="0000 0000 0000 0000" icon={CardIcon} type="tel" />
-                    <div className="grid grid-cols-2 gap-4">
-                        <InputField label="Expiry Date" placeholder="MM/YY" icon={Calendar} type="tel" />
-                        <InputField label="CVV" placeholder="123" icon={Lock} type="password" />
-                    </div>
-                    <div className="flex items-center gap-2 justify-center py-2 text-[10px] text-slate-400 font-bold uppercase tracking-widest">
-                        <ShieldCheck size={14} className="text-emerald-500" /> 100% Encrypted & Secure
-                    </div>
-                    <button onClick={() => setActivePaymentAction(null)} className="w-full bg-slate-900 dark:bg-emerald-600 text-white py-4.5 rounded-2xl font-bold uppercase tracking-widest text-sm transition-all active:scale-95">Verify & Pay</button>
-                </div>
-            </PaymentSubDrawer>
-        </div>
-    );
-};
-
-const PaymentCard = ({ label, desc, icon: Icon, active, onClick }: any) => (
-    <button 
-        onClick={onClick}
-        className={`flex items-center gap-4 p-4 rounded-2xl border-2 transition-all text-left ${active ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20 shadow-sm' : 'border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/40 hover:border-slate-200 dark:hover:border-slate-700'}`}
-    >
-        <div className={`p-3 rounded-xl ${active ? 'bg-emerald-500 text-white shadow-md shadow-emerald-500/20' : 'bg-white dark:bg-slate-800 text-slate-400 border border-slate-100 dark:border-slate-700'}`}>
-            <Icon size={22} />
-        </div>
-        <div className="flex-1 min-w-0">
-            <h4 className={`font-bold text-sm leading-none mb-1 ${active ? 'text-emerald-900 dark:text-white' : 'text-slate-800 dark:text-slate-200'}`}>{label}</h4>
-            <p className={`text-[10px] font-medium uppercase tracking-wider ${active ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400'}`}>{desc}</p>
-        </div>
-        {active && <CheckCircle2 className="text-emerald-500" size={20} />}
-    </button>
-);
-
-const PaymentSubDrawer = ({ isOpen, onClose, title, icon: Icon, children }: any) => (
-    <div className={`absolute inset-0 z-[100] transition-all duration-300 ${isOpen ? 'visible' : 'invisible pointer-events-none'}`}>
-        <div className={`absolute inset-0 bg-black/40 backdrop-blur-[2px] transition-opacity duration-300 ${isOpen ? 'opacity-100' : 'opacity-0'}`} onClick={onClose} />
-        <div className={`absolute bottom-0 left-0 right-0 bg-white dark:bg-[#152026] rounded-t-[2.5rem] shadow-2xl p-8 transform transition-transform duration-500 cubic-bezier(0.32, 0.72, 0, 1) ${isOpen ? 'translate-y-0' : 'translate-y-full'}`}>
-            <div className="w-12 h-1.5 bg-slate-100 dark:bg-slate-700 rounded-full mx-auto mb-8"></div>
-            <div className="flex items-center gap-4 mb-8">
-                <div className="w-12 h-12 rounded-2xl bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center text-emerald-600">
-                    <Icon size={24} />
-                </div>
-                <div className="flex-1">
-                    <h3 className="text-xl font-black font-heading dark:text-white">{title}</h3>
-                    <p className="text-xs text-slate-400 font-bold uppercase tracking-widest mt-1">Confirm Details</p>
-                </div>
-                <button onClick={onClose} className="p-2 bg-slate-100 dark:bg-slate-800 rounded-full text-slate-500 dark:text-slate-400"><X size={20}/></button>
-            </div>
-            {children}
-        </div>
+      <div className="p-8 border-t border-slate-100 dark:border-slate-800 shrink-0 bg-white dark:bg-slate-900 z-10">
+          <button 
+              disabled={!selectedPayment} 
+              onClick={() => selectedPayment && handlePaymentSelect(selectedPayment)}
+              className="w-full py-5 rounded-2xl font-black text-sm bg-slate-900 text-white uppercase tracking-widest shadow-2xl disabled:opacity-30 transition-all active:scale-95 dark:bg-emerald-600 flex items-center justify-center gap-2"
+              style={selectedPayment ? { backgroundColor: iconColor } : {}}
+          >
+              Complete Order Now <ArrowRight size={18} />
+          </button>
+      </div>
     </div>
-);
+  );
+};
 
 export default PreviewPanel;

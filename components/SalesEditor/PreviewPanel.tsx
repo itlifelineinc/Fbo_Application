@@ -5,7 +5,7 @@ import {
   X, ChevronLeft, ShoppingBag, CreditCard, Smartphone, Banknote, 
   Truck, ArrowRight, ShieldCheck, MapPin, Tag, Package, Building2,
   Calendar, CreditCard as CardIcon, Lock, CheckCircle2, User, Mail, Phone,
-  Wallet
+  Wallet, AlertCircle
 } from 'lucide-react';
 
 // Import Templates
@@ -63,8 +63,10 @@ const PreviewPanel: React.FC<PreviewPanelProps> = ({ data, device }) => {
   };
 
   const ContentShell = (
-    <div className="absolute inset-0 overflow-y-auto no-scrollbar preview-wrapper bg-white dark:bg-slate-950 z-[1] relative" style={previewStyle}>
-        {renderActiveTemplate()}
+    <div className="absolute inset-0 overflow-y-auto no-scrollbar preview-wrapper bg-white dark:bg-slate-950 z-[1]" style={previewStyle}>
+        <div className="min-h-full flex flex-col">
+            {renderActiveTemplate()}
+        </div>
         
         {/* Main Checkout Drawer */}
         <div className={`checkout-drawer ${isCheckoutOpen ? 'open' : ''}`}>
@@ -88,7 +90,7 @@ const PreviewPanel: React.FC<PreviewPanelProps> = ({ data, device }) => {
   return (
     <>
       <style>{`
-        .preview-wrapper { font-family: var(--font-body); font-size: var(--base-size); line-height: 1.6; color: #334155; width: 100%; height: 100%; }
+        .preview-wrapper { font-family: var(--font-body); font-size: var(--base-size); line-height: 1.6; color: #334155; width: 100%; height: 100%; position: relative; }
         .preview-wrapper h1 { font-family: var(--font-heading); line-height: 1.1; font-weight: 800; font-size: var(--h1-size); margin-bottom: 1rem; }
         .clean-section { padding: var(--section-padding) 1.5rem; }
         .clean-btn { border-radius: var(--btn-radius); padding: 0.85rem 1rem; font-weight: 800; display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; text-transform: uppercase; letter-spacing: 0.05em; font-size: 0.72rem; min-height: 3.5rem; }
@@ -98,9 +100,9 @@ const PreviewPanel: React.FC<PreviewPanelProps> = ({ data, device }) => {
         .custom-story-drawer { position: absolute; left: 0; right: 0; bottom: -110%; background: white; z-index: 700; border-top-left-radius: 2.5rem; border-top-right-radius: 2.5rem; box-shadow: 0 -10px 40px -10px rgba(0,0,0,0.3); max-height: 85%; display: flex; flex-direction: column; transform: translateY(110%); visibility: hidden; opacity: 0; transition: all 0.5s cubic-bezier(0.32, 0.72, 0, 1); }
         .custom-story-drawer.open { bottom: 0; transform: translateY(0); visibility: visible; opacity: 1; pointer-events: auto; }
         .dark .custom-story-drawer { background: #0f172a; border-top: 1px solid #334155; }
-        .checkout-drawer { position: absolute; top: 0; right: -100%; bottom: 0; width: 100%; background: white; z-index: 600; transition: right 0.4s cubic-bezier(0.32, 0.72, 0, 1); display: flex; flex-direction: column; overflow-y: auto; }
+        .checkout-drawer { position: absolute; top: 0; right: -100%; bottom: 0; width: 100%; background: white; z-index: 600; transition: right 0.4s cubic-bezier(0.32, 0.72, 0, 1); display: flex; flex-direction: column; overflow: hidden; }
         .checkout-drawer.open { right: 0; }
-        .dark .checkout-drawer { background: #0f172a; }
+        .dark .checkout-drawer { background: #0b141a; }
         .no-scrollbar::-webkit-scrollbar { display: none; }
       `}</style>
 
@@ -136,7 +138,7 @@ const CheckoutView: React.FC<{ data: SalesPage; onClose: () => void }> = ({ data
     const [selectedMethod, setSelectedMethod] = useState<string | null>(null);
     const [activePaymentAction, setActivePaymentAction] = useState<'MOMO' | 'CARD' | null>(null);
     
-    // Form States
+    // Form States (Simulated)
     const [momoNumber, setMomoNumber] = useState('');
     const [cardDetails, setCardDetails] = useState({ number: '', expiry: '', cvv: '', name: '' });
 
@@ -151,15 +153,17 @@ const CheckoutView: React.FC<{ data: SalesPage; onClose: () => void }> = ({ data
         else setActivePaymentAction(null);
     };
 
-    const InputField = ({ label, placeholder, icon: Icon, type = "text" }: any) => (
-        <div className="space-y-1.5">
+    const InputField = ({ label, placeholder, icon: Icon, type = "text", value, onChange }: any) => (
+        <div className="space-y-1.5 w-full">
             <label className="text-[10px] font-black uppercase text-slate-400 tracking-wider ml-1">{label}</label>
             <div className="relative">
                 {Icon && <Icon className="absolute left-3.5 top-3.5 text-slate-400" size={16} />}
                 <input 
                     type={type} 
+                    value={value}
+                    onChange={(e) => onChange?.(e.target.value)}
                     placeholder={placeholder} 
-                    className={`w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-3.5 rounded-xl text-sm focus:ring-1 focus:ring-emerald-500 outline-none transition-all ${Icon ? 'pl-11' : ''}`}
+                    className={`w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-3.5 rounded-xl text-sm focus:ring-1 focus:ring-emerald-500 outline-none transition-all ${Icon ? 'pl-11' : ''} dark:text-white`}
                 />
             </div>
         </div>
@@ -167,13 +171,13 @@ const CheckoutView: React.FC<{ data: SalesPage; onClose: () => void }> = ({ data
 
     return (
         <div className="flex flex-col h-full bg-white dark:bg-[#0b141a] text-slate-900 dark:text-white font-sans relative">
-            {/* 1. AMAZON-STYLE STICKY HEADER */}
+            {/* Header */}
             <div className="p-5 flex items-center justify-between sticky top-0 bg-white/95 dark:bg-[#0b141a]/95 backdrop-blur-md z-40 border-b border-slate-100 dark:border-slate-800">
                 <div className="flex items-center gap-3">
-                    <button onClick={onClose} className="p-2 -ml-2 text-slate-500 hover:bg-slate-100 rounded-full transition-colors"><ChevronLeft size={24}/></button>
+                    <button onClick={onClose} className="p-2 -ml-2 text-slate-500 hover:bg-slate-100 rounded-full transition-colors dark:hover:bg-slate-800"><ChevronLeft size={24}/></button>
                     <div>
                         <h2 className="text-lg font-black leading-none">Checkout</h2>
-                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">Review & Place Order</p>
+                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">Place Your Order</p>
                     </div>
                 </div>
                 <div className="w-10 h-10 bg-emerald-50 dark:bg-emerald-900/30 rounded-xl flex items-center justify-center text-emerald-600">
@@ -181,8 +185,8 @@ const CheckoutView: React.FC<{ data: SalesPage; onClose: () => void }> = ({ data
                 </div>
             </div>
             
-            <div className="flex-1 overflow-y-auto no-scrollbar pb-32">
-                {/* 2. ORDER PREVIEW (Amazon-style brief) */}
+            <div className="flex-1 overflow-y-auto no-scrollbar pb-40">
+                {/* Minimal Order Preview */}
                 <div className="p-6 bg-slate-50 dark:bg-slate-900/40 border-b border-slate-100 dark:border-slate-800">
                     <div className="flex items-center gap-4">
                         <div className="w-16 h-16 bg-white dark:bg-slate-800 rounded-xl overflow-hidden shadow-sm flex-shrink-0 border border-slate-100 dark:border-slate-700">
@@ -196,41 +200,39 @@ const CheckoutView: React.FC<{ data: SalesPage; onClose: () => void }> = ({ data
                 </div>
 
                 <div className="p-6 space-y-10">
-                    {/* 3. PERSONAL INFORMATION */}
+                    {/* Personal Info */}
                     <div className="space-y-5">
                         <div className="flex items-center gap-2 mb-2">
                             <User size={18} className="text-emerald-500" />
-                            <h3 className="font-black text-sm uppercase tracking-wider">Recipient Details</h3>
+                            <h3 className="font-black text-sm uppercase tracking-wider">Contact Info</h3>
                         </div>
                         <div className="grid grid-cols-2 gap-3">
                             <InputField label="First Name" placeholder="John" />
                             <InputField label="Last Name" placeholder="Doe" />
                         </div>
-                        <InputField label="Email Address" placeholder="john@example.com" icon={Mail} type="email" />
-                        <InputField label="Phone Number" placeholder="54 123 4567" icon={Phone} type="tel" />
+                        <InputField label="Email" placeholder="john@example.com" icon={Mail} type="email" />
+                        <InputField label="Phone" placeholder="054 123 4567" icon={Phone} type="tel" />
                     </div>
 
-                    {/* 4. SHIPPING ADDRESS (Detailed) */}
+                    {/* Shipping Address */}
                     {config.shipping.enabled && (
-                        <div className="space-y-5 animate-in fade-in slide-in-from-bottom-2">
+                        <div className="space-y-5">
                             <div className="flex items-center gap-2 mb-2">
                                 <MapPin size={18} className="text-blue-500" />
-                                <h3 className="font-black text-sm uppercase tracking-wider">Shipping Address</h3>
+                                <h3 className="font-black text-sm uppercase tracking-wider">Shipping Details</h3>
                             </div>
-                            <InputField label="Street Address" placeholder="123 Aloe Street" />
-                            <InputField label="Apartment, suite, etc. (optional)" placeholder="Apt 4B" />
+                            <InputField label="Street Address" placeholder="123 Aloevera Lane" />
+                            <InputField label="City" placeholder="Accra" />
                             <div className="grid grid-cols-2 gap-3">
-                                <InputField label="City" placeholder="Accra" />
                                 <InputField label="State / Region" placeholder="Greater Accra" />
+                                <InputField label="Postal Code" placeholder="GA-123" />
                             </div>
-                            <InputField label="ZIP / Postal Code" placeholder="GA-123-4567" />
                         </div>
                     )}
 
-                    {/* 5. PAYMENT METHODS */}
+                    {/* Payment Method Selection */}
                     <div className="space-y-5">
                         <div className="flex items-center gap-2 mb-2">
-                            {/* Fix: Use Wallet icon which is now imported */}
                             <Wallet size={18} className="text-amber-500" />
                             <h3 className="font-black text-sm uppercase tracking-wider">Payment Method</h3>
                         </div>
@@ -239,7 +241,7 @@ const CheckoutView: React.FC<{ data: SalesPage; onClose: () => void }> = ({ data
                                 <PaymentCard 
                                     id="momo"
                                     label="Mobile Money" 
-                                    desc="MTN, Vodafone, AirtelTigo" 
+                                    desc="MTN, Vodafone, Airtel" 
                                     icon={Smartphone} 
                                     active={selectedMethod === 'momo'} 
                                     onClick={() => handleMethodSelect('momo')} 
@@ -259,7 +261,7 @@ const CheckoutView: React.FC<{ data: SalesPage; onClose: () => void }> = ({ data
                                 <PaymentCard 
                                     id="cod"
                                     label="Cash on Delivery" 
-                                    desc="Pay when you receive" 
+                                    desc="Pay when receiving" 
                                     icon={Banknote} 
                                     active={selectedMethod === 'cod'} 
                                     onClick={() => handleMethodSelect('cod')} 
@@ -269,7 +271,7 @@ const CheckoutView: React.FC<{ data: SalesPage; onClose: () => void }> = ({ data
                                 <PaymentCard 
                                     id="bank"
                                     label="Bank Transfer" 
-                                    desc="Direct wire to account" 
+                                    desc="Direct wire to bank" 
                                     icon={Building2} 
                                     active={selectedMethod === 'bank'} 
                                     onClick={() => handleMethodSelect('bank')} 
@@ -280,14 +282,13 @@ const CheckoutView: React.FC<{ data: SalesPage; onClose: () => void }> = ({ data
                 </div>
             </div>
 
-            {/* 6. FIXED ORDER SUMMARY & BUTTON (Amazon-like) */}
+            {/* Sticky Summary Bar */}
             <div className="absolute bottom-0 left-0 right-0 p-5 bg-white dark:bg-[#0b141a] border-t border-slate-100 dark:border-slate-800 z-40 shadow-[0_-10px_30px_rgba(0,0,0,0.05)]">
                 <div className="flex justify-between items-end mb-4">
                     <div className="space-y-1">
                         <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Order Total</p>
                         <div className="flex items-baseline gap-1">
                             <span className="text-xl font-black text-slate-900 dark:text-white leading-none">{data.currency} {total.toLocaleString()}</span>
-                            <span className="text-[9px] text-slate-400 font-bold uppercase">(Inc. VAT)</span>
                         </div>
                     </div>
                     <div className="text-right">
@@ -296,49 +297,46 @@ const CheckoutView: React.FC<{ data: SalesPage; onClose: () => void }> = ({ data
                     </div>
                 </div>
                 <button className="w-full bg-emerald-600 text-white py-4.5 rounded-2xl font-black uppercase tracking-[0.15em] text-sm flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/20 active:scale-95 transition-all">
-                    Complete Purchase <ArrowRight size={20}/>
+                    Complete Order <ArrowRight size={20}/>
                 </button>
             </div>
 
-            {/* 7. BOTTOM ACTION DRAWERS (For MoMo / Card) */}
-            
-            {/* Mobile Money Input Drawer */}
+            {/* Payment Detail Drawers */}
             <PaymentSubDrawer 
                 isOpen={activePaymentAction === 'MOMO'} 
                 onClose={() => setActivePaymentAction(null)}
-                title="Mobile Money Details"
+                title="Mobile Money"
                 icon={Smartphone}
             >
                 <div className="space-y-6">
                     <div className="p-4 bg-emerald-50 dark:bg-emerald-900/20 rounded-2xl border border-emerald-100 dark:border-emerald-800 flex items-start gap-3">
                         <AlertCircle className="text-emerald-600 shrink-0 mt-0.5" size={18} />
-                        <p className="text-xs text-emerald-800 dark:text-emerald-300 leading-relaxed">
-                            A prompt will be sent to this number. Please authorize the payment on your phone.
+                        <p className="text-xs text-emerald-800 dark:text-emerald-300 leading-relaxed font-medium">
+                            A payment prompt will be sent to this number. Please authorize the transaction on your phone.
                         </p>
                     </div>
-                    <InputField label="Enter MoMo Number" placeholder="054 XXXXXXX" icon={Smartphone} type="tel" />
-                    <button onClick={() => setActivePaymentAction(null)} className="w-full bg-slate-900 dark:bg-white dark:text-slate-900 text-white py-4 rounded-xl font-bold">Confirm Number</button>
+                    <InputField label="Enter Phone Number" placeholder="054 XXXXXXX" icon={Smartphone} type="tel" value={momoNumber} onChange={setMomoNumber} />
+                    <button onClick={() => setActivePaymentAction(null)} className="w-full bg-slate-900 dark:bg-emerald-600 text-white py-4.5 rounded-2xl font-bold uppercase tracking-widest text-sm transition-all active:scale-95">Send Confirmation</button>
                 </div>
             </PaymentSubDrawer>
 
-            {/* Credit Card Input Drawer */}
             <PaymentSubDrawer 
                 isOpen={activePaymentAction === 'CARD'} 
                 onClose={() => setActivePaymentAction(null)}
-                title="Secure Card Payment"
+                title="Card Details"
                 icon={CardIcon}
             >
                 <div className="space-y-5">
-                    <InputField label="Cardholder Name" placeholder="John Doe" icon={User} />
+                    <InputField label="Cardholder Name" placeholder="JOHN DOE" icon={User} />
                     <InputField label="Card Number" placeholder="0000 0000 0000 0000" icon={CardIcon} type="tel" />
                     <div className="grid grid-cols-2 gap-4">
                         <InputField label="Expiry Date" placeholder="MM/YY" icon={Calendar} type="tel" />
                         <InputField label="CVV" placeholder="123" icon={Lock} type="password" />
                     </div>
                     <div className="flex items-center gap-2 justify-center py-2 text-[10px] text-slate-400 font-bold uppercase tracking-widest">
-                        <ShieldCheck size={14} className="text-emerald-500" /> PCI-DSS Compliant Secure
+                        <ShieldCheck size={14} className="text-emerald-500" /> 100% Encrypted & Secure
                     </div>
-                    <button onClick={() => setActivePaymentAction(null)} className="w-full bg-slate-900 dark:bg-white dark:text-slate-900 text-white py-4 rounded-xl font-bold">Securely Save Card</button>
+                    <button onClick={() => setActivePaymentAction(null)} className="w-full bg-slate-900 dark:bg-emerald-600 text-white py-4.5 rounded-2xl font-bold uppercase tracking-widest text-sm transition-all active:scale-95">Verify & Pay</button>
                 </div>
             </PaymentSubDrawer>
         </div>
@@ -364,25 +362,21 @@ const PaymentCard = ({ label, desc, icon: Icon, active, onClick }: any) => (
 const PaymentSubDrawer = ({ isOpen, onClose, title, icon: Icon, children }: any) => (
     <div className={`absolute inset-0 z-[100] transition-all duration-300 ${isOpen ? 'visible' : 'invisible pointer-events-none'}`}>
         <div className={`absolute inset-0 bg-black/40 backdrop-blur-[2px] transition-opacity duration-300 ${isOpen ? 'opacity-100' : 'opacity-0'}`} onClick={onClose} />
-        <div className={`absolute bottom-0 left-0 right-0 bg-white dark:bg-[#1a1a1a] rounded-t-[2.5rem] shadow-2xl p-8 transform transition-transform duration-500 cubic-bezier(0.32, 0.72, 0, 1) ${isOpen ? 'translate-y-0' : 'translate-y-full'}`}>
-            <div className="w-12 h-1.5 bg-slate-100 dark:bg-slate-800 rounded-full mx-auto mb-8"></div>
+        <div className={`absolute bottom-0 left-0 right-0 bg-white dark:bg-[#152026] rounded-t-[2.5rem] shadow-2xl p-8 transform transition-transform duration-500 cubic-bezier(0.32, 0.72, 0, 1) ${isOpen ? 'translate-y-0' : 'translate-y-full'}`}>
+            <div className="w-12 h-1.5 bg-slate-100 dark:bg-slate-700 rounded-full mx-auto mb-8"></div>
             <div className="flex items-center gap-4 mb-8">
                 <div className="w-12 h-12 rounded-2xl bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center text-emerald-600">
                     <Icon size={24} />
                 </div>
-                <div>
+                <div className="flex-1">
                     <h3 className="text-xl font-black font-heading dark:text-white">{title}</h3>
-                    <p className="text-xs text-slate-400 font-bold uppercase tracking-widest mt-1">Payment Authorization</p>
+                    <p className="text-xs text-slate-400 font-bold uppercase tracking-widest mt-1">Confirm Details</p>
                 </div>
-                <button onClick={onClose} className="ml-auto p-2 bg-slate-100 dark:bg-slate-800 rounded-full text-slate-500"><X size={20}/></button>
+                <button onClick={onClose} className="p-2 bg-slate-100 dark:bg-slate-800 rounded-full text-slate-500 dark:text-slate-400"><X size={20}/></button>
             </div>
             {children}
         </div>
     </div>
-);
-
-const AlertCircle = ({ size, className }: any) => (
-    <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
 );
 
 export default PreviewPanel;

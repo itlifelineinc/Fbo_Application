@@ -100,7 +100,7 @@ const ProductClean: React.FC<ProductCleanProps> = ({
   const footerContrast = getContrastColor(data.pageBgColor);
 
   return (
-    <div className="flex flex-col relative min-h-full pb-20">
+    <div className="flex flex-col relative min-h-full">
       {/* Floating WhatsApp Button - Scope Local to Container */}
       {data.ctaDisplay?.showFloatingWhatsapp && !heroButtonVisible && (
           <a 

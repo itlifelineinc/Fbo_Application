@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, Suspense } from 'react';
+import React, { useState, useEffect, useRef, Suspense } from 'react';
 import { SalesPage, Product, FaqItem } from '../../types/salesPage';
 import WhatsAppFloatingButton from '../Shared/WhatsAppFloatingButton';
 import { 
@@ -7,7 +7,7 @@ import {
   Image as ImageIcon, CreditCard, Smartphone, Truck, Send, Loader2, Package, 
   ShoppingBag, CheckCircle, ChevronDown, Wallet, Building2, CreditCard as CardIcon, 
   MapPin, Mail, LayoutGrid, Map as MapIcon, Navigation, Search, X, AlertCircle,
-  Tag, ArrowRight, Box, Home, Clock
+  Tag, ArrowRight, Box, Home, Clock, Plus, Minus, Crosshair
 } from 'lucide-react';
 
 // Import Templates
@@ -206,7 +206,6 @@ const PreviewPanel: React.FC<PreviewPanelProps> = ({ data, device }) => {
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
-        /* Stepper styles for Tracking */
         .track-line {
             width: 2px;
             background-color: #e2e8f0;
@@ -218,6 +217,16 @@ const PreviewPanel: React.FC<PreviewPanelProps> = ({ data, device }) => {
         }
         .track-line-active {
             background-color: #10b981;
+        }
+
+        .map-real-bg {
+            background-image: url('https://api.mapbox.com/styles/v1/mapbox/light-v10/static/0,0,1,0/1000x1000?access_token=pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4NXVycTA2emYycXBndHRqcmZ3N3gifQ.r_68_f3YXYByJ9as-kyMsA');
+            background-size: cover;
+            background-position: center;
+            transition: transform 0.5s cubic-bezier(0.23, 1, 0.32, 1), filter 0.3s ease;
+        }
+        .dark .map-real-bg {
+            background-image: url('https://api.mapbox.com/styles/v1/mapbox/dark-v10/static/0,0,1,0/1000x1000?access_token=pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4NXVycTA2emYycXBndHRqcmZ3N3gifQ.r_68_f3YXYByJ9as-kyMsA');
         }
       `}</style>
 
@@ -340,8 +349,19 @@ const CheckoutView: React.FC<{ data: SalesPage; onClose: () => void }> = ({ data
     zip: ''
   });
 
-  const [addressSuggestions, setAddressSuggestions] = useState<string[]>([]);
+  // --- MAP PICKER STATE ---
   const [showMapPicker, setShowMapPicker] = useState(false);
+  const [zoom, setZoom] = useState(1);
+  const [isLocating, setIsLocating] = useState(false);
+  const [mapSearch, setMapSearch] = useState('');
+  const [mapResults, setMapResults] = useState<any[]>([]);
+  const [selectedLocation, setSelectedLocation] = useState({
+      name: 'Boundary Rd., East Legon, Accra',
+      details: 'Greater Accra Region, Ghana',
+      street: 'Boundary Rd.',
+      city: 'Accra',
+      state: 'Greater Accra'
+  });
 
   const product = data.products[0];
   const unitPrice = packageType === 'full' ? (data.fullPackPrice || product?.price) : product?.price || 0;
@@ -352,6 +372,60 @@ const CheckoutView: React.FC<{ data: SalesPage; onClose: () => void }> = ({ data
   
   const total = unitPrice + shipping;
   const iconColor = data.pageBgColor;
+
+  // --- MAP LOGIC ---
+  const handleMapSearch = (query: string) => {
+      setMapSearch(query);
+      if (query.length > 2) {
+          const mockResults = [
+              { name: 'East Legon Mall', details: 'East Legon, Accra', street: 'Mall Link Rd.', city: 'Accra', state: 'Greater Accra' },
+              { name: 'University of Ghana', details: 'Legon, Accra', street: 'Legon Bypass', city: 'Accra', state: 'Greater Accra' },
+              { name: 'Marina Mall', details: 'Airport Residential Area, Accra', street: 'Liberation Rd.', city: 'Accra', state: 'Greater Accra' },
+              { name: 'Kumasi City Mall', details: 'Lake Rd, Kumasi', street: 'Lake Rd.', city: 'Kumasi', state: 'Ashanti' }
+          ].filter(l => l.name.toLowerCase().includes(query.toLowerCase()));
+          setMapResults(mockResults);
+      } else {
+          setMapResults([]);
+      }
+  };
+
+  const selectMapLocation = (loc: any) => {
+      setSelectedLocation(loc);
+      setMapSearch('');
+      setMapResults([]);
+      setZoom(2.5); // "Zoom in" to the selection
+  };
+
+  const handleLocateMe = () => {
+      setIsLocating(true);
+      if ("geolocation" in navigator) {
+          navigator.geolocation.getCurrentPosition(() => {
+              // Mock update to current area
+              setSelectedLocation({
+                  name: 'Your Current Position',
+                  details: 'Detected via GPS',
+                  street: 'Main Street',
+                  city: 'Accra',
+                  state: 'Greater Accra'
+              });
+              setZoom(2.8);
+              setIsLocating(false);
+          }, () => {
+              alert("Could not access location. Please check your browser permissions.");
+              setIsLocating(false);
+          });
+      }
+  };
+
+  const confirmMapSelection = () => {
+      setCustomerInfo({
+          ...customerInfo,
+          street: selectedLocation.street,
+          city: selectedLocation.city,
+          state: selectedLocation.state
+      });
+      setShowMapPicker(false);
+  };
 
   const handleAddressSearch = (query: string) => {
     setCustomerInfo({ ...customerInfo, street: query });
@@ -367,6 +441,8 @@ const CheckoutView: React.FC<{ data: SalesPage; onClose: () => void }> = ({ data
       setAddressSuggestions([]);
     }
   };
+
+  const [addressSuggestions, setAddressSuggestions] = useState<string[]>([]);
 
   const selectSuggestion = (suggestion: string) => {
     const parts = suggestion.split(', ');
@@ -456,6 +532,7 @@ const CheckoutView: React.FC<{ data: SalesPage; onClose: () => void }> = ({ data
                       </div>
 
                       <div className="flex items-start gap-6 relative opacity-30 grayscale">
+                          <div className="track-line"></div>
                           <div className="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-800 flex items-center justify-center text-slate-500 z-10 shrink-0">
                               <Home size={16} />
                           </div>
@@ -520,30 +597,122 @@ const CheckoutView: React.FC<{ data: SalesPage; onClose: () => void }> = ({ data
   return (
     <div className="flex flex-col h-full bg-white dark:bg-slate-950 relative overflow-hidden">
       
-      {/* MAP PICKER */}
+      {/* FUNCTIONAL REFINED MAP PICKER UI */}
       {showMapPicker && (
-          <div className="absolute inset-0 z-[900] bg-white dark:bg-slate-900 flex flex-col">
-              <div className="flex items-center justify-between p-4 border-b border-slate-100 dark:border-slate-800">
-                  <h3 className="font-bold uppercase text-xs tracking-widest">Pin your location</h3>
-                  <button onClick={() => setShowMapPicker(false)} className="p-2 bg-slate-100 rounded-full dark:bg-slate-800"><X size={18}/></button>
-              </div>
-              <div className="flex-1 bg-slate-200 dark:bg-slate-800 relative flex items-center justify-center">
-                  <MapIcon size={64} className="text-slate-400 opacity-20" />
-                  <div className="absolute animate-bounce" style={{ color: iconColor }}>
-                      <MapPin size={48} strokeWidth={3} />
+          <div className="absolute inset-0 z-[900] bg-white dark:bg-slate-900 flex flex-col animate-in fade-in slide-in-from-bottom-full duration-500 cubic-bezier(0.32, 0.72, 0, 1)">
+              <div className="flex items-center justify-between p-5 border-b border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 shrink-0 shadow-sm">
+                  <div className="flex items-center gap-2">
+                    <MapIcon size={18} className="text-emerald-500" />
+                    <h3 className="font-black uppercase text-xs tracking-[0.2em] text-slate-800 dark:text-white">Pin Delivery Spot</h3>
                   </div>
-                  <div className="absolute bottom-10 left-6 right-6 bg-white/90 backdrop-blur-md p-6 rounded-[2rem] shadow-2xl dark:bg-slate-900/90 border border-white/20">
-                      <p className="text-xs font-bold text-slate-800 dark:text-white mb-2">Location Found</p>
-                      <p className="text-[10px] text-slate-500 truncate mb-4">Boundary Rd., Accra, Ghana</p>
+                  <button onClick={() => setShowMapPicker(false)} className="p-2 bg-slate-100 dark:bg-slate-800 rounded-full transition-colors active:scale-95"><X size={20}/></button>
+              </div>
+              
+              <div className="flex-1 bg-slate-100 dark:bg-slate-950 relative overflow-hidden">
+                  {/* REAL MAP BACKGROUND SIMULATION */}
+                  <div 
+                    className="absolute inset-0 map-real-bg" 
+                    style={{ transform: `scale(${zoom})`, filter: isLocating ? 'blur(4px) grayscale(50%)' : 'none' }}
+                  />
+
+                  {/* Floating Map Controls */}
+                  <div className="absolute top-6 right-6 flex flex-col gap-2 z-20">
                       <button 
-                        onClick={() => {
-                            setCustomerInfo({...customerInfo, street: 'Boundary Rd.', city: 'Accra', state: 'Greater Accra'});
-                            setShowMapPicker(false);
-                        }} 
-                        className="w-full py-4 rounded-xl bg-slate-900 text-white font-black text-[10px] uppercase tracking-widest"
+                        onClick={() => setZoom(prev => Math.min(3, prev + 0.5))}
+                        className="w-10 h-10 bg-white dark:bg-slate-800 rounded-xl shadow-lg flex items-center justify-center text-slate-600 dark:text-slate-300 hover:bg-slate-50 active:scale-95 transition-all border border-slate-100 dark:border-slate-700"
+                      >
+                          <Plus size={18} strokeWidth={3} />
+                      </button>
+                      <button 
+                        onClick={() => setZoom(prev => Math.max(1, prev - 0.5))}
+                        className="w-10 h-10 bg-white dark:bg-slate-800 rounded-xl shadow-lg flex items-center justify-center text-slate-600 dark:text-slate-300 hover:bg-slate-50 active:scale-95 transition-all border border-slate-100 dark:border-slate-700"
+                      >
+                          <Minus size={18} strokeWidth={3} />
+                      </button>
+                      <button 
+                        onClick={handleLocateMe}
+                        disabled={isLocating}
+                        className={`w-10 h-10 bg-white dark:bg-slate-800 rounded-xl shadow-lg flex items-center justify-center active:scale-95 transition-all border border-slate-100 dark:border-slate-700 ${isLocating ? 'text-slate-300' : 'text-emerald-600'}`}
+                      >
+                          {isLocating ? <Loader2 size={18} className="animate-spin" /> : <Crosshair size={18} strokeWidth={3} />}
+                      </button>
+                  </div>
+
+                  {/* FIXED Marker (Center of Screen) */}
+                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none pb-12 z-10">
+                      <div className="relative flex flex-col items-center">
+                          {/* Marker Shadow */}
+                          <div className="w-5 h-5 bg-black/20 rounded-full blur-[3px] absolute -bottom-1 scale-x-150"></div>
+                          {/* Animated Marker */}
+                          <div className={`relative ${isLocating ? 'animate-pulse' : 'animate-bounce'}`} style={{ color: iconColor }}>
+                              <MapPin size={52} strokeWidth={2.5} fill="currentColor" className="text-white filter drop-shadow-xl" style={{ color: iconColor }} />
+                              <div className="absolute inset-0 flex items-center justify-center">
+                                  <div className="w-3 h-3 bg-white rounded-full shadow-inner mb-4"></div>
+                              </div>
+                          </div>
+                      </div>
+                  </div>
+
+                  {/* Map Search Interface */}
+                  <div className="absolute top-6 left-6 right-20 z-30">
+                      <div className="relative flex flex-col gap-2">
+                          <div className="relative flex items-center">
+                              <Search size={18} className="absolute left-4 text-slate-400" />
+                              <input 
+                                  type="text" 
+                                  value={mapSearch}
+                                  onChange={(e) => handleMapSearch(e.target.value)}
+                                  placeholder="Search building or street..." 
+                                  className="w-full pl-12 pr-4 py-4 bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-100 dark:border-slate-800 outline-none text-sm font-bold dark:text-white focus:ring-2 focus:ring-emerald-500/50"
+                              />
+                              {mapSearch && (
+                                  <button onClick={() => { setMapSearch(''); setMapResults([]); }} className="absolute right-4 p-1 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-400">
+                                      <X size={14} />
+                                  </button>
+                              )}
+                          </div>
+
+                          {/* Search Results List */}
+                          {mapResults.length > 0 && (
+                              <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-100 dark:border-slate-800 overflow-hidden animate-in fade-in slide-in-from-top-2">
+                                  {mapResults.map((res, i) => (
+                                      <button 
+                                        key={i} 
+                                        onClick={() => selectMapLocation(res)}
+                                        className="w-full flex items-center gap-3 p-4 text-left hover:bg-slate-50 dark:hover:bg-slate-800 border-b border-slate-50 dark:border-slate-800 last:border-0"
+                                      >
+                                          <div className="p-2 bg-emerald-50 dark:bg-emerald-900/30 rounded-lg text-emerald-600">
+                                              <Navigation size={16} fill="currentColor" />
+                                          </div>
+                                          <div className="min-w-0">
+                                              <p className="text-sm font-black text-slate-800 dark:text-white truncate">{res.name}</p>
+                                              <p className="text-xs text-slate-500 dark:text-slate-400 truncate">{res.details}</p>
+                                          </div>
+                                      </button>
+                                  ))}
+                              </div>
+                          )}
+                      </div>
+                  </div>
+
+                  {/* Bottom Confirm Panel */}
+                  <div className="absolute bottom-6 left-6 right-6 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md p-6 rounded-[2.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.2)] border border-white/20 z-20">
+                      <div className="flex items-start gap-4 mb-5">
+                          <div className="w-12 h-12 bg-emerald-50 dark:bg-emerald-900/30 rounded-2xl flex items-center justify-center text-emerald-600 shrink-0">
+                              <Navigation size={24} fill="currentColor" className="opacity-80" />
+                          </div>
+                          <div className="min-w-0">
+                              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-0.5">Delivery Target</p>
+                              <p className="text-base font-black text-slate-800 dark:text-white truncate">{selectedLocation.name}</p>
+                              <p className="text-[11px] text-slate-500 font-bold dark:text-slate-400 uppercase tracking-wide">{selectedLocation.details}</p>
+                          </div>
+                      </div>
+                      <button 
+                        onClick={confirmMapSelection} 
+                        className="w-full py-5 rounded-[1.5rem] text-white font-black text-xs uppercase tracking-[0.2em] transition-all active:scale-95 shadow-xl flex items-center justify-center gap-2 group"
                         style={{ backgroundColor: iconColor }}
                       >
-                        Confirm Location
+                        Deliver Here <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
                       </button>
                   </div>
               </div>
@@ -726,16 +895,6 @@ const CheckoutView: React.FC<{ data: SalesPage; onClose: () => void }> = ({ data
                                 value={customerInfo.street}
                                 onChange={e => handleAddressSearch(e.target.value)}
                               />
-                              {addressSuggestions.length > 0 && (
-                                  <div className="absolute top-full left-0 right-0 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl mt-2 shadow-2xl z-50 max-h-40 overflow-y-auto">
-                                      {addressSuggestions.map((s, i) => (
-                                          <div key={i} onClick={() => selectSuggestion(s)} className="p-4 text-[11px] font-bold hover:bg-slate-50 dark:hover:bg-slate-700 cursor-pointer flex items-center gap-3 border-b border-slate-50 dark:border-slate-700 last:border-0">
-                                              <Navigation size={14} color={iconColor}/>
-                                              <span className="truncate">{s}</span>
-                                          </div>
-                                      ))}
-                                  </div>
-                              )}
                           </div>
                       </div>
                       <div>

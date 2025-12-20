@@ -16,12 +16,12 @@ const INPUT_STYLE = "w-full bg-transparent border border-slate-300 rounded-xl px
 const LABEL_STYLE = "block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2 dark:text-slate-200";
 
 const BADGES_CONFIG = [
-    { id: 'iasc', label: 'IASC Certified', icon: Leaf },
-    { id: 'guarantee', label: '30-Day Guarantee', icon: ShieldCheck },
-    { id: 'cruelty_free', label: 'Cruelty Free', icon: Heart },
-    { id: 'kosher', label: 'Kosher Rated', icon: CheckCircle },
-    { id: 'halal', label: 'Halal Certified', icon: CheckCircle },
-    { id: 'natural', label: 'Natural Ingredients', icon: Sparkles },
+    { id: 'iasc', label: 'Certified', icon: Leaf },
+    { id: 'guarantee', label: 'Risk Free', icon: ShieldCheck },
+    { id: 'cruelty_free', label: 'Ethical', icon: Heart },
+    { id: 'kosher', label: 'Kosher', icon: CheckCircle },
+    { id: 'halal', label: 'Halal', icon: CheckCircle },
+    { id: 'natural', label: 'Natural', icon: Sparkles },
 ];
 
 const TrustProofEditor: React.FC<TrustProofEditorProps> = ({ data, onChange, currentUser }) => {

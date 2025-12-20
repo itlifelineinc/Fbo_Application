@@ -18,12 +18,12 @@ interface ProductCleanProps {
 }
 
 const BADGES_MAP: Record<string, { label: string, icon: any }> = {
-    'iasc': { label: 'IASC Certified', icon: Leaf },
-    'guarantee': { label: '30-Day Guarantee', icon: ShieldCheck },
-    'cruelty_free': { label: 'Cruelty Free', icon: Heart },
-    'kosher': { label: 'Kosher Rated', icon: CheckCircle },
-    'halal': { label: 'Halal Certified', icon: CheckCircle },
-    'natural': { label: 'Natural Ingredients', icon: Sparkles },
+    'iasc': { label: 'Certified', icon: Leaf },
+    'guarantee': { label: 'Risk Free', icon: ShieldCheck },
+    'cruelty_free': { label: 'Ethical', icon: Heart },
+    'kosher': { label: 'Kosher', icon: CheckCircle },
+    'halal': { label: 'Halal', icon: CheckCircle },
+    'natural': { label: 'Natural', icon: Sparkles },
 };
 
 const getContrastColor = (hexcolor: string) => {
@@ -268,7 +268,7 @@ const ProductClean: React.FC<ProductCleanProps> = ({
                       <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-1.5">
                               <h4 className="text-sm font-black text-slate-900 dark:text-white truncate">{testimonials[activeTestimonial]?.name}</h4>
-                              <div className="bg-emerald-500 rounded-full p-0.5 shadow-sm border border-white dark:border-slate-800 shrink-0">
+                              <div className="bg-emerald-50 rounded-full p-0.5 shadow-sm border border-white dark:border-slate-800 shrink-0">
                                   <ShieldCheck size={12} className="text-white" fill="currentColor" />
                               </div>
                           </div>
@@ -309,7 +309,7 @@ const ProductClean: React.FC<ProductCleanProps> = ({
       {/* 7. PRICE CARD */}
       <div className="px-6 py-10 bg-white dark:bg-slate-950">
           <div className="bg-slate-900 rounded-[3rem] p-10 shadow-2xl relative overflow-hidden text-left border border-slate-800">
-              <div className="absolute top-0 right-0 w-48 h-48 bg-emerald-500/10 rounded-full blur-3xl -mr-20 -mt-20"></div>
+              <div className="absolute top-0 right-0 w-48 h-48 bg-emerald-500/20 rounded-full blur-3xl -mr-20 -mt-20"></div>
               
               <div className="relative z-10">
                   <div className="flex flex-col gap-8">
@@ -396,8 +396,8 @@ const ProductClean: React.FC<ProductCleanProps> = ({
           </div>
       </div>
 
-      {/* MODERNIZED FOOTER */}
-      <footer className={`text-center space-y-4 pb-32 pt-10 px-6 transition-all duration-500 ${footerContrast}`} style={{ backgroundColor: data.pageBgColor }}>
+      {/* MODERNIZED FOOTER - REDUCED BOTTOM PADDING */}
+      <footer className={`text-center space-y-4 pb-12 pt-10 px-6 transition-all duration-500 ${footerContrast}`} style={{ backgroundColor: data.pageBgColor }}>
           <p className="text-[9px] uppercase font-black tracking-[0.25em] max-w-[85%] mx-auto leading-relaxed opacity-70">{data.disclaimer}</p>
           <div className="pt-8 border-t border-current/10 mx-6">
               <p className="text-[10px] font-black uppercase tracking-widest mb-1">{data.title}</p>

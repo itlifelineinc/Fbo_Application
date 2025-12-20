@@ -1,9 +1,9 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { SalesPage, FaqItem, CurrencyCode } from '../../../../types/salesPage';
 import { 
   Check, MessageCircle, ShoppingBag, BookOpen, Zap, ListChecks, 
-  CheckCircle, ChevronDown, Package, ArrowRight, Quote, Star, Award, CalendarDays, Shield, Globe, ShieldCheck, Leaf, Heart, Sparkles
+  CheckCircle, ChevronDown, Package, ArrowRight, Quote, Star, Award, CalendarDays, Shield, Globe, ShieldCheck, Leaf, Heart, Sparkles, HelpCircle
 } from 'lucide-react';
 import { currencyService, ConversionResult } from '../../../../services/currencyService';
 
@@ -26,7 +26,6 @@ const BADGES_MAP: Record<string, { label: string, icon: any }> = {
     'natural': { label: 'Natural Ingredients', icon: Sparkles },
 };
 
-// Helper to determine text contrast
 const getContrastColor = (hexcolor: string) => {
     if (!hexcolor || hexcolor === 'transparent') return 'text-slate-900';
     const hex = hexcolor.replace('#', '');
@@ -42,6 +41,8 @@ const ProductClean: React.FC<ProductCleanProps> = ({
 }) => {
   const [activeImg, setActiveImg] = useState(0);
   const [activeTestimonial, setActiveTestimonial] = useState(0);
+  const [heroButtonVisible, setHeroButtonVisible] = useState(true);
+  const heroButtonRef = useRef<HTMLAnchorElement>(null);
   
   const [visitorCurrency, setVisitorCurrency] = useState<CurrencyCode | null>(null);
   const [convertedMainPrice, setConvertedMainPrice] = useState<ConversionResult | null>(null);
@@ -52,6 +53,30 @@ const ProductClean: React.FC<ProductCleanProps> = ({
   const faqs = data.faqs || [];
   const testimonials = data.testimonials || [];
   const activeBadges = (data.badges || []).map(id => BADGES_MAP[id]).filter(Boolean);
+
+  // WhatsApp Link Generation
+  const whatsappUrl = React.useMemo(() => {
+    if (!data.whatsappNumber) return '#';
+    const cleanNumber = data.whatsappNumber.replace(/\D/g, '');
+    const message = data.whatsappMessage.replace('{title}', product?.name || data.title);
+    return `https://wa.me/${cleanNumber}?text=${encodeURIComponent(message)}`;
+  }, [data.whatsappNumber, data.whatsappMessage, data.title, product?.name]);
+
+  // Observer to check if Hero WhatsApp button is in view
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setHeroButtonVisible(entry.isIntersecting);
+      },
+      { threshold: 0.1 }
+    );
+
+    if (heroButtonRef.current) {
+      observer.observe(heroButtonRef.current);
+    }
+
+    return () => observer.disconnect();
+  }, []);
 
   useEffect(() => {
     const runConversion = async () => {
@@ -84,12 +109,23 @@ const ProductClean: React.FC<ProductCleanProps> = ({
   const isDarkBg = data.pageBgColor === '#064e3b' || data.pageBgColor === '#111827' || data.pageBgColor === '#000000' || data.pageBgColor === '#1e1b4b' || data.pageBgColor === '#4c0519';
   const textColorClass = isDarkBg ? 'text-white' : 'text-slate-900';
   
-  // Dynamic Contrast for Buttons & Footers
   const accentContrast = getContrastColor(data.themeColor);
   const footerContrast = getContrastColor(data.pageBgColor);
 
   return (
-    <div className="flex flex-col">
+    <div className="flex flex-col relative">
+      {/* Smart Floating WhatsApp Button */}
+      {data.ctaDisplay?.showFloatingWhatsapp && !heroButtonVisible && (
+          <a 
+            href={whatsappUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="fixed bottom-8 right-6 z-[60] w-14 h-14 bg-[#25D366] rounded-full shadow-2xl flex items-center justify-center text-white transition-all duration-500 animate-in fade-in zoom-in-50 slide-in-from-bottom-10 active:scale-90"
+          >
+              <MessageCircle size={28} fill="currentColor" />
+          </a>
+      )}
+
       {/* 1. HERO */}
       <header className="clean-section pt-16 pb-12 flex flex-col items-center text-center transition-all duration-500 overflow-hidden" style={{ backgroundColor: data.pageBgColor }}>
         <span className={`text-[10px] font-black uppercase tracking-[0.3em] mb-4 opacity-70 ${textColorClass}`}>{product?.category || 'Quality Wellness'}</span>
@@ -103,7 +139,6 @@ const ProductClean: React.FC<ProductCleanProps> = ({
             </div>
         </div>
 
-        {/* TRUST BADGES: Under image */}
         {activeBadges.length > 0 && (
             <div className="flex flex-wrap justify-center gap-4 mb-10 px-6 max-w-[400px]">
                 {activeBadges.map((badge, i) => (
@@ -118,9 +153,16 @@ const ProductClean: React.FC<ProductCleanProps> = ({
         )}
         
         <div className="flex flex-row gap-3 w-full px-5 max-w-[440px]">
-            <button className={`clean-btn flex-1 shadow-xl border border-white/10 active:scale-95 ${accentContrast}`} style={{ backgroundColor: data.themeColor }}>
+            <a 
+                ref={heroButtonRef}
+                href={whatsappUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={`clean-btn flex-1 shadow-xl border border-white/10 active:scale-95 ${accentContrast}`} 
+                style={{ backgroundColor: data.themeColor }}
+            >
                 <MessageCircle size={16} strokeWidth={4} /> WhatsApp
-            </button>
+            </a>
             {data.checkoutConfig?.enabled && (
                 <button onClick={onOpenCheckout} className="clean-btn flex-1 bg-white/20 backdrop-blur-md text-white border border-white/20 shadow-lg active:scale-95">
                     <ShoppingBag size={16} strokeWidth={4} /> Checkout
@@ -310,7 +352,7 @@ const ProductClean: React.FC<ProductCleanProps> = ({
           </div>
       </div>
 
-      {/* 8. WHY BUY FROM ME - NO GAP WITH FOOTER */}
+      {/* 8. WHY BUY FROM ME */}
       <div className="px-6 pt-6 pb-0 bg-white dark:bg-slate-950">
           <div className="relative pt-12 pb-10 px-8 rounded-t-[3rem] bg-slate-50 dark:bg-slate-900 border-x border-t border-slate-100 dark:border-slate-800 overflow-hidden">
               <div className="absolute top-0 right-0 p-8 opacity-5">
@@ -354,7 +396,7 @@ const ProductClean: React.FC<ProductCleanProps> = ({
           </div>
       </div>
 
-      {/* MODERNIZED FOOTER: Matching Headline Background */}
+      {/* MODERNIZED FOOTER */}
       <footer className={`text-center space-y-4 pb-32 pt-10 px-6 transition-all duration-500 ${footerContrast}`} style={{ backgroundColor: data.pageBgColor }}>
           <p className="text-[9px] uppercase font-black tracking-[0.25em] max-w-[85%] mx-auto leading-relaxed opacity-70">{data.disclaimer}</p>
           <div className="pt-8 border-t border-current/10 mx-6">
@@ -365,9 +407,5 @@ const ProductClean: React.FC<ProductCleanProps> = ({
     </div>
   );
 };
-
-const HelpCircle = ({ size, color, style, strokeWidth }: { size: number, color?: string, style?: any, strokeWidth?: number }) => (
-    <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color || "currentColor"} style={style} strokeWidth={strokeWidth || 2} strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg>
-);
 
 export default ProductClean;

@@ -6,7 +6,7 @@ import {
     Camera, Check, Edit2, Shield, Award, 
     Calendar, Video, Play, Search, MoreHorizontal,
     Settings, Eye, EyeOff, Moon, Sun, Key, LogOut,
-    Zap, ChevronLeft, Move, AlertCircle, Loader2
+    Zap, ChevronLeft, Move, AlertCircle, Loader2, User, X
 } from 'lucide-react';
 
 interface StudentProfileProps {
@@ -104,7 +104,6 @@ const StudentProfile: React.FC<StudentProfileProps> = ({ students, courses, curr
       const isHandleChanging = formattedNewHandle !== student.handle;
       const isNameChanging = editName !== student.name;
 
-      // Validate Change Frequencies
       if (isNameChanging && student.lastNameChangeAt && (now - student.lastNameChangeAt < twoWeeksMs)) {
           const daysLeft = Math.ceil((twoWeeksMs - (now - student.lastNameChangeAt)) / (24 * 60 * 60 * 1000));
           alert(`You can change your name again in ${daysLeft} days.`);
@@ -143,7 +142,7 @@ const StudentProfile: React.FC<StudentProfileProps> = ({ students, courses, curr
   return (
     <div className="h-full flex flex-col bg-white dark:bg-[#0f0f0f] overflow-y-auto no-scrollbar animate-fade-in relative">
       
-      {/* 1. CHANNEL BANNER - Centered Frame on Desktop with Rounded Corners */}
+      {/* 1. CHANNEL BANNER - Desktop with Rounded Corners */}
       <div className="w-full bg-slate-100 dark:bg-[#181818] shrink-0 md:pt-4">
         <div className="max-w-[1284px] mx-auto relative w-full h-[160px] md:h-[260px] bg-slate-200 dark:bg-[#272727] overflow-hidden group md:rounded-2xl shadow-sm">
             {student.bannerUrl ? (
@@ -215,7 +214,6 @@ const StudentProfile: React.FC<StudentProfileProps> = ({ students, courses, curr
       <div className="max-w-[1284px] mx-auto w-full px-4 md:px-6 py-6 md:py-8">
           <div className="flex flex-row md:flex-row gap-4 md:gap-8 items-start">
             
-            {/* Profile Picture (Left on Mobile) */}
             <div className="relative shrink-0 group">
                 <div 
                     className={`w-24 h-24 md:w-40 md:h-40 rounded-full border-4 border-white dark:border-[#0f0f0f] bg-emerald-100 dark:bg-[#272727] shadow-sm overflow-hidden flex items-center justify-center transition-transform ${isOwnProfile ? 'cursor-pointer hover:brightness-90' : ''}`}
@@ -248,7 +246,6 @@ const StudentProfile: React.FC<StudentProfileProps> = ({ students, courses, curr
                     </button>
                 )}
 
-                {/* Reposition HUD for Avatar */}
                 {adjustMode === 'AVATAR' && isOwnProfile && (
                     <div className="absolute left-full top-0 ml-4 z-40 bg-white dark:bg-slate-900 p-3 rounded-2xl shadow-2xl border border-slate-100 dark:border-slate-800 animate-slide-right flex flex-col gap-2 min-w-[120px]">
                         {['top', 'center', 'bottom'].map(pos => (
@@ -267,7 +264,6 @@ const StudentProfile: React.FC<StudentProfileProps> = ({ students, courses, curr
                 <input type="file" ref={avatarInputRef} className="hidden" accept="image/*" onChange={(e) => handleFileUpload(e, 'AVATAR')} />
             </div>
 
-            {/* Details (Right on Mobile) */}
             <div className="flex-1 min-w-0 flex flex-col justify-center pt-2 md:pt-4">
                 <div className="mb-4">
                     <h1 className="text-xl md:text-4xl font-black text-slate-900 dark:text-white font-heading tracking-tight mb-1 truncate">{student.name}</h1>
@@ -289,7 +285,7 @@ const StudentProfile: React.FC<StudentProfileProps> = ({ students, courses, curr
                     </div>
                 )}
 
-                {/* Action Buttons (YouTube Style) - Horizontal on Mobile */}
+                {/* HORIZONTAL BUTTONS FOR MOBILE: Scaled down text and padding */}
                 <div className="flex flex-row flex-nowrap gap-2">
                     {isOwnProfile ? (
                         <>
@@ -309,7 +305,6 @@ const StudentProfile: React.FC<StudentProfileProps> = ({ students, courses, curr
             </div>
           </div>
           
-          {/* Bio for Mobile (Shown below photo and info row) */}
           {student.bio && (
               <div className="mt-6 sm:hidden">
                   <p className="text-sm text-slate-600 dark:text-[#aaaaaa] line-clamp-3 leading-relaxed">
@@ -320,7 +315,7 @@ const StudentProfile: React.FC<StudentProfileProps> = ({ students, courses, curr
           )}
       </div>
 
-      {/* 3. CHANNEL TABS - Search icon removed */}
+      {/* 3. CHANNEL TABS */}
       <div className="max-w-[1284px] mx-auto w-full border-b border-slate-100 dark:border-white/10 shrink-0">
           <div className="flex items-center gap-1 md:gap-4 px-4 overflow-x-auto no-scrollbar">
               {TABS.map(tab => (
@@ -419,6 +414,7 @@ const StudentProfile: React.FC<StudentProfileProps> = ({ students, courses, curr
 
           {activeTab === 'Settings' && (
               <div className="w-full animate-fade-in pb-10">
+                  {/* TWO-COLUMN GRID FOR DESKTOP SETTINGS */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-12">
                       {/* Section: Channel Basics */}
                       {isOwnProfile && (
@@ -554,14 +550,6 @@ const LogoPlaceholder = () => (
         <rect x="20" y="20" width="60" height="60" rx="12" fill="none" stroke="currentColor" strokeWidth="4" />
         <path d="M40 40 L60 50 L40 60 Z" fill="currentColor" />
     </svg>
-);
-
-const User = ({ size, className }: { size: number, className?: string }) => (
-    <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-);
-
-const X = ({ size, className }: { size: number, className?: string }) => (
-    <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
 );
 
 export default StudentProfile;

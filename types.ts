@@ -190,6 +190,8 @@ export interface Student {
   bio?: string;
   avatarUrl?: string;
   bannerUrl?: string;
+  bannerPosition?: string; // e.g. "center" or "0% 20%"
+  avatarPosition?: string; // e.g. "center"
   enrolledDate: string;
   progress: number;
   completedModules: string[];
@@ -207,6 +209,8 @@ export interface Student {
   salesHistory?: SaleRecord[];
   assignmentSubmissions?: AssignmentSubmission[];
   cohortId?: string;
+  lastHandleChangeAt?: number;
+  lastNameChangeAt?: number;
 }
 
 export type MessageStatus = 'SENT' | 'DELIVERED' | 'READ';

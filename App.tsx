@@ -75,10 +75,22 @@ const App: React.FC = () => {
   };
 
   const handleAddStudent = (student: Student) => setStudents([...students, student]);
+  
   const handleUpdateStudent = (updatedStudent: Student) => {
-    setStudents(students.map(s => s.id === updatedStudent.id ? updatedStudent : s));
+    const oldStudent = students.find(s => s.id === updatedStudent.id);
+    let newStudents = students.map(s => s.id === updatedStudent.id ? updatedStudent : s);
+    
+    // Cascading Handle Update: If a user changes their handle, update all students who have them as a sponsor.
+    if (oldStudent && oldStudent.handle !== updatedStudent.handle) {
+        newStudents = newStudents.map(s => 
+            s.sponsorId === oldStudent.handle ? { ...s, sponsorId: updatedStudent.handle } : s
+        );
+    }
+    
+    setStudents(newStudents);
     if (currentUser?.id === updatedStudent.id) setCurrentUser(updatedStudent);
   };
+
   const handleDeleteStudent = (id: string) => setStudents(students.filter(s => s.id !== id));
 
   const handleSubmitCourse = (course: Course) => {

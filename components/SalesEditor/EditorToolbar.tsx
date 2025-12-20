@@ -39,13 +39,13 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({
             <ChevronLeft strokeWidth={2.5} size={24} />
         </Link>
         <div className="flex items-center gap-2">
-            <h1 className="text-lg font-bold text-slate-900 dark:text-white leading-none">{pageTypeTitle}</h1>
             <button 
                 onClick={onToggleTypeSelection}
                 className="p-1.5 bg-slate-50 rounded-lg text-slate-400 dark:bg-slate-800"
             >
                 <LayoutGrid size={16} strokeWidth={2.5} />
             </button>
+            <h1 className="text-lg font-bold text-slate-900 dark:text-white leading-none">{pageTypeTitle}</h1>
         </div>
       </div>
 
@@ -58,7 +58,6 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({
         <div className="flex flex-col">
             <div className="flex items-center gap-3">
                 <div className="flex items-center gap-2">
-                    <h1 className="text-xl font-bold text-slate-900 dark:text-white leading-none">{pageTypeTitle}</h1>
                     <button 
                         onClick={onToggleTypeSelection}
                         className="p-1.5 hover:bg-slate-100 rounded-lg text-slate-400 hover:text-emerald-600 transition-colors dark:hover:bg-slate-800"
@@ -66,6 +65,7 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({
                     >
                         <LayoutGrid size={18} strokeWidth={2.5} />
                     </button>
+                    <h1 className="text-xl font-bold text-slate-900 dark:text-white leading-none">{pageTypeTitle}</h1>
                 </div>
                 <span className="text-slate-300 dark:text-slate-600">|</span>
                 <span className="text-xs font-medium text-slate-400">

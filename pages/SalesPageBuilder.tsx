@@ -29,12 +29,12 @@ const SalesPageBuilder: React.FC<SalesPageBuilderProps> = ({ currentUser }) => {
   const [showSplitView, setShowSplitView] = useState(true);
   const [showTypeSelection, setShowTypeSelection] = useState(false);
 
-  // If no pages exist or forced by create button
+  // Trigger type selection immediately on entry if no page is active
   useEffect(() => {
-      if (isLoaded && pages.length === 0) {
+      if (isLoaded && !currentPage) {
           setShowTypeSelection(true);
       }
-  }, [isLoaded, pages]);
+  }, [isLoaded, currentPage]);
 
   const pageTypes: { 
       id: PageType; 

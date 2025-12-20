@@ -88,19 +88,18 @@ const EditorLayout: React.FC<EditorLayoutProps> = ({
   const handleUpdateCurrency = (id: string, currency: CurrencyCode) => {
       if (data?.id === id) {
           updateField('currency', currency);
-      } else {
-          // If editing a background page, we'd need to update it in the list
-          // For now, assume users edit currency for the active page
-          console.warn("Currency update logic triggered for non-active page");
       }
   };
 
   // --- CONTEXT-AWARE DISPATCHER ---
   const renderContent = () => {
       if (activeTabId === 'OVERVIEW') {
+          // Filter pages shown in Overview by the current Portal Type
+          const filteredPages = pages.filter(p => p.type === portalType);
+          
           return (
             <Overview 
-                pages={pages} 
+                pages={filteredPages} 
                 activePageId={data?.id}
                 onSelect={onSelectPage}
                 onCreate={onCreatePage}

@@ -6,7 +6,7 @@ import {
   LogOut, Settings, Moon, Sun, ChevronDown, Award, Bell, 
   LayoutTemplate, X, Menu, Home, BookOpen, Globe, Users, 
   MessageCircle, DollarSign, Rocket, Layers, User,
-  ShoppingCart, ChevronRight, LayoutGrid, CheckCircle
+  ShoppingCart, ChevronRight, LayoutGrid, CheckCircle, AlertCircle
 } from 'lucide-react';
 import { Logo } from './Logo';
 
@@ -32,6 +32,7 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const [isNotificationMenuOpen, setIsNotificationMenuOpen] = useState(false);
   const [isSalesMenuOpen, setIsSalesMenuOpen] = useState(false);
+  const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
   
   const [isDockExpanded, setIsDockExpanded] = useState(false);
   const dockTimeoutRef = useRef<any>(null);
@@ -97,18 +98,17 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
       setIsSidebarOpen(!isSidebarOpen);
   }
 
-  /**
-   * NO-NAVBAR ROUTE LISTING ("Labeling")
-   * Any path starting with these prefixes will NOT render the global header.
-   * This allows the page itself to provide a custom header/toolbar.
-   */
-  const customHeaderPages = [
+  const handleLogoutClick = () => {
+      setIsProfileMenuOpen(false);
+      setIsSidebarOpen(false);
+      setIsLogoutModalOpen(true);
+  };
+
+  const hasCustomHeader = [
     '/sales-builder', 
     '/builder',
-    '/classroom/', // Individual lesson pages have their own header
-  ];
-  
-  const hasCustomHeader = customHeaderPages.some(path => location.pathname.startsWith(path));
+    '/classroom/', 
+  ].some(path => location.pathname.startsWith(path));
 
   const NavItem = ({ to, label, icon: Icon, active, onClick }: { to: string, label: string, icon: any, active: boolean, onClick?: () => void }) => (
     <Link
@@ -128,6 +128,50 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
   return (
     <div className="flex h-screen bg-[#f3f4f6] dark:bg-[#0f172a] overflow-hidden transition-colors duration-300 font-sans">
       
+      {/* 1. LOGOUT CONFIRMATION MODAL/DRAWER */}
+      {isLogoutModalOpen && (
+        <div className="fixed inset-0 z-[500] flex justify-center md:items-center md:justify-center p-0 md:p-6">
+            <style>{`
+                @keyframes slideInUp {
+                    from { transform: translateY(100%); }
+                    to { transform: translateY(0); }
+                }
+                @keyframes zoomInSmall {
+                    from { opacity: 0; transform: scale(0.9); }
+                    to { opacity: 1; transform: scale(1); }
+                }
+                .logout-drawer { animation: slideInUp 0.3s cubic-bezier(0.32, 0.72, 0, 1) forwards; }
+                .logout-modal { animation: zoomInSmall 0.2s ease-out forwards; }
+            `}</style>
+            <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-md animate-fade-in" onClick={() => setIsLogoutModalOpen(false)}></div>
+            <div className="relative flex flex-col bg-white dark:bg-slate-900 shadow-2xl w-full h-fit md:max-w-md mt-auto md:mt-0 rounded-t-[2.5rem] md:rounded-[2rem] overflow-hidden logout-drawer md:logout-modal">
+                <div className="p-8 flex flex-col items-center text-center">
+                    <div className="w-16 h-16 bg-red-50 dark:bg-red-900/20 rounded-2xl flex items-center justify-center text-red-600 mb-6">
+                        <LogOut size={32} strokeWidth={3} />
+                    </div>
+                    <h3 className="text-2xl font-black text-slate-900 dark:text-white font-heading mb-2">Sign Out?</h3>
+                    <p className="text-slate-500 dark:text-slate-400 text-sm leading-relaxed mb-8">
+                        Are you sure you want to log out? You will need to sign in again to access your team dashboard and courses.
+                    </p>
+                    <div className="flex flex-col w-full gap-3">
+                        <button 
+                            onClick={onLogout}
+                            className="w-full py-4 bg-slate-900 dark:bg-red-600 text-white font-black rounded-2xl shadow-lg hover:brightness-110 active:scale-95 transition-all text-sm uppercase tracking-widest"
+                        >
+                            Yes, Sign Out
+                        </button>
+                        <button 
+                            onClick={() => setIsLogoutModalOpen(false)}
+                            className="w-full py-4 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-bold rounded-2xl hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors text-sm"
+                        >
+                            Cancel
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+      )}
+
       {/* MODERN FLOATING SIDEBAR */}
       <div 
         className={`fixed inset-0 z-[200] transition-all duration-500 ${isSidebarOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}
@@ -189,7 +233,7 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
                 </nav>
                 
                 <div className="mt-auto pt-6 border-t border-slate-100 dark:border-slate-800 pb-10 shrink-0">
-                  <button onClick={onLogout} className="flex items-center gap-4 text-left py-3 text-xl font-bold text-red-500 hover:text-red-600 transition-colors w-full">
+                  <button onClick={handleLogoutClick} className="flex items-center gap-4 text-left py-3 text-xl font-bold text-red-500 hover:text-red-600 transition-colors w-full">
                     <LogOut size={24} strokeWidth={3} />
                     Sign Out
                   </button>
@@ -199,7 +243,6 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
       </div>
 
       <div className="flex-1 flex flex-col h-full overflow-hidden relative">
-        {/* CONDITIONAL HEADER: Completely hidden for "labeled" routes */}
         {!hasCustomHeader && (
             <header className="flex h-16 md:h-20 bg-white dark:bg-slate-900 items-center justify-between px-4 md:px-8 shrink-0 z-40 relative shadow-md transition-all duration-300">
                 <div className="flex items-center gap-4">
@@ -234,7 +277,6 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
                             )}
                         </button>
 
-                        {/* NOTIFICATION DROPDOWN */}
                         {isNotificationMenuOpen && (
                             <div ref={notificationMenuRef} className="absolute right-0 mt-3 w-[320px] md:w-[380px] bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border border-slate-100 dark:border-slate-800 z-[150] overflow-hidden animate-fade-in">
                                 <div className="p-5 border-b border-slate-50 dark:border-slate-800 flex justify-between items-center bg-slate-50/50 dark:bg-slate-800/50">
@@ -281,7 +323,6 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
                             </div>
                         </button>
 
-                        {/* PROFILE DROPDOWN */}
                         {isProfileMenuOpen && (
                             <div ref={profileMenuRef} className="absolute right-0 mt-3 w-64 bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border border-slate-100 dark:border-slate-800 z-[150] overflow-hidden animate-fade-in">
                                 <div className="p-2 pt-4">
@@ -302,11 +343,11 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
                                         </button>
                                     </div>
 
-                                    <button className="w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 text-sm font-bold text-slate-700 dark:text-slate-300 transition-colors">
+                                    <Link to={`/students/${currentUser.id}`} onClick={() => setIsProfileMenuOpen(false)} className="w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 text-sm font-bold text-slate-700 dark:text-slate-300 transition-colors">
                                         <Settings size={18} className="text-slate-400" /> Settings
-                                    </button>
+                                    </Link>
                                     <div className="h-px bg-slate-50 dark:bg-slate-800 my-2 mx-2"></div>
-                                    <button onClick={() => { onLogout(); setIsProfileMenuOpen(false); }} className="w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-red-50 dark:hover:bg-red-900/20 text-sm font-bold text-red-600 transition-colors">
+                                    <button onClick={handleLogoutClick} className="w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-red-50 dark:hover:bg-red-900/20 text-sm font-bold text-red-600 transition-colors">
                                         <LogOut size={18} /> Sign Out
                                     </button>
                                 </div>
@@ -321,7 +362,6 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
             {children}
         </main>
 
-        {/* FLOATING DOCK */}
         {!hasCustomHeader && (
             <div className="md:hidden fixed bottom-6 left-0 right-0 z-[160] flex justify-center pointer-events-none">
                 <div 

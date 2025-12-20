@@ -1,11 +1,11 @@
 
 import { useState, useEffect, useCallback } from 'react';
-import { SalesPage, CurrencyCode } from '../types/salesPage';
+import { SalesPage, CurrencyCode, PageType } from '../types/salesPage';
 import { Student } from '../types';
 import { COUNTRY_CURRENCY_MAP } from '../services/currencyService';
 
 const EMPTY_PAGE: SalesPage = {
-  id: 'draft-new',
+  id: '',
   type: 'product',
   title: '',
   subtitle: '',
@@ -50,7 +50,7 @@ const EMPTY_PAGE: SalesPage = {
   faqs: [],
   disclaimer: 'Statements have not been evaluated by the FDA. This product is not intended to diagnose, treat, cure, or prevent any disease.',
 
-  currency: 'USD', // Will be overridden by init logic
+  currency: 'USD', 
   products: [],
   packages: [],
   
@@ -101,17 +101,16 @@ const EMPTY_PAGE: SalesPage = {
   lastSavedAt: Date.now(),
 };
 
-const DB_NAME = 'NexuSalesDrafts';
-const STORE_NAME = 'drafts';
-const DRAFT_KEY = 'current_draft';
+const DB_NAME = 'NexuSalesSystem';
+const STORE_NAME = 'pages';
 
 const getDB = (): Promise<IDBDatabase> => {
-  return new Error("IDB Error").stack?.includes("webkit") ? Promise.reject() : new Promise((resolve, reject) => {
-    const request = indexedDB.open(DB_NAME, 1);
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open(DB_NAME, 2); // Version bump
     request.onupgradeneeded = (e: any) => {
       const db = e.target.result;
       if (!db.objectStoreNames.contains(STORE_NAME)) {
-        db.createObjectStore(STORE_NAME);
+        db.createObjectStore(STORE_NAME, { keyPath: 'id' });
       }
     };
     request.onsuccess = () => resolve(request.result);
@@ -119,88 +118,104 @@ const getDB = (): Promise<IDBDatabase> => {
   });
 };
 
-const saveToIDB = async (data: SalesPage) => {
-  try {
-    const db = await getDB();
-    const tx = db.transaction(STORE_NAME, 'readwrite');
-    const store = tx.objectStore(STORE_NAME);
-    store.put(data, DRAFT_KEY);
-  } catch (e) {
-      console.warn("IndexedDB not available, using fallback storage");
-      localStorage.setItem(DRAFT_KEY, JSON.stringify(data));
-  }
-};
-
-const loadFromIDB = async (): Promise<SalesPage | null> => {
-  try {
-    const db = await getDB();
-    const tx = db.transaction(STORE_NAME, 'readonly');
-    const store = tx.objectStore(STORE_NAME);
-    const request = store.get(DRAFT_KEY);
-    return new Promise((resolve, reject) => {
-      request.onsuccess = () => resolve(request.result || null);
-      request.onerror = () => reject(request.error);
-    });
-  } catch (e) {
-      const data = localStorage.getItem(DRAFT_KEY);
-      return data ? JSON.parse(data) : null;
-  }
-};
-
 export const useLocalDraft = (currentUser?: Student) => {
-  const [page, setPage] = useState<SalesPage>(EMPTY_PAGE);
-  const [lastSaved, setLastSaved] = useState<Date>(new Date());
+  const [pages, setPages] = useState<SalesPage[]>([]);
+  const [currentPage, setCurrentPage] = useState<SalesPage | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);
 
-  useEffect(() => {
-    const initLoad = async () => {
-      try {
-        const saved = await loadFromIDB();
-        if (saved) {
-          const merged = { ...EMPTY_PAGE, ...saved };
-          setPage(merged);
-          setLastSaved(new Date(merged.lastSavedAt || Date.now()));
-        } else if (currentUser) {
-          // Initialize NEW draft with FBO defaults
-          const defaultCurrency = (currentUser.country && COUNTRY_CURRENCY_MAP[currentUser.country]) || 'USD';
-          setPage({
-              ...EMPTY_PAGE,
-              currency: defaultCurrency as CurrencyCode,
-              whatsappNumber: currentUser.whatsappNumber || '',
-              contactEmail: currentUser.email || ''
-          });
-        }
-      } catch (err) {
-        console.error("Draft load failed", err);
-      } finally {
+  // Load all pages on init
+  const refreshPages = async () => {
+    try {
+      const db = await getDB();
+      const tx = db.transaction(STORE_NAME, 'readonly');
+      const store = tx.objectStore(STORE_NAME);
+      const request = store.getAll();
+      request.onsuccess = () => {
+        setPages(request.result || []);
         setIsLoaded(true);
-      }
-    };
-    initLoad();
-  }, [currentUser]);
-
-  useEffect(() => {
-    if (!isLoaded) return;
-
-    const timer = setTimeout(async () => {
-      try {
-        await saveToIDB(page);
-        setLastSaved(new Date());
-      } catch (err) {
-        console.error("Draft save failed", err);
-      }
-    }, 1000);
-
-    return () => clearTimeout(timer);
-  }, [page, isLoaded]);
-
-  const updateField = useCallback(<K extends keyof SalesPage>(field: K, value: SalesPage[K]) => {
-    setPage(prev => ({ ...prev, [field]: value, lastSavedAt: Date.now() }));
-  }, []);
-
-  const publish = () => {
-    updateField('isPublished', !page.isPublished);
+      };
+    } catch (e) {
+      console.error("Failed to load pages", e);
+      setIsLoaded(true);
+    }
   };
 
-  return { page, updateField, publish, lastSaved, isLoaded };
+  useEffect(() => {
+    refreshPages();
+  }, []);
+
+  const savePage = async (page: SalesPage) => {
+    try {
+      const db = await getDB();
+      const tx = db.transaction(STORE_NAME, 'readwrite');
+      const store = tx.objectStore(STORE_NAME);
+      store.put({ ...page, lastSavedAt: Date.now() });
+      setPages(prev => {
+        const idx = prev.findIndex(p => p.id === page.id);
+        if (idx > -1) {
+           const next = [...prev];
+           next[idx] = page;
+           return next;
+        }
+        return [...prev, page];
+      });
+    } catch (e) {
+      console.error("Save failed", e);
+    }
+  };
+
+  const createNewPage = (type: PageType) => {
+      const defaultCurrency = (currentUser?.country && COUNTRY_CURRENCY_MAP[currentUser.country]) || 'USD';
+      const newPage: SalesPage = {
+          ...EMPTY_PAGE,
+          id: `sp_${Date.now()}`,
+          type,
+          currency: defaultCurrency as CurrencyCode,
+          whatsappNumber: currentUser?.whatsappNumber || '',
+          contactEmail: currentUser?.email || '',
+          title: `New ${type.charAt(0).toUpperCase() + type.slice(1)} Page`,
+          lastSavedAt: Date.now()
+      };
+      savePage(newPage);
+      setCurrentPage(newPage);
+      return newPage;
+  };
+
+  const selectPage = (id: string) => {
+      const page = pages.find(p => p.id === id);
+      if (page) setCurrentPage(page);
+  };
+
+  const updateField = useCallback(<K extends keyof SalesPage>(field: K, value: SalesPage[K]) => {
+    setCurrentPage(prev => {
+        if (!prev) return null;
+        const updated = { ...prev, [field]: value, lastSavedAt: Date.now() };
+        // Background save
+        savePage(updated);
+        return updated;
+    });
+  }, []);
+
+  const deletePage = async (id: string) => {
+      try {
+        const db = await getDB();
+        const tx = db.transaction(STORE_NAME, 'readwrite');
+        tx.objectStore(STORE_NAME).delete(id);
+        setPages(prev => prev.filter(p => p.id !== id));
+        if (currentPage?.id === id) setCurrentPage(null);
+      } catch (e) {
+          console.error("Delete failed", e);
+      }
+  };
+
+  return { 
+      pages, 
+      currentPage, 
+      setCurrentPage,
+      createNewPage, 
+      selectPage, 
+      updateField, 
+      deletePage,
+      isLoaded 
+  };
 };

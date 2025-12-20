@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Smartphone, Monitor, Eye, ChevronLeft, Columns, Maximize } from 'lucide-react';
+import { Smartphone, Monitor, Eye, ChevronLeft, Columns, Maximize, LayoutGrid } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 interface EditorToolbarProps {
@@ -14,6 +14,7 @@ interface EditorToolbarProps {
   onSetPreviewDevice: (device: 'mobile' | 'desktop') => void;
   showSplitView: boolean;
   onToggleSplitView: () => void;
+  onToggleTypeSelection: () => void;
 }
 
 const EditorToolbar: React.FC<EditorToolbarProps> = ({ 
@@ -26,7 +27,8 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({
   previewDevice,
   onSetPreviewDevice,
   showSplitView,
-  onToggleSplitView
+  onToggleSplitView,
+  onToggleTypeSelection
 }) => {
   return (
     <div className="bg-white dark:bg-slate-900 flex items-center justify-between px-4 md:px-6 h-16 md:h-20 shrink-0 z-40 sticky top-0 border-b border-slate-100 dark:border-slate-800 transition-all">
@@ -36,7 +38,15 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({
         <Link to="/dashboard" className="p-1 -ml-2 text-slate-500 dark:text-slate-400">
             <ChevronLeft strokeWidth={2.5} size={24} />
         </Link>
-        <h1 className="text-lg font-bold text-slate-900 dark:text-white leading-none">{pageTypeTitle}</h1>
+        <div className="flex items-center gap-2">
+            <h1 className="text-lg font-bold text-slate-900 dark:text-white leading-none">{pageTypeTitle}</h1>
+            <button 
+                onClick={onToggleTypeSelection}
+                className="p-1.5 bg-slate-50 rounded-lg text-slate-400 dark:bg-slate-800"
+            >
+                <LayoutGrid size={16} strokeWidth={2.5} />
+            </button>
+        </div>
       </div>
 
       {/* Desktop Left: Standard Nav */}
@@ -47,7 +57,16 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({
         
         <div className="flex flex-col">
             <div className="flex items-center gap-3">
-                <h1 className="text-xl font-bold text-slate-900 dark:text-white leading-none">{pageTypeTitle}</h1>
+                <div className="flex items-center gap-2">
+                    <h1 className="text-xl font-bold text-slate-900 dark:text-white leading-none">{pageTypeTitle}</h1>
+                    <button 
+                        onClick={onToggleTypeSelection}
+                        className="p-1.5 hover:bg-slate-100 rounded-lg text-slate-400 hover:text-emerald-600 transition-colors dark:hover:bg-slate-800"
+                        title="Change Page Type"
+                    >
+                        <LayoutGrid size={18} strokeWidth={2.5} />
+                    </button>
+                </div>
                 <span className="text-slate-300 dark:text-slate-600">|</span>
                 <span className="text-xs font-medium text-slate-400">
                     Saved {lastSaved.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}

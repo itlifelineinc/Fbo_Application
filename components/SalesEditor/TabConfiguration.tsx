@@ -6,7 +6,7 @@ import {
     MousePointerClick, Star, Phone, ShieldCheck, 
     CreditCard, Share2, AlertTriangle, Lightbulb, Heart, ListChecks, X,
     Zap, UserPlus, Award, User, Briefcase, TrendingUp, Palette, ListOrdered, ClipboardCheck, Gift,
-    Construction
+    Construction, LayoutGrid
 } from 'lucide-react';
 
 export interface TabDefinition {
@@ -18,6 +18,7 @@ export interface TabDefinition {
 // Configuration Map for all six page builder portals
 export const PAGE_TAB_CONFIG: Record<PageType, TabDefinition[]> = {
     'product': [
+        { id: 'OVERVIEW', label: 'Overview', icon: LayoutGrid },
         { id: 'PRODUCTS', label: 'Product Selection', icon: ShoppingBag },
         { id: 'CONTENT', label: 'Page Content', icon: FileText },
         { id: 'TRUST_PROOF', label: 'Trust & Proof', icon: ShieldCheck },
@@ -27,6 +28,7 @@ export const PAGE_TAB_CONFIG: Record<PageType, TabDefinition[]> = {
         { id: 'PUBLISH', label: 'Publish', icon: Share2 },
     ],
     'bundle': [
+        { id: 'OVERVIEW', label: 'Overview', icon: LayoutGrid },
         { id: 'PKG_BASICS', label: 'Package Basics', icon: Type },
         { id: 'PKG_PRODUCTS', label: 'Bundle Contents', icon: Package },
         { id: 'EDUCATION', label: 'Why this Bundle?', icon: Lightbulb },
@@ -37,6 +39,7 @@ export const PAGE_TAB_CONFIG: Record<PageType, TabDefinition[]> = {
         { id: 'PUBLISH', label: 'Publish', icon: Share2 },
     ],
     'problem': [
+        { id: 'OVERVIEW', label: 'Overview', icon: LayoutGrid },
         { id: 'PAGE_BASICS', label: 'Basics', icon: Type },
         { id: 'PROBLEM_EDU', label: 'The Pain Point', icon: AlertTriangle },
         { id: 'MISTAKES', label: 'Common Mistakes', icon: X }, 
@@ -48,6 +51,7 @@ export const PAGE_TAB_CONFIG: Record<PageType, TabDefinition[]> = {
         { id: 'PUBLISH', label: 'Publish', icon: Share2 },
     ],
     'capture': [
+        { id: 'OVERVIEW', label: 'Overview', icon: LayoutGrid },
         { id: 'HEADLINE_MSG', label: 'Headline & Message', icon: Type },
         { id: 'EXPLANATION', label: 'The Hook', icon: Zap },
         { id: 'WHATSAPP_SETUP', label: 'WhatsApp Link', icon: Phone },
@@ -56,6 +60,7 @@ export const PAGE_TAB_CONFIG: Record<PageType, TabDefinition[]> = {
         { id: 'PUBLISH', label: 'Publish', icon: Share2 },
     ],
     'brand': [
+        { id: 'OVERVIEW', label: 'Overview', icon: LayoutGrid },
         { id: 'PROFILE_ID', label: 'My Identity', icon: User },
         { id: 'MY_STORY', label: 'My Vision', icon: FileText },
         { id: 'WHY_FOREVER', label: 'Why I Lead', icon: Heart },
@@ -66,6 +71,7 @@ export const PAGE_TAB_CONFIG: Record<PageType, TabDefinition[]> = {
         { id: 'PUBLISH', label: 'Publish', icon: Share2 },
     ],
     'recruit': [
+        { id: 'OVERVIEW', label: 'Overview', icon: LayoutGrid },
         { id: 'PAGE_BASICS', label: 'Campaign Info', icon: Type },
         { id: 'OPP_OVERVIEW', label: 'Opportunity', icon: Briefcase },
         { id: 'BENEFITS', label: 'Incentives', icon: TrendingUp },

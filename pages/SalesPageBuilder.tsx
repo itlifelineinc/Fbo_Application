@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useLocalDraft } from '../hooks/useLocalDraft';
 import { PageType } from '../types/salesPage';
 import EditorToolbar from '../components/SalesEditor/EditorToolbar';
@@ -14,13 +14,27 @@ interface SalesPageBuilderProps {
 }
 
 const SalesPageBuilder: React.FC<SalesPageBuilderProps> = ({ currentUser }) => {
-  const { page, updateField, publish, lastSaved, isLoaded } = useLocalDraft(currentUser);
+  const { 
+      pages, 
+      currentPage, 
+      createNewPage, 
+      selectPage, 
+      updateField, 
+      deletePage, 
+      isLoaded 
+  } = useLocalDraft(currentUser);
+
   const [isPreviewMode, setIsPreviewMode] = useState(false); 
   const [previewDevice, setPreviewDevice] = useState<'mobile' | 'desktop'>('desktop');
   const [showSplitView, setShowSplitView] = useState(true);
-  
-  const [showTypeSelection, setShowTypeSelection] = useState(true);
-  const [selectedType, setSelectedType] = useState<string | null>(null);
+  const [showTypeSelection, setShowTypeSelection] = useState(false);
+
+  // If no pages exist or forced by create button
+  useEffect(() => {
+      if (isLoaded && pages.length === 0) {
+          setShowTypeSelection(true);
+      }
+  }, [isLoaded, pages]);
 
   const pageTypes: { 
       id: PageType; 
@@ -30,60 +44,17 @@ const SalesPageBuilder: React.FC<SalesPageBuilderProps> = ({ currentUser }) => {
       badge?: string; 
       active: boolean 
   }[] = [
-    {
-      id: 'product',
-      title: 'Product Sales',
-      description: 'Single product conversion page',
-      icon: ShoppingBag,
-      badge: 'Popular',
-      active: true
-    },
-    {
-      id: 'bundle',
-      title: 'Package Bundle',
-      description: 'Sell multiple products together',
-      icon: Package,
-      active: true
-    },
-    {
-      id: 'problem',
-      title: 'Problem Solver',
-      description: 'Focus on health solution',
-      icon: Heart,
-      active: true
-    },
-    {
-      id: 'capture',
-      title: 'Lead Capture',
-      description: 'Get WhatsApp leads fast',
-      icon: MessageCircle,
-      active: true
-    },
-    {
-      id: 'brand',
-      title: 'Personal Brand',
-      description: 'Your mini website profile',
-      icon: User,
-      active: true
-    },
-    {
-      id: 'recruit',
-      title: 'Recruitment',
-      description: 'Join the business opportunity',
-      icon: Briefcase,
-      active: true
-    }
+    { id: 'product', title: 'Product Sales', description: 'Single product conversion page', icon: ShoppingBag, badge: 'Popular', active: true },
+    { id: 'bundle', title: 'Package Bundle', description: 'Sell multiple products together', icon: Package, active: true },
+    { id: 'problem', title: 'Problem Solver', description: 'Focus on health solution', icon: Heart, active: true },
+    { id: 'capture', title: 'Lead Capture', description: 'Get WhatsApp leads fast', icon: MessageCircle, active: true },
+    { id: 'brand', title: 'Personal Brand', description: 'Your mini website profile', icon: User, active: true },
+    { id: 'recruit', title: 'Recruitment', description: 'Join the business opportunity', icon: Briefcase, active: true }
   ];
 
-  const handleSelectType = (id: PageType, active: boolean) => {
-      if (!active) return;
-      
-      setSelectedType(id);
-      updateField('type', id);
-
-      setTimeout(() => {
-          setShowTypeSelection(false);
-      }, 400);
+  const handleSelectType = (id: PageType) => {
+      createNewPage(id);
+      setShowTypeSelection(false);
   };
 
   if (!isLoaded) {
@@ -91,13 +62,13 @@ const SalesPageBuilder: React.FC<SalesPageBuilderProps> = ({ currentUser }) => {
         <div className="flex h-screen w-full items-center justify-center bg-slate-50 dark:bg-slate-950">
             <div className="flex flex-col items-center gap-4">
                 <Loader2 className="animate-spin text-emerald-600" size={48} />
-                <p className="text-slate-500 font-bold animate-pulse uppercase tracking-widest text-xs">Loading Draft...</p>
+                <p className="text-slate-500 font-bold animate-pulse uppercase tracking-widest text-xs">Accessing System...</p>
             </div>
         </div>
     );
   }
 
-  const activePageType = pageTypes.find(t => t.id === page.type);
+  const activePageType = pageTypes.find(t => t.id === (currentPage?.type || 'product'));
   const pageTypeTitle = activePageType ? activePageType.title : 'Page Builder';
 
   return (
@@ -126,13 +97,11 @@ const SalesPageBuilder: React.FC<SalesPageBuilderProps> = ({ currentUser }) => {
                   {pageTypes.map((type) => (
                       <button 
                           key={type.id}
-                          onClick={() => handleSelectType(type.id, type.active)}
+                          onClick={() => type.active && handleSelectType(type.id)}
                           className={`
                               flex flex-col items-center justify-center gap-3 p-4 py-6 rounded-3xl transition-all duration-300 h-full border text-center group relative
                               ${type.active 
-                                  ? selectedType === type.id 
-                                      ? 'bg-emerald-50 border-emerald-500 shadow-xl ring-1 ring-emerald-500 dark:bg-emerald-900/20 dark:border-emerald-500 scale-105' 
-                                      : 'bg-white hover:shadow-xl hover:border-slate-200 border-slate-100 dark:bg-slate-800 dark:border-slate-700 dark:hover:bg-slate-750'
+                                  ? 'bg-white hover:shadow-xl hover:border-slate-200 border-slate-100 dark:bg-slate-800 dark:border-slate-700 dark:hover:bg-slate-750'
                                   : 'bg-slate-50 border-slate-100 opacity-60 cursor-not-allowed grayscale dark:bg-slate-800/50 dark:border-slate-700'
                               }
                           `}
@@ -142,41 +111,17 @@ const SalesPageBuilder: React.FC<SalesPageBuilderProps> = ({ currentUser }) => {
                                   {type.badge}
                               </span>
                           )}
-
-                          <div className={`
-                              p-4 rounded-2xl transition-all duration-300 relative mb-1
-                              ${type.active 
-                                  ? selectedType === type.id 
-                                      ? 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/50 dark:text-emerald-400' 
-                                      : 'text-slate-500 group-hover:text-slate-800 group-hover:scale-110 dark:text-slate-400 dark:group-hover:text-white bg-slate-50 dark:bg-slate-700/30'
-                                  : 'bg-slate-200 text-slate-400 dark:bg-slate-700 dark:text-slate-500'
-                              }
-                          `}>
-                              {type.active ? (
-                                <type.icon 
-                                    strokeWidth={2.5}
-                                    size={32}
-                                    className={selectedType === type.id ? 'fill-emerald-200/50' : 'fill-slate-100 dark:fill-slate-800'}
-                                />
-                              ) : (
-                                <Lock size={32} className="opacity-50" />
-                              )}
+                          <div className={`p-4 rounded-2xl transition-all duration-300 relative mb-1 ${type.active ? 'text-slate-500 group-hover:text-slate-800 group-hover:scale-110 dark:text-slate-400 dark:group-hover:text-white bg-slate-50 dark:bg-slate-700/30' : 'bg-slate-200 text-slate-400 dark:bg-slate-700 dark:text-slate-500'}`}>
+                              {type.active ? <type.icon strokeWidth={2.5} size={32} /> : <Lock size={32} className="opacity-50" />}
                           </div>
-                          
                           <div className="space-y-1 w-full px-1">
-                              <h4 className={`font-extrabold text-sm md:text-base leading-tight ${selectedType === type.id ? 'text-emerald-900 dark:text-emerald-100' : 'text-slate-700 dark:text-slate-200'}`}>
+                              <h4 className={`font-extrabold text-sm md:text-base leading-tight ${type.active ? 'text-slate-700 dark:text-slate-200' : 'text-slate-400'}`}>
                                   {type.title}
                               </h4>
                               <p className="text-[10px] md:text-xs text-slate-400 font-medium leading-snug">
                                   {type.active ? type.description : 'Coming Soon'}
                               </p>
                           </div>
-                          
-                          {selectedType === type.id && (
-                              <div className="absolute top-3 left-3 text-emerald-600 animate-in zoom-in duration-300">
-                                  <Check size={18} strokeWidth={4} />
-                              </div>
-                          )}
                       </button>
                   ))}
               </div>
@@ -185,36 +130,35 @@ const SalesPageBuilder: React.FC<SalesPageBuilderProps> = ({ currentUser }) => {
 
       <EditorToolbar 
         pageTypeTitle={pageTypeTitle}
-        lastSaved={lastSaved}
-        isPublished={page.isPublished}
-        onPublish={publish}
+        lastSaved={new Date(currentPage?.lastSavedAt || Date.now())}
+        isPublished={currentPage?.isPublished || false}
+        onPublish={() => updateField('isPublished', !currentPage?.isPublished)}
         isPreviewMode={isPreviewMode}
         onTogglePreview={() => setIsPreviewMode(!isPreviewMode)}
         previewDevice={previewDevice}
         onSetPreviewDevice={setPreviewDevice}
         showSplitView={showSplitView}
         onToggleSplitView={() => setShowSplitView(!showSplitView)}
+        onToggleTypeSelection={() => setShowTypeSelection(true)}
       />
 
       <div className="flex-1 flex overflow-hidden relative">
-        <div className={`
-            flex-col transition-all duration-300 ease-in-out z-10 bg-white
-            ${isPreviewMode ? 'hidden' : 'flex'}
-            ${showSplitView 
-                ? 'w-full md:w-1/2 border-r border-slate-200' 
-                : 'w-full max-w-5xl mx-auto shadow-xl my-0 md:my-6 rounded-none md:rounded-2xl border-x border-slate-200'
-            }
-        `}>
-          <EditorLayout data={page} updateField={updateField} isPreviewMode={false} previewDevice={previewDevice} />
+        <div className={`flex-col transition-all duration-300 ease-in-out z-10 bg-white ${isPreviewMode ? 'hidden' : 'flex'} ${showSplitView ? 'w-full md:w-1/2 border-r border-slate-200' : 'w-full max-w-5xl mx-auto shadow-xl my-0 md:my-6 rounded-none md:rounded-2xl border-x border-slate-200'}`}>
+          <EditorLayout 
+              data={currentPage} 
+              pages={pages}
+              updateField={updateField} 
+              onSelectPage={selectPage}
+              onCreatePage={() => setShowTypeSelection(true)}
+              onDeletePage={deletePage}
+              isPreviewMode={false} 
+              previewDevice={previewDevice} 
+          />
         </div>
 
-        <div className={`
-            bg-slate-200 overflow-hidden relative transition-all duration-300
-            ${isPreviewMode ? 'flex w-full' : 'hidden'}
-            ${showSplitView && !isPreviewMode ? 'hidden md:flex w-1/2' : ''}
-        `}>
+        <div className={`bg-slate-200 overflow-hidden relative transition-all duration-300 ${isPreviewMode ? 'flex w-full' : 'hidden'} ${showSplitView && !isPreviewMode ? 'hidden md:flex w-1/2' : ''}`}>
           <div className="w-full h-full bg-dot-pattern flex items-center justify-center overflow-hidden p-4 md:p-8">
-             <PreviewPanel data={page} device={previewDevice} />
+             {currentPage ? <PreviewPanel data={currentPage} device={previewDevice} /> : <div className="text-slate-400 font-bold uppercase tracking-widest text-sm">Select a page to preview</div>}
           </div>
         </div>
       </div>

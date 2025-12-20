@@ -6,7 +6,8 @@ import {
     Camera, Check, Edit2, Shield, Award, 
     Calendar, Video, Play, Search, MoreHorizontal,
     Settings, Eye, EyeOff, Moon, Sun, Key, LogOut,
-    Zap, ChevronLeft, Move, AlertCircle, Loader2, User, X
+    Zap, ChevronLeft, Move, AlertCircle, Loader2, User, X,
+    Mail, Phone, Smartphone, Hash, Globe, AlignLeft
 } from 'lucide-react';
 
 interface StudentProfileProps {
@@ -17,6 +18,10 @@ interface StudentProfileProps {
   theme: 'light' | 'dark';
   onToggleTheme: () => void;
 }
+
+const COUNTRIES = [
+  'USA', 'UK', 'Ghana', 'Nigeria', 'South Africa', 'Kenya', 'Tanzania', 'Uganda', 'UAE', 'India', 'Canada', 'Australia', 'Philippines', 'Malaysia'
+];
 
 const StudentProfile: React.FC<StudentProfileProps> = ({ students, courses, currentUser, onUpdateStudent, theme, onToggleTheme }) => {
   const { studentId } = useParams();
@@ -31,6 +36,13 @@ const StudentProfile: React.FC<StudentProfileProps> = ({ students, courses, curr
   // Editing Profile Data
   const [editName, setEditName] = useState('');
   const [editHandle, setEditHandle] = useState('');
+  const [editEmail, setEditEmail] = useState('');
+  const [editPhone, setEditPhone] = useState('');
+  const [editWhatsapp, setEditWhatsapp] = useState('');
+  const [editCountry, setEditCountry] = useState('');
+  const [editForeverId, setEditForeverId] = useState('');
+  const [editBio, setEditBio] = useState('');
+
   const [handleStatus, setHandleStatus] = useState<'IDLE' | 'CHECKING' | 'AVAILABLE' | 'TAKEN' | 'INVALID'>('IDLE');
   
   // Positioning States
@@ -43,6 +55,12 @@ const StudentProfile: React.FC<StudentProfileProps> = ({ students, courses, curr
       if (student) {
           setEditName(student.name);
           setEditHandle(student.handle);
+          setEditEmail(student.email || '');
+          setEditPhone(student.phoneNumber || '');
+          setEditWhatsapp(student.whatsappNumber || '');
+          setEditCountry(student.country || '');
+          setEditForeverId(student.foreverId || '');
+          setEditBio(student.bio || '');
       }
   }, [student]);
 
@@ -123,10 +141,16 @@ const StudentProfile: React.FC<StudentProfileProps> = ({ students, courses, curr
           ...student,
           name: editName,
           handle: formattedNewHandle,
+          email: editEmail,
+          phoneNumber: editPhone,
+          whatsappNumber: editWhatsapp,
+          country: editCountry,
+          foreverId: editForeverId,
+          bio: editBio,
           lastNameChangeAt: isNameChanging ? now : student.lastNameChangeAt,
           lastHandleChangeAt: isHandleChanging ? now : student.lastHandleChangeAt
       });
-      alert("Settings saved!");
+      alert("Profile settings saved successfully!");
   };
 
   const updatePosition = (pos: string) => {
@@ -139,10 +163,13 @@ const StudentProfile: React.FC<StudentProfileProps> = ({ students, courses, curr
 
   const TABS = ['Overview', 'Courses', 'Progress', 'Settings'];
 
+  const INPUT_STYLE = "w-full bg-slate-50 dark:bg-[#1f1f1f] border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-emerald-500 text-slate-900 dark:text-white font-medium transition-all";
+  const LABEL_STYLE = "block text-xs font-bold text-slate-500 uppercase mb-2 ml-1 dark:text-slate-400 tracking-wider";
+
   return (
     <div className="h-full flex flex-col bg-white dark:bg-[#0f0f0f] overflow-y-auto no-scrollbar animate-fade-in relative">
       
-      {/* 1. CHANNEL BANNER - Desktop with Rounded Corners */}
+      {/* 1. CHANNEL BANNER */}
       <div className="w-full bg-slate-100 dark:bg-[#181818] shrink-0 md:pt-4">
         <div className="max-w-[1284px] mx-auto relative w-full h-[160px] md:h-[260px] bg-slate-200 dark:bg-[#272727] overflow-hidden group md:rounded-2xl shadow-sm">
             {student.bannerUrl ? (
@@ -158,7 +185,6 @@ const StudentProfile: React.FC<StudentProfileProps> = ({ students, courses, curr
                 </div>
             )}
 
-            {/* Back Button on Banner */}
             <button 
                 onClick={() => navigate(-1)}
                 className="absolute top-4 left-4 z-20 p-2 bg-black/40 hover:bg-black/60 text-white rounded-full backdrop-blur-md transition-all shadow-lg"
@@ -185,7 +211,6 @@ const StudentProfile: React.FC<StudentProfileProps> = ({ students, courses, curr
                 </div>
             )}
 
-            {/* Reposition HUD for Banner */}
             {adjustMode === 'BANNER' && isOwnProfile && (
                 <div className="absolute inset-0 z-30 bg-black/40 backdrop-blur-[2px] flex items-center justify-center">
                     <div className="bg-white dark:bg-slate-900 p-4 rounded-2xl shadow-2xl flex flex-col gap-4 animate-scale-in">
@@ -276,16 +301,6 @@ const StudentProfile: React.FC<StudentProfileProps> = ({ students, courses, curr
                     </div>
                 </div>
 
-                {student.bio && (
-                    <div className="max-w-2xl hidden sm:block mb-4">
-                        <p className="text-sm md:text-base text-slate-600 dark:text-[#aaaaaa] line-clamp-2 leading-relaxed">
-                            {student.bio}
-                        </p>
-                        <button className="text-slate-900 dark:text-white font-bold text-sm mt-1 hover:opacity-70">...more</button>
-                    </div>
-                )}
-
-                {/* HORIZONTAL BUTTONS FOR MOBILE: Scaled down text and padding */}
                 <div className="flex flex-row flex-nowrap gap-2">
                     {isOwnProfile ? (
                         <>
@@ -304,15 +319,6 @@ const StudentProfile: React.FC<StudentProfileProps> = ({ students, courses, curr
                 </div>
             </div>
           </div>
-          
-          {student.bio && (
-              <div className="mt-6 sm:hidden">
-                  <p className="text-sm text-slate-600 dark:text-[#aaaaaa] line-clamp-3 leading-relaxed">
-                      {student.bio}
-                  </p>
-                  <button className="text-slate-900 dark:text-white font-bold text-xs mt-1">...more</button>
-              </div>
-          )}
       </div>
 
       {/* 3. CHANNEL TABS */}
@@ -398,52 +404,46 @@ const StudentProfile: React.FC<StudentProfileProps> = ({ students, courses, curr
                           <div className="h-full bg-emerald-500 rounded-full" style={{ width: `${student.progress}%` }} />
                       </div>
                   </div>
-                  
-                  <div className="space-y-4">
-                      <h4 className="font-bold text-slate-400 uppercase text-xs tracking-widest">Achievements</h4>
-                      <div className="flex flex-wrap gap-4">
-                          {[1,2,3].map(i => (
-                              <div key={i} className="w-16 h-16 rounded-full bg-emerald-50 dark:bg-[#272727] border-2 border-emerald-500 flex items-center justify-center text-emerald-600 shadow-lg shadow-emerald-500/10">
-                                  <Award size={32} />
-                              </div>
-                          ))}
-                      </div>
-                  </div>
               </div>
           )}
 
           {activeTab === 'Settings' && (
               <div className="w-full animate-fade-in pb-10">
-                  {/* TWO-COLUMN GRID FOR DESKTOP SETTINGS */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-12">
-                      {/* Section: Channel Basics */}
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+                      
+                      {/* Left Side: Profile Information */}
                       {isOwnProfile && (
-                          <section className="space-y-6">
+                          <section className="space-y-8">
                               <div className="flex items-center gap-2 border-b border-slate-100 dark:border-white/10 pb-2">
                                   <User size={18} className="text-emerald-500" />
-                                  <h3 className="font-black dark:text-white uppercase text-sm tracking-widest">Channel Basics</h3>
+                                  <h3 className="font-black dark:text-white uppercase text-sm tracking-widest font-heading">Profile Information</h3>
                               </div>
                               
                               <div className="space-y-5">
+                                  {/* Name */}
                                   <div>
-                                      <label className="block text-xs font-bold text-slate-500 uppercase mb-2 ml-1">Channel Name</label>
-                                      <input 
-                                        type="text"
-                                        value={editName}
-                                        onChange={(e) => setEditName(e.target.value)}
-                                        className="w-full bg-slate-50 dark:bg-[#1f1f1f] border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-emerald-500 text-slate-900 dark:text-white font-medium"
-                                      />
-                                      <p className="text-[10px] text-slate-400 mt-1 ml-1">Limit: Once every 14 days.</p>
-                                  </div>
-
-                                  <div>
-                                      <label className="block text-xs font-bold text-slate-500 uppercase mb-2 ml-1">Channel Handle</label>
+                                      <label className={LABEL_STYLE}>Full Name</label>
                                       <div className="relative">
+                                          <User className="absolute left-4 top-3.5 text-slate-400" size={16} />
                                           <input 
                                             type="text"
-                                            value={editHandle}
+                                            value={editName}
+                                            onChange={(e) => setEditName(e.target.value)}
+                                            className={INPUT_STYLE + " pl-11"}
+                                          />
+                                      </div>
+                                  </div>
+
+                                  {/* Handle */}
+                                  <div>
+                                      <label className={LABEL_STYLE}>Handle</label>
+                                      <div className="relative">
+                                          <span className="absolute left-4 top-3.5 text-slate-400 font-bold">@</span>
+                                          <input 
+                                            type="text"
+                                            value={editHandle.replace('@', '')}
                                             onChange={(e) => setEditHandle(e.target.value)}
-                                            className={`w-full bg-slate-50 dark:bg-[#1f1f1f] border rounded-xl px-4 py-3 outline-none focus:ring-2 font-mono text-sm ${handleStatus === 'TAKEN' ? 'border-red-500 focus:ring-red-200 text-red-600' : 'border-slate-200 dark:border-slate-800 focus:ring-emerald-500 text-slate-900 dark:text-white'}`}
+                                            className={`${INPUT_STYLE} pl-9 font-mono text-sm ${handleStatus === 'TAKEN' ? 'border-red-500 focus:ring-red-200 text-red-600' : ''}`}
                                           />
                                           <div className="absolute right-3 top-3.5">
                                               {handleStatus === 'CHECKING' && <Loader2 className="animate-spin text-slate-400" size={16} />}
@@ -451,79 +451,183 @@ const StudentProfile: React.FC<StudentProfileProps> = ({ students, courses, curr
                                               {handleStatus === 'TAKEN' && <X size={16} className="text-red-500" />}
                                           </div>
                                       </div>
-                                      {handleStatus === 'TAKEN' && <p className="text-[10px] text-red-500 mt-1 ml-1 font-bold">This handle is already taken.</p>}
-                                      <p className="text-[10px] text-slate-400 mt-1 ml-1">Limit: Once every 2 months. Changes cascade to your team.</p>
+                                      <p className="text-[10px] text-slate-400 mt-1 ml-1">Changed once every 60 days.</p>
+                                  </div>
+
+                                  {/* Email */}
+                                  <div>
+                                      <label className={LABEL_STYLE}>Email Address</label>
+                                      <div className="relative">
+                                          <Mail className="absolute left-4 top-3.5 text-slate-400" size={16} />
+                                          <input 
+                                            type="email"
+                                            value={editEmail}
+                                            onChange={(e) => setEditEmail(e.target.value)}
+                                            className={INPUT_STYLE + " pl-11"}
+                                          />
+                                      </div>
+                                  </div>
+
+                                  <div className="grid grid-cols-2 gap-4">
+                                      {/* Phone */}
+                                      <div>
+                                          <label className={LABEL_STYLE}>Phone Number</label>
+                                          <div className="relative">
+                                              <Phone className="absolute left-4 top-3.5 text-slate-400" size={16} />
+                                              <input 
+                                                type="tel"
+                                                value={editPhone}
+                                                onChange={(e) => setEditPhone(e.target.value)}
+                                                className={INPUT_STYLE + " pl-11 text-sm"}
+                                              />
+                                          </div>
+                                      </div>
+                                      {/* WhatsApp */}
+                                      <div>
+                                          <label className={LABEL_STYLE}>WhatsApp</label>
+                                          <div className="relative">
+                                              <Smartphone className="absolute left-4 top-3.5 text-slate-400" size={16} />
+                                              <input 
+                                                type="tel"
+                                                value={editWhatsapp}
+                                                onChange={(e) => setEditWhatsapp(e.target.value)}
+                                                className={INPUT_STYLE + " pl-11 text-sm"}
+                                              />
+                                          </div>
+                                      </div>
+                                  </div>
+
+                                  <div className="grid grid-cols-2 gap-4">
+                                      {/* Country */}
+                                      <div>
+                                          <label className={LABEL_STYLE}>Country</label>
+                                          <div className="relative">
+                                              <Globe className="absolute left-4 top-3.5 text-slate-400" size={16} />
+                                              <select 
+                                                value={editCountry}
+                                                onChange={(e) => setEditCountry(e.target.value)}
+                                                className={INPUT_STYLE + " pl-11 appearance-none"}
+                                              >
+                                                  {COUNTRIES.map(c => <option key={c} value={c}>{c}</option>)}
+                                              </select>
+                                          </div>
+                                      </div>
+                                      {/* Forever ID */}
+                                      <div>
+                                          <label className={LABEL_STYLE}>Forever ID</label>
+                                          <div className="relative">
+                                              <Hash className="absolute left-4 top-3.5 text-slate-400" size={16} />
+                                              <input 
+                                                type="text"
+                                                value={editForeverId}
+                                                onChange={(e) => setEditForeverId(e.target.value)}
+                                                className={INPUT_STYLE + " pl-11 font-mono text-sm"}
+                                                placeholder="12 digits"
+                                              />
+                                          </div>
+                                      </div>
+                                  </div>
+
+                                  {/* Bio */}
+                                  <div>
+                                      <label className={LABEL_STYLE}>About Me (Bio)</label>
+                                      <div className="relative">
+                                          <AlignLeft className="absolute left-4 top-4 text-slate-400" size={16} />
+                                          <textarea 
+                                            value={editBio}
+                                            onChange={(e) => setEditBio(e.target.value)}
+                                            className={INPUT_STYLE + " pl-11 h-32 resize-none pt-4"}
+                                            placeholder="Tell your team about yourself..."
+                                          />
+                                      </div>
                                   </div>
 
                                   <button 
                                     onClick={saveProfileSettings}
-                                    className="bg-slate-900 dark:bg-emerald-600 text-white px-8 py-3 rounded-xl font-bold text-sm shadow-lg hover:brightness-110 active:scale-95 transition-all"
+                                    className="w-full md:w-auto bg-slate-900 dark:bg-emerald-600 text-white px-10 py-4 rounded-2xl font-black text-sm shadow-xl hover:brightness-110 active:scale-95 transition-all flex items-center justify-center gap-2"
                                   >
-                                    Save Changes
+                                    <Check size={18} strokeWidth={3} /> Save Profile Details
                                   </button>
                               </div>
                           </section>
                       )}
 
-                      {/* Section: Security */}
-                      {canViewCredentials && (
-                          <section className="space-y-6">
-                              <div className="flex items-center gap-2 border-b border-slate-100 dark:border-white/10 pb-2">
-                                  <Shield size={18} className="text-emerald-500" />
-                                  <h3 className="font-black dark:text-white uppercase text-sm tracking-widest">Security</h3>
-                              </div>
-                              
-                              <div className="space-y-4">
-                                  {isEditingPassword ? (
-                                      <div className="flex gap-2">
-                                          <input 
-                                              type="password" 
-                                              value={newPassword}
-                                              onChange={(e) => setNewPassword(e.target.value)}
-                                              placeholder="New Password"
-                                              className="flex-1 bg-slate-100 dark:bg-[#272727] border-none rounded-lg px-4 py-2 text-white outline-none focus:ring-2 focus:ring-emerald-500"
-                                          />
-                                          <button onClick={handlePasswordChange} className="bg-emerald-600 text-white px-4 py-2 rounded-lg font-bold">Save</button>
-                                          <button onClick={() => setIsEditingPassword(false)} className="px-4 py-2 text-slate-500">Cancel</button>
-                                      </div>
-                                  ) : (
-                                      <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-[#1f1f1f] rounded-xl border border-slate-100 dark:border-white/5">
-                                          <div>
-                                              <p className="text-xs text-slate-500 dark:text-[#aaaaaa] uppercase font-bold">Account Password</p>
-                                              <p className="font-mono mt-1 dark:text-white">{showPassword ? student.password : '••••••••'}</p>
-                                          </div>
-                                          <div className="flex gap-2">
-                                              <button onClick={() => setShowPassword(!showPassword)} className="p-2 hover:bg-white dark:hover:bg-[#333] rounded-full transition-colors dark:text-[#f1f1f1]">{showPassword ? <EyeOff size={18}/> : <Eye size={18}/>}</button>
-                                              {isOwnProfile && <button onClick={() => setIsEditingPassword(true)} className="p-2 hover:bg-white dark:hover:bg-[#333] rounded-full transition-colors dark:text-[#f1f1f1]"><Edit2 size={18}/></button>}
-                                          </div>
-                                      </div>
-                                  )}
-                              </div>
-                          </section>
-                      )}
-
-                      {/* Section: Interface */}
-                      {isOwnProfile && (
-                          <section className="space-y-6">
-                              <div className="flex items-center gap-2 border-b border-slate-100 dark:border-white/10 pb-2">
-                                  <Settings size={18} className="text-blue-500" />
-                                  <h3 className="font-black dark:text-white uppercase text-sm tracking-widest">Interface</h3>
-                              </div>
-                              <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-[#1f1f1f] rounded-xl border border-slate-100 dark:border-white/5">
-                                  <div>
-                                      <p className="text-sm font-bold dark:text-white">Visual Appearance</p>
-                                      <p className="text-xs text-slate-500 dark:text-[#aaaaaa]">{theme === 'dark' ? 'Dark theme is active' : 'Light theme is active'}</p>
+                      {/* Right Side: Security & Interface */}
+                      <div className="space-y-12">
+                          {/* Security Section */}
+                          {canViewCredentials && (
+                              <section className="space-y-6">
+                                  <div className="flex items-center gap-2 border-b border-slate-100 dark:border-white/10 pb-2">
+                                      <Shield size={18} className="text-emerald-500" />
+                                      <h3 className="font-black dark:text-white uppercase text-sm tracking-widest font-heading">Account Security</h3>
                                   </div>
-                                  <button 
-                                      onClick={onToggleTheme}
-                                      className="flex items-center gap-2 px-4 py-2 bg-slate-200 dark:bg-[#3f3f3f] rounded-full text-sm font-bold dark:text-[#f1f1f1]"
-                                  >
-                                      {theme === 'dark' ? <Moon size={16}/> : <Sun size={16}/>}
-                                      Switch
-                                  </button>
-                              </div>
-                          </section>
-                      )}
+                                  
+                                  <div className="space-y-4">
+                                      {isEditingPassword ? (
+                                          <div className="bg-slate-50 dark:bg-[#1f1f1f] p-6 rounded-2xl border border-emerald-100 dark:border-emerald-900/30 space-y-4">
+                                              <div>
+                                                  <label className={LABEL_STYLE}>New Password</label>
+                                                  <input 
+                                                      type="password" 
+                                                      value={newPassword}
+                                                      onChange={(e) => setNewPassword(e.target.value)}
+                                                      className={INPUT_STYLE}
+                                                      autoFocus
+                                                  />
+                                              </div>
+                                              <div className="flex gap-3">
+                                                  <button onClick={handlePasswordChange} className="flex-1 bg-emerald-600 text-white py-3 rounded-xl font-bold">Save Password</button>
+                                                  <button onClick={() => setIsEditingPassword(false)} className="flex-1 bg-slate-200 dark:bg-[#333] text-slate-700 dark:text-white py-3 rounded-xl font-bold">Cancel</button>
+                                              </div>
+                                          </div>
+                                      ) : (
+                                          <div className="flex items-center justify-between p-5 bg-slate-50 dark:bg-[#1f1f1f] rounded-2xl border border-slate-100 dark:border-white/5">
+                                              <div className="flex items-center gap-4">
+                                                  <div className="p-3 bg-white dark:bg-slate-800 rounded-xl shadow-sm">
+                                                      <Key size={20} className="text-amber-500" />
+                                                  </div>
+                                                  <div>
+                                                      <p className="text-xs text-slate-500 dark:text-[#aaaaaa] uppercase font-bold">Account Password</p>
+                                                      <p className="font-mono mt-1 dark:text-white">{showPassword ? student.password : '••••••••'}</p>
+                                                  </div>
+                                              </div>
+                                              <div className="flex gap-2">
+                                                  <button onClick={() => setShowPassword(!showPassword)} className="p-2.5 hover:bg-white dark:hover:bg-[#333] rounded-xl transition-colors dark:text-[#f1f1f1]">{showPassword ? <EyeOff size={20}/> : <Eye size={20}/>}</button>
+                                                  {isOwnProfile && <button onClick={() => setIsEditingPassword(true)} className="p-2.5 hover:bg-white dark:hover:bg-[#333] rounded-xl transition-colors dark:text-[#f1f1f1]"><Edit2 size={20}/></button>}
+                                              </div>
+                                          </div>
+                                      )}
+                                  </div>
+                              </section>
+                          )}
+
+                          {/* Interface Section */}
+                          {isOwnProfile && (
+                              <section className="space-y-6">
+                                  <div className="flex items-center gap-2 border-b border-slate-100 dark:border-white/10 pb-2">
+                                      <Settings size={18} className="text-blue-500" />
+                                      <h3 className="font-black dark:text-white uppercase text-sm tracking-widest font-heading">Display Preferences</h3>
+                                  </div>
+                                  <div className="flex items-center justify-between p-5 bg-slate-50 dark:bg-[#1f1f1f] rounded-2xl border border-slate-100 dark:border-white/5">
+                                      <div className="flex items-center gap-4">
+                                          <div className={`p-3 rounded-xl shadow-sm ${theme === 'dark' ? 'bg-slate-800 text-blue-400' : 'bg-white text-amber-500'}`}>
+                                              {theme === 'dark' ? <Moon size={20}/> : <Sun size={20}/>}
+                                          </div>
+                                          <div>
+                                              <p className="text-sm font-bold dark:text-white">Visual Appearance</p>
+                                              <p className="text-xs text-slate-500 dark:text-[#aaaaaa]">{theme === 'dark' ? 'Dark theme active' : 'Light theme active'}</p>
+                                          </div>
+                                      </div>
+                                      <button 
+                                          onClick={onToggleTheme}
+                                          className="flex items-center gap-2 px-6 py-2.5 bg-slate-900 text-white dark:bg-[#3f3f3f] rounded-xl text-sm font-bold shadow-md hover:scale-105 transition-transform"
+                                      >
+                                          Switch Theme
+                                      </button>
+                                  </div>
+                              </section>
+                          )}
+                      </div>
                   </div>
               </div>
           )}

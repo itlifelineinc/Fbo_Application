@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useLocalDraft } from '../hooks/useLocalDraft';
 import { PageType } from '../types/salesPage';
@@ -5,15 +6,19 @@ import EditorToolbar from '../components/SalesEditor/EditorToolbar';
 import EditorLayout from '../components/SalesEditor/Layout';
 import PreviewPanel from '../components/SalesEditor/PreviewPanel';
 import { ResponsiveModal } from '../components/Shared/ResponsiveModal';
+import { Student } from '../types';
 import { LayoutTemplate, ShoppingBag, Package, Heart, MessageCircle, User, Briefcase, Check, Lock, Loader2 } from 'lucide-react';
 
-const SalesPageBuilder: React.FC = () => {
-  const { page, updateField, publish, lastSaved, isLoaded } = useLocalDraft();
-  const [isPreviewMode, setIsPreviewMode] = useState(false); // Controls Mobile View mainly
+interface SalesPageBuilderProps {
+    currentUser: Student;
+}
+
+const SalesPageBuilder: React.FC<SalesPageBuilderProps> = ({ currentUser }) => {
+  const { page, updateField, publish, lastSaved, isLoaded } = useLocalDraft(currentUser);
+  const [isPreviewMode, setIsPreviewMode] = useState(false); 
   const [previewDevice, setPreviewDevice] = useState<'mobile' | 'desktop'>('desktop');
   const [showSplitView, setShowSplitView] = useState(true);
   
-  // Page Type Selection State
   const [showTypeSelection, setShowTypeSelection] = useState(true);
   const [selectedType, setSelectedType] = useState<string | null>(null);
 
@@ -74,11 +79,8 @@ const SalesPageBuilder: React.FC = () => {
       if (!active) return;
       
       setSelectedType(id);
-      
-      // Update the draft with the selected type so EditorLayout knows what tabs to show
       updateField('type', id);
 
-      // Close modal after delay
       setTimeout(() => {
           setShowTypeSelection(false);
       }, 400);
@@ -101,7 +103,6 @@ const SalesPageBuilder: React.FC = () => {
   return (
     <div className="flex flex-col h-full bg-slate-100 overflow-hidden relative">
       
-      {/* Page Type Selection Modal */}
       <ResponsiveModal 
         isOpen={showTypeSelection} 
         onClose={() => setShowTypeSelection(false)} 
@@ -136,7 +137,6 @@ const SalesPageBuilder: React.FC = () => {
                               }
                           `}
                       >
-                          {/* Badge if exists */}
                           {type.badge && type.active && (
                               <span className="absolute top-3 right-3 bg-emerald-100 text-emerald-800 text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider dark:bg-emerald-900 dark:text-emerald-300">
                                   {type.badge}
@@ -183,7 +183,6 @@ const SalesPageBuilder: React.FC = () => {
           </div>
       </ResponsiveModal>
 
-      {/* Main Builder UI */}
       <EditorToolbar 
         pageTypeTitle={pageTypeTitle}
         lastSaved={lastSaved}
@@ -198,7 +197,6 @@ const SalesPageBuilder: React.FC = () => {
       />
 
       <div className="flex-1 flex overflow-hidden relative">
-        {/* Editor Panel */}
         <div className={`
             flex-col transition-all duration-300 ease-in-out z-10 bg-white
             ${isPreviewMode ? 'hidden' : 'flex'}
@@ -207,11 +205,9 @@ const SalesPageBuilder: React.FC = () => {
                 : 'w-full max-w-5xl mx-auto shadow-xl my-0 md:my-6 rounded-none md:rounded-2xl border-x border-slate-200'
             }
         `}>
-          {/* Pass previewDevice here */}
           <EditorLayout data={page} updateField={updateField} isPreviewMode={false} previewDevice={previewDevice} />
         </div>
 
-        {/* Preview Panel */}
         <div className={`
             bg-slate-200 overflow-hidden relative transition-all duration-300
             ${isPreviewMode ? 'flex w-full' : 'hidden'}

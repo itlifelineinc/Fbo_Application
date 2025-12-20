@@ -18,7 +18,6 @@ export interface TabDefinition {
 // Configuration Map for all six page builder portals
 export const PAGE_TAB_CONFIG: Record<PageType, TabDefinition[]> = {
     'product': [
-        { id: 'OVERVIEW', label: 'Overview', icon: Type },
         { id: 'PRODUCTS', label: 'Product Selection', icon: ShoppingBag },
         { id: 'CONTENT', label: 'Page Content', icon: FileText },
         { id: 'TRUST_PROOF', label: 'Trust & Proof', icon: ShieldCheck },
@@ -93,7 +92,7 @@ export const PlaceholderTab: React.FC<{ label: string, portalType: string }> = (
         </p>
         <div className="mt-8 flex items-center gap-2 px-4 py-2 bg-white dark:bg-slate-700 rounded-full border border-slate-100 dark:border-slate-600 shadow-sm">
             <div className="w-2 h-2 bg-yellow-400 rounded-full animate-pulse"></div>
-            <span className="text-[10px] font-bold text-slate-500 dark:text-slate-300 uppercase tracking-widest">Under Construction</span>
+            <span className="text-[10px] font-bold text-slate-500 text-slate-300 uppercase tracking-widest">Under Construction</span>
         </div>
     </div>
 );

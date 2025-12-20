@@ -80,7 +80,6 @@ const App: React.FC = () => {
     const oldStudent = students.find(s => s.id === updatedStudent.id);
     let newStudents = students.map(s => s.id === updatedStudent.id ? updatedStudent : s);
     
-    // Cascading Handle Update: If a user changes their handle, update all students who have them as a sponsor.
     if (oldStudent && oldStudent.handle !== updatedStudent.handle) {
         newStudents = newStudents.map(s => 
             s.sponsorId === oldStudent.handle ? { ...s, sponsorId: updatedStudent.handle } : s
@@ -168,9 +167,7 @@ const App: React.FC = () => {
       }
   };
 
-  const handleUpdateStats = (seconds: number, questions: number) => {
-      // Placeholder for stats update logic
-  };
+  const handleUpdateStats = (seconds: number, questions: number) => {};
 
   const handleAddTemplate = (t: MentorshipTemplate) => setTemplates([...templates, t]);
   const handleUpdateTemplate = (t: MentorshipTemplate) => setTemplates(templates.map(tmp => tmp.id === t.id ? t : tmp));
@@ -190,9 +187,7 @@ const App: React.FC = () => {
       handleUpdateStudent({ ...currentUser, assignmentSubmissions: subs });
   };
 
-  // --- Broadcast Handlers ---
   const handleSendBroadcast = (broadcast: Broadcast) => {
-      // For now, updating local state is enough since we lift state here
       setBroadcasts(prev => {
           const exists = prev.find(b => b.id === broadcast.id);
           if (exists) return prev.map(b => b.id === broadcast.id ? broadcast : b);
@@ -345,7 +340,7 @@ const App: React.FC = () => {
 
         <Route path="/sales-builder" element={
             <ProtectedRoute currentUser={currentUser} onLogout={handleLogout} theme={theme} onToggleTheme={toggleTheme} courses={courses} notifications={notifications}>
-                <SalesPageBuilder />
+                <SalesPageBuilder currentUser={currentUser!} />
             </ProtectedRoute>
         } />
 

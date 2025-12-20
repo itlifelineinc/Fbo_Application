@@ -1,5 +1,8 @@
+
 import { useState, useEffect, useCallback } from 'react';
-import { SalesPage } from '../types/salesPage';
+import { SalesPage, CurrencyCode } from '../types/salesPage';
+import { Student } from '../types';
+import { COUNTRY_CURRENCY_MAP } from '../services/currencyService';
 
 const EMPTY_PAGE: SalesPage = {
   id: 'draft-new',
@@ -9,12 +12,11 @@ const EMPTY_PAGE: SalesPage = {
   slug: '',
   heroImage: null,
   galleryImages: [],
-  themeColor: '#10b981', // Emerald-500
-  pageBgColor: '#064e3b', // Default Dark Green
-  cardBgColor: '#fcd34d', // Default Amber/Yellow
-  layoutStyle: 'clean', // Default to 'clean'
+  themeColor: '#10b981', 
+  pageBgColor: '#064e3b', 
+  cardBgColor: '#fcd34d', 
+  layoutStyle: 'clean', 
   
-  // Defaults for new design system
   headingFont: 'Lexend',
   bodyFont: 'Noto Sans',
   baseFontSize: 16,
@@ -22,11 +24,9 @@ const EMPTY_PAGE: SalesPage = {
   typeScale: 1.25, 
   sectionSpacing: 5, 
   
-  // Button Defaults
   buttonCorner: 'pill',
   buttonSize: 'md',
 
-  // Mobile Overrides (Responsive Defaults)
   mobileOverrides: {
       baseFontSize: 15,
       subtitleFontSize: 18,
@@ -35,12 +35,11 @@ const EMPTY_PAGE: SalesPage = {
       buttonSize: 'md'
   },
 
-  description: '', // Persuasive story
+  description: '', 
   shortStoryTitle: 'Why this product?',
   features: [],
   testimonials: [],
   
-  // Trust Defaults
   badges: ['guarantee'],
   personalBranding: {
       bio: '',
@@ -51,14 +50,12 @@ const EMPTY_PAGE: SalesPage = {
   faqs: [],
   disclaimer: 'Statements have not been evaluated by the FDA. This product is not intended to diagnose, treat, cure, or prevent any disease.',
 
-  currency: 'USD',
+  currency: 'USD', // Will be overridden by init logic
   products: [],
   packages: [],
   
-  // Pricing Defaults
   fullPackPrice: 0,
 
-  // CTA Defaults
   whatsappNumber: '',
   whatsappMessage: "Hi, I'm interested in {title}. Can you tell me more?",
   ctaDisplay: {
@@ -71,7 +68,6 @@ const EMPTY_PAGE: SalesPage = {
     { id: 'default-cta', label: 'Chat on WhatsApp', style: 'primary', actionType: 'WHATSAPP', url: '', icon: 'whatsapp' }
   ],
   
-  // Checkout Defaults
   checkoutConfig: {
       enabled: false,
       paymentMethods: {
@@ -105,13 +101,12 @@ const EMPTY_PAGE: SalesPage = {
   lastSavedAt: Date.now(),
 };
 
-// --- Simple IndexedDB Implementation ---
 const DB_NAME = 'NexuSalesDrafts';
 const STORE_NAME = 'drafts';
 const DRAFT_KEY = 'current_draft';
 
 const getDB = (): Promise<IDBDatabase> => {
-  return new Promise((resolve, reject) => {
+  return new Error("IDB Error").stack?.includes("webkit") ? Promise.reject() : new Promise((resolve, reject) => {
     const request = indexedDB.open(DB_NAME, 1);
     request.onupgradeneeded = (e: any) => {
       const db = e.target.result;
@@ -125,46 +120,55 @@ const getDB = (): Promise<IDBDatabase> => {
 };
 
 const saveToIDB = async (data: SalesPage) => {
-  const db = await getDB();
-  const tx = db.transaction(STORE_NAME, 'readwrite');
-  const store = tx.objectStore(STORE_NAME);
-  store.put(data, DRAFT_KEY);
-  return new Promise((resolve, reject) => {
-    tx.oncomplete = () => resolve(true);
-    tx.onerror = () => reject(tx.error);
-  });
+  try {
+    const db = await getDB();
+    const tx = db.transaction(STORE_NAME, 'readwrite');
+    const store = tx.objectStore(STORE_NAME);
+    store.put(data, DRAFT_KEY);
+  } catch (e) {
+      console.warn("IndexedDB not available, using fallback storage");
+      localStorage.setItem(DRAFT_KEY, JSON.stringify(data));
+  }
 };
 
 const loadFromIDB = async (): Promise<SalesPage | null> => {
-  const db = await getDB();
-  const tx = db.transaction(STORE_NAME, 'readonly');
-  const store = tx.objectStore(STORE_NAME);
-  const request = store.get(DRAFT_KEY);
-  return new Promise((resolve, reject) => {
-    request.onsuccess = () => resolve(request.result || null);
-    request.onerror = () => reject(request.error);
-  });
+  try {
+    const db = await getDB();
+    const tx = db.transaction(STORE_NAME, 'readonly');
+    const store = tx.objectStore(STORE_NAME);
+    const request = store.get(DRAFT_KEY);
+    return new Promise((resolve, reject) => {
+      request.onsuccess = () => resolve(request.result || null);
+      request.onerror = () => reject(request.error);
+    });
+  } catch (e) {
+      const data = localStorage.getItem(DRAFT_KEY);
+      return data ? JSON.parse(data) : null;
+  }
 };
 
-export const useLocalDraft = () => {
+export const useLocalDraft = (currentUser?: Student) => {
   const [page, setPage] = useState<SalesPage>(EMPTY_PAGE);
   const [lastSaved, setLastSaved] = useState<Date>(new Date());
   const [isLoaded, setIsLoaded] = useState(false);
 
-  // Load Draft on Mount
   useEffect(() => {
     const initLoad = async () => {
       try {
         const saved = await loadFromIDB();
         if (saved) {
           const merged = { ...EMPTY_PAGE, ...saved };
-          // Standard safety checks for nested objects
-          if (!merged.checkoutConfig) merged.checkoutConfig = EMPTY_PAGE.checkoutConfig;
-          if (!merged.pageBgColor) merged.pageBgColor = EMPTY_PAGE.pageBgColor;
-          if (!merged.cardBgColor) merged.cardBgColor = EMPTY_PAGE.cardBgColor;
-          
           setPage(merged);
           setLastSaved(new Date(merged.lastSavedAt || Date.now()));
+        } else if (currentUser) {
+          // Initialize NEW draft with FBO defaults
+          const defaultCurrency = (currentUser.country && COUNTRY_CURRENCY_MAP[currentUser.country]) || 'USD';
+          setPage({
+              ...EMPTY_PAGE,
+              currency: defaultCurrency as CurrencyCode,
+              whatsappNumber: currentUser.whatsappNumber || '',
+              contactEmail: currentUser.email || ''
+          });
         }
       } catch (err) {
         console.error("Draft load failed", err);
@@ -173,9 +177,8 @@ export const useLocalDraft = () => {
       }
     };
     initLoad();
-  }, []);
+  }, [currentUser]);
 
-  // Auto-save with debounce
   useEffect(() => {
     if (!isLoaded) return;
 

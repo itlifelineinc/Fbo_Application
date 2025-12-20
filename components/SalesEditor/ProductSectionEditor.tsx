@@ -14,7 +14,6 @@ const LABEL_STYLE = "block text-xs font-bold text-slate-700 uppercase tracking-w
 
 const ProductSectionEditor: React.FC<ProductSectionEditorProps> = ({ data, onChange }) => {
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectionType, setSelectionType] = useState<'SINGLE' | 'BUNDLE'>('SINGLE');
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [activeImageIndex, setActiveImageIndex] = useState<number | null>(null);
   
@@ -78,23 +77,13 @@ const ProductSectionEditor: React.FC<ProductSectionEditorProps> = ({ data, onCha
   return (
     <div className="space-y-8 pb-10 w-full max-w-full overflow-x-hidden">
       
-      {/* 1. Selection Type */}
-      <div className="bg-slate-100 p-1 rounded-xl flex dark:bg-slate-800 w-full">
-          <button 
-            onClick={() => setSelectionType('SINGLE')}
-            className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-xs md:text-sm font-bold transition-all ${selectionType === 'SINGLE' ? 'bg-white shadow-sm text-emerald-600 dark:bg-slate-700 dark:text-emerald-400' : 'text-slate-500 hover:text-slate-700 dark:text-slate-400'}`}
-          >
-              <ShoppingBag size={16} /> <span className="truncate">Single Product</span>
-          </button>
-          <button 
-            onClick={() => setSelectionType('BUNDLE')}
-            className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-xs md:text-sm font-bold transition-all ${selectionType === 'BUNDLE' ? 'bg-white shadow-sm text-emerald-600 dark:bg-slate-700 dark:text-emerald-400' : 'text-slate-500 hover:text-slate-700 dark:text-slate-400'}`}
-          >
-              <Package size={16} /> <span className="truncate">Bundle / Pack</span>
-          </button>
+      {/* Search Header */}
+      <div className="mb-2">
+          <label className={LABEL_STYLE}>Search Catalog</label>
+          <p className="text-[10px] text-slate-500 mb-4 dark:text-slate-400">Search for any Forever product to automatically import its high-quality data.</p>
       </div>
 
-      {/* 2. Catalog Search */}
+      {/* Catalog Search */}
       <div className="relative z-20 w-full">
           <div className="relative w-full">
               <Search className="absolute left-3 top-3.5 text-slate-400" size={18} />
@@ -102,7 +91,7 @@ const ProductSectionEditor: React.FC<ProductSectionEditorProps> = ({ data, onCha
                   type="text" 
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search Forever Catalog..."
+                  placeholder="e.g. Aloe Vera Gel, C9, Bright..."
                   className={INPUT_STYLE + " pl-10"}
               />
           </div>
@@ -133,7 +122,7 @@ const ProductSectionEditor: React.FC<ProductSectionEditorProps> = ({ data, onCha
           )}
       </div>
 
-      {/* 3. Product Images (Moved out of details, kept for selection) */}
+      {/* Product Images Area */}
       {activeProduct ? (
           <div className="animate-fade-in space-y-6">
               <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl p-6 shadow-sm">
@@ -179,10 +168,10 @@ const ProductSectionEditor: React.FC<ProductSectionEditorProps> = ({ data, onCha
       ) : (
           <div className="text-center py-16 border-2 border-dashed border-slate-200 rounded-3xl bg-slate-50/50 dark:border-slate-700 dark:bg-slate-900/30 w-full">
               <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm dark:bg-slate-800">
-                  <Search size={24} className="text-slate-400" />
+                  <ShoppingBag size={24} className="text-slate-400" />
               </div>
               <h3 className="font-bold text-lg text-slate-700 dark:text-white">No Product Selected</h3>
-              <p className="text-sm text-slate-500 max-w-xs mx-auto mt-1 dark:text-slate-400">Use the search bar above to find a product from the Forever catalog.</p>
+              <p className="text-sm text-slate-500 max-w-xs mx-auto mt-1 dark:text-slate-400">Search for a single product above to get started.</p>
           </div>
       )}
 

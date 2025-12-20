@@ -1,10 +1,11 @@
 
 import React, { useState, useEffect } from 'react';
-import { SalesPage, FaqItem } from '../../../../types/salesPage';
+import { SalesPage, FaqItem, CurrencyCode } from '../../../../types/salesPage';
 import { 
   Check, MessageCircle, ShoppingBag, BookOpen, Zap, ListChecks, 
-  CheckCircle, ChevronDown, Package, ArrowRight, Quote, Star, Award, CalendarDays, Shield
+  CheckCircle, ChevronDown, Package, ArrowRight, Quote, Star, Award, CalendarDays, Shield, Globe
 } from 'lucide-react';
+import { currencyService, ConversionResult } from '../../../../services/currencyService';
 
 interface ProductCleanProps {
     data: SalesPage;
@@ -21,10 +22,35 @@ const ProductClean: React.FC<ProductCleanProps> = ({
 }) => {
   const [activeImg, setActiveImg] = useState(0);
   const [activeTestimonial, setActiveTestimonial] = useState(0);
+  
+  // --- CURRENCY CONVERSION STATE ---
+  const [visitorCurrency, setVisitorCurrency] = useState<CurrencyCode | null>(null);
+  const [convertedMainPrice, setConvertedMainPrice] = useState<ConversionResult | null>(null);
+  const [convertedPackPrice, setConvertedPackPrice] = useState<ConversionResult | null>(null);
+
   const product = data.products[0];
   const images = product?.images || [];
   const faqs = data.faqs || [];
   const testimonials = data.testimonials || [];
+
+  // Buyer Side: Auto-detect location and convert
+  useEffect(() => {
+    const runConversion = async () => {
+        const localCurr = await currencyService.detectVisitorCurrency();
+        setVisitorCurrency(localCurr);
+
+        if (product?.price) {
+            const mainRes = await currencyService.convertPrice(product.price, data.currency, localCurr);
+            setConvertedMainPrice(mainRes);
+        }
+
+        if (data.fullPackPrice) {
+            const packRes = await currencyService.convertPrice(data.fullPackPrice, data.currency, localCurr);
+            setConvertedPackPrice(packRes);
+        }
+    };
+    runConversion();
+  }, [data.currency, product?.price, data.fullPackPrice]);
 
   useEffect(() => {
     if (images.length <= 1) return;
@@ -57,7 +83,6 @@ const ProductClean: React.FC<ProductCleanProps> = ({
             </div>
         </div>
 
-        {/* CREDIBILITY BADGES */}
         <div className="flex flex-wrap justify-center gap-6 mb-12 w-full px-6">
             <div className="flex flex-col items-center gap-1.5 opacity-80">
                 <div className="w-9 h-9 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center border border-white/10">
@@ -167,7 +192,7 @@ const ProductClean: React.FC<ProductCleanProps> = ({
           </div>
       )}
 
-      {/* 5. TESTIMONIALS (Sliding Card) */}
+      {/* 5. TESTIMONIALS */}
       {testimonials.length > 0 && (
           <div className="px-6 py-4 bg-white dark:bg-slate-950">
               <div className="attachment-card text-center flex flex-col items-center">
@@ -233,7 +258,6 @@ const ProductClean: React.FC<ProductCleanProps> = ({
       {/* 7. PRICE CARD */}
       <div className="px-6 py-10 bg-white dark:bg-slate-950">
           <div className="bg-slate-900 rounded-[3rem] p-10 shadow-2xl relative overflow-hidden text-left border border-slate-800">
-              {/* Modern Glass Background Decor */}
               <div className="absolute top-0 right-0 w-48 h-48 bg-emerald-500/20 rounded-full blur-3xl -mr-20 -mt-20"></div>
               <div className="absolute bottom-0 left-0 w-32 h-32 bg-blue-500/10 rounded-full blur-2xl -ml-10 -mb-10"></div>
               
@@ -247,10 +271,25 @@ const ProductClean: React.FC<ProductCleanProps> = ({
                           
                           <div className="flex flex-col gap-1">
                             <p className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em]">Standard Selection</p>
-                            <div className="flex items-baseline gap-2">
-                                <span className="text-emerald-500 text-lg font-black">{data.currency}</span>
-                                <span className="text-5xl font-black text-white tracking-tighter">{product?.price?.toLocaleString()}</span>
-                            </div>
+                            
+                            {/* DYNAMIC CONVERTED PRICE DISPLAY */}
+                            {convertedMainPrice?.isConverted ? (
+                                <div className="space-y-1">
+                                    <div className="flex items-baseline gap-2">
+                                        <span className="text-emerald-500 text-lg font-black">{convertedMainPrice.currency}</span>
+                                        <span className="text-5xl font-black text-white tracking-tighter">{Math.round(convertedMainPrice.amount).toLocaleString()}</span>
+                                    </div>
+                                    <div className="flex items-center gap-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                                        <Globe size={10} className="text-emerald-500" />
+                                        <span>Local Estimate (Original: {data.currency} {product?.price.toLocaleString()})</span>
+                                    </div>
+                                </div>
+                            ) : (
+                                <div className="flex items-baseline gap-2">
+                                    <span className="text-emerald-500 text-lg font-black">{data.currency}</span>
+                                    <span className="text-5xl font-black text-white tracking-tighter">{product?.price?.toLocaleString()}</span>
+                                </div>
+                            )}
                           </div>
                       </div>
 
@@ -258,7 +297,11 @@ const ProductClean: React.FC<ProductCleanProps> = ({
                           <div className="flex items-center justify-between p-6 bg-white/5 border border-white/10 rounded-[2rem] hover:bg-white/10 transition-colors cursor-default">
                               <div className="space-y-1">
                                 <p className="text-[10px] font-black text-emerald-400 uppercase tracking-widest">Exclusive Full Pack</p>
-                                <p className="text-3xl font-black text-white">{data.currency} {data.fullPackPrice.toLocaleString()}</p>
+                                <p className="text-3xl font-black text-white">
+                                    {convertedPackPrice?.isConverted 
+                                        ? `${convertedPackPrice.currency} ${Math.round(convertedPackPrice.amount).toLocaleString()}` 
+                                        : `${data.currency} ${data.fullPackPrice.toLocaleString()}`}
+                                </p>
                                 <p className="text-[9px] text-slate-400 font-bold uppercase tracking-wider">Save more with our bulk case</p>
                               </div>
                               <div className="p-4 bg-emerald-500/20 rounded-2xl">

@@ -103,7 +103,6 @@ const EditorLayout: React.FC<EditorLayoutProps> = ({ data, updateField, isPrevie
   const renderContent = () => {
       // 1. SHARED GLOBAL COMPONENTS (Used across multiple portals)
       switch (activeTabId) {
-          case 'OVERVIEW':
           case 'PKG_BASICS':
           case 'PAGE_BASICS':
           case 'HEADLINE_MSG':

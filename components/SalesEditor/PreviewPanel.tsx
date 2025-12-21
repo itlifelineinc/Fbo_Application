@@ -19,6 +19,14 @@ interface PreviewPanelProps {
   device: 'mobile' | 'desktop';
 }
 
+const MOCK_ADDRESSES = [
+    { street: '123 Independence Ave', city: 'Accra', region: 'Greater Accra', zip: 'GA-123-4567' },
+    { street: '45 Osei Tutu Blvd', city: 'Kumasi', region: 'Ashanti', zip: 'AK-000-1111' },
+    { street: '88 Harbour Road', city: 'Tema', region: 'Greater Accra', zip: 'GT-022-8888' },
+    { street: '12 Cape Coast Highway', city: 'Takoradi', region: 'Western', zip: 'WR-001-2222' },
+    { street: '500 Oxford Street', city: 'Osu, Accra', region: 'Greater Accra', zip: 'GA-002-3333' }
+];
+
 const CheckoutView: React.FC<{ data: SalesPage; onClose: () => void }> = ({ data, onClose }) => {
     const [orderSuccess, setOrderSuccess] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -35,11 +43,39 @@ const CheckoutView: React.FC<{ data: SalesPage; onClose: () => void }> = ({ data
         region: '',
         zip: ''
     });
+    const [addressSuggestions, setAddressSuggestions] = useState<typeof MOCK_ADDRESSES>([]);
+    const [showSuggestions, setShowSuggestions] = useState(false);
 
     // Payment Form States
     const [momoNumber, setMomoNumber] = useState('');
     const [momoProvider, setMomoProvider] = useState('MTN');
     const [cardData, setCardData] = useState({ number: '', expiry: '', cvv: '', name: '' });
+
+    const handleStreetChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const val = e.target.value;
+        setShipping({ ...shipping, street: val });
+        
+        if (val.length > 2) {
+            const matches = MOCK_ADDRESSES.filter(addr => 
+                addr.street.toLowerCase().includes(val.toLowerCase())
+            );
+            setAddressSuggestions(matches);
+            setShowSuggestions(matches.length > 0);
+        } else {
+            setShowSuggestions(false);
+        }
+    };
+
+    const selectAddress = (addr: typeof MOCK_ADDRESSES[0]) => {
+        setShipping({
+            ...shipping,
+            street: addr.street,
+            city: addr.city,
+            region: addr.region,
+            zip: addr.zip
+        });
+        setShowSuggestions(false);
+    };
 
     const handleSubmitOrder = (e: React.FormEvent) => {
         e.preventDefault();
@@ -164,6 +200,9 @@ const CheckoutView: React.FC<{ data: SalesPage; onClose: () => void }> = ({ data
             {/* Payment Specific Drawers */}
             <div className={`custom-drawer ${activeDrawer === 'MOMO' ? 'open' : ''}`}>
                 <div className="w-12 h-1 bg-slate-200 dark:bg-slate-800 rounded-full mx-auto mt-4 shrink-0"></div>
+                <button onClick={() => setActiveDrawer(null)} className="absolute top-4 right-6 p-2 text-slate-400 hover:text-slate-600 dark:hover:text-white transition-colors">
+                    <X size={20} />
+                </button>
                 <div className="p-6 space-y-6">
                     <div className="text-center">
                         <div className="w-16 h-16 bg-yellow-400 rounded-3xl mx-auto flex items-center justify-center text-white mb-4 shadow-lg">
@@ -192,6 +231,9 @@ const CheckoutView: React.FC<{ data: SalesPage; onClose: () => void }> = ({ data
 
             <div className={`custom-drawer ${activeDrawer === 'CARD' ? 'open' : ''}`}>
                 <div className="w-12 h-1 bg-slate-200 dark:bg-slate-800 rounded-full mx-auto mt-4 shrink-0"></div>
+                <button onClick={() => setActiveDrawer(null)} className="absolute top-4 right-6 p-2 text-slate-400 hover:text-slate-600 dark:hover:text-white transition-colors">
+                    <X size={20} />
+                </button>
                 <div className="p-6 space-y-6">
                     <div className="text-center">
                         <div className="w-16 h-16 bg-blue-600 rounded-3xl mx-auto flex items-center justify-center text-white mb-4 shadow-lg">
@@ -262,9 +304,37 @@ const CheckoutView: React.FC<{ data: SalesPage; onClose: () => void }> = ({ data
                         <div className="space-y-5">
                             <h4 className="font-black text-slate-400 text-[10px] uppercase tracking-[0.2em] ml-1">Shipping Address</h4>
                             <div className="space-y-4">
-                                <div className="space-y-1.5">
+                                <div className="space-y-1.5 relative">
                                     <label className="text-[10px] font-black text-slate-400 uppercase ml-1">Street Address</label>
-                                    <input type="text" required value={shipping.street} onChange={e => setShipping({...shipping, street: e.target.value})} placeholder="House number and street name" className="w-full p-4 bg-white border border-slate-200 rounded-2xl outline-none focus:border-slate-900 text-sm font-bold dark:bg-slate-800 dark:border-slate-700 dark:text-white shadow-sm" />
+                                    <input 
+                                        type="text" 
+                                        required 
+                                        value={shipping.street} 
+                                        onChange={handleStreetChange} 
+                                        placeholder="House number and street name" 
+                                        className="w-full p-4 bg-white border border-slate-200 rounded-2xl outline-none focus:border-slate-900 text-sm font-bold dark:bg-slate-800 dark:border-slate-700 dark:text-white shadow-sm" 
+                                    />
+                                    {/* Address Suggestions */}
+                                    {showSuggestions && (
+                                        <div className="absolute top-full left-0 right-0 z-[100] mt-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+                                            {addressSuggestions.map((addr, i) => (
+                                                <button
+                                                    key={i}
+                                                    type="button"
+                                                    onClick={() => selectAddress(addr)}
+                                                    className="w-full flex items-center gap-3 p-4 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors text-left border-b border-slate-100 dark:border-slate-700 last:border-0"
+                                                >
+                                                    <div className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-700 flex items-center justify-center text-slate-400">
+                                                        <MapPin size={16} />
+                                                    </div>
+                                                    <div>
+                                                        <p className="text-sm font-bold text-slate-900 dark:text-white">{addr.street}</p>
+                                                        <p className="text-[10px] text-slate-500 uppercase font-black tracking-widest">{addr.city}, {addr.region}</p>
+                                                    </div>
+                                                </button>
+                                            ))}
+                                        </div>
+                                    )}
                                 </div>
                                 <div className="space-y-1.5">
                                     <label className="text-[10px] font-black text-slate-400 uppercase ml-1">Apartment, suite, etc. <span className="opacity-50">(optional)</span></label>
@@ -527,7 +597,7 @@ const PreviewPanel: React.FC<PreviewPanelProps> = ({ data, device }) => {
             background-color: #0f172a;
             background-image: 
                 radial-gradient(at 0% 0%, var(--page-bg) 0px, transparent 50%),
-                radial-gradient(at 100% 0%, #1e293b 0px, transparent 50%),
+                radial-gradient(at 100% 0%, #1e293b) 0px, transparent 50%),
                 radial-gradient(at 100% 100%, var(--page-bg) 0px, transparent 50%),
                 radial-gradient(at 0% 100%, #1e293b 0px, transparent 50%);
             position: relative;

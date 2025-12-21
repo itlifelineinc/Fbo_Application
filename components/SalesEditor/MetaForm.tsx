@@ -1,25 +1,27 @@
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import { SalesPage, CurrencyCode } from '../../types/salesPage';
 import CustomSelect from '../Shared/CustomSelect';
+import { CheckCircle, XCircle } from 'lucide-react';
 
 interface MetaFormProps {
   data: SalesPage;
   onChange: <K extends keyof SalesPage>(field: K, value: SalesPage[K]) => void;
+  pages: SalesPage[];
 }
 
 const INPUT_STYLE = "w-full bg-transparent border border-slate-300 rounded-xl px-4 py-3 text-slate-900 font-bold focus:border-emerald-600 focus:ring-0 outline-none transition-all dark:border-slate-700 dark:text-white placeholder-slate-400";
 const LABEL_STYLE = "block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2 dark:text-slate-200";
 
-const MetaForm: React.FC<MetaFormProps> = ({ data, onChange }) => {
+const MetaForm: React.FC<MetaFormProps> = ({ data, onChange, pages }) => {
   
   const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const title = e.target.value;
     onChange('title', title);
     // Auto-generate slug if it's empty or looks like a default draft slug
-    if (!data.slug || data.slug.startsWith('draft-')) {
+    if (!data.slug || data.slug.startsWith('sp_')) {
       const slug = title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
-      onChange('slug', slug.slice(0, 50)); // Enforce slug limit logic
+      onChange('slug', slug.slice(0, 50));
     }
   };
 
@@ -28,6 +30,11 @@ const MetaForm: React.FC<MetaFormProps> = ({ data, onChange }) => {
     const val = e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '');
     onChange('slug', val);
   };
+
+  const isSlugTaken = useMemo(() => {
+    if (!data.slug) return false;
+    return pages.some(p => p.slug === data.slug && p.id !== data.id);
+  }, [data.slug, data.id, pages]);
 
   const currencyOptions = [
     { value: 'USD', label: 'USD - US Dollar ($)' },
@@ -97,16 +104,24 @@ const MetaForm: React.FC<MetaFormProps> = ({ data, onChange }) => {
 
         <div>
             <label className={LABEL_STYLE}>URL Slug</label>
-            <div className="flex items-center">
-            <span className="bg-slate-100 border border-r-0 border-slate-300 rounded-l-xl px-3 py-3 text-slate-500 text-sm font-bold dark:bg-slate-800 dark:border-slate-700 dark:text-slate-400">fbo.com/p/</span>
-            <input 
-                type="text" 
-                value={data.slug}
-                onChange={handleSlugChange}
-                maxLength={50}
-                className={`flex-1 rounded-r-xl rounded-l-none ${INPUT_STYLE}`}
-            />
+            <div className="relative">
+                <div className="flex items-center">
+                <span className="bg-slate-100 border border-r-0 border-slate-300 rounded-l-xl px-3 py-3 text-slate-500 text-[10px] font-bold dark:bg-slate-800 dark:border-slate-700 dark:text-slate-400">app.nexu.com/p/</span>
+                <input 
+                    type="text" 
+                    value={data.slug}
+                    onChange={handleSlugChange}
+                    maxLength={50}
+                    className={`flex-1 rounded-r-xl rounded-l-none ${INPUT_STYLE} pr-10 ${isSlugTaken ? 'border-red-500 focus:border-red-600' : ''}`}
+                />
+                </div>
+                <div className="absolute right-3 top-[14px]">
+                    {data.slug && !isSlugTaken && <CheckCircle size={16} className="text-emerald-500" />}
+                    {isSlugTaken && <XCircle size={16} className="text-red-500" />}
+                </div>
             </div>
+            {isSlugTaken && <p className="text-[10px] text-red-500 mt-1 font-bold">This link is already taken. Try a different name.</p>}
+            {!isSlugTaken && data.slug && <p className="text-[10px] text-emerald-600 mt-1 font-bold uppercase tracking-wider">Link is available!</p>}
         </div>
       </div>
     </div>

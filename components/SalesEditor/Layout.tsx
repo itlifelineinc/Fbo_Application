@@ -14,8 +14,9 @@ import PublishShare from './PublishShare';
 import ThemeSelector from './ThemeSelector';
 import Overview from './Overview';
 import InfoPopover from '../Shared/InfoPopover';
+import SEOSettings from './SEOSettings';
 import { PAGE_TAB_CONFIG, PlaceholderTab } from './TabConfiguration';
-import { Type, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Type, ChevronLeft, ChevronRight, LayoutGrid } from 'lucide-react';
 
 interface EditorLayoutProps {
   data: SalesPage | null;
@@ -115,7 +116,7 @@ const EditorLayout: React.FC<EditorLayoutProps> = ({
           case 'PAGE_BASICS':
           case 'HEADLINE_MSG':
           case 'PROFILE_ID':
-              return <MetaForm data={data} onChange={updateField} />;
+              return <MetaForm data={data} onChange={updateField} pages={pages} />;
           
           case 'DESIGN':
           case 'DESIGN_PREVIEW':
@@ -125,7 +126,7 @@ const EditorLayout: React.FC<EditorLayoutProps> = ({
 
           case 'PUBLISH':
           case 'PREVIEW_PUBLISH':
-              return <PublishShare data={data} onChange={updateField} />;
+              return <PublishShare data={data} onChange={updateField} pages={pages} />;
 
           case 'CTA_SETUP':
           case 'WHATSAPP_SETUP':
@@ -134,6 +135,9 @@ const EditorLayout: React.FC<EditorLayoutProps> = ({
           
           case 'CHECKOUT':
               return <CheckoutConfiguration data={data} onChange={updateField} />;
+              
+          case 'SEO':
+              return <SEOSettings data={data} onChange={updateField} pages={pages} />;
       }
 
       if (portalType === 'product') {

@@ -1,13 +1,15 @@
+
 import React, { useMemo } from 'react';
 import { SalesPage } from '../../types/salesPage';
-import { Search, Image as ImageIcon, AlertTriangle, CheckCircle } from 'lucide-react';
+import { Search, Image as ImageIcon, AlertTriangle, CheckCircle, XCircle } from 'lucide-react';
 
 interface SEOSettingsProps {
   data: SalesPage;
   onChange: <K extends keyof SalesPage>(field: K, value: SalesPage[K]) => void;
+  pages: SalesPage[];
 }
 
-const SEOSettings: React.FC<SEOSettingsProps> = ({ data, onChange }) => {
+const SEOSettings: React.FC<SEOSettingsProps> = ({ data, onChange, pages }) => {
   
   const handleSlugChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '');
@@ -27,6 +29,11 @@ const SEOSettings: React.FC<SEOSettingsProps> = ({ data, onChange }) => {
     }
   };
 
+  const isSlugTaken = useMemo(() => {
+    if (!data.slug) return false;
+    return pages.some(p => p.slug === data.slug && p.id !== data.id);
+  }, [data.slug, data.id, pages]);
+
   // SEO Score Calculation
   const seoScore = useMemo(() => {
     let score = 0;
@@ -39,15 +46,15 @@ const SEOSettings: React.FC<SEOSettingsProps> = ({ data, onChange }) => {
     else if (metaDescription) score += 10;
 
     if (ogImage) score += 20;
-    if (data.slug) score += 20;
+    if (data.slug && !isSlugTaken) score += 20;
 
     return Math.min(100, score);
-  }, [data.seo, data.slug]);
+  }, [data.seo, data.slug, isSlugTaken]);
 
   const getScoreColor = (score: number) => {
     if (score >= 80) return 'text-emerald-600 bg-emerald-50 border-emerald-200 dark:bg-emerald-900/30 dark:border-emerald-800 dark:text-emerald-400';
-    if (score >= 50) return 'text-yellow-600 bg-yellow-50 border-yellow-200 dark:bg-yellow-900/30 dark:border-yellow-800 dark:text-yellow-400';
-    return 'text-red-600 bg-red-50 border-red-200 dark:bg-red-900/30 dark:border-red-800 dark:text-red-400';
+    if (score >= 50) return 'text-yellow-600 bg-yellow-50 border-yellow-200 dark:bg-yellow-900/30 dark:border-emerald-800 dark:text-yellow-400';
+    return 'text-red-600 bg-red-50 border-red-200 dark:bg-red-900/30 dark:border-emerald-800 dark:text-red-400';
   };
 
   return (
@@ -66,15 +73,22 @@ const SEOSettings: React.FC<SEOSettingsProps> = ({ data, onChange }) => {
 
       <div>
         <label className="block text-sm font-bold text-slate-700 mb-1 dark:text-slate-300">URL Slug</label>
-        <div className="flex items-center">
-          <span className="bg-slate-100 border border-r-0 border-slate-200 rounded-l-xl px-3 py-3 text-slate-500 text-sm dark:bg-slate-700 dark:border-slate-600 dark:text-slate-400">fbo.com/p/</span>
-          <input 
-            type="text" 
-            value={data.slug}
-            onChange={handleSlugChange}
-            className="flex-1 p-3 border border-slate-200 rounded-r-xl bg-white text-slate-900 focus:ring-2 focus:ring-emerald-500 outline-none font-mono text-sm dark:bg-slate-700 dark:border-slate-600 dark:text-white"
-          />
+        <div className="relative">
+            <div className="flex items-center">
+              <span className="bg-slate-100 border border-r-0 border-slate-200 rounded-l-xl px-3 py-3 text-slate-500 text-[10px] font-bold dark:bg-slate-700 dark:border-slate-600 dark:text-slate-400">app.nexu.com/p/</span>
+              <input 
+                type="text" 
+                value={data.slug}
+                onChange={handleSlugChange}
+                className={`flex-1 p-3 border border-slate-200 rounded-r-xl bg-white text-slate-900 focus:ring-2 focus:ring-emerald-500 outline-none font-mono text-sm dark:bg-slate-700 dark:border-slate-600 dark:text-white pr-10 ${isSlugTaken ? 'border-red-500' : ''}`}
+              />
+            </div>
+            <div className="absolute right-3 top-[14px]">
+                {data.slug && !isSlugTaken && <CheckCircle size={16} className="text-emerald-500" />}
+                {isSlugTaken && <XCircle size={16} className="text-red-500" />}
+            </div>
         </div>
+        {isSlugTaken && <p className="text-[10px] text-red-500 mt-1 font-bold">This link name is already taken.</p>}
         <p className="text-xs text-slate-400 mt-1 dark:text-slate-500">Auto-formatted from page title if empty.</p>
       </div>
 

@@ -19,6 +19,101 @@ interface PreviewPanelProps {
   device: 'mobile' | 'desktop';
 }
 
+// Fix: Added missing CheckoutView component to resolve "Cannot find name 'CheckoutView'" errors
+const CheckoutView: React.FC<{ data: SalesPage; onClose: () => void }> = ({ data, onClose }) => {
+    const [orderSuccess, setOrderSuccess] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const product = data.products[0];
+
+    const handleSubmitOrder = (e: React.FormEvent) => {
+        e.preventDefault();
+        setIsSubmitting(true);
+        setTimeout(() => {
+            setIsSubmitting(false);
+            setOrderSuccess(true);
+        }, 1500);
+    };
+
+    if (orderSuccess) {
+        return (
+            <div className="flex flex-col items-center justify-center h-full p-8 text-center animate-fade-in bg-white dark:bg-[#0f172a]">
+                <div className="w-20 h-20 bg-emerald-100 rounded-full flex items-center justify-center text-emerald-600 mb-6 dark:bg-emerald-900/30">
+                    <CheckCircle size={48} />
+                </div>
+                <h3 className="text-2xl font-black text-slate-900 dark:text-white mb-2">Order Confirmed!</h3>
+                <p className="text-slate-500 dark:text-slate-400 text-sm mb-8">Your order has been placed successfully. You will receive a confirmation message on WhatsApp shortly.</p>
+                <button 
+                    onClick={onClose}
+                    className="w-full py-4 bg-slate-900 text-white dark:bg-emerald-600 rounded-2xl font-bold uppercase tracking-widest text-xs"
+                >
+                    Close
+                </button>
+            </div>
+        );
+    }
+
+    return (
+        <div className="flex flex-col h-full bg-white dark:bg-[#0f172a]">
+            {/* Checkout Header */}
+            <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex items-center gap-4 bg-slate-50 dark:bg-slate-900">
+                <button onClick={onClose} className="p-2 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-full transition-colors text-slate-500">
+                    <ChevronLeft size={20} />
+                </button>
+                <h3 className="font-black text-slate-900 dark:text-white uppercase tracking-wider text-sm">Secure Checkout</h3>
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-6 space-y-8 no-scrollbar">
+                {/* Order Summary */}
+                <div className="space-y-4">
+                    <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Order Summary</h4>
+                    <div className="flex gap-4 items-center p-3 bg-slate-50 dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700">
+                        <div className="w-16 h-16 rounded-xl bg-white overflow-hidden shrink-0 border border-slate-100 dark:bg-slate-700 dark:border-slate-600">
+                            {product?.images?.[0] ? <img src={product.images[0]} className="w-full h-full object-cover" /> : <Box className="w-full h-full p-4 text-slate-300" />}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                            <p className="font-bold text-slate-900 dark:text-white truncate">{product?.name || 'Product'}</p>
+                            <p className="text-xs text-emerald-600 font-bold">{data.currency} {product?.price?.toLocaleString()}</p>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Form */}
+                <form onSubmit={handleSubmitOrder} className="space-y-6">
+                    <div className="space-y-4">
+                        <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Contact Information</h4>
+                        <div className="space-y-3">
+                            <input type="text" required placeholder="Full Name" className="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-emerald-500 text-sm dark:bg-slate-800 dark:border-slate-700 dark:text-white" />
+                            <input type="email" required placeholder="Email Address" className="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-emerald-500 text-sm dark:bg-slate-800 dark:border-slate-700 dark:text-white" />
+                            <input type="tel" required placeholder="Phone Number" className="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-emerald-500 text-sm dark:bg-slate-800 dark:border-slate-700 dark:text-white" />
+                        </div>
+                    </div>
+
+                    {data.checkoutConfig?.shipping?.enabled && (
+                        <div className="space-y-4">
+                            <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Delivery Address</h4>
+                            <textarea required placeholder="House No, Street, City" className="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-emerald-500 text-sm h-24 resize-none dark:bg-slate-800 dark:border-slate-700 dark:text-white" />
+                        </div>
+                    )}
+
+                    <div className="space-y-4 pt-4 border-t border-slate-100 dark:border-slate-800">
+                        <div className="flex justify-between items-center text-sm font-bold">
+                            <span className="text-slate-500 uppercase tracking-widest text-[10px]">Total Due</span>
+                            <span className="text-xl text-slate-900 dark:text-white">{data.currency} {product?.price?.toLocaleString()}</span>
+                        </div>
+                        <button 
+                            type="submit"
+                            disabled={isSubmitting}
+                            className="w-full py-4 bg-emerald-600 text-white rounded-2xl font-black shadow-lg hover:bg-emerald-700 transition-all flex items-center justify-center gap-3 disabled:opacity-50"
+                        >
+                            {isSubmitting ? <Loader2 className="animate-spin" size={20} /> : <><Check size={20} strokeWidth={3} /> Place Order</>}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    );
+};
+
 const PreviewPanel: React.FC<PreviewPanelProps> = ({ data, device }) => {
   const isMobile = device === 'mobile';
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
@@ -85,7 +180,6 @@ const PreviewPanel: React.FC<PreviewPanelProps> = ({ data, device }) => {
           line-height: 1.6;
           color: #334155;
           width: 100%;
-          height: 100%;
         }
         .preview-wrapper h1 { 
             font-family: var(--font-heading);
@@ -319,10 +413,36 @@ const PreviewPanel: React.FC<PreviewPanelProps> = ({ data, device }) => {
            </div>
         </div>
       ) : (
-        <div className="w-full h-full bg-white shadow-lg overflow-y-auto no-scrollbar preview-wrapper relative" style={previewStyle}>
-            {renderActiveTemplate()}
-            <div className={`checkout-drawer ${isCheckoutOpen ? 'open' : ''} max-w-sm border-l border-slate-100 shadow-2xl`}>
-                <CheckoutView data={data} onClose={() => setIsCheckoutOpen(false)} />
+        <div className="w-full h-full bg-slate-100 dark:bg-slate-950 overflow-y-auto no-scrollbar scroll-smooth">
+            <div className="mx-auto w-full max-w-[700px] min-h-full bg-white dark:bg-slate-950 shadow-2xl relative preview-wrapper" style={previewStyle}>
+                {renderActiveTemplate()}
+                <div className={`checkout-drawer ${isCheckoutOpen ? 'open' : ''} max-w-sm border-l border-slate-100 shadow-2xl z-[600]`}>
+                    <CheckoutView data={data} onClose={() => setIsCheckoutOpen(false)} />
+                </div>
+
+                <div className={`custom-story-drawer ${isStoryDrawerOpen ? 'open' : ''}`}>
+                  <div className="w-12 h-1 bg-slate-200 dark:bg-slate-800 rounded-full mx-auto mt-4"></div>
+                  <div className="flex justify-between items-center px-6 pt-4 pb-2">
+                      <h3 className="text-lg font-black text-slate-900 dark:text-white uppercase tracking-wider">{data.shortStoryTitle || 'The Story'}</h3>
+                      <button onClick={() => setIsStoryDrawerOpen(false)} className="p-2 bg-slate-100 dark:bg-slate-800 rounded-full"><X size={20} /></button>
+                  </div>
+                  <div className="flex-1 overflow-y-auto p-6 no-scrollbar pt-2 text-left">
+                      <p className="text-sm text-slate-700 dark:text-slate-200 leading-relaxed whitespace-pre-wrap">{data.description}</p>
+                  </div>
+                </div>
+                
+                {/* FAQ Drawer for Desktop constrained to 700px */}
+                <div className={`custom-story-drawer ${activeFaqForDrawer ? 'open' : ''}`}>
+                    <div className="w-12 h-1 bg-slate-200 dark:bg-slate-800 rounded-full mx-auto mt-4"></div>
+                    <div className="flex justify-between items-center px-6 pt-4 pb-2">
+                        <h3 className="text-lg font-black text-slate-900 dark:text-white uppercase tracking-wider">Question</h3>
+                        <button onClick={() => setActiveFaqForDrawer(null)} className="p-2 bg-slate-100 dark:bg-slate-800 rounded-full"><X size={20} /></button>
+                    </div>
+                    <div className="flex-1 overflow-y-auto p-6 no-scrollbar pt-2 text-left">
+                        <p className="text-base font-black text-slate-900 dark:text-white mb-4">{activeFaqForDrawer?.question}</p>
+                        <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed whitespace-pre-wrap">{activeFaqForDrawer?.answer}</p>
+                    </div>
+                </div>
             </div>
         </div>
       )}
@@ -330,744 +450,5 @@ const PreviewPanel: React.FC<PreviewPanelProps> = ({ data, device }) => {
   );
 };
 
-const CheckoutView: React.FC<{ data: SalesPage; onClose: () => void }> = ({ data, onClose }) => {
-  const [packageType, setPackageType] = useState<'single' | 'full'>('single');
-  const [selectedPayment, setSelectedPayment] = useState<string | null>(null);
-  const [paymentStep, setPaymentStep] = useState<string | null>(null); 
-  const [momoNumber, setMomoNumber] = useState('');
-  const [orderId] = useState(() => `NX-${Math.floor(100000 + Math.random() * 900000)}`);
-  
-  const [customerInfo, setCustomerInfo] = useState({
-    firstName: '',
-    lastName: '',
-    phone: '',
-    email: '',
-    houseNo: '',
-    street: '',
-    city: '',
-    state: '',
-    zip: ''
-  });
-
-  // --- MAP PICKER STATE ---
-  const [showMapPicker, setShowMapPicker] = useState(false);
-  const [zoom, setZoom] = useState(1);
-  const [isLocating, setIsLocating] = useState(false);
-  const [mapSearch, setMapSearch] = useState('');
-  const [mapResults, setMapResults] = useState<any[]>([]);
-  const [selectedLocation, setSelectedLocation] = useState({
-      name: 'Boundary Rd., East Legon, Accra',
-      details: 'Greater Accra Region, Ghana',
-      street: 'Boundary Rd.',
-      city: 'Accra',
-      state: 'Greater Accra'
-  });
-
-  const product = data.products[0];
-  const unitPrice = packageType === 'full' ? (data.fullPackPrice || product?.price) : product?.price || 0;
-  
-  const threshold = data.checkoutConfig.shipping.freeShippingThreshold || 0;
-  const flatRate = data.checkoutConfig.shipping.flatRate || 0;
-  const shipping = (data.checkoutConfig.shipping.enabled && unitPrice >= threshold && threshold > 0) ? 0 : (data.checkoutConfig.shipping.enabled ? flatRate : 0);
-  
-  const total = unitPrice + shipping;
-  const iconColor = data.pageBgColor;
-
-  // --- MAP LOGIC ---
-  const handleMapSearch = (query: string) => {
-      setMapSearch(query);
-      if (query.length > 2) {
-          const mockResults = [
-              { name: 'East Legon Mall', details: 'East Legon, Accra', street: 'Mall Link Rd.', city: 'Accra', state: 'Greater Accra' },
-              { name: 'University of Ghana', details: 'Legon, Accra', street: 'Legon Bypass', city: 'Accra', state: 'Greater Accra' },
-              { name: 'Marina Mall', details: 'Airport Residential Area, Accra', street: 'Liberation Rd.', city: 'Accra', state: 'Greater Accra' },
-              { name: 'Kumasi City Mall', details: 'Lake Rd, Kumasi', street: 'Lake Rd.', city: 'Kumasi', state: 'Ashanti' }
-          ].filter(l => l.name.toLowerCase().includes(query.toLowerCase()));
-          setMapResults(mockResults);
-      } else {
-          setMapResults([]);
-      }
-  };
-
-  const selectMapLocation = (loc: any) => {
-      setSelectedLocation(loc);
-      setMapSearch('');
-      setMapResults([]);
-      setZoom(2.5); // "Zoom in" to the selection
-  };
-
-  const handleLocateMe = () => {
-      setIsLocating(true);
-      if ("geolocation" in navigator) {
-          navigator.geolocation.getCurrentPosition(() => {
-              // Mock update to current area
-              setSelectedLocation({
-                  name: 'Your Current Position',
-                  details: 'Detected via GPS',
-                  street: 'Main Street',
-                  city: 'Accra',
-                  state: 'Greater Accra'
-              });
-              setZoom(2.8);
-              setIsLocating(false);
-          }, () => {
-              alert("Could not access location. Please check your browser permissions.");
-              setIsLocating(false);
-          });
-      }
-  };
-
-  const confirmMapSelection = () => {
-      setCustomerInfo({
-          ...customerInfo,
-          street: selectedLocation.street,
-          city: selectedLocation.city,
-          state: selectedLocation.state
-      });
-      setShowMapPicker(false);
-  };
-
-  const handleAddressSearch = (query: string) => {
-    setCustomerInfo({ ...customerInfo, street: query });
-    if (query.length > 2) {
-      const mocks = [
-        `${query} Avenue, East Legon, Accra`,
-        `${query} Road, Kumasi Central`,
-        `${query} Street, Osu, Accra`,
-        `${query} Crescent, Tema Community 25`
-      ];
-      setAddressSuggestions(mocks);
-    } else {
-      setAddressSuggestions([]);
-    }
-  };
-
-  const [addressSuggestions, setAddressSuggestions] = useState<string[]>([]);
-
-  const selectSuggestion = (suggestion: string) => {
-    const parts = suggestion.split(', ');
-    setCustomerInfo({
-        ...customerInfo,
-        street: parts[0] || '',
-        city: parts[1] || '',
-        state: parts[2] || ''
-    });
-    setAddressSuggestions([]);
-  };
-
-  const handlePaymentSelect = (method: string) => {
-      const mandatory = ['firstName', 'lastName', 'phone', 'houseNo', 'street', 'city', 'state'];
-      const isMissing = mandatory.some(key => !customerInfo[key as keyof typeof customerInfo]);
-
-      if (isMissing) {
-          alert("Please complete the delivery information above before choosing a payment method.");
-          return;
-      }
-
-      setSelectedPayment(method);
-      if (method === 'cod') {
-          setPaymentStep('success');
-      } else {
-          setPaymentStep(method);
-      }
-  };
-
-  const handleConfirmAction = () => {
-      setPaymentStep('processing');
-      setTimeout(() => setPaymentStep('success'), 2000);
-  };
-
-  if (paymentStep === 'tracking') {
-      const estArrival = new Date();
-      estArrival.setDate(estArrival.getDate() + 3);
-      const arrivalStr = estArrival.toLocaleDateString('en-US', { month: 'short', day: 'numeric', weekday: 'long' });
-
-      return (
-          <div className="flex flex-col h-full bg-slate-50 dark:bg-slate-950 animate-fade-in overflow-hidden">
-              <div className="px-6 py-8 border-b border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 shrink-0 flex items-center gap-3">
-                  <button onClick={() => setPaymentStep('success')} className="p-2 -ml-2 text-slate-500"><ChevronLeft size={24}/></button>
-                  <h2 className="text-xl font-black text-slate-900 dark:text-white uppercase tracking-tight font-heading">Track Order</h2>
-              </div>
-              <div className="flex-1 overflow-y-auto p-6 space-y-6 no-scrollbar">
-                  <div className="bg-emerald-500 rounded-3xl p-6 text-white shadow-xl relative overflow-hidden">
-                      <div className="relative z-10">
-                        <p className="text-[10px] font-black uppercase tracking-widest opacity-80 mb-1">Arriving By</p>
-                        <h3 className="text-2xl font-black">{arrivalStr}</h3>
-                        <p className="text-xs font-bold mt-4 bg-white/20 inline-block px-3 py-1 rounded-full backdrop-blur-sm">Order ID: {orderId}</p>
-                      </div>
-                      <Box size={80} className="absolute -bottom-4 -right-4 opacity-20 rotate-12" />
-                  </div>
-
-                  <div className="bg-white dark:bg-slate-900 rounded-[2rem] p-8 border border-slate-100 dark:border-slate-800 space-y-10 relative">
-                      <div className="flex items-start gap-6 relative">
-                          <div className="track-line track-line-active"></div>
-                          <div className="w-8 h-8 rounded-full bg-emerald-500 flex items-center justify-center text-white z-10 shrink-0">
-                              <Check size={16} strokeWidth={4}/>
-                          </div>
-                          <div>
-                              <p className="text-sm font-black text-slate-900 dark:text-white uppercase">Ordered</p>
-                              <p className="text-xs text-slate-500">Today, {new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</p>
-                          </div>
-                      </div>
-
-                      <div className="flex items-start gap-6 relative">
-                          <div className="track-line"></div>
-                          <div className="w-8 h-8 rounded-full bg-emerald-500 flex items-center justify-center text-white z-10 shrink-0 shadow-lg shadow-emerald-500/30 animate-pulse">
-                              <Package size={16} strokeWidth={3}/>
-                          </div>
-                          <div>
-                              <p className="text-sm font-black text-slate-900 dark:text-white uppercase">Processing</p>
-                              <p className="text-xs text-slate-500 font-medium italic">Preparing your wellness items...</p>
-                          </div>
-                      </div>
-
-                      <div className="flex items-start gap-6 relative opacity-30 grayscale">
-                          <div className="track-line"></div>
-                          <div className="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-800 flex items-center justify-center text-slate-500 z-10 shrink-0">
-                              <Truck size={16} />
-                          </div>
-                          <div>
-                              <p className="text-sm font-black text-slate-900 dark:text-white uppercase">Shipped</p>
-                          </div>
-                      </div>
-
-                      <div className="flex items-start gap-6 relative opacity-30 grayscale">
-                          <div className="track-line"></div>
-                          <div className="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-800 flex items-center justify-center text-slate-500 z-10 shrink-0">
-                              <Home size={16} />
-                          </div>
-                          <div>
-                              <p className="text-sm font-black text-slate-900 dark:text-white uppercase">Delivered</p>
-                          </div>
-                      </div>
-                  </div>
-
-                  <div className="bg-white dark:bg-slate-900 rounded-[2rem] p-6 border border-slate-100 dark:border-slate-800">
-                      <h4 className="text-[10px] font-black uppercase text-slate-400 tracking-widest mb-4">Delivery Address</h4>
-                      <p className="text-sm font-bold text-slate-800 dark:text-slate-200">{customerInfo.firstName} {customerInfo.lastName}</p>
-                      <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed mt-1">
-                          {customerInfo.houseNo}, {customerInfo.street}<br/>
-                          {customerInfo.city}, {customerInfo.state}<br/>
-                          {customerInfo.phone}
-                      </p>
-                  </div>
-              </div>
-              <div className="p-6 bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800">
-                  <button onClick={onClose} className="w-full py-4 bg-slate-900 text-white rounded-2xl font-black uppercase tracking-widest text-xs dark:bg-emerald-600">Back to Page</button>
-              </div>
-          </div>
-      );
-  }
-
-  if (paymentStep === 'success') {
-      return (
-          <div className="flex flex-col h-full bg-white dark:bg-slate-950 items-center justify-center p-8 text-center animate-fade-in">
-              <div className="w-24 h-24 bg-emerald-100 rounded-full flex items-center justify-center text-emerald-600 mb-6 dark:bg-emerald-900/30">
-                  <CheckCircle size={64} />
-              </div>
-              <h2 className="text-2xl font-black text-slate-900 dark:text-white uppercase tracking-tight mb-1">Order Placed!</h2>
-              <p className="text-xs font-black text-slate-400 uppercase tracking-widest mb-4">Order ID: {orderId}</p>
-              <p className="text-slate-500 dark:text-slate-400 text-sm mb-10">Hi {customerInfo.firstName}, we've received your order. We'll message you once it ships.</p>
-              
-              <div className="flex flex-col w-full gap-3">
-                <button 
-                    onClick={() => setPaymentStep('tracking')} 
-                    className="w-full py-4 bg-emerald-600 text-white rounded-2xl font-black uppercase tracking-widest text-xs shadow-lg flex items-center justify-center gap-2 group"
-                >
-                    <Truck size={18} /> Track Your Order <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
-                </button>
-                <button onClick={onClose} className="w-full py-4 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-2xl font-bold uppercase tracking-widest text-[10px]">Return to Store</button>
-              </div>
-          </div>
-      );
-  }
-
-  if (paymentStep === 'processing') {
-      return (
-          <div className="flex flex-col h-full bg-white dark:bg-slate-950 items-center justify-center p-8 text-center">
-              <Loader2 size={48} className="text-emerald-500 animate-spin mb-4" />
-              <p className="text-slate-600 dark:text-slate-300 font-bold uppercase tracking-widest text-xs">Processing Payment...</p>
-          </div>
-      );
-  }
-
-  const INPUT_CLASS = "w-full p-4 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl text-sm font-bold outline-none focus:border-emerald-500 transition-all dark:text-white placeholder-slate-400";
-  const LABEL_CLASS = "text-[10px] font-black uppercase text-slate-400 tracking-[0.2em] mb-2 block";
-
-  return (
-    <div className="flex flex-col h-full bg-white dark:bg-slate-950 relative overflow-hidden">
-      
-      {/* FUNCTIONAL REFINED MAP PICKER UI */}
-      {showMapPicker && (
-          <div className="absolute inset-0 z-[900] bg-white dark:bg-slate-900 flex flex-col animate-in fade-in slide-in-from-bottom-full duration-500 cubic-bezier(0.32, 0.72, 0, 1)">
-              <div className="flex items-center justify-between p-5 border-b border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 shrink-0 shadow-sm">
-                  <div className="flex items-center gap-2">
-                    <MapIcon size={18} className="text-emerald-500" />
-                    <h3 className="font-black uppercase text-xs tracking-[0.2em] text-slate-800 dark:text-white">Pin Delivery Spot</h3>
-                  </div>
-                  <button onClick={() => setShowMapPicker(false)} className="p-2 bg-slate-100 dark:bg-slate-800 rounded-full transition-colors active:scale-95"><X size={20}/></button>
-              </div>
-              
-              <div className="flex-1 bg-slate-100 dark:bg-slate-950 relative overflow-hidden">
-                  {/* REAL MAP BACKGROUND SIMULATION */}
-                  <div 
-                    className="absolute inset-0 map-real-bg" 
-                    style={{ transform: `scale(${zoom})`, filter: isLocating ? 'blur(4px) grayscale(50%)' : 'none' }}
-                  />
-
-                  {/* Floating Map Controls */}
-                  <div className="absolute top-6 right-6 flex flex-col gap-2 z-20">
-                      <button 
-                        onClick={() => setZoom(prev => Math.min(3, prev + 0.5))}
-                        className="w-10 h-10 bg-white dark:bg-slate-800 rounded-xl shadow-lg flex items-center justify-center text-slate-600 dark:text-slate-300 hover:bg-slate-50 active:scale-95 transition-all border border-slate-100 dark:border-slate-700"
-                      >
-                          <Plus size={18} strokeWidth={3} />
-                      </button>
-                      <button 
-                        onClick={() => setZoom(prev => Math.max(1, prev - 0.5))}
-                        className="w-10 h-10 bg-white dark:bg-slate-800 rounded-xl shadow-lg flex items-center justify-center text-slate-600 dark:text-slate-300 hover:bg-slate-50 active:scale-95 transition-all border border-slate-100 dark:border-slate-700"
-                      >
-                          <Minus size={18} strokeWidth={3} />
-                      </button>
-                      <button 
-                        onClick={handleLocateMe}
-                        disabled={isLocating}
-                        className={`w-10 h-10 bg-white dark:bg-slate-800 rounded-xl shadow-lg flex items-center justify-center active:scale-95 transition-all border border-slate-100 dark:border-slate-700 ${isLocating ? 'text-slate-300' : 'text-emerald-600'}`}
-                      >
-                          {isLocating ? <Loader2 size={18} className="animate-spin" /> : <Crosshair size={18} strokeWidth={3} />}
-                      </button>
-                  </div>
-
-                  {/* FIXED Marker (Center of Screen) */}
-                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none pb-12 z-10">
-                      <div className="relative flex flex-col items-center">
-                          {/* Marker Shadow */}
-                          <div className="w-5 h-5 bg-black/20 rounded-full blur-[3px] absolute -bottom-1 scale-x-150"></div>
-                          {/* Animated Marker */}
-                          <div className={`relative ${isLocating ? 'animate-pulse' : 'animate-bounce'}`} style={{ color: iconColor }}>
-                              <MapPin size={52} strokeWidth={2.5} fill="currentColor" className="text-white filter drop-shadow-xl" style={{ color: iconColor }} />
-                              <div className="absolute inset-0 flex items-center justify-center">
-                                  <div className="w-3 h-3 bg-white rounded-full shadow-inner mb-4"></div>
-                              </div>
-                          </div>
-                      </div>
-                  </div>
-
-                  {/* Map Search Interface */}
-                  <div className="absolute top-6 left-6 right-20 z-30">
-                      <div className="relative flex flex-col gap-2">
-                          <div className="relative flex items-center">
-                              <Search size={18} className="absolute left-4 text-slate-400" />
-                              <input 
-                                  type="text" 
-                                  value={mapSearch}
-                                  onChange={(e) => handleMapSearch(e.target.value)}
-                                  placeholder="Search building or street..." 
-                                  className="w-full pl-12 pr-4 py-4 bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-100 dark:border-slate-800 outline-none text-sm font-bold dark:text-white focus:ring-2 focus:ring-emerald-500/50"
-                              />
-                              {mapSearch && (
-                                  <button onClick={() => { setMapSearch(''); setMapResults([]); }} className="absolute right-4 p-1 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-400">
-                                      <X size={14} />
-                                  </button>
-                              )}
-                          </div>
-
-                          {/* Search Results List */}
-                          {mapResults.length > 0 && (
-                              <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-100 dark:border-slate-800 overflow-hidden animate-in fade-in slide-in-from-top-2">
-                                  {mapResults.map((res, i) => (
-                                      <button 
-                                        key={i} 
-                                        onClick={() => selectMapLocation(res)}
-                                        className="w-full flex items-center gap-3 p-4 text-left hover:bg-slate-50 dark:hover:bg-slate-800 border-b border-slate-50 dark:border-slate-800 last:border-0"
-                                      >
-                                          <div className="p-2 bg-emerald-50 dark:bg-emerald-900/30 rounded-lg text-emerald-600">
-                                              <Navigation size={16} fill="currentColor" />
-                                          </div>
-                                          <div className="min-w-0">
-                                              <p className="text-sm font-black text-slate-800 dark:text-white truncate">{res.name}</p>
-                                              <p className="text-xs text-slate-500 dark:text-slate-400 truncate">{res.details}</p>
-                                          </div>
-                                      </button>
-                                  ))}
-                              </div>
-                          )}
-                      </div>
-                  </div>
-
-                  {/* Bottom Confirm Panel */}
-                  <div className="absolute bottom-6 left-6 right-6 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md p-6 rounded-[2.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.2)] border border-white/20 z-20">
-                      <div className="flex items-start gap-4 mb-5">
-                          <div className="w-12 h-12 bg-emerald-50 dark:bg-emerald-900/30 rounded-2xl flex items-center justify-center text-emerald-600 shrink-0">
-                              <Navigation size={24} fill="currentColor" className="opacity-80" />
-                          </div>
-                          <div className="min-w-0">
-                              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-0.5">Delivery Target</p>
-                              <p className="text-base font-black text-slate-800 dark:text-white truncate">{selectedLocation.name}</p>
-                              <p className="text-[11px] text-slate-500 font-bold dark:text-slate-400 uppercase tracking-wide">{selectedLocation.details}</p>
-                          </div>
-                      </div>
-                      <button 
-                        onClick={confirmMapSelection} 
-                        className="w-full py-5 rounded-[1.5rem] text-white font-black text-xs uppercase tracking-[0.2em] transition-all active:scale-95 shadow-xl flex items-center justify-center gap-2 group"
-                        style={{ backgroundColor: iconColor }}
-                      >
-                        Deliver Here <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
-                      </button>
-                  </div>
-              </div>
-          </div>
-      )}
-
-      {/* PAYMENT SUB-DRAWERS */}
-      <div className={`absolute inset-x-0 bottom-0 z-[800] bg-white dark:bg-slate-900 rounded-t-[3rem] shadow-[0_-20px_50px_-20px_rgba(0,0,0,0.3)] transition-transform duration-500 ease-in-out border-t border-slate-100 dark:border-slate-800 ${paymentStep ? 'translate-y-0' : 'translate-y-full'}`}>
-          <div className="w-12 h-1 bg-slate-200 dark:bg-slate-700 rounded-full mx-auto mt-6 mb-2"></div>
-          <div className="p-10 pb-16">
-              <div className="flex justify-between items-center mb-8">
-                  <h3 className="text-xl font-black text-slate-900 dark:text-white uppercase tracking-tighter flex items-center gap-3">
-                      {paymentStep === 'momo' ? <Smartphone size={24} color={iconColor}/> : paymentStep === 'card' ? <CardIcon size={24} color={iconColor}/> : <Building2 size={24} color={iconColor}/>}
-                      {paymentStep === 'momo' ? 'Mobile Money' : paymentStep === 'card' ? 'Secure Card Pay' : 'Bank Confirmation'}
-                  </h3>
-                  <button onClick={() => setPaymentStep(null)} className="p-2 bg-slate-100 dark:bg-slate-800 rounded-full"><X size={20} /></button>
-              </div>
-
-              {paymentStep === 'momo' && (
-                  <div className="space-y-8">
-                      <div>
-                          <label className={LABEL_CLASS}>Enter MoMo Number</label>
-                          <div className="relative">
-                              <input 
-                                type="tel" 
-                                value={momoNumber}
-                                onChange={e => setMomoNumber(e.target.value)}
-                                placeholder="0XX XXX XXXX"
-                                className="w-full p-6 bg-slate-50 dark:bg-slate-800 border-2 border-slate-100 dark:border-slate-700 rounded-[1.5rem] outline-none focus:border-emerald-500 font-black text-xl dark:text-white placeholder-slate-300"
-                              />
-                              <button onClick={handleConfirmAction} className="absolute right-3 top-1/2 -translate-y-1/2 p-4 bg-emerald-500 text-white rounded-2xl shadow-xl active:scale-90 transition-transform flex items-center justify-center">
-                                  <Send size={24} />
-                              </button>
-                          </div>
-                      </div>
-                      <div className="flex items-center gap-3 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-2xl">
-                        <AlertCircle size={20} className="text-blue-500" />
-                        <p className="text-[10px] font-bold text-blue-700 dark:text-blue-300 uppercase tracking-wider leading-relaxed">Check your phone screen for the prompt to confirm.</p>
-                      </div>
-                  </div>
-              )}
-
-              {paymentStep === 'card' && (
-                  <div className="space-y-4">
-                      <div className="space-y-4">
-                          <div>
-                              <label className={LABEL_CLASS}>Card Number</label>
-                              <input type="text" placeholder="XXXX XXXX XXXX XXXX" className={INPUT_CLASS} />
-                          </div>
-                          <div className="grid grid-cols-2 gap-4">
-                              <div>
-                                  <label className={LABEL_CLASS}>Expiry</label>
-                                  <input type="text" placeholder="MM/YY" className={INPUT_CLASS} />
-                              </div>
-                              <div>
-                                  <label className={LABEL_CLASS}>CVV</label>
-                                  <input type="text" placeholder="123" className={INPUT_CLASS} />
-                              </div>
-                          </div>
-                      </div>
-                      <button onClick={handleConfirmAction} className="w-full py-5 text-white rounded-[1.5rem] font-black uppercase tracking-widest text-sm mt-6 shadow-xl" style={{ backgroundColor: iconColor }}>
-                        Verify & Pay {data.currency} {total.toLocaleString()}
-                      </button>
-                  </div>
-              )}
-
-              {paymentStep === 'bank' && (
-                  <div className="space-y-6 text-center">
-                      <div className="bg-slate-50 dark:bg-slate-800 p-8 rounded-[2rem] border border-slate-100 dark:border-slate-700 space-y-4">
-                          <div className="flex justify-between border-b border-slate-200 dark:border-slate-700 pb-3">
-                              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Bank</span>
-                              <span className="text-sm font-black dark:text-white uppercase">Nexu Growth Bank</span>
-                          </div>
-                          <div className="flex justify-between border-b border-slate-200 dark:border-slate-700 pb-3">
-                              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">A/C Name</span>
-                              <span className="text-sm font-black dark:text-white uppercase">Nexu Academy Ltd</span>
-                          </div>
-                          <div className="flex justify-between pb-1">
-                              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Number</span>
-                              <span className="text-sm font-black font-mono dark:text-white">099100234567</span>
-                          </div>
-                      </div>
-                      <button onClick={handleConfirmAction} className="w-full py-5 text-white rounded-[1.5rem] font-black uppercase tracking-widest text-sm shadow-xl" style={{ backgroundColor: iconColor }}>
-                        I've made the transfer
-                      </button>
-                  </div>
-              )}
-          </div>
-      </div>
-
-      <div className="flex items-center px-6 py-8 border-b border-slate-100 dark:border-slate-800 shrink-0 bg-white dark:bg-slate-950 z-10">
-          <button onClick={onClose} className="p-2 -ml-2 text-slate-800 dark:text-white"><ChevronLeft size={28} strokeWidth={3} /></button>
-          <h2 className="text-xl font-black text-slate-900 dark:text-white ml-2 uppercase tracking-tight font-heading">Secure Checkout</h2>
-      </div>
-      
-      <div className="flex-1 overflow-y-auto p-6 space-y-12 no-scrollbar">
-          <div className="space-y-6">
-              <h3 className="text-[10px] font-black uppercase text-slate-400 tracking-[0.3em] flex items-center gap-2">
-                  <User size={14} color={iconColor} strokeWidth={4} /> Delivery Destination
-              </h3>
-              <div className="space-y-4">
-                  <div>
-                      <label className={LABEL_CLASS}>First Name*</label>
-                      <input 
-                        type="text" 
-                        className={INPUT_CLASS} 
-                        placeholder="Jane"
-                        value={customerInfo.firstName}
-                        onChange={e => setCustomerInfo({...customerInfo, firstName: e.target.value})}
-                      />
-                  </div>
-                  <div>
-                      <label className={LABEL_CLASS}>Last Name*</label>
-                      <input 
-                        type="text" 
-                        className={INPUT_CLASS} 
-                        placeholder="Doe"
-                        value={customerInfo.lastName}
-                        onChange={e => setCustomerInfo({...customerInfo, lastName: e.target.value})}
-                      />
-                  </div>
-                  <div>
-                      <label className={LABEL_CLASS}>Phone Number*</label>
-                      <div className="relative">
-                        <Smartphone size={16} color={iconColor} className="absolute left-4 top-1/2 -translate-y-1/2" />
-                        <input 
-                            type="tel" 
-                            className={INPUT_CLASS + " pl-12"} 
-                            placeholder="0XX XXX XXXX"
-                            value={customerInfo.phone}
-                            onChange={e => setCustomerInfo({...customerInfo, phone: e.target.value})}
-                        />
-                      </div>
-                  </div>
-                  <div>
-                      <label className={LABEL_CLASS}>Email (Optional)</label>
-                      <div className="relative">
-                        <Mail size={16} color={iconColor} className="absolute left-4 top-1/2 -translate-y-1/2" />
-                        <input 
-                            type="email" 
-                            className={INPUT_CLASS + " pl-12"} 
-                            placeholder="jane@example.com"
-                            value={customerInfo.email}
-                            onChange={e => setCustomerInfo({...customerInfo, email: e.target.value})}
-                        />
-                      </div>
-                  </div>
-
-                  <div className="h-px bg-slate-100 dark:bg-slate-700 my-4"></div>
-
-                  <div className="space-y-4">
-                      <div>
-                          <label className={LABEL_CLASS}>House / Flat No.*</label>
-                          <input 
-                            type="text" 
-                            className={INPUT_CLASS} 
-                            placeholder="B12"
-                            value={customerInfo.houseNo}
-                            onChange={e => setCustomerInfo({...customerInfo, houseNo: e.target.value})}
-                          />
-                      </div>
-                      <div>
-                          <label className={LABEL_CLASS}>Postal / Zip Code</label>
-                          <input 
-                            type="text" 
-                            className={INPUT_CLASS} 
-                            placeholder="00233"
-                            value={customerInfo.zip}
-                            onChange={e => setCustomerInfo({...customerInfo, zip: e.target.value})}
-                          />
-                      </div>
-                      <div className="relative">
-                          <label className={LABEL_CLASS}>Street Name / Area*</label>
-                          <div className="relative">
-                              <Search size={16} color={iconColor} className="absolute left-4 top-1/2 -translate-y-1/2" />
-                              <input 
-                                type="text" 
-                                className={INPUT_CLASS + " pl-12"} 
-                                placeholder="Start typing address..."
-                                value={customerInfo.street}
-                                onChange={e => handleAddressSearch(e.target.value)}
-                              />
-                          </div>
-                      </div>
-                      <div>
-                          <label className={LABEL_CLASS}>City*</label>
-                          <input 
-                            type="text" 
-                            className={INPUT_CLASS} 
-                            placeholder="Accra"
-                            value={customerInfo.city}
-                            onChange={e => setCustomerInfo({...customerInfo, city: e.target.value})}
-                          />
-                      </div>
-                      <div>
-                          <label className={LABEL_CLASS}>State / Region*</label>
-                          <input 
-                            type="text" 
-                            className={INPUT_CLASS} 
-                            placeholder="Greater Accra"
-                            value={customerInfo.state}
-                            onChange={e => setCustomerInfo({...customerInfo, state: e.target.value})}
-                          />
-                      </div>
-                  </div>
-
-                  <button 
-                    onClick={() => setShowMapPicker(true)}
-                    className="w-full mt-4 py-4 border-2 border-dashed rounded-2xl flex items-center justify-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] transition-all hover:bg-slate-50 dark:hover:bg-slate-800"
-                    style={{ color: iconColor, borderColor: iconColor }}
-                  >
-                      <MapIcon size={16} /> Use My Precise Map Location
-                  </button>
-              </div>
-          </div>
-
-          {data.fullPackPrice > 0 && (
-              <div className="space-y-6">
-                  <h3 className="text-[10px] font-black uppercase text-slate-400 tracking-[0.3em] flex items-center gap-2">
-                      <Tag size={14} color={iconColor} strokeWidth={4} /> Choose Your Package
-                  </h3>
-                  <div className="flex flex-col gap-4">
-                      <div 
-                          onClick={() => setPackageType('single')}
-                          className={`p-6 rounded-[2rem] border-2 flex items-center justify-between cursor-pointer transition-all ${packageType === 'single' ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20 shadow-lg' : 'border-slate-100 bg-slate-50 dark:bg-slate-800'}`}
-                      >
-                          <div className="flex items-center gap-4">
-                              <div className={`p-3 rounded-2xl ${packageType === 'single' ? 'bg-emerald-500 text-white' : 'bg-slate-200 text-slate-500 dark:bg-slate-700'}`}><ShoppingCart size={22}/></div>
-                              <div>
-                                  <p className="font-black text-sm text-slate-900 dark:text-white uppercase tracking-tight">Standard Unit</p>
-                                  <p className="text-xs text-slate-500 font-bold">{data.currency} {product?.price.toLocaleString()}</p>
-                              </div>
-                          </div>
-                          <div className={`w-7 h-7 rounded-full border-2 flex items-center justify-center ${packageType === 'single' ? 'border-emerald-500 bg-emerald-500 shadow-md shadow-emerald-500/20' : 'border-slate-200'}`}>
-                              {packageType === 'single' && <Check size={16} className="text-white" strokeWidth={4} />}
-                          </div>
-                      </div>
-
-                      <div 
-                          onClick={() => setPackageType('full')}
-                          className={`p-6 rounded-[2rem] border-2 flex items-center justify-between cursor-pointer transition-all ${packageType === 'full' ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20 shadow-lg' : 'border-slate-100 bg-slate-50 dark:bg-slate-800'}`}
-                      >
-                          <div className="flex items-center gap-4">
-                              <div className={`p-3 rounded-2xl ${packageType === 'full' ? 'bg-emerald-500 text-white' : 'bg-slate-200 text-slate-500 dark:bg-slate-700'}`}><Package size={22}/></div>
-                              <div>
-                                  <p className="font-black text-sm text-slate-900 dark:text-white uppercase tracking-tight">Full Case Pack</p>
-                                  <p className="text-xs text-slate-500 font-bold">{data.currency} {data.fullPackPrice.toLocaleString()}</p>
-                              </div>
-                          </div>
-                          <div className={`w-7 h-7 rounded-full border-2 flex items-center justify-center ${packageType === 'full' ? 'border-emerald-500 bg-emerald-500 shadow-md shadow-emerald-500/20' : 'border-slate-200'}`}>
-                              {packageType === 'full' && <Check size={16} className="text-white" strokeWidth={4} />}
-                          </div>
-                      </div>
-                  </div>
-              </div>
-          )}
-
-          <div className="space-y-6">
-            <h3 className="text-[10px] font-black uppercase text-slate-400 tracking-[0.3em] flex items-center gap-2">
-                <LayoutGrid size={14} color={iconColor} strokeWidth={4} /> Checkout Summary
-            </h3>
-            <div className="bg-slate-50 dark:bg-slate-800 rounded-[2.5rem] p-8 border border-slate-100 dark:border-slate-700 space-y-6 shadow-sm">
-                <div className="flex justify-between items-center pb-6 border-b border-slate-200 dark:border-slate-700">
-                    <div className="flex gap-4 items-center">
-                        <img src={product?.images[0]} className="w-16 h-16 object-contain bg-white rounded-2xl border border-slate-100 p-2 shadow-sm" />
-                        <div>
-                            <p className="text-xs font-black text-slate-900 dark:text-white uppercase truncate max-w-[120px] tracking-tight">{product?.name}</p>
-                            <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest">{packageType === 'full' ? 'Bulk Case' : 'Individual'}</p>
-                        </div>
-                    </div>
-                    <p className="text-lg font-black text-slate-900 dark:text-white">{data.currency} {unitPrice.toLocaleString()}</p>
-                </div>
-                <div className="space-y-3">
-                    <div className="flex justify-between text-xs font-black">
-                        <span className="text-slate-400 uppercase tracking-widest">Subtotal</span>
-                        <span className="text-slate-700 dark:text-slate-300">{data.currency} {unitPrice.toLocaleString()}</span>
-                    </div>
-                    <div className="flex justify-between text-xs font-black">
-                        <span className="text-slate-400 uppercase tracking-widest">Delivery</span>
-                        <span className={`uppercase ${shipping === 0 ? 'text-emerald-500' : 'text-slate-700 dark:text-slate-300'}`}>{shipping === 0 ? 'FREE' : `${data.currency} ${shipping}`}</span>
-                    </div>
-                    
-                    {data.checkoutConfig.shipping.freeShippingThreshold ? (
-                        <div className={`p-4 rounded-2xl text-[10px] font-black uppercase tracking-wider text-center ${unitPrice >= threshold ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30' : 'bg-blue-50 text-blue-700 dark:bg-blue-900/20'}`}>
-                            {unitPrice >= threshold 
-                                ? '🎉 Free Delivery Unlocked!' 
-                                : `Add ${data.currency} ${(threshold - unitPrice).toLocaleString()} more for FREE Delivery`}
-                        </div>
-                    ) : null}
-
-                    <div className="flex justify-between pt-6 border-t border-slate-200 dark:border-slate-700 items-end">
-                        <span className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-[0.2em]">Total Amount</span>
-                        <span className="text-3xl font-black text-emerald-500 tracking-tighter">{data.currency} {total.toLocaleString()}</span>
-                    </div>
-                </div>
-            </div>
-          </div>
-
-          <div className="space-y-6 pb-20">
-              <h3 className="text-[10px] font-black uppercase text-slate-400 tracking-[0.3em] flex items-center gap-2">
-                  <CreditCard size={14} color={iconColor} strokeWidth={4} /> Payment Destination
-              </h3>
-              <div className="flex flex-col gap-3">
-                  {data.checkoutConfig.paymentMethods.mobileMoney && (
-                      <button onClick={() => handlePaymentSelect('momo')} className={`p-6 rounded-[2rem] border-2 flex items-center justify-between transition-all ${selectedPayment === 'momo' ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20' : 'border-slate-100 bg-white dark:bg-slate-800'}`}>
-                          <div className="flex items-center gap-4">
-                              <Smartphone size={24} className="text-yellow-600"/>
-                              <span className="font-black text-sm text-slate-800 dark:text-white uppercase tracking-tight">Mobile Money</span>
-                          </div>
-                          <div className={`w-6 h-6 rounded-full border-2 ${selectedPayment === 'momo' ? 'border-emerald-500 bg-emerald-500 shadow-md' : 'border-slate-200'}`} />
-                      </button>
-                  )}
-                  {data.checkoutConfig.paymentMethods.card && (
-                      <button onClick={() => handlePaymentSelect('card')} className={`p-6 rounded-[2rem] border-2 flex items-center justify-between transition-all ${selectedPayment === 'card' ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20' : 'border-slate-100 bg-white dark:bg-slate-800'}`}>
-                          <div className="flex items-center gap-4">
-                              <CardIcon size={24} className="text-indigo-600"/>
-                              <span className="font-black text-sm text-slate-800 dark:text-white uppercase tracking-tight">Credit / Debit Card</span>
-                          </div>
-                          <div className={`w-6 h-6 rounded-full border-2 ${selectedPayment === 'card' ? 'border-emerald-500 bg-emerald-500 shadow-md' : 'border-slate-200'}`} />
-                      </button>
-                  )}
-                  {data.checkoutConfig.paymentMethods.bankTransfer && (
-                      <button onClick={() => handlePaymentSelect('bank')} className={`p-6 rounded-[2rem] border-2 flex items-center justify-between transition-all ${selectedPayment === 'bank' ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20' : 'border-slate-100 bg-white dark:bg-slate-800'}`}>
-                          <div className="flex items-center gap-4">
-                              <Building2 size={24} className="text-blue-600"/>
-                              <span className="font-black text-sm text-slate-800 dark:text-white uppercase tracking-tight">Direct Bank Transfer</span>
-                          </div>
-                          <div className={`w-6 h-6 rounded-full border-2 ${selectedPayment === 'bank' ? 'border-emerald-500 bg-emerald-500 shadow-md' : 'border-slate-200'}`} />
-                      </button>
-                  )}
-                  {data.checkoutConfig.paymentMethods.cashOnDelivery && (
-                      <button onClick={() => handlePaymentSelect('cod')} className={`p-6 rounded-[2rem] border-2 flex items-center justify-between transition-all ${selectedPayment === 'cod' ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20' : 'border-slate-100 bg-white dark:bg-slate-800'}`}>
-                          <div className="flex items-center gap-4">
-                              <Wallet size={24} className="text-green-600"/>
-                              <span className="font-black text-sm text-slate-800 dark:text-white uppercase tracking-tight">Cash on Delivery</span>
-                          </div>
-                          <div className={`w-6 h-6 rounded-full border-2 ${selectedPayment === 'cod' ? 'border-emerald-500 bg-emerald-500 shadow-md' : 'border-slate-200'}`} />
-                      </button>
-                  )}
-              </div>
-          </div>
-      </div>
-
-      <div className="p-8 border-t border-slate-100 dark:border-slate-800 shrink-0 bg-white dark:bg-slate-900 z-10">
-          <button 
-              disabled={!selectedPayment} 
-              onClick={() => selectedPayment && handlePaymentSelect(selectedPayment)}
-              className="w-full py-5 rounded-2xl font-black text-sm bg-slate-900 text-white uppercase tracking-widest shadow-2xl disabled:opacity-30 transition-all active:scale-95 dark:bg-emerald-600 flex items-center justify-center gap-2"
-              style={selectedPayment ? { backgroundColor: iconColor } : {}}
-          >
-              Complete Order Now <ArrowRight size={18} />
-          </button>
-      </div>
-    </div>
-  );
-};
-
+// Fix: Added default export for PreviewPanel to resolve Error in file pages/SalesPageBuilder.tsx on line 7
 export default PreviewPanel;

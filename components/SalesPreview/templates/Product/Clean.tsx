@@ -15,6 +15,7 @@ interface ProductCleanProps {
     onReadMoreUsage: () => void;
     onOpenFaq: (faq: FaqItem) => void;
     onViewAllFaqs: () => void;
+    onHeroVisibilityChange?: (visible: boolean) => void;
 }
 
 const BADGES_MAP: Record<string, { label: string, icon: any }> = {
@@ -37,11 +38,10 @@ const getContrastColor = (hexcolor: string) => {
 };
 
 const ProductClean: React.FC<ProductCleanProps> = ({ 
-    data, onOpenCheckout, onReadMoreStory, onReadMoreBenefits, onReadMoreUsage, onOpenFaq, onViewAllFaqs 
+    data, onOpenCheckout, onReadMoreStory, onReadMoreBenefits, onReadMoreUsage, onOpenFaq, onViewAllFaqs, onHeroVisibilityChange 
 }) => {
   const [activeImg, setActiveImg] = useState(0);
   const [activeTestimonial, setActiveTestimonial] = useState(0);
-  const [heroButtonVisible, setHeroButtonVisible] = useState(true);
   const heroButtonRef = useRef<HTMLAnchorElement>(null);
   
   const [visitorCurrency, setVisitorCurrency] = useState<CurrencyCode | null>(null);
@@ -64,9 +64,11 @@ const ProductClean: React.FC<ProductCleanProps> = ({
 
   // Observer to check if Hero WhatsApp button is in view
   useEffect(() => {
+    if (!onHeroVisibilityChange) return;
+    
     const observer = new IntersectionObserver(
       ([entry]) => {
-        setHeroButtonVisible(entry.isIntersecting);
+        onHeroVisibilityChange(entry.isIntersecting);
       },
       { threshold: 0.1 }
     );
@@ -76,7 +78,7 @@ const ProductClean: React.FC<ProductCleanProps> = ({
     }
 
     return () => observer.disconnect();
-  }, []);
+  }, [onHeroVisibilityChange]);
 
   useEffect(() => {
     const runConversion = async () => {
@@ -114,18 +116,6 @@ const ProductClean: React.FC<ProductCleanProps> = ({
 
   return (
     <div className="flex flex-col relative">
-      {/* Smart Floating WhatsApp Button */}
-      {data.ctaDisplay?.showFloatingWhatsapp && !heroButtonVisible && (
-          <a 
-            href={whatsappUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="fixed bottom-8 right-6 z-[60] w-14 h-14 bg-[#25D366] rounded-full shadow-2xl flex items-center justify-center text-white transition-all duration-500 animate-in fade-in zoom-in-50 slide-in-from-bottom-10 active:scale-90"
-          >
-              <MessageCircle size={28} fill="currentColor" />
-          </a>
-      )}
-
       {/* 1. HERO */}
       <header className="clean-section pt-16 pb-12 flex flex-col items-center text-center transition-all duration-500 overflow-hidden" style={{ backgroundColor: data.pageBgColor }}>
         <span className={`text-[10px] font-black uppercase tracking-[0.3em] mb-4 opacity-70 ${textColorClass}`}>{product?.category || 'Quality Wellness'}</span>

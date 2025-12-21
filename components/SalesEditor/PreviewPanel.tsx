@@ -254,11 +254,16 @@ const CheckoutView: React.FC<{ data: SalesPage; onClose: () => void }> = ({ data
             </div>
 
             {/* Checkout Header */}
-            <div className="p-5 border-b border-slate-100 dark:border-slate-800 flex items-center gap-4 bg-white dark:bg-slate-900 shrink-0">
-                <button onClick={onClose} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors text-slate-500">
-                    <ChevronLeft size={20} />
+            <div className="p-5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-white dark:bg-slate-900 shrink-0">
+                <div className="flex items-center gap-4">
+                    <button onClick={onClose} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors text-slate-500 md:hidden">
+                        <ChevronLeft size={20} />
+                    </button>
+                    <h3 className="font-bold text-slate-900 dark:text-white text-base">Order Details</h3>
+                </div>
+                <button onClick={onClose} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors text-slate-400">
+                    <X size={24} strokeWidth={2.5} />
                 </button>
-                <h3 className="font-bold text-slate-900 dark:text-white text-base">Order Details</h3>
             </div>
 
             <div className="flex-1 overflow-y-auto no-scrollbar">
@@ -414,6 +419,7 @@ const PreviewPanel: React.FC<PreviewPanelProps> = ({ data, device }) => {
   const [isUsageDrawerOpen, setIsUsageDrawerOpen] = useState(false);
   const [activeFaqForDrawer, setActiveFaqForDrawer] = useState<FaqItem | null>(null);
   const [isAllFaqsDrawerOpen, setIsAllFaqsDrawerOpen] = useState(false);
+  const [heroButtonVisible, setHeroButtonVisible] = useState(true);
   
   const settings = isMobile && data.mobileOverrides ? { ...data, ...data.mobileOverrides } : data;
   const baseSize = settings.baseFontSize || 16;
@@ -441,6 +447,14 @@ const PreviewPanel: React.FC<PreviewPanelProps> = ({ data, device }) => {
     '--btn-radius': radius,
   } as React.CSSProperties;
 
+  const whatsappUrl = React.useMemo(() => {
+    if (!data.whatsappNumber) return '#';
+    const cleanNumber = data.whatsappNumber.replace(/\D/g, '');
+    const product = data.products[0];
+    const message = data.whatsappMessage.replace('{title}', product?.name || data.title);
+    return `https://wa.me/${cleanNumber}?text=${encodeURIComponent(message)}`;
+  }, [data.whatsappNumber, data.whatsappMessage, data.title, data.products]);
+
   const renderActiveTemplate = () => {
       const type = data.type;
       const theme = data.layoutStyle;
@@ -453,6 +467,7 @@ const PreviewPanel: React.FC<PreviewPanelProps> = ({ data, device }) => {
           onReadMoreUsage: () => setIsUsageDrawerOpen(true),
           onOpenFaq: (faq: FaqItem) => setActiveFaqForDrawer(faq),
           onViewAllFaqs: () => setIsAllFaqsDrawerOpen(true),
+          onHeroVisibilityChange: (visible: boolean) => setHeroButtonVisible(visible)
       };
 
       if (type === 'product' && theme === 'clean') {
@@ -461,6 +476,17 @@ const PreviewPanel: React.FC<PreviewPanelProps> = ({ data, device }) => {
 
       return <Placeholder data={data} type={type} theme={theme} />;
   };
+
+  const floatingButton = (data.ctaDisplay?.showFloatingWhatsapp && !heroButtonVisible) ? (
+      <a 
+        href={whatsappUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="absolute bottom-24 right-4 z-[100] w-12 h-12 bg-[#25D366] rounded-full shadow-2xl flex items-center justify-center text-white transition-all duration-500 animate-in fade-in zoom-in-50 slide-in-from-bottom-5 active:scale-90"
+      >
+          <MessageCircle size={24} fill="currentColor" />
+      </a>
+  ) : null;
 
   return (
     <>
@@ -597,7 +623,7 @@ const PreviewPanel: React.FC<PreviewPanelProps> = ({ data, device }) => {
             background-color: #0f172a;
             background-image: 
                 radial-gradient(at 0% 0%, var(--page-bg) 0px, transparent 50%),
-                radial-gradient(at 100% 0%, #1e293b) 0px, transparent 50%),
+                radial-gradient(at 100% 0%, #1e293b 0px, transparent 50%),
                 radial-gradient(at 100% 100%, var(--page-bg) 0px, transparent 50%),
                 radial-gradient(at 0% 100%, #1e293b 0px, transparent 50%);
             position: relative;
@@ -621,6 +647,8 @@ const PreviewPanel: React.FC<PreviewPanelProps> = ({ data, device }) => {
            <div className="absolute inset-0 overflow-y-auto no-scrollbar preview-wrapper bg-white dark:bg-slate-950 z-[1]" style={previewStyle}>
               {renderActiveTemplate()}
            </div>
+
+           {floatingButton}
 
            {/* Drawers for Mobile */}
            <div className={`checkout-drawer ${isCheckoutOpen ? 'open' : ''}`}>
@@ -697,6 +725,8 @@ const PreviewPanel: React.FC<PreviewPanelProps> = ({ data, device }) => {
                 <div className="flex-1 overflow-y-auto no-scrollbar scroll-smooth preview-wrapper" style={previewStyle}>
                     {renderActiveTemplate()}
                 </div>
+
+                {floatingButton}
 
                 {/* Drawers strictly contained within the 700px box */}
                 <div className={`checkout-drawer ${isCheckoutOpen ? 'open' : ''} border-l border-slate-100 shadow-2xl z-[600] dark:border-slate-800`}>

@@ -1,7 +1,7 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { SalesPage, CurrencyCode } from '../../types/salesPage';
-import { Plus, Edit2, Globe, Calendar, BarChart2, Eye, MessageCircle, ShoppingBag, Trash2, ChevronDown } from 'lucide-react';
+import { Plus, Globe, Calendar, Trash2, ChevronDown, ExternalLink } from 'lucide-react';
 
 interface OverviewProps {
   pages: SalesPage[];
@@ -10,6 +10,8 @@ interface OverviewProps {
   onCreate: () => void;
   onDelete: (id: string) => void;
   onUpdateCurrency: (id: string, currency: CurrencyCode) => void;
+  onUpdateField: <K extends keyof SalesPage>(id: string, field: K, value: SalesPage[K]) => void;
+  onTogglePreview: () => void;
 }
 
 const CURRENCIES = [
@@ -20,29 +22,54 @@ const CURRENCIES = [
     { value: 'EUR', label: 'EUR (€)', flag: '🇪🇺' },
 ];
 
-const Overview: React.FC<OverviewProps> = ({ pages, activePageId, onSelect, onCreate, onDelete, onUpdateCurrency }) => {
+const Overview: React.FC<OverviewProps> = ({ 
+    pages, 
+    activePageId, 
+    onSelect, 
+    onCreate, 
+    onDelete, 
+    onUpdateCurrency,
+    onUpdateField,
+    onTogglePreview
+}) => {
+
+  const handleOpenPreview = (id: string) => {
+      onSelect(id);
+      onTogglePreview();
+  };
+
   return (
     <div className="space-y-6 animate-fade-in pb-10">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {pages.map((page) => {
           const isActive = page.id === activePageId;
-          // Mock stats - in real app these come from backend
-          const stats = { views: 120, leads: 15, sales: 3 };
+          const liveUrl = `app.nexu.com/p/${page.slug || 'untitled'}`;
+          
+          // Real metrics from the page object, or 0 if draft
+          const views = page.isPublished ? (page.views || 0) : 0;
+          const leads = page.isPublished ? (page.leads || 0) : 0;
+          const sales = page.isPublished ? (page.sales || 0) : 0;
 
           return (
             <div 
               key={page.id} 
-              className={`group bg-white dark:bg-slate-800 rounded-2xl border-2 transition-all p-5 flex flex-col justify-between ${isActive ? 'border-emerald-500 shadow-lg ring-1 ring-emerald-500' : 'border-slate-100 hover:border-slate-200 dark:border-slate-700 shadow-sm'}`}
+              className={`group bg-white dark:bg-slate-800 rounded-2xl border-2 transition-all p-5 flex flex-col justify-between ${isActive ? 'border-emerald-500 shadow-lg ring-1 ring-emerald-500' : 'border-slate-100 hover:border-emerald-200 dark:border-slate-700 shadow-sm'}`}
             >
               <div>
                 <div className="flex justify-between items-start mb-3">
-                  <div>
-                    <h3 className="font-extrabold text-slate-900 dark:text-white leading-tight">{page.title || 'Untitled Page'}</h3>
+                  <div className="flex-1 mr-2">
+                    <input 
+                        type="text"
+                        value={page.title}
+                        onChange={(e) => onUpdateField(page.id, 'title', e.target.value)}
+                        className="w-full bg-transparent border-none p-0 font-extrabold text-slate-900 dark:text-white leading-tight focus:ring-0 placeholder-slate-400"
+                        placeholder="Untitled Page"
+                    />
                     <div className="flex items-center gap-2 mt-1">
-                        <span className={`text-[10px] font-black uppercase px-2 py-0.5 rounded ${page.isPublished ? 'bg-green-100 text-green-700 dark:bg-green-900/30' : 'bg-slate-100 text-slate-500 dark:bg-slate-700'}`}>
+                        <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded ${page.isPublished ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : 'bg-slate-100 text-slate-500 dark:bg-slate-700'}`}>
                             {page.isPublished ? 'Published' : 'Draft'}
                         </span>
-                        <span className="text-[10px] text-slate-400 font-bold uppercase flex items-center gap-1">
+                        <span className="text-[9px] text-slate-400 font-bold uppercase flex items-center gap-1">
                             <Calendar size={10} /> {new Date(page.lastSavedAt).toLocaleDateString()}
                         </span>
                     </div>
@@ -67,24 +94,28 @@ const Overview: React.FC<OverviewProps> = ({ pages, activePageId, onSelect, onCr
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2 bg-slate-50 dark:bg-slate-900/50 p-2 rounded-lg border border-slate-100 dark:border-slate-800 mb-4">
-                    <Globe size={12} className="text-slate-400" />
-                    <span className="text-[10px] font-mono text-slate-500 dark:text-slate-400 truncate">fbo.com/p/{page.slug || '...'}</span>
-                </div>
+                <button 
+                    onClick={() => handleOpenPreview(page.id)}
+                    className="w-full flex items-center gap-2 bg-slate-50 dark:bg-slate-900/50 p-2 rounded-lg border border-slate-100 hover:border-emerald-300 transition-colors dark:border-slate-800 mb-4 text-left overflow-hidden"
+                >
+                    <Globe size={12} className="text-slate-400 shrink-0" />
+                    <span className="text-[10px] font-mono text-slate-500 dark:text-slate-400 truncate flex-1">{liveUrl}</span>
+                    <ExternalLink size={10} className="text-slate-300" />
+                </button>
 
                 {/* Performance Snapshot */}
                 <div className="grid grid-cols-3 gap-2 mb-4">
-                    <div className="text-center p-2 bg-slate-50 dark:bg-slate-700 rounded-xl">
-                        <p className="text-[9px] font-black text-slate-400 uppercase">Views</p>
-                        <p className="text-sm font-black text-slate-800 dark:text-white">{stats.views}</p>
+                    <div className="text-center p-2 bg-slate-50 dark:bg-slate-700 rounded-xl border border-slate-100 dark:border-slate-600">
+                        <p className="text-[8px] font-black text-slate-400 uppercase tracking-wider">Views</p>
+                        <p className="text-sm font-black text-slate-800 dark:text-white">{views}</p>
                     </div>
-                    <div className="text-center p-2 bg-slate-50 dark:bg-slate-700 rounded-xl">
-                        <p className="text-[9px] font-black text-slate-400 uppercase">Leads</p>
-                        <p className="text-sm font-black text-blue-600 dark:text-blue-400">{stats.leads}</p>
+                    <div className="text-center p-2 bg-slate-50 dark:bg-slate-700 rounded-xl border border-slate-100 dark:border-slate-600">
+                        <p className="text-[8px] font-black text-slate-400 uppercase tracking-wider">Leads</p>
+                        <p className={`text-sm font-black ${leads > 0 ? 'text-blue-600 dark:text-blue-400' : 'text-slate-400'}`}>{leads}</p>
                     </div>
-                    <div className="text-center p-2 bg-slate-50 dark:bg-slate-700 rounded-xl">
-                        <p className="text-[9px] font-black text-slate-400 uppercase">Sales</p>
-                        <p className="text-sm font-black text-emerald-600 dark:text-emerald-400">{stats.sales}</p>
+                    <div className="text-center p-2 bg-slate-50 dark:bg-slate-700 rounded-xl border border-slate-100 dark:border-slate-600">
+                        <p className="text-[8px] font-black text-slate-400 uppercase tracking-wider">Sales</p>
+                        <p className={`text-sm font-black ${sales > 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400'}`}>{sales}</p>
                     </div>
                 </div>
               </div>
@@ -94,7 +125,7 @@ const Overview: React.FC<OverviewProps> = ({ pages, activePageId, onSelect, onCr
                     onClick={() => onSelect(page.id)}
                     className={`flex-1 py-2.5 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all flex items-center justify-center gap-2 ${isActive ? 'bg-emerald-600 text-white shadow-lg' : 'bg-slate-900 text-white hover:bg-slate-800'}`}
                   >
-                    <Edit2 size={12} /> {isActive ? 'Currently Editing' : 'Edit Details'}
+                    {isActive ? 'Currently Editing' : 'Continue Editing'}
                   </button>
                   <button 
                     onClick={() => onDelete(page.id)}

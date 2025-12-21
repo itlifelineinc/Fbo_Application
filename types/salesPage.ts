@@ -175,6 +175,11 @@ export interface SalesPage {
   refundPolicy: string;
   termsRequired: boolean;
   
+  // Performance
+  views: number;
+  leads: number;
+  sales: number;
+
   // State
   isPublished: boolean;
   lastSavedAt: number;

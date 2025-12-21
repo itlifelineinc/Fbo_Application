@@ -97,6 +97,9 @@ const EMPTY_PAGE: SalesPage = {
   contactVisible: true,
   refundPolicy: '30-day money-back guarantee.',
   termsRequired: false,
+  views: 0,
+  leads: 0,
+  sales: 0,
   isPublished: false,
   lastSavedAt: Date.now(),
 };

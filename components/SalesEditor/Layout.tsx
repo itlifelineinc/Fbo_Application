@@ -25,6 +25,7 @@ interface EditorLayoutProps {
   onSelectPage: (id: string) => void;
   onCreatePage: () => void;
   onDeletePage: (id: string) => void;
+  onTogglePreview: () => void;
   isPreviewMode: boolean;
   previewDevice?: 'mobile' | 'desktop'; 
   currentUser: Student;
@@ -47,6 +48,7 @@ const EditorLayout: React.FC<EditorLayoutProps> = ({
     onSelectPage, 
     onCreatePage, 
     onDeletePage,
+    onTogglePreview,
     isPreviewMode, 
     previewDevice = 'desktop',
     currentUser
@@ -89,8 +91,25 @@ const EditorLayout: React.FC<EditorLayoutProps> = ({
   };
 
   const handleUpdateCurrency = (id: string, currency: CurrencyCode) => {
+      const pageToUpdate = pages.find(p => p.id === id);
+      if (pageToUpdate) {
+          if (data?.id === id) {
+              updateField('currency', currency);
+          } else {
+              // Note: Ideally updateField should handle specific page IDs, but current hook is designed for active page.
+              // For overview tab, we just select then update.
+              onSelectPage(id);
+              updateField('currency', currency);
+          }
+      }
+  };
+
+  const handleUpdateFieldForPage = <K extends keyof SalesPage>(id: string, field: K, value: SalesPage[K]) => {
       if (data?.id === id) {
-          updateField('currency', currency);
+          updateField(field, value);
+      } else {
+          onSelectPage(id);
+          updateField(field, value);
       }
   };
 
@@ -105,6 +124,8 @@ const EditorLayout: React.FC<EditorLayoutProps> = ({
                 onCreate={onCreatePage}
                 onDelete={onDeletePage}
                 onUpdateCurrency={handleUpdateCurrency}
+                onUpdateField={handleUpdateFieldForPage}
+                onTogglePreview={onTogglePreview}
             />
           );
       }

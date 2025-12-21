@@ -7,7 +7,7 @@ import {
   Image as ImageIcon, CreditCard, Smartphone, Truck, Send, Loader2, Package, 
   ShoppingBag, CheckCircle, ChevronDown, Wallet, Building2, CreditCard as CardIcon, 
   MapPin, Mail, LayoutGrid, Map as MapIcon, Navigation, Search, X, AlertCircle,
-  Tag, ArrowRight, Box, Home, Clock, Plus, Minus, Crosshair
+  Tag, ArrowRight, Box, Home, Clock, Plus, Minus, Crosshair, Mic
 } from 'lucide-react';
 
 // Import Templates
@@ -19,7 +19,6 @@ interface PreviewPanelProps {
   device: 'mobile' | 'desktop';
 }
 
-// Fix: Added missing CheckoutView component to resolve "Cannot find name 'CheckoutView'" errors
 const CheckoutView: React.FC<{ data: SalesPage; onClose: () => void }> = ({ data, onClose }) => {
     const [orderSuccess, setOrderSuccess] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -54,8 +53,7 @@ const CheckoutView: React.FC<{ data: SalesPage; onClose: () => void }> = ({ data
 
     return (
         <div className="flex flex-col h-full bg-white dark:bg-[#0f172a]">
-            {/* Checkout Header */}
-            <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex items-center gap-4 bg-slate-50 dark:bg-slate-900">
+            <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex items-center gap-4 bg-slate-50 dark:bg-slate-900 shrink-0">
                 <button onClick={onClose} className="p-2 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-full transition-colors text-slate-500">
                     <ChevronLeft size={20} />
                 </button>
@@ -63,7 +61,6 @@ const CheckoutView: React.FC<{ data: SalesPage; onClose: () => void }> = ({ data
             </div>
 
             <div className="flex-1 overflow-y-auto p-6 space-y-8 no-scrollbar">
-                {/* Order Summary */}
                 <div className="space-y-4">
                     <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Order Summary</h4>
                     <div className="flex gap-4 items-center p-3 bg-slate-50 dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700">
@@ -77,7 +74,6 @@ const CheckoutView: React.FC<{ data: SalesPage; onClose: () => void }> = ({ data
                     </div>
                 </div>
 
-                {/* Form */}
                 <form onSubmit={handleSubmitOrder} className="space-y-6">
                     <div className="space-y-4">
                         <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Contact Information</h4>
@@ -149,7 +145,6 @@ const PreviewPanel: React.FC<PreviewPanelProps> = ({ data, device }) => {
     '--btn-radius': radius,
   } as React.CSSProperties;
 
-  // --- TEMPLATE DISPATCHER ---
   const renderActiveTemplate = () => {
       const type = data.type;
       const theme = data.layoutStyle;
@@ -252,7 +247,8 @@ const PreviewPanel: React.FC<PreviewPanelProps> = ({ data, device }) => {
         }
         .dark .step-connector { background-color: #334155; }
 
-        .custom-story-drawer {
+        /* Unified Drawer Style */
+        .custom-drawer {
             position: absolute;
             left: 0;
             right: 0;
@@ -271,14 +267,14 @@ const PreviewPanel: React.FC<PreviewPanelProps> = ({ data, device }) => {
             pointer-events: none;
             transition: all 0.5s cubic-bezier(0.32, 0.72, 0, 1);
         }
-        .custom-story-drawer.open {
+        .custom-drawer.open {
             bottom: 0;
             transform: translateY(0);
             visibility: visible;
             opacity: 1;
             pointer-events: auto;
         }
-        .dark .custom-story-drawer { background: #0f172a; border-top: 1px solid #334155; }
+        .dark .custom-drawer { background: #0f172a; border-top: 1px solid #334155; }
 
         .checkout-drawer {
             position: absolute;
@@ -300,27 +296,17 @@ const PreviewPanel: React.FC<PreviewPanelProps> = ({ data, device }) => {
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
-        .track-line {
-            width: 2px;
-            background-color: #e2e8f0;
-            height: 100%;
-            position: absolute;
-            left: 15px;
-            top: 24px;
-            z-index: 1;
-        }
-        .track-line-active {
-            background-color: #10b981;
-        }
-
-        .map-real-bg {
-            background-image: url('https://api.mapbox.com/styles/v1/mapbox/light-v10/static/0,0,1,0/1000x1000?access_token=pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4NXVycTA2emYycXBndHRqcmZ3N3gifQ.r_68_f3YXYByJ9as-kyMsA');
+        .stage-bg {
+            background: linear-gradient(135deg, var(--page-bg) 0%, #1e293b 100%);
             background-size: cover;
-            background-position: center;
-            transition: transform 0.5s cubic-bezier(0.23, 1, 0.32, 1), filter 0.3s ease;
+            position: relative;
         }
-        .dark .map-real-bg {
-            background-image: url('https://api.mapbox.com/styles/v1/mapbox/dark-v10/static/0,0,1,0/1000x1000?access_token=pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4NXVycTA2emYycXBndHRqcmZ3N3gifQ.r_68_f3YXYByJ9as-kyMsA');
+        .stage-overlay {
+            position: absolute;
+            inset: 0;
+            background-image: radial-gradient(circle at 2px 2px, rgba(255,255,255,0.05) 1px, transparent 0);
+            background-size: 24px 24px;
+            pointer-events: none;
         }
       `}</style>
 
@@ -335,11 +321,12 @@ const PreviewPanel: React.FC<PreviewPanelProps> = ({ data, device }) => {
               {renderActiveTemplate()}
            </div>
 
+           {/* Drawers for Mobile */}
            <div className={`checkout-drawer ${isCheckoutOpen ? 'open' : ''}`}>
               <CheckoutView data={data} onClose={() => setIsCheckoutOpen(false)} />
            </div>
 
-           <div className={`custom-story-drawer ${isStoryDrawerOpen ? 'open' : ''}`}>
+           <div className={`custom-drawer ${isStoryDrawerOpen ? 'open' : ''}`}>
               <div className="w-12 h-1 bg-slate-200 dark:bg-slate-800 rounded-full mx-auto mt-4"></div>
               <div className="flex justify-between items-center px-6 pt-4 pb-2">
                   <h3 className="text-lg font-black text-slate-900 dark:text-white uppercase tracking-wider">{data.shortStoryTitle || 'The Story'}</h3>
@@ -350,7 +337,7 @@ const PreviewPanel: React.FC<PreviewPanelProps> = ({ data, device }) => {
               </div>
            </div>
 
-           <div className={`custom-story-drawer ${isBenefitsDrawerOpen ? 'open' : ''}`}>
+           <div className={`custom-drawer ${isBenefitsDrawerOpen ? 'open' : ''}`}>
               <div className="w-12 h-1 bg-slate-200 dark:bg-slate-800 rounded-full mx-auto mt-4"></div>
               <div className="flex justify-between items-center px-6 pt-4 pb-2">
                   <h3 className="text-lg font-black text-slate-900 dark:text-white uppercase tracking-wider">Benefits</h3>
@@ -366,7 +353,7 @@ const PreviewPanel: React.FC<PreviewPanelProps> = ({ data, device }) => {
               </div>
            </div>
 
-           <div className={`custom-story-drawer ${isUsageDrawerOpen ? 'open' : ''}`}>
+           <div className={`custom-drawer ${isUsageDrawerOpen ? 'open' : ''}`}>
               <div className="w-12 h-1 bg-slate-200 dark:bg-slate-800 rounded-full mx-auto mt-4"></div>
               <div className="flex justify-between items-center px-6 pt-4 pb-2">
                   <h3 className="text-lg font-black text-slate-900 dark:text-white uppercase tracking-wider">Usage Steps</h3>
@@ -384,7 +371,7 @@ const PreviewPanel: React.FC<PreviewPanelProps> = ({ data, device }) => {
               </div>
            </div>
 
-           <div className={`custom-story-drawer ${activeFaqForDrawer ? 'open' : ''}`}>
+           <div className={`custom-drawer ${activeFaqForDrawer ? 'open' : ''}`}>
               <div className="w-12 h-1 bg-slate-200 dark:bg-slate-800 rounded-full mx-auto mt-4"></div>
               <div className="flex justify-between items-center px-6 pt-4 pb-2">
                   <h3 className="text-lg font-black text-slate-900 dark:text-white uppercase tracking-wider">Question</h3>
@@ -395,32 +382,27 @@ const PreviewPanel: React.FC<PreviewPanelProps> = ({ data, device }) => {
                   <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed whitespace-pre-wrap">{activeFaqForDrawer?.answer}</p>
               </div>
            </div>
-
-           <div className={`custom-story-drawer ${isAllFaqsDrawerOpen ? 'open' : ''}`}>
-              <div className="w-12 h-1 bg-slate-200 dark:bg-slate-800 rounded-full mx-auto mt-4"></div>
-              <div className="flex justify-between items-center px-6 pt-4 pb-2">
-                  <h3 className="text-lg font-black text-slate-900 dark:text-white uppercase tracking-wider">All FAQs</h3>
-                  <button onClick={() => setIsAllFaqsDrawerOpen(false)} className="p-2 bg-slate-100 dark:bg-slate-800 rounded-full"><X size={20} /></button>
-              </div>
-              <div className="flex-1 overflow-y-auto p-6 no-scrollbar pt-2 space-y-6">
-                  {data.faqs.map((faq, i) => (
-                    <div key={i} className="space-y-1">
-                        <p className="text-sm font-black text-slate-900 dark:text-white flex items-center gap-2"><span style={{ color: data.pageBgColor }}>Q.</span> {faq.question}</p>
-                        <p className="text-xs text-slate-500 dark:text-slate-400 pl-6">{faq.answer}</p>
-                    </div>
-                  ))}
-              </div>
-           </div>
         </div>
       ) : (
-        <div className="w-full h-full bg-slate-100 dark:bg-slate-950 overflow-y-auto no-scrollbar scroll-smooth">
-            <div className="mx-auto w-full max-w-[700px] min-h-full bg-white dark:bg-slate-950 shadow-2xl relative preview-wrapper" style={previewStyle}>
-                {renderActiveTemplate()}
-                <div className={`checkout-drawer ${isCheckoutOpen ? 'open' : ''} max-w-sm border-l border-slate-100 shadow-2xl z-[600]`}>
+        /* DESKTOP VIEW: Focused 700px container with fixed gradient background */
+        <div className="w-full h-full stage-bg flex items-center justify-center overflow-hidden">
+            <div className="stage-overlay"></div>
+            
+            {/* The 700px Container (The "Page") */}
+            <div 
+                className="w-full max-w-[700px] h-[95%] bg-white dark:bg-slate-950 shadow-[0_30px_60px_-12px_rgba(0,0,0,0.6)] relative rounded-2xl overflow-hidden flex flex-col"
+            >
+                {/* Scrollable content area inside the 700px container */}
+                <div className="flex-1 overflow-y-auto no-scrollbar scroll-smooth preview-wrapper" style={previewStyle}>
+                    {renderActiveTemplate()}
+                </div>
+
+                {/* Drawers strictly contained within the 700px box */}
+                <div className={`checkout-drawer ${isCheckoutOpen ? 'open' : ''} border-l border-slate-100 shadow-2xl z-[600]`}>
                     <CheckoutView data={data} onClose={() => setIsCheckoutOpen(false)} />
                 </div>
 
-                <div className={`custom-story-drawer ${isStoryDrawerOpen ? 'open' : ''}`}>
+                <div className={`custom-drawer ${isStoryDrawerOpen ? 'open' : ''}`}>
                   <div className="w-12 h-1 bg-slate-200 dark:bg-slate-800 rounded-full mx-auto mt-4"></div>
                   <div className="flex justify-between items-center px-6 pt-4 pb-2">
                       <h3 className="text-lg font-black text-slate-900 dark:text-white uppercase tracking-wider">{data.shortStoryTitle || 'The Story'}</h3>
@@ -430,9 +412,42 @@ const PreviewPanel: React.FC<PreviewPanelProps> = ({ data, device }) => {
                       <p className="text-sm text-slate-700 dark:text-slate-200 leading-relaxed whitespace-pre-wrap">{data.description}</p>
                   </div>
                 </div>
+
+                <div className={`custom-drawer ${isBenefitsDrawerOpen ? 'open' : ''}`}>
+                    <div className="w-12 h-1 bg-slate-200 dark:bg-slate-800 rounded-full mx-auto mt-4"></div>
+                    <div className="flex justify-between items-center px-6 pt-4 pb-2">
+                        <h3 className="text-lg font-black text-slate-900 dark:text-white uppercase tracking-wider">Benefits</h3>
+                        <button onClick={() => setIsBenefitsDrawerOpen(false)} className="p-2 bg-slate-100 dark:bg-slate-800 rounded-full"><X size={20} /></button>
+                    </div>
+                    <div className="flex-1 overflow-y-auto p-6 no-scrollbar pt-2 space-y-4">
+                        {data.products[0]?.benefits.map((b, i) => (
+                            <div key={i} className="flex items-start gap-4">
+                                <div className="w-6 h-6 rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: data.pageBgColor }}><Check size={14} className="text-white" strokeWidth={4} /></div>
+                                <p className="text-sm font-bold text-slate-700 dark:text-slate-200 leading-tight">{b}</p>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+
+                <div className={`custom-drawer ${isUsageDrawerOpen ? 'open' : ''}`}>
+                    <div className="w-12 h-1 bg-slate-200 dark:bg-slate-800 rounded-full mx-auto mt-4"></div>
+                    <div className="flex justify-between items-center px-6 pt-4 pb-2">
+                        <h3 className="text-lg font-black text-slate-900 dark:text-white uppercase tracking-wider">Usage Steps</h3>
+                        <button onClick={() => setIsUsageDrawerOpen(false)} className="p-2 bg-slate-100 dark:bg-slate-800 rounded-full"><X size={20} /></button>
+                    </div>
+                    <div className="flex-1 overflow-y-auto p-6 no-scrollbar pt-2 space-y-8 relative">
+                        {data.products[0]?.usageSteps.map((step, idx) => (
+                            <div key={idx} className="flex items-start gap-5 relative">
+                                <div className="w-9 h-9 rounded-full flex items-center justify-center shrink-0 border-2 font-black text-sm" style={{ borderColor: data.pageBgColor, color: data.pageBgColor }}>
+                                    {idx + 1}
+                                </div>
+                                <p className="text-sm font-bold text-slate-700 dark:text-slate-200 pt-1.5 leading-relaxed">{step}</p>
+                            </div>
+                        ))}
+                    </div>
+                </div>
                 
-                {/* FAQ Drawer for Desktop constrained to 700px */}
-                <div className={`custom-story-drawer ${activeFaqForDrawer ? 'open' : ''}`}>
+                <div className={`custom-drawer ${activeFaqForDrawer ? 'open' : ''}`}>
                     <div className="w-12 h-1 bg-slate-200 dark:bg-slate-800 rounded-full mx-auto mt-4"></div>
                     <div className="flex justify-between items-center px-6 pt-4 pb-2">
                         <h3 className="text-lg font-black text-slate-900 dark:text-white uppercase tracking-wider">Question</h3>
@@ -450,5 +465,4 @@ const PreviewPanel: React.FC<PreviewPanelProps> = ({ data, device }) => {
   );
 };
 
-// Fix: Added default export for PreviewPanel to resolve Error in file pages/SalesPageBuilder.tsx on line 7
 export default PreviewPanel;

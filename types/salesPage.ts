@@ -75,6 +75,13 @@ export interface ComparisonRow {
   dont: string;
 }
 
+export interface BeforeAfterPair {
+  id: string;
+  before: string;
+  after: string;
+  label?: string;
+}
+
 export interface MobileDesignOverrides {
   baseFontSize?: number;
   subtitleFontSize?: number;
@@ -122,6 +129,9 @@ export interface ProblemSolverData {
     support: string[];
   };
   solutionIntro?: string;
+  beforeAfterImages: BeforeAfterPair[];
+  socialProofBadges: string[];
+  countryNotice?: string;
 }
 
 export interface SalesPage {

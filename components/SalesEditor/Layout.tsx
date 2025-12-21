@@ -10,6 +10,8 @@ import ProblemSectionEditor from './ProblemSectionEditor';
 import MistakesSectionEditor from './MistakesSectionEditor';
 import LifestyleSectionEditor from './LifestyleSectionEditor';
 import SolutionSectionEditor from './SolutionSectionEditor';
+import SocialProofSectionEditor from './SocialProofSectionEditor';
+import ComplianceSectionEditor from './ComplianceSectionEditor';
 import PackageSectionEditor from './PackageSectionEditor';
 import TrustProofEditor from './TrustProofEditor'; 
 import CTAConfiguration from './CTAConfiguration';
@@ -46,7 +48,9 @@ const TAB_HELP_CONTENT: Record<string, React.ReactNode> = {
     'PROBLEM_EDU': 'Explain the challenge clearly and without medical jargon to build empathy with your readers.',
     'MISTAKES': 'Create awareness by highlighting what typically fails. Position your solution as the smart choice.',
     'LIFESTYLE': 'Introduce natural support and lifestyle habits first to build credibility as a wellness partner.',
-    'SOLUTION': 'Seamlessly transition from education to your recommended products. Clearly explain how each item aids the user.'
+    'SOLUTION': 'Seamlessly transition from education to your recommended products. Clearly explain how each item aids the user.',
+    'PROOF': 'Reduce doubt by sharing real experiences. Visual results and global trust badges build immense authority.',
+    'COMPLIANCE': 'Ensure your page meets legal and Forever guidelines. This tab manages disclaimers and safety labels.'
 };
 
 const EditorLayout: React.FC<EditorLayoutProps> = ({ 
@@ -175,6 +179,12 @@ const EditorLayout: React.FC<EditorLayoutProps> = ({
 
           case 'SOLUTION':
               return <SolutionSectionEditor data={data} onChange={updateField} />;
+
+          case 'PROOF':
+              return <SocialProofSectionEditor data={data} onChange={updateField} />;
+
+          case 'COMPLIANCE':
+              return <ComplianceSectionEditor data={data} onChange={updateField} />;
       }
 
       if (portalType === 'product') {

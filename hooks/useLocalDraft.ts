@@ -29,7 +29,9 @@ const EMPTY_PAGE: SalesPage = {
       dietSuggestions: {
           avoid: [],
           support: []
-      }
+      },
+      beforeAfterImages: [],
+      socialProofBadges: ['quality', 'millions']
   },
   heroImage: null,
   galleryImages: [],

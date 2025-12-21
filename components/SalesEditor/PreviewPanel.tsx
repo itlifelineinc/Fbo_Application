@@ -7,7 +7,7 @@ import {
   Image as ImageIcon, CreditCard, Smartphone, Truck, Send, Loader2, Package, 
   ShoppingBag, CheckCircle, ChevronDown, Wallet, Building2, CreditCard as CardIcon, 
   MapPin, Mail, LayoutGrid, Map as MapIcon, Navigation, Search, X, AlertCircle,
-  Tag, ArrowRight, Box, Home, Clock, Plus, Minus, Crosshair, Mic
+  Tag, ArrowRight, Box, Home, Clock, Plus, Minus, Crosshair, Mic, Landmark, Banknote, RefreshCw, Map
 } from 'lucide-react';
 
 // Import Templates
@@ -22,7 +22,24 @@ interface PreviewPanelProps {
 const CheckoutView: React.FC<{ data: SalesPage; onClose: () => void }> = ({ data, onClose }) => {
     const [orderSuccess, setOrderSuccess] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [isTracking, setIsTracking] = useState(false);
+    const [selectedPayment, setSelectedPayment] = useState<string>('');
+    const [activeDrawer, setActiveDrawer] = useState<'MOMO' | 'CARD' | null>(null);
     const product = data.products[0];
+
+    // Shipping State
+    const [shipping, setShipping] = useState({
+        street: '',
+        apartment: '',
+        city: '',
+        region: '',
+        zip: ''
+    });
+
+    // Payment Form States
+    const [momoNumber, setMomoNumber] = useState('');
+    const [momoProvider, setMomoProvider] = useState('MTN');
+    const [cardData, setCardData] = useState({ number: '', expiry: '', cvv: '', name: '' });
 
     const handleSubmitOrder = (e: React.FormEvent) => {
         e.preventDefault();
@@ -33,75 +50,284 @@ const CheckoutView: React.FC<{ data: SalesPage; onClose: () => void }> = ({ data
         }, 1500);
     };
 
+    const paymentMethods = data.checkoutConfig?.paymentMethods || {};
+    const availablePayments = [
+        { id: 'momo', label: 'Mobile Money', icon: Smartphone, enabled: paymentMethods.mobileMoney, color: 'text-yellow-600', drawer: 'MOMO' as const },
+        { id: 'card', label: 'Credit/Debit Card', icon: CardIcon, enabled: paymentMethods.card, color: 'text-blue-600', drawer: 'CARD' as const },
+        { id: 'cod', label: 'Cash on Delivery', icon: Banknote, enabled: paymentMethods.cashOnDelivery, color: 'text-emerald-600' },
+        { id: 'bank', label: 'Bank Transfer', icon: Landmark, enabled: paymentMethods.bankTransfer, color: 'text-slate-600' },
+    ].filter(p => p.enabled);
+
+    useEffect(() => {
+        if (!selectedPayment && availablePayments.length > 0) {
+            setSelectedPayment(availablePayments[0].id);
+        }
+    }, [availablePayments]);
+
+    const handlePaymentSelect = (p: any) => {
+        setSelectedPayment(p.id);
+        if (p.drawer) {
+            setActiveDrawer(p.drawer);
+        }
+    };
+
+    if (isTracking) {
+        return (
+            <div className="flex flex-col h-full bg-slate-50 dark:bg-[#0f172a] animate-fade-in">
+                <div className="p-5 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex items-center gap-3 shrink-0">
+                    <button onClick={() => setIsTracking(false)} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full">
+                        <ChevronLeft size={20} />
+                    </button>
+                    <h3 className="font-bold text-slate-900 dark:text-white">Track Order #NEXU-9821</h3>
+                </div>
+                <div className="flex-1 p-6 space-y-8 overflow-y-auto no-scrollbar">
+                    <div className="bg-emerald-600 text-white p-6 rounded-[2rem] shadow-lg relative overflow-hidden">
+                        <div className="relative z-10">
+                            <p className="text-[10px] font-black uppercase tracking-widest opacity-80">Estimated Delivery</p>
+                            <h2 className="text-3xl font-black font-heading mt-1">Today, 4:30 PM</h2>
+                            <div className="flex items-center gap-2 mt-4 text-xs font-bold bg-white/20 w-fit px-3 py-1 rounded-full">
+                                <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
+                                <span>In Transit</span>
+                            </div>
+                        </div>
+                        <Truck size={120} className="absolute -right-8 -bottom-8 text-white/10" strokeWidth={1} />
+                    </div>
+
+                    <div className="space-y-8 relative">
+                        <div className="absolute left-[17px] top-4 bottom-4 w-0.5 bg-slate-200 dark:bg-slate-800"></div>
+                        
+                        {[
+                            { label: 'Order Placed', time: '10:05 AM', done: true, current: false },
+                            { label: 'Confirmed & Packed', time: '11:20 AM', done: true, current: false },
+                            { label: 'Handed to Courier', time: '1:45 PM', done: true, current: true },
+                            { label: 'Out for Delivery', time: 'Waiting', done: false, current: false },
+                            { label: 'Delivered', time: 'Waiting', done: false, current: false }
+                        ].map((step, i) => (
+                            <div key={i} className="flex gap-6 relative z-10">
+                                <div className={`w-9 h-9 rounded-full flex items-center justify-center shrink-0 border-4 border-slate-50 dark:border-[#0f172a] shadow-sm ${step.done ? 'bg-emerald-500 text-white' : 'bg-slate-200 dark:bg-slate-800 text-slate-400'}`}>
+                                    {step.done ? <Check size={18} strokeWidth={4} /> : <div className="w-2 h-2 bg-current rounded-full" />}
+                                </div>
+                                <div>
+                                    <h4 className={`font-black text-sm uppercase tracking-wider ${step.done || step.current ? 'text-slate-900 dark:text-white' : 'text-slate-400'}`}>{step.label}</h4>
+                                    <p className="text-xs font-bold text-slate-500 mt-0.5">{step.time}</p>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+
+                    <div className="bg-white dark:bg-slate-800 p-5 rounded-3xl border border-slate-100 dark:border-slate-700 shadow-sm flex items-center gap-4">
+                        <div className="w-12 h-12 bg-blue-50 dark:bg-blue-900/30 rounded-2xl flex items-center justify-center text-blue-600 dark:text-blue-400">
+                            <MapPin size={24} />
+                        </div>
+                        <div>
+                            <h4 className="font-black text-xs uppercase text-slate-400 tracking-widest">Delivery Address</h4>
+                            <p className="text-sm font-bold text-slate-800 dark:text-white">{shipping.street}, {shipping.city}</p>
+                        </div>
+                    </div>
+                </div>
+                <div className="p-4 bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800">
+                    <button onClick={onClose} className="w-full py-4 bg-slate-900 text-white dark:bg-emerald-600 rounded-2xl font-bold uppercase tracking-widest text-[10px]">Back to Store</button>
+                </div>
+            </div>
+        );
+    }
+
     if (orderSuccess) {
         return (
             <div className="flex flex-col items-center justify-center h-full p-8 text-center animate-fade-in bg-white dark:bg-[#0f172a]">
-                <div className="w-20 h-20 bg-emerald-100 rounded-full flex items-center justify-center text-emerald-600 mb-6 dark:bg-emerald-900/30">
-                    <CheckCircle size={48} />
+                <div className="w-24 h-24 bg-emerald-100 rounded-full flex items-center justify-center text-emerald-600 mb-8 dark:bg-emerald-900/30 shadow-xl shadow-emerald-500/10">
+                    <CheckCircle size={56} strokeWidth={2.5} />
                 </div>
-                <h3 className="text-2xl font-black text-slate-900 dark:text-white mb-2">Order Confirmed!</h3>
-                <p className="text-slate-500 dark:text-slate-400 text-sm mb-8">Your order has been placed successfully. You will receive a confirmation message on WhatsApp shortly.</p>
-                <button 
-                    onClick={onClose}
-                    className="w-full py-4 bg-slate-900 text-white dark:bg-emerald-600 rounded-2xl font-bold uppercase tracking-widest text-xs"
-                >
-                    Close
-                </button>
+                <h3 className="text-3xl font-black text-slate-900 dark:text-white mb-3 font-heading tracking-tight">Order Received!</h3>
+                <p className="text-slate-500 dark:text-slate-400 text-sm mb-10 leading-relaxed max-w-[280px]">We've received your payment and are preparing your package for shipment.</p>
+                
+                <div className="w-full space-y-3">
+                    <button 
+                        onClick={() => setIsTracking(true)}
+                        className="w-full py-5 bg-emerald-600 text-white rounded-2xl font-black uppercase tracking-widest text-xs shadow-lg hover:brightness-110 active:scale-95 transition-all flex items-center justify-center gap-2"
+                    >
+                        <Map size={18} /> Track Your Order
+                    </button>
+                    <button 
+                        onClick={onClose}
+                        className="w-full py-5 bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300 rounded-2xl font-bold uppercase tracking-widest text-[10px] hover:bg-slate-200 transition-all"
+                    >
+                        Return to Store
+                    </button>
+                </div>
             </div>
         );
     }
 
     return (
-        <div className="flex flex-col h-full bg-white dark:bg-[#0f172a]">
-            <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex items-center gap-4 bg-slate-50 dark:bg-slate-900 shrink-0">
-                <button onClick={onClose} className="p-2 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-full transition-colors text-slate-500">
-                    <ChevronLeft size={20} />
-                </button>
-                <h3 className="font-black text-slate-900 dark:text-white uppercase tracking-wider text-sm">Secure Checkout</h3>
+        <div className="flex flex-col h-full bg-white dark:bg-[#0f172a] relative overflow-hidden">
+            {/* Payment Specific Drawers */}
+            <div className={`custom-drawer ${activeDrawer === 'MOMO' ? 'open' : ''}`}>
+                <div className="w-12 h-1 bg-slate-200 dark:bg-slate-800 rounded-full mx-auto mt-4 shrink-0"></div>
+                <div className="p-6 space-y-6">
+                    <div className="text-center">
+                        <div className="w-16 h-16 bg-yellow-400 rounded-3xl mx-auto flex items-center justify-center text-white mb-4 shadow-lg">
+                            <Smartphone size={32} strokeWidth={3} />
+                        </div>
+                        <h3 className="text-xl font-black text-slate-900 dark:text-white uppercase tracking-tight">Mobile Money</h3>
+                        <p className="text-xs text-slate-500 mt-1">Select provider and enter your number</p>
+                    </div>
+                    <div className="space-y-4">
+                        <div className="grid grid-cols-3 gap-2">
+                            {['MTN', 'Telecel', 'AirtelTigo'].map(p => (
+                                <button key={p} onClick={() => setMomoProvider(p)} className={`py-3 rounded-xl border-2 font-black text-[10px] uppercase transition-all ${momoProvider === p ? 'border-emerald-500 bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30' : 'border-slate-100 text-slate-400'}`}>{p}</button>
+                            ))}
+                        </div>
+                        <input 
+                            type="tel" 
+                            placeholder="Mobile Number (e.g. 054...)" 
+                            value={momoNumber}
+                            onChange={e => setMomoNumber(e.target.value)}
+                            className="w-full p-4 bg-slate-50 dark:bg-slate-800 border-2 border-slate-100 dark:border-slate-700 rounded-2xl outline-none focus:border-emerald-500 font-bold"
+                        />
+                    </div>
+                    <button onClick={() => setActiveDrawer(null)} className="w-full py-4 bg-emerald-600 text-white rounded-2xl font-black uppercase tracking-widest text-xs shadow-lg">Confirm Payment</button>
+                </div>
             </div>
 
-            <div className="flex-1 overflow-y-auto p-6 space-y-8 no-scrollbar">
-                <div className="space-y-4">
-                    <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Order Summary</h4>
-                    <div className="flex gap-4 items-center p-3 bg-slate-50 dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700">
-                        <div className="w-16 h-16 rounded-xl bg-white overflow-hidden shrink-0 border border-slate-100 dark:bg-slate-700 dark:border-slate-600">
-                            {product?.images?.[0] ? <img src={product.images[0]} className="w-full h-full object-cover" /> : <Box className="w-full h-full p-4 text-slate-300" />}
+            <div className={`custom-drawer ${activeDrawer === 'CARD' ? 'open' : ''}`}>
+                <div className="w-12 h-1 bg-slate-200 dark:bg-slate-800 rounded-full mx-auto mt-4 shrink-0"></div>
+                <div className="p-6 space-y-6">
+                    <div className="text-center">
+                        <div className="w-16 h-16 bg-blue-600 rounded-3xl mx-auto flex items-center justify-center text-white mb-4 shadow-lg">
+                            <CardIcon size={32} strokeWidth={3} />
                         </div>
-                        <div className="flex-1 min-w-0">
-                            <p className="font-bold text-slate-900 dark:text-white truncate">{product?.name || 'Product'}</p>
-                            <p className="text-xs text-emerald-600 font-bold">{data.currency} {product?.price?.toLocaleString()}</p>
-                        </div>
+                        <h3 className="text-xl font-black text-slate-900 dark:text-white uppercase tracking-tight">Secure Card</h3>
+                        <p className="text-xs text-slate-500 mt-1">Visa, Mastercard, or AMEX</p>
                     </div>
-                </div>
-
-                <form onSubmit={handleSubmitOrder} className="space-y-6">
                     <div className="space-y-4">
-                        <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Contact Information</h4>
-                        <div className="space-y-3">
-                            <input type="text" required placeholder="Full Name" className="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-emerald-500 text-sm dark:bg-slate-800 dark:border-slate-700 dark:text-white" />
-                            <input type="email" required placeholder="Email Address" className="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-emerald-500 text-sm dark:bg-slate-800 dark:border-slate-700 dark:text-white" />
-                            <input type="tel" required placeholder="Phone Number" className="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-emerald-500 text-sm dark:bg-slate-800 dark:border-slate-700 dark:text-white" />
+                        <input type="text" placeholder="Card Number" className="w-full p-4 bg-slate-50 dark:bg-slate-800 border-2 border-slate-100 dark:border-slate-700 rounded-2xl outline-none focus:border-blue-500 font-bold" />
+                        <div className="grid grid-cols-2 gap-3">
+                            <input type="text" placeholder="MM / YY" className="w-full p-4 bg-slate-50 dark:bg-slate-800 border-2 border-slate-100 dark:border-slate-700 rounded-2xl outline-none focus:border-blue-500 font-bold" />
+                            <input type="password" placeholder="CVV" className="w-full p-4 bg-slate-50 dark:bg-slate-800 border-2 border-slate-100 dark:border-slate-700 rounded-2xl outline-none focus:border-blue-500 font-bold" />
+                        </div>
+                    </div>
+                    <button onClick={() => setActiveDrawer(null)} className="w-full py-4 bg-blue-600 text-white rounded-2xl font-black uppercase tracking-widest text-xs shadow-lg">Submit Payment</button>
+                </div>
+            </div>
+
+            {/* Checkout Header */}
+            <div className="p-5 border-b border-slate-100 dark:border-slate-800 flex items-center gap-4 bg-white dark:bg-slate-900 shrink-0">
+                <button onClick={onClose} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors text-slate-500">
+                    <ChevronLeft size={20} />
+                </button>
+                <h3 className="font-bold text-slate-900 dark:text-white text-base">Order Details</h3>
+            </div>
+
+            <div className="flex-1 overflow-y-auto no-scrollbar">
+                <form onSubmit={handleSubmitOrder} className="p-6 space-y-12 pb-20">
+                    
+                    {/* Section 1: Item Summary */}
+                    <div className="space-y-4">
+                        <h4 className="font-black text-slate-400 text-[10px] uppercase tracking-[0.2em] ml-1">Your Package</h4>
+                        <div className="flex gap-4 p-5 bg-slate-50 dark:bg-slate-800/50 rounded-3xl border border-slate-100 dark:border-slate-700 shadow-sm">
+                            <div className="w-16 h-16 rounded-2xl bg-white overflow-hidden shrink-0 border border-slate-200 dark:bg-slate-700 dark:border-slate-600 shadow-sm p-1">
+                                {product?.images?.[0] ? <img src={product.images[0]} className="w-full h-full object-cover rounded-xl" /> : <Box className="w-full h-full p-5 text-slate-300" />}
+                            </div>
+                            <div className="flex-1 min-w-0 flex flex-col justify-center">
+                                <p className="font-black text-slate-900 dark:text-white text-sm line-clamp-1">{product?.name || 'Product'}</p>
+                                <p className="text-sm text-emerald-600 font-black mt-0.5">{data.currency} {product?.price?.toLocaleString()}</p>
+                            </div>
                         </div>
                     </div>
 
+                    {/* Section 2: Contact */}
+                    <div className="space-y-5">
+                        <h4 className="font-black text-slate-400 text-[10px] uppercase tracking-[0.2em] ml-1">Customer Info</h4>
+                        <div className="grid grid-cols-1 gap-4">
+                            <div className="grid grid-cols-2 gap-3">
+                                <div className="space-y-1.5">
+                                    <label className="text-[10px] font-black text-slate-400 uppercase ml-1">First Name</label>
+                                    <input type="text" required placeholder="John" className="w-full p-4 bg-white border border-slate-200 rounded-2xl outline-none focus:border-slate-900 text-sm font-bold dark:bg-slate-800 dark:border-slate-700 dark:text-white shadow-sm" />
+                                </div>
+                                <div className="space-y-1.5">
+                                    <label className="text-[10px] font-black text-slate-400 uppercase ml-1">Last Name</label>
+                                    <input type="text" required placeholder="Smith" className="w-full p-4 bg-white border border-slate-200 rounded-2xl outline-none focus:border-slate-900 text-sm font-bold dark:bg-slate-800 dark:border-slate-700 dark:text-white shadow-sm" />
+                                </div>
+                            </div>
+                            <div className="space-y-1.5">
+                                <label className="text-[10px] font-black text-slate-400 uppercase ml-1">WhatsApp / Phone</label>
+                                <input type="tel" required placeholder="+233..." className="w-full p-4 bg-white border border-slate-200 rounded-2xl outline-none focus:border-slate-900 text-sm font-bold dark:bg-slate-800 dark:border-slate-700 dark:text-white shadow-sm" />
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Section 3: Detailed Shipping (Amazon Style) */}
                     {data.checkoutConfig?.shipping?.enabled && (
-                        <div className="space-y-4">
-                            <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Delivery Address</h4>
-                            <textarea required placeholder="House No, Street, City" className="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-emerald-500 text-sm h-24 resize-none dark:bg-slate-800 dark:border-slate-700 dark:text-white" />
+                        <div className="space-y-5">
+                            <h4 className="font-black text-slate-400 text-[10px] uppercase tracking-[0.2em] ml-1">Shipping Address</h4>
+                            <div className="space-y-4">
+                                <div className="space-y-1.5">
+                                    <label className="text-[10px] font-black text-slate-400 uppercase ml-1">Street Address</label>
+                                    <input type="text" required value={shipping.street} onChange={e => setShipping({...shipping, street: e.target.value})} placeholder="House number and street name" className="w-full p-4 bg-white border border-slate-200 rounded-2xl outline-none focus:border-slate-900 text-sm font-bold dark:bg-slate-800 dark:border-slate-700 dark:text-white shadow-sm" />
+                                </div>
+                                <div className="space-y-1.5">
+                                    <label className="text-[10px] font-black text-slate-400 uppercase ml-1">Apartment, suite, etc. <span className="opacity-50">(optional)</span></label>
+                                    <input type="text" value={shipping.apartment} onChange={e => setShipping({...shipping, apartment: e.target.value})} placeholder="Apt 4B" className="w-full p-4 bg-white border border-slate-200 rounded-2xl outline-none focus:border-slate-900 text-sm font-bold dark:bg-slate-800 dark:border-slate-700 dark:text-white shadow-sm" />
+                                </div>
+                                <div className="grid grid-cols-2 gap-3">
+                                    <div className="space-y-1.5">
+                                        <label className="text-[10px] font-black text-slate-400 uppercase ml-1">City / Town</label>
+                                        <input type="text" required value={shipping.city} onChange={e => setShipping({...shipping, city: e.target.value})} placeholder="Accra" className="w-full p-4 bg-white border border-slate-200 rounded-2xl outline-none focus:border-slate-900 text-sm font-bold dark:bg-slate-800 dark:border-slate-700 dark:text-white shadow-sm" />
+                                    </div>
+                                    <div className="space-y-1.5">
+                                        <label className="text-[10px] font-black text-slate-400 uppercase ml-1">Region / State</label>
+                                        <input type="text" required value={shipping.region} onChange={e => setShipping({...shipping, region: e.target.value})} placeholder="Greater Accra" className="w-full p-4 bg-white border border-slate-200 rounded-2xl outline-none focus:border-slate-900 text-sm font-bold dark:bg-slate-800 dark:border-slate-700 dark:text-white shadow-sm" />
+                                    </div>
+                                </div>
+                                <div className="space-y-1.5">
+                                    <label className="text-[10px] font-black text-slate-400 uppercase ml-1">Zip / Postal Code</label>
+                                    <input type="text" value={shipping.zip} onChange={e => setShipping({...shipping, zip: e.target.value})} placeholder="00233" className="w-full p-4 bg-white border border-slate-200 rounded-2xl outline-none focus:border-slate-900 text-sm font-bold dark:bg-slate-800 dark:border-slate-700 dark:text-white shadow-sm" />
+                                </div>
+                            </div>
                         </div>
                     )}
 
-                    <div className="space-y-4 pt-4 border-t border-slate-100 dark:border-slate-800">
-                        <div className="flex justify-between items-center text-sm font-bold">
-                            <span className="text-slate-500 uppercase tracking-widest text-[10px]">Total Due</span>
-                            <span className="text-xl text-slate-900 dark:text-white">{data.currency} {product?.price?.toLocaleString()}</span>
+                    {/* Section 4: Payment Selection */}
+                    <div className="space-y-5">
+                        <h4 className="font-black text-slate-400 text-[10px] uppercase tracking-[0.2em] ml-1">Payment Method</h4>
+                        <div className="space-y-3">
+                            {availablePayments.map((p) => (
+                                <button
+                                    key={p.id}
+                                    type="button"
+                                    onClick={() => handlePaymentSelect(p)}
+                                    className={`w-full flex items-center justify-between p-5 rounded-3xl border-2 transition-all shadow-sm ${selectedPayment === p.id ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20' : 'border-slate-50 bg-slate-50/50 hover:border-slate-200 dark:bg-slate-800 dark:border-slate-700'}`}
+                                >
+                                    <div className="flex items-center gap-4">
+                                        <div className={`p-2.5 rounded-xl bg-white dark:bg-slate-700 shadow-sm ${p.color}`}>
+                                            <p.icon size={22} strokeWidth={2.5} />
+                                        </div>
+                                        <div className="text-left">
+                                            <span className={`text-sm font-black uppercase tracking-wider block ${selectedPayment === p.id ? 'text-emerald-900 dark:text-emerald-400' : 'text-slate-700 dark:text-slate-300'}`}>{p.label}</span>
+                                            {p.id === 'momo' && momoNumber && <span className="text-[10px] font-bold text-emerald-600">{momoProvider}: {momoNumber}</span>}
+                                        </div>
+                                    </div>
+                                    <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors ${selectedPayment === p.id ? 'border-emerald-500 bg-emerald-500' : 'border-slate-200 bg-white'}`}>
+                                        {selectedPayment === p.id && <Check size={14} className="text-white" strokeWidth={4} />}
+                                    </div>
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* Final CTA Overlay */}
+                    <div className="pt-6 space-y-6">
+                        <div className="flex justify-between items-center bg-slate-900 text-white p-6 rounded-[2rem] shadow-xl">
+                            <span className="text-[10px] font-black uppercase tracking-[0.2em] opacity-60">Grand Total</span>
+                            <span className="text-2xl font-black">{data.currency} {product?.price?.toLocaleString()}</span>
                         </div>
                         <button 
                             type="submit"
                             disabled={isSubmitting}
-                            className="w-full py-4 bg-emerald-600 text-white rounded-2xl font-black shadow-lg hover:bg-emerald-700 transition-all flex items-center justify-center gap-3 disabled:opacity-50"
+                            className="w-full py-6 bg-emerald-600 text-white rounded-3xl font-black shadow-2xl hover:brightness-110 active:scale-[0.98] transition-all flex items-center justify-center gap-3 disabled:opacity-50 uppercase tracking-[0.2em] text-sm"
                         >
-                            {isSubmitting ? <Loader2 className="animate-spin" size={20} /> : <><Check size={20} strokeWidth={3} /> Place Order</>}
+                            {isSubmitting ? <Loader2 className="animate-spin" size={24} /> : 'Complete Order'}
                         </button>
                     </div>
                 </form>
@@ -258,7 +484,7 @@ const PreviewPanel: React.FC<PreviewPanelProps> = ({ data, device }) => {
             border-top-left-radius: 2.5rem;
             border-top-right-radius: 2.5rem;
             box-shadow: 0 -10px 40px -10px rgba(0,0,0,0.3);
-            max-height: 85%;
+            max-height: 90%;
             display: flex;
             flex-direction: column;
             transform: translateY(110%);
@@ -296,16 +522,21 @@ const PreviewPanel: React.FC<PreviewPanelProps> = ({ data, device }) => {
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
+        /* Sophisticated Mesh Gradient Stage */
         .stage-bg {
-            background: linear-gradient(135deg, var(--page-bg) 0%, #1e293b 100%);
-            background-size: cover;
+            background-color: #0f172a;
+            background-image: 
+                radial-gradient(at 0% 0%, var(--page-bg) 0px, transparent 50%),
+                radial-gradient(at 100% 0%, #1e293b 0px, transparent 50%),
+                radial-gradient(at 100% 100%, var(--page-bg) 0px, transparent 50%),
+                radial-gradient(at 0% 100%, #1e293b 0px, transparent 50%);
             position: relative;
         }
         .stage-overlay {
             position: absolute;
             inset: 0;
-            background-image: radial-gradient(circle at 2px 2px, rgba(255,255,255,0.05) 1px, transparent 0);
-            background-size: 24px 24px;
+            background-image: radial-gradient(circle at 1px 1px, rgba(255,255,255,0.03) 1px, transparent 0);
+            background-size: 32px 32px;
             pointer-events: none;
         }
       `}</style>
@@ -327,7 +558,7 @@ const PreviewPanel: React.FC<PreviewPanelProps> = ({ data, device }) => {
            </div>
 
            <div className={`custom-drawer ${isStoryDrawerOpen ? 'open' : ''}`}>
-              <div className="w-12 h-1 bg-slate-200 dark:bg-slate-800 rounded-full mx-auto mt-4"></div>
+              <div className="w-12 h-1 bg-slate-200 dark:bg-slate-800 rounded-full mx-auto mt-4 shrink-0"></div>
               <div className="flex justify-between items-center px-6 pt-4 pb-2">
                   <h3 className="text-lg font-black text-slate-900 dark:text-white uppercase tracking-wider">{data.shortStoryTitle || 'The Story'}</h3>
                   <button onClick={() => setIsStoryDrawerOpen(false)} className="p-2 bg-slate-100 dark:bg-slate-800 rounded-full"><X size={20} /></button>
@@ -338,7 +569,7 @@ const PreviewPanel: React.FC<PreviewPanelProps> = ({ data, device }) => {
            </div>
 
            <div className={`custom-drawer ${isBenefitsDrawerOpen ? 'open' : ''}`}>
-              <div className="w-12 h-1 bg-slate-200 dark:bg-slate-800 rounded-full mx-auto mt-4"></div>
+              <div className="w-12 h-1 bg-slate-200 dark:bg-slate-800 rounded-full mx-auto mt-4 shrink-0"></div>
               <div className="flex justify-between items-center px-6 pt-4 pb-2">
                   <h3 className="text-lg font-black text-slate-900 dark:text-white uppercase tracking-wider">Benefits</h3>
                   <button onClick={() => setIsBenefitsDrawerOpen(false)} className="p-2 bg-slate-100 dark:bg-slate-800 rounded-full"><X size={20} /></button>
@@ -354,7 +585,7 @@ const PreviewPanel: React.FC<PreviewPanelProps> = ({ data, device }) => {
            </div>
 
            <div className={`custom-drawer ${isUsageDrawerOpen ? 'open' : ''}`}>
-              <div className="w-12 h-1 bg-slate-200 dark:bg-slate-800 rounded-full mx-auto mt-4"></div>
+              <div className="w-12 h-1 bg-slate-200 dark:bg-slate-800 rounded-full mx-auto mt-4 shrink-0"></div>
               <div className="flex justify-between items-center px-6 pt-4 pb-2">
                   <h3 className="text-lg font-black text-slate-900 dark:text-white uppercase tracking-wider">Usage Steps</h3>
                   <button onClick={() => setIsUsageDrawerOpen(false)} className="p-2 bg-slate-100 dark:bg-slate-800 rounded-full"><X size={20} /></button>
@@ -372,7 +603,7 @@ const PreviewPanel: React.FC<PreviewPanelProps> = ({ data, device }) => {
            </div>
 
            <div className={`custom-drawer ${activeFaqForDrawer ? 'open' : ''}`}>
-              <div className="w-12 h-1 bg-slate-200 dark:bg-slate-800 rounded-full mx-auto mt-4"></div>
+              <div className="w-12 h-1 bg-slate-200 dark:bg-slate-800 rounded-full mx-auto mt-4 shrink-0"></div>
               <div className="flex justify-between items-center px-6 pt-4 pb-2">
                   <h3 className="text-lg font-black text-slate-900 dark:text-white uppercase tracking-wider">Question</h3>
                   <button onClick={() => setActiveFaqForDrawer(null)} className="p-2 bg-slate-100 dark:bg-slate-800 rounded-full"><X size={20} /></button>
@@ -390,7 +621,7 @@ const PreviewPanel: React.FC<PreviewPanelProps> = ({ data, device }) => {
             
             {/* The 700px Container (The "Page") */}
             <div 
-                className="w-full max-w-[700px] h-[95%] bg-white dark:bg-slate-950 shadow-[0_30px_60px_-12px_rgba(0,0,0,0.6)] relative rounded-2xl overflow-hidden flex flex-col"
+                className="w-full max-w-[700px] h-[95%] bg-white dark:bg-slate-950 shadow-[0_40px_100px_-20px_rgba(0,0,0,0.8)] relative rounded-2xl overflow-hidden flex flex-col"
             >
                 {/* Scrollable content area inside the 700px container */}
                 <div className="flex-1 overflow-y-auto no-scrollbar scroll-smooth preview-wrapper" style={previewStyle}>
@@ -398,12 +629,12 @@ const PreviewPanel: React.FC<PreviewPanelProps> = ({ data, device }) => {
                 </div>
 
                 {/* Drawers strictly contained within the 700px box */}
-                <div className={`checkout-drawer ${isCheckoutOpen ? 'open' : ''} border-l border-slate-100 shadow-2xl z-[600]`}>
+                <div className={`checkout-drawer ${isCheckoutOpen ? 'open' : ''} border-l border-slate-100 shadow-2xl z-[600] dark:border-slate-800`}>
                     <CheckoutView data={data} onClose={() => setIsCheckoutOpen(false)} />
                 </div>
 
                 <div className={`custom-drawer ${isStoryDrawerOpen ? 'open' : ''}`}>
-                  <div className="w-12 h-1 bg-slate-200 dark:bg-slate-800 rounded-full mx-auto mt-4"></div>
+                  <div className="w-12 h-1 bg-slate-200 dark:bg-slate-800 rounded-full mx-auto mt-4 shrink-0"></div>
                   <div className="flex justify-between items-center px-6 pt-4 pb-2">
                       <h3 className="text-lg font-black text-slate-900 dark:text-white uppercase tracking-wider">{data.shortStoryTitle || 'The Story'}</h3>
                       <button onClick={() => setIsStoryDrawerOpen(false)} className="p-2 bg-slate-100 dark:bg-slate-800 rounded-full"><X size={20} /></button>
@@ -414,7 +645,7 @@ const PreviewPanel: React.FC<PreviewPanelProps> = ({ data, device }) => {
                 </div>
 
                 <div className={`custom-drawer ${isBenefitsDrawerOpen ? 'open' : ''}`}>
-                    <div className="w-12 h-1 bg-slate-200 dark:bg-slate-800 rounded-full mx-auto mt-4"></div>
+                    <div className="w-12 h-1 bg-slate-200 dark:bg-slate-800 rounded-full mx-auto mt-4 shrink-0"></div>
                     <div className="flex justify-between items-center px-6 pt-4 pb-2">
                         <h3 className="text-lg font-black text-slate-900 dark:text-white uppercase tracking-wider">Benefits</h3>
                         <button onClick={() => setIsBenefitsDrawerOpen(false)} className="p-2 bg-slate-100 dark:bg-slate-800 rounded-full"><X size={20} /></button>
@@ -430,7 +661,7 @@ const PreviewPanel: React.FC<PreviewPanelProps> = ({ data, device }) => {
                 </div>
 
                 <div className={`custom-drawer ${isUsageDrawerOpen ? 'open' : ''}`}>
-                    <div className="w-12 h-1 bg-slate-200 dark:bg-slate-800 rounded-full mx-auto mt-4"></div>
+                    <div className="w-12 h-1 bg-slate-200 dark:bg-slate-800 rounded-full mx-auto mt-4 shrink-0"></div>
                     <div className="flex justify-between items-center px-6 pt-4 pb-2">
                         <h3 className="text-lg font-black text-slate-900 dark:text-white uppercase tracking-wider">Usage Steps</h3>
                         <button onClick={() => setIsUsageDrawerOpen(false)} className="p-2 bg-slate-100 dark:bg-slate-800 rounded-full"><X size={20} /></button>
@@ -448,7 +679,7 @@ const PreviewPanel: React.FC<PreviewPanelProps> = ({ data, device }) => {
                 </div>
                 
                 <div className={`custom-drawer ${activeFaqForDrawer ? 'open' : ''}`}>
-                    <div className="w-12 h-1 bg-slate-200 dark:bg-slate-800 rounded-full mx-auto mt-4"></div>
+                    <div className="w-12 h-1 bg-slate-200 dark:bg-slate-800 rounded-full mx-auto mt-4 shrink-0"></div>
                     <div className="flex justify-between items-center px-6 pt-4 pb-2">
                         <h3 className="text-lg font-black text-slate-900 dark:text-white uppercase tracking-wider">Question</h3>
                         <button onClick={() => setActiveFaqForDrawer(null)} className="p-2 bg-slate-100 dark:bg-slate-800 rounded-full"><X size={20} /></button>

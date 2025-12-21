@@ -10,6 +10,27 @@ const EMPTY_PAGE: SalesPage = {
   title: '',
   subtitle: '',
   slug: '',
+  language: 'English',
+  targetAudience: [],
+  problemSolverData: {
+      problemDescription: '',
+      whoItAffects: '',
+      symptoms: [],
+      causes: {
+          stress: true,
+          diet: true,
+          lifestyle: true,
+          others: ''
+      },
+      mistakes: [],
+      comparisonTable: [],
+      lifestylePrinciples: ['Balanced Nutrition', 'Hydration', 'Stress Management'],
+      lifestyleTips: [],
+      dietSuggestions: {
+          avoid: [],
+          support: []
+      }
+  },
   heroImage: null,
   galleryImages: [],
   themeColor: '#10b981', 
@@ -177,6 +198,7 @@ export const useLocalDraft = (currentUser?: Student) => {
           whatsappNumber: currentUser?.whatsappNumber || '',
           contactEmail: currentUser?.email || '',
           title: `New ${type.charAt(0).toUpperCase() + type.slice(1)} Page`,
+          slug: `sp_${Date.now()}`, // Ensure unique slug from start
           lastSavedAt: Date.now()
       };
       savePage(newPage);

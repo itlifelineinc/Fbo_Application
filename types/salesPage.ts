@@ -17,6 +17,7 @@ export interface Product {
   ingredients: string[]; 
   category?: string; 
   stockStatus?: 'IN_STOCK' | 'LOW_STOCK' | 'OUT_OF_STOCK';
+  whyItFits?: string; // Specific for Problem Solver pages
 }
 
 export interface Package {
@@ -62,6 +63,18 @@ export interface FaqItem {
   answer: string;
 }
 
+export interface Mistake {
+  id: string;
+  title: string;
+  explanation: string;
+}
+
+export interface ComparisonRow {
+  id: string;
+  do: string;
+  dont: string;
+}
+
 export interface MobileDesignOverrides {
   baseFontSize?: number;
   subtitleFontSize?: number;
@@ -90,6 +103,27 @@ export interface CheckoutConfig {
   };
 }
 
+export interface ProblemSolverData {
+  problemDescription: string;
+  whoItAffects: string;
+  symptoms: string[];
+  causes: {
+    stress: boolean;
+    diet: boolean;
+    lifestyle: boolean;
+    others: string;
+  };
+  mistakes: Mistake[];
+  comparisonTable: ComparisonRow[];
+  lifestylePrinciples: string[];
+  lifestyleTips: string[];
+  dietSuggestions: {
+    avoid: string[];
+    support: string[];
+  };
+  solutionIntro?: string;
+}
+
 export interface SalesPage {
   id: string;
   type: PageType; 
@@ -97,7 +131,12 @@ export interface SalesPage {
   title: string;
   subtitle: string;
   slug: string;
+  language?: string;
+  targetAudience?: string[];
   
+  // Problem Solver Specific
+  problemSolverData?: ProblemSolverData;
+
   // Visuals
   heroImage: string | null;
   galleryImages: string[];

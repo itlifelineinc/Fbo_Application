@@ -6,6 +6,10 @@ import MetaForm from './MetaForm';
 import MediaUploader from './MediaUploader';
 import ProductSectionEditor from './ProductSectionEditor';
 import PageContentEditor from './PageContentEditor'; 
+import ProblemSectionEditor from './ProblemSectionEditor';
+import MistakesSectionEditor from './MistakesSectionEditor';
+import LifestyleSectionEditor from './LifestyleSectionEditor';
+import SolutionSectionEditor from './SolutionSectionEditor';
 import PackageSectionEditor from './PackageSectionEditor';
 import TrustProofEditor from './TrustProofEditor'; 
 import CTAConfiguration from './CTAConfiguration';
@@ -38,7 +42,11 @@ const TAB_HELP_CONTENT: Record<string, React.ReactNode> = {
     'TRUST_PROOF': 'Social proof is key. Add testimonials and official certification badges.',
     'CTA_SETUP': 'Configure your WhatsApp link and where buttons appear on the page.',
     'CHECKOUT': 'Switch between direct sales or lead collection via chat.',
-    'PUBLISH': 'Take your page live and share it with your audience.'
+    'PUBLISH': 'Take your page live and share it with your audience.',
+    'PROBLEM_EDU': 'Explain the challenge clearly and without medical jargon to build empathy with your readers.',
+    'MISTAKES': 'Create awareness by highlighting what typically fails. Position your solution as the smart choice.',
+    'LIFESTYLE': 'Introduce natural support and lifestyle habits first to build credibility as a wellness partner.',
+    'SOLUTION': 'Seamlessly transition from education to your recommended products. Clearly explain how each item aids the user.'
 };
 
 const EditorLayout: React.FC<EditorLayoutProps> = ({ 
@@ -91,16 +99,12 @@ const EditorLayout: React.FC<EditorLayoutProps> = ({
   };
 
   const handleUpdateCurrency = (id: string, currency: CurrencyCode) => {
-      const pageToUpdate = pages.find(p => p.id === id);
-      if (pageToUpdate) {
-          if (data?.id === id) {
-              updateField('currency', currency);
-          } else {
-              // Note: Ideally updateField should handle specific page IDs, but current hook is designed for active page.
-              // For overview tab, we just select then update.
-              onSelectPage(id);
-              updateField('currency', currency);
-          }
+      if (data?.id === id) {
+          updateField('currency', currency);
+      } else {
+          // If editing a non-active page, select it first
+          onSelectPage(id);
+          setTimeout(() => updateField('currency', currency), 10);
       }
   };
 
@@ -109,7 +113,7 @@ const EditorLayout: React.FC<EditorLayoutProps> = ({
           updateField(field, value);
       } else {
           onSelectPage(id);
-          updateField(field, value);
+          setTimeout(() => updateField(field, value), 10);
       }
   };
 
@@ -159,6 +163,18 @@ const EditorLayout: React.FC<EditorLayoutProps> = ({
               
           case 'SEO':
               return <SEOSettings data={data} onChange={updateField} pages={pages} />;
+
+          case 'PROBLEM_EDU':
+              return <ProblemSectionEditor data={data} onChange={updateField} />;
+              
+          case 'MISTAKES':
+              return <MistakesSectionEditor data={data} onChange={updateField} />;
+
+          case 'LIFESTYLE':
+              return <LifestyleSectionEditor data={data} onChange={updateField} />;
+
+          case 'SOLUTION':
+              return <SolutionSectionEditor data={data} onChange={updateField} />;
       }
 
       if (portalType === 'product') {

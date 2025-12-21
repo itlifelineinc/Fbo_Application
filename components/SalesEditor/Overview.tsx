@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { SalesPage, CurrencyCode } from '../../types/salesPage';
 import { Plus, Globe, Calendar, Trash2, ChevronDown, ExternalLink } from 'lucide-react';
 
@@ -35,7 +35,10 @@ const Overview: React.FC<OverviewProps> = ({
 
   const handleOpenPreview = (id: string) => {
       onSelect(id);
-      onTogglePreview();
+      // Small delay to ensure state propagates to the preview panel before showing it
+      setTimeout(() => {
+          onTogglePreview();
+      }, 50);
   };
 
   return (
@@ -43,9 +46,10 @@ const Overview: React.FC<OverviewProps> = ({
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {pages.map((page) => {
           const isActive = page.id === activePageId;
+          // Updated URL structure
           const liveUrl = `app.nexu.com/p/${page.slug || 'untitled'}`;
           
-          // Real metrics from the page object, or 0 if draft
+          // Logic: If draft, metrics are zero. Otherwise use real data.
           const views = page.isPublished ? (page.views || 0) : 0;
           const leads = page.isPublished ? (page.leads || 0) : 0;
           const sales = page.isPublished ? (page.sales || 0) : 0;
@@ -58,12 +62,13 @@ const Overview: React.FC<OverviewProps> = ({
               <div>
                 <div className="flex justify-between items-start mb-3">
                   <div className="flex-1 mr-2">
+                    {/* Editable Title */}
                     <input 
                         type="text"
                         value={page.title}
                         onChange={(e) => onUpdateField(page.id, 'title', e.target.value)}
-                        className="w-full bg-transparent border-none p-0 font-extrabold text-slate-900 dark:text-white leading-tight focus:ring-0 placeholder-slate-400"
-                        placeholder="Untitled Page"
+                        className="w-full bg-transparent border-none p-0 font-extrabold text-slate-900 dark:text-white leading-tight focus:ring-0 placeholder-slate-400 text-base"
+                        placeholder="Internal Page Name"
                     />
                     <div className="flex items-center gap-2 mt-1">
                         <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded ${page.isPublished ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : 'bg-slate-100 text-slate-500 dark:bg-slate-700'}`}>
@@ -75,7 +80,7 @@ const Overview: React.FC<OverviewProps> = ({
                     </div>
                   </div>
                   
-                  {/* Currency Picker on Card */}
+                  {/* Quick Currency Picker */}
                   <div className="relative group/curr">
                     <button className="flex items-center gap-1.5 px-2 py-1 bg-slate-50 dark:bg-slate-700 rounded-lg text-[10px] font-black text-slate-600 dark:text-slate-300 border border-slate-100 dark:border-slate-600">
                         {page.currency} <ChevronDown size={10} />
@@ -94,16 +99,17 @@ const Overview: React.FC<OverviewProps> = ({
                   </div>
                 </div>
 
+                {/* Clickable URL to Preview */}
                 <button 
                     onClick={() => handleOpenPreview(page.id)}
-                    className="w-full flex items-center gap-2 bg-slate-50 dark:bg-slate-900/50 p-2 rounded-lg border border-slate-100 hover:border-emerald-300 transition-colors dark:border-slate-800 mb-4 text-left overflow-hidden"
+                    className="w-full flex items-center gap-2 bg-slate-50 dark:bg-slate-900/50 p-2 rounded-lg border border-slate-100 hover:border-emerald-300 transition-colors dark:border-slate-800 mb-4 text-left overflow-hidden group/link"
                 >
-                    <Globe size={12} className="text-slate-400 shrink-0" />
-                    <span className="text-[10px] font-mono text-slate-500 dark:text-slate-400 truncate flex-1">{liveUrl}</span>
-                    <ExternalLink size={10} className="text-slate-300" />
+                    <Globe size={12} className="text-slate-400 shrink-0 group-hover/link:text-emerald-500" />
+                    <span className="text-[10px] font-mono text-slate-500 dark:text-slate-400 truncate flex-1 group-hover/link:text-emerald-600">{liveUrl}</span>
+                    <ExternalLink size={10} className="text-slate-300 group-hover/link:text-emerald-500" />
                 </button>
 
-                {/* Performance Snapshot */}
+                {/* Performance Stats */}
                 <div className="grid grid-cols-3 gap-2 mb-4">
                     <div className="text-center p-2 bg-slate-50 dark:bg-slate-700 rounded-xl border border-slate-100 dark:border-slate-600">
                         <p className="text-[8px] font-black text-slate-400 uppercase tracking-wider">Views</p>
@@ -138,7 +144,7 @@ const Overview: React.FC<OverviewProps> = ({
           );
         })}
 
-        {/* Create New Card */}
+        {/* Create Card */}
         <button 
             onClick={onCreate}
             className="h-full min-h-[180px] rounded-2xl border-2 border-dashed border-slate-200 hover:border-emerald-500 hover:bg-emerald-50 transition-all flex flex-col items-center justify-center gap-3 group dark:border-slate-700 dark:hover:bg-slate-800"

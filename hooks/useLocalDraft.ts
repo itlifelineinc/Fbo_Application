@@ -31,7 +31,9 @@ const EMPTY_PAGE: SalesPage = {
           support: []
       },
       beforeAfterImages: [],
-      socialProofBadges: ['quality', 'millions']
+      socialProofBadges: ['quality', 'millions'],
+      // Fix: Added missing ctaHeadline required by ProblemSolverData interface
+      ctaHeadline: ''
   },
   heroImage: null,
   galleryImages: [],

@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { SalesPage, ProblemSolverData } from '../../types/salesPage';
 import { AlertCircle, Plus, X, Brain, Apple, Utensils, Activity, ShieldAlert } from 'lucide-react';
@@ -8,17 +9,25 @@ interface ProblemSectionEditorProps {
 }
 
 const INPUT_STYLE = "w-full bg-transparent border border-slate-300 rounded-xl px-4 py-3 text-slate-900 font-bold focus:border-emerald-600 focus:ring-0 outline-none transition-all dark:border-slate-700 dark:text-white placeholder-slate-400";
-// Fix: Renamed LABEL_STYLE to LABEL_CLASS to resolve "Cannot find name 'LABEL_CLASS'" error
 const LABEL_CLASS = "block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2 dark:text-slate-200";
 
 const ProblemSectionEditor: React.FC<ProblemSectionEditorProps> = ({ data, onChange }) => {
   const [newSymptom, setNewSymptom] = useState('');
   
+  // Strictly reference problemSolverData namespace
   const problemData = data.problemSolverData || {
     problemDescription: '',
     whoItAffects: '',
     symptoms: [],
-    causes: { stress: true, diet: true, lifestyle: true, others: '' }
+    causes: { stress: true, diet: true, lifestyle: true, others: '' },
+    mistakes: [],
+    comparisonTable: [],
+    lifestylePrinciples: [],
+    lifestyleTips: [],
+    dietSuggestions: { avoid: [], support: [] },
+    beforeAfterImages: [],
+    socialProofBadges: [],
+    ctaHeadline: ''
   };
 
   const updateProblemData = (field: keyof ProblemSolverData, value: any) => {
@@ -65,7 +74,7 @@ const ProblemSectionEditor: React.FC<ProblemSectionEditorProps> = ({ data, onCha
               <textarea 
                   value={problemData.problemDescription}
                   onChange={(e) => updateProblemData('problemDescription', e.target.value)}
-                  placeholder="e.g. An ulcer is an open sore in the lining of your stomach or small intestine..."
+                  placeholder="e.g. An ulcer is an open sore in the lining of your stomach..."
                   className={INPUT_STYLE + " h-28 resize-none text-sm font-normal"}
               />
           </div>
@@ -76,7 +85,7 @@ const ProblemSectionEditor: React.FC<ProblemSectionEditorProps> = ({ data, onCha
                   type="text" 
                   value={problemData.whoItAffects}
                   onChange={(e) => updateProblemData('whoItAffects', e.target.value)}
-                  placeholder="e.g. People who experience high stress or frequent acidity..."
+                  placeholder="e.g. People who experience high stress or acidity..."
                   className={INPUT_STYLE}
               />
           </div>
@@ -98,10 +107,7 @@ const ProblemSectionEditor: React.FC<ProblemSectionEditorProps> = ({ data, onCha
                   placeholder="e.g. Burning stomach pain"
                   className={INPUT_STYLE + " py-2 text-sm font-normal"}
               />
-              <button 
-                  onClick={addSymptom}
-                  className="bg-slate-900 text-white p-3 rounded-xl hover:bg-slate-800 transition-colors dark:bg-emerald-600"
-              >
+              <button onClick={addSymptom} className="bg-slate-900 text-white p-3 rounded-xl hover:bg-slate-800 dark:bg-emerald-600">
                   <Plus size={20} />
               </button>
           </div>
@@ -143,19 +149,7 @@ const ProblemSectionEditor: React.FC<ProblemSectionEditorProps> = ({ data, onCha
                   </button>
               ))}
           </div>
-
-          <div>
-              <label className={LABEL_CLASS}>Other Contributors (Optional)</label>
-              <input 
-                  type="text" 
-                  value={problemData.causes.others}
-                  onChange={(e) => updateCause('others', e.target.value)}
-                  placeholder="e.g. Environmental toxins, processed foods..."
-                  className={INPUT_STYLE}
-              />
-          </div>
       </div>
-
     </div>
   );
 };

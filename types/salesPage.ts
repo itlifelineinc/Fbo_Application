@@ -17,7 +17,7 @@ export interface Product {
   ingredients: string[]; 
   category?: string; 
   stockStatus?: 'IN_STOCK' | 'LOW_STOCK' | 'OUT_OF_STOCK';
-  whyItFits?: string; // Specific for Problem Solver pages
+  whyItFits?: string; 
 }
 
 export interface Package {
@@ -32,6 +32,29 @@ export interface Package {
   isPopular?: boolean;
 }
 
+// Fix: Added Mistake interface for sales pages
+export interface Mistake {
+  id: string;
+  title: string;
+  explanation: string;
+}
+
+// Fix: Added ComparisonRow interface
+export interface ComparisonRow {
+  id: string;
+  do: string;
+  dont: string;
+}
+
+// Fix: Added BeforeAfterPair interface
+export interface BeforeAfterPair {
+  id: string;
+  before: string;
+  after: string;
+  label?: string;
+}
+
+// Fix: Added PackageOption interface
 export interface PackageOption {
   id: string;
   name: string;
@@ -39,10 +62,40 @@ export interface PackageOption {
   features: string[];
 }
 
+// Fix: Added MobileDesignOverrides interface
+export interface MobileDesignOverrides {
+  baseFontSize: number;
+  subtitleFontSize: number;
+  typeScale: number;
+  sectionSpacing: number;
+  buttonSize: 'sm' | 'md' | 'lg';
+}
+
+// Fix: Added CheckoutConfig interface with shipping details
+export interface CheckoutConfig {
+  enabled: boolean;
+  paymentMethods: {
+      mobileMoney: boolean;
+      card: boolean;
+      cashOnDelivery: boolean;
+      bankTransfer: boolean;
+  };
+  shipping: {
+      enabled: boolean;
+      flatRate: number;
+      freeShippingThreshold: number;
+      pickupOption: boolean;
+  };
+  notifications: {
+      emailOrderAlert: boolean;
+      whatsappOrderAlert: boolean;
+  };
+}
+
 export interface CTAButton {
   id: string;
   label: string;
-  actionType: 'WHATSAPP' | 'SCROLL' | 'LINK'; 
+  actionType: 'WHATSAPP' | 'SCROLL' | 'LINK' | 'PHONE'; 
   url: string;
   style: "primary" | "outline" | "link";
   color?: string; 
@@ -63,91 +116,58 @@ export interface FaqItem {
   answer: string;
 }
 
-export interface Mistake {
-  id: string;
-  title: string;
-  explanation: string;
-}
-
-export interface ComparisonRow {
-  id: string;
-  do: string;
-  dont: string;
-}
-
-export interface BeforeAfterPair {
-  id: string;
-  before: string;
-  after: string;
-  label?: string;
-}
-
-export interface MobileDesignOverrides {
-  baseFontSize?: number;
-  subtitleFontSize?: number;
-  typeScale?: number;
-  sectionSpacing?: number;
-  buttonSize?: 'sm' | 'md' | 'lg';
-}
-
-export interface CheckoutConfig {
-  enabled: boolean;
-  paymentMethods: {
-    mobileMoney: boolean;
-    card: boolean;
-    cashOnDelivery: boolean;
-    bankTransfer: boolean;
-  };
-  shipping: {
-    enabled: boolean;
-    freeShippingThreshold?: number;
-    flatRate?: number;
-    pickupOption: boolean;
-  };
-  notifications: {
-    emailOrderAlert: boolean;
-    whatsappOrderAlert: boolean;
-  };
+export interface ProductSalesData {
+    featuredProductId: string;
+    showIngredients: boolean;
+    comparisonTitle: string;
 }
 
 export interface ProblemSolverData {
-  problemDescription: string;
-  whoItAffects: string;
-  symptoms: string[];
-  causes: {
-    stress: boolean;
-    diet: boolean;
-    lifestyle: boolean;
-    others: string;
-  };
-  mistakes: Mistake[];
-  comparisonTable: ComparisonRow[];
-  lifestylePrinciples: string[];
-  lifestyleTips: string[];
-  dietSuggestions: {
-    avoid: string[];
-    support: string[];
-  };
-  solutionIntro?: string;
-  beforeAfterImages: BeforeAfterPair[];
-  socialProofBadges: string[];
-  countryNotice?: string;
+    problemDescription: string;
+    whoItAffects: string;
+    symptoms: string[];
+    causes: {
+        stress: boolean;
+        diet: boolean;
+        lifestyle: boolean;
+        others: string;
+    };
+    // Fix: Using Mistake interface
+    mistakes: Mistake[];
+    // Fix: Using ComparisonRow interface
+    comparisonTable: ComparisonRow[];
+    lifestylePrinciples: string[];
+    lifestyleTips: string[];
+    dietSuggestions: { avoid: string[]; support: string[] };
+    solutionIntro?: string;
+    // Fix: Using BeforeAfterPair interface
+    beforeAfterImages: BeforeAfterPair[];
+    socialProofBadges: string[];
+    countryNotice?: string;
+    ctaHeadline: string; // Specific to this builder
+}
+
+export interface BundleData {
+    bundleOfferTitle: string;
+    timerEnabled: boolean;
+    timerExpiry?: string;
 }
 
 export interface SalesPage {
   id: string;
   type: PageType; 
-  // Metadata
   title: string;
   subtitle: string;
   slug: string;
   language?: string;
   targetAudience?: string[];
   
-  // Problem Solver Specific
+  // Isolated Data Blocks
+  productSalesData?: ProductSalesData;
   problemSolverData?: ProblemSolverData;
+  bundleData?: BundleData;
 
-  // Visuals
+  // Visuals (Global but customizable)
   heroImage: string | null;
   galleryImages: string[];
   themeColor: string;
@@ -155,47 +175,45 @@ export interface SalesPage {
   cardBgColor: string; 
   layoutStyle: LayoutStyle;
   
-  // New Design Props (Desktop Defaults)
+  // Typography
   headingFont: string;
   bodyFont: string;
   baseFontSize: number; 
-  subtitleFontSize?: number; 
+  subtitleFontSize: number;
   typeScale: number; 
   sectionSpacing: number; 
   
-  // Button Styling
+  // Components
   buttonCorner?: 'square' | 'rounded' | 'pill';
   buttonSize?: 'sm' | 'md' | 'lg';
-
-  // Responsive Overrides
-  mobileOverrides?: MobileDesignOverrides;
   
-  // Content
-  description: string; // Used for persuasive story
-  shortStoryTitle?: string;
+  // Fix: Added mobileOverrides property
+  mobileOverrides?: MobileDesignOverrides;
+
+  // Shared Content Lists
+  description: string; 
+  shortStoryTitle: string;
   features: string[]; 
   testimonials: Testimonial[];
-  
-  // Trust & Proof
+  faqs: FaqItem[];
   badges: string[]; 
+  
   personalBranding: {
       bio: string;
       yearsExperience: number;
       rank: string;
       photoUrl: string;
   };
-  faqs: FaqItem[];
   disclaimer: string;
 
   // Commerce
   currency: CurrencyCode;
   products: Product[];
   packages: Package[];
-  
-  // Pricing extension
+  // Fix: Added missing properties used in editors
+  pricingOptions?: PackageOption[];
   basePrice?: number;
   fullPackPrice?: number; 
-  pricingOptions?: PackageOption[];
   
   // CTA & WhatsApp
   whatsappNumber: string;
@@ -208,28 +226,25 @@ export interface SalesPage {
   };
   ctas: CTAButton[];
   
-  // Checkout & Payments
+  // Checkout
+  // Fix: Using CheckoutConfig interface
   checkoutConfig: CheckoutConfig;
-
-  // SEO
+  
+  // SEO & Contact
+  // Fix: Added seo and contact fields missing in definition
   seo: {
     metaTitle: string;
     metaDescription: string;
-    ogImage?: string;
+    ogImage: string;
   };
-  
-  // Contact & Legal
   contactEmail: string;
   contactVisible: boolean;
   refundPolicy: string;
   termsRequired: boolean;
-  
-  // Performance
+
+  isPublished: boolean;
+  lastSavedAt: number;
   views: number;
   leads: number;
   sales: number;
-
-  // State
-  isPublished: boolean;
-  lastSavedAt: number;
 }

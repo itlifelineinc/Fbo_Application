@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { SalesPage, CTAButton } from '../../types/salesPage';
 import { MessageCircle, ShoppingBag, MousePointerClick, Smartphone, Zap, CheckCircle2, AlertCircle, RefreshCw } from 'lucide-react';
@@ -144,16 +145,22 @@ const CTAConfiguration: React.FC<CTAConfigurationProps> = ({ data, onChange }) =
             </div>
 
             <div className="space-y-5">
-                <div>
-                    <label className={LABEL_STYLE}>Button Label</label>
-                    <input 
-                        type="text" 
-                        value={secondaryLabel}
-                        onChange={(e) => updateSecondaryCTA(e.target.value)}
-                        placeholder="e.g. Order Now"
-                        className={INPUT_STYLE}
-                    />
-                </div>
+                {/* 
+                   ISOLATION LOGIC: 
+                   We remove the Button Label field only for the 'product' type builder 
+                */}
+                {data.type !== 'product' && (
+                    <div>
+                        <label className={LABEL_STYLE}>Button Label</label>
+                        <input 
+                            type="text" 
+                            value={secondaryLabel}
+                            onChange={(e) => updateSecondaryCTA(e.target.value)}
+                            placeholder="e.g. Order Now"
+                            className={INPUT_STYLE}
+                        />
+                    </div>
+                )}
 
                 {/* Checkout Toggle */}
                 <div className="flex items-center justify-between p-4 bg-white border border-slate-200 rounded-2xl shadow-sm dark:bg-slate-800 dark:border-slate-700">

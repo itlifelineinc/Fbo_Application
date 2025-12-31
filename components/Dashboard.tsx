@@ -7,9 +7,72 @@ import {
     Users, TrendingUp, Calendar, ArrowUpRight, Award, 
     BookOpen, DollarSign, CircleDollarSign, Target, MessageSquare, PlusCircle, 
     BarChart2, Zap, ArrowRight, Layout, ArrowLeft, Clock, Globe, UserPlus, Shield,
-    ShoppingCart, GraduationCap, Bell, Flag, Store, Lock, CheckCircle, X, PieChart as PieChartIcon, Activity, Lightbulb, ChevronLeft, HelpCircle, Hand, Medal, Gift, Hourglass, Megaphone, MessageCircle, Sparkles, Rocket, UserCheck, LayoutTemplate, CreditCard, Phone, MousePointerClick, Smartphone, Eye, Filter, ArrowDown, ExternalLink, Share2, Trash2, MoreHorizontal, Wallet, Check, Edit3, Trophy, Network, Book, Video, ClipboardCheck, PlayCircle, Search, Star, Layers, Briefcase, HeartPulse, Projector, AlertCircle, ChevronRight
+    ShoppingCart, GraduationCap, Bell, Flag, Store, Lock, CheckCircle, X, PieChart as PieChartIcon, Activity, Lightbulb, ChevronLeft, HelpCircle, Hand, Medal, Gift, Hourglass, Megaphone, MessageCircle, Sparkles, Rocket, UserCheck, LayoutTemplate, CreditCard, Phone, MousePointerClick, Smartphone, Eye, Filter, ArrowDown, ExternalLink, Share2, Trash2, MoreHorizontal, Wallet, Check, Edit3, Trophy, Network, Book, Video, ClipboardCheck, PlayCircle, Search, Star, Layers, Briefcase, HeartPulse, Projector, AlertCircle, ChevronRight, VideoIcon, MonitorPlay, CalendarPlus, History, Info, Play, BellRing, CalendarDays
 } from 'lucide-react';
 import { RANKS, RANK_ORDER } from '../constants';
+
+// --- MOCK LIVE DATA ---
+const MOCK_LIVE_SESSIONS = [
+    {
+        id: 'ls1',
+        title: 'New Product Deep Dive: Aloe Body Care',
+        instructor: 'Alice Freeman',
+        startTime: new Date(Date.now() + 1000 * 60 * 60 * 2).toISOString(), // 2 hours from now
+        duration: 45,
+        audience: 'TEAM',
+        type: 'LIVE',
+        platform: 'Zoom',
+        link: 'https://zoom.us/j/mock1',
+        thumbnail: 'https://images.unsplash.com/photo-1540555700478-4be289fbecef?q=80&w=800&auto=format&fit=crop'
+    },
+    {
+        id: 'ls2',
+        title: 'Global Marketing Plan Mastery',
+        instructor: 'Senior Manager Sarah',
+        startTime: new Date(Date.now() + 1000 * 60 * 60 * 24).toISOString(), // Tomorrow
+        duration: 60,
+        audience: 'GLOBAL',
+        type: 'LIVE',
+        platform: 'Google Meet',
+        link: 'https://meet.google.com/mock2',
+        thumbnail: 'https://images.unsplash.com/photo-1515187029135-18ee286d815b?q=80&w=800&auto=format&fit=crop'
+    }
+];
+
+const MOCK_REPLAYS = [
+    {
+        id: 'r1',
+        title: 'How to Close 5 Retail Sales Weekly',
+        instructor: 'Alice Freeman',
+        duration: 32,
+        audience: 'TEAM',
+        type: 'REPLAY',
+        link: 'https://youtube.com/watch?mock_r1',
+        thumbnail: 'https://images.unsplash.com/photo-1552581234-26160f608093?q=80&w=800&auto=format&fit=crop',
+        notes: 'Focus on the "Acidity Test" demo. Use the script from Template #4. Ensure you follow up within 48 hours of the first contact.',
+        timestamps: [
+            { time: '02:15', label: 'Opening Hook & Mindset' },
+            { time: '12:40', label: 'The Acidity Demo Step-by-Step' },
+            { time: '25:10', label: 'Handling Price Objections' }
+        ]
+    },
+    {
+        id: 'r2',
+        title: 'Recruiting for 2025: Social Strategy',
+        instructor: 'Elite Global Leaders',
+        duration: 55,
+        audience: 'GLOBAL',
+        type: 'REPLAY',
+        link: 'https://youtube.com/watch?mock_r2',
+        thumbnail: 'https://images.unsplash.com/photo-1557804506-669a67965ba0?q=80&w=800&auto=format&fit=crop',
+        notes: 'Global update on social algorithm changes and prospecting rules. Key takeaway: Short-form video is the primary funnel.',
+        timestamps: [
+            { time: '05:00', label: 'Instagram Algorithm Update' },
+            { time: '20:00', label: 'TikTok Funnels for FBOs' },
+            { time: '45:00', label: 'Global Closing Masterclass' }
+        ]
+    }
+];
 
 // --- REUSABLE CUSTOM MODAL ---
 const CustomModal = ({ 
@@ -294,7 +357,7 @@ const Dashboard: React.FC<DashboardProps> = ({
     // Sales Section
     'MY_PAGES' | 'CREATE_PAGE' | 'LEADS' | 'ORDERS' | 'PAYMENTS' | 'SALES_ANALYTICS' |
     // Training Section
-    'MY_CLASSROOM' | 'GLOBAL_LIBRARY' | 'TEAM_TRAINING' | 'ASSIGNMENTS' | 'MOMENTUM' 
+    'MY_CLASSROOM' | 'GLOBAL_LIBRARY' | 'TEAM_TRAINING' | 'ASSIGNMENTS' | 'LIVE_SESSIONS' | 'MOMENTUM' 
   >('NONE');
   
   const [supportMenuOpen, setSupportMenuOpen] = useState<string | null>(null); // Stores ID of user whose menu is open
@@ -311,6 +374,12 @@ const Dashboard: React.FC<DashboardProps> = ({
 
   // NEW: Assignment Modal States
   const [assignmentTab, setAssignmentTab] = useState<'ACTIVE' | 'COMPLETED' | 'UPCOMING'>('ACTIVE');
+
+  // NEW: Live Sessions States
+  const [liveSessionTab, setLiveSessionTab] = useState<'UPCOMING' | 'REPLAYS'>('UPCOMING');
+  const [liveAudienceFilter, setLiveAudienceFilter] = useState<'TEAM' | 'GLOBAL'>('TEAM');
+  const [selectedReplay, setSelectedReplay] = useState<any | null>(null);
+  const [reminders, setReminders] = useState<string[]>([]);
   
   // Mock Payment Status
   const [isPaymentSetup, setIsPaymentSetup] = useState(false);
@@ -458,12 +527,241 @@ const Dashboard: React.FC<DashboardProps> = ({
       return isAssigned && !isSubmitted;
   }).length;
 
+  // --- HANDLERS ---
+  const handleAddToCalendar = (session: any) => {
+    const start = new Date(session.startTime).toISOString().replace(/-|:|\.\d\d\d/g, "");
+    const end = new Date(new Date(session.startTime).getTime() + session.duration * 60000).toISOString().replace(/-|:|\.\d\d\d/g, "");
+    const url = `https://www.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(session.title)}&dates=${start}/${end}&details=${encodeURIComponent('Join training at: ' + session.link)}&location=${encodeURIComponent(session.platform)}&sf=true&output=xml`;
+    window.open(url, '_blank');
+  };
+
+  const toggleReminder = (sessionId: string) => {
+    setReminders(prev => prev.includes(sessionId) ? prev.filter(id => id !== sessionId) : [...prev, sessionId]);
+  };
+
   // --- RENDER MODALS ---
   const renderModals = () => {
       // ----------------------------
       // TRAINING HUB MODALS
       // ----------------------------
       
+      if (activeModal === 'LIVE_SESSIONS') {
+          const sessionsToShow = liveSessionTab === 'UPCOMING' 
+              ? MOCK_LIVE_SESSIONS.filter(s => s.audience === liveAudienceFilter)
+              : MOCK_REPLAYS.filter(r => r.audience === liveAudienceFilter);
+
+          return (
+              <CustomModal
+                  isOpen={true}
+                  onClose={() => { setActiveModal('NONE'); setSelectedReplay(null); }}
+                  title="Live Trainings & Replays"
+                  icon={VideoIcon}
+              >
+                  <div className="space-y-8 animate-fade-in pb-10">
+                      
+                      {/* 1. Global/Team Status Board */}
+                      <div className="bg-gradient-to-r from-red-600 to-rose-500 rounded-[2.5rem] p-6 text-white shadow-xl relative overflow-hidden group">
+                           <div className="relative z-10">
+                                <div className="flex items-center gap-2 mb-2">
+                                    <div className="w-2 h-2 bg-white rounded-full animate-ping"></div>
+                                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-white/80">Happening This Week</span>
+                                </div>
+                                <h3 className="text-2xl font-bold font-heading">Coaching Momentum</h3>
+                                <p className="text-sm text-white/70 mt-1">Direct access to leaders and strategy updates.</p>
+                           </div>
+                           <VideoIcon size={120} className="absolute -right-8 -bottom-8 text-white/10 rotate-12 transition-transform duration-500 group-hover:scale-110" strokeWidth={1} />
+                      </div>
+
+                      {/* 2. Primary Tabs (Upcoming vs Replays) */}
+                      <div className="flex p-1 bg-slate-100 dark:bg-slate-800 rounded-2xl">
+                          <button 
+                            onClick={() => setLiveSessionTab('UPCOMING')}
+                            className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-bold transition-all ${liveSessionTab === 'UPCOMING' ? 'bg-white text-slate-900 shadow-sm dark:bg-slate-700 dark:text-white' : 'text-slate-400 hover:text-slate-600 dark:text-slate-500'}`}
+                          >
+                              <CalendarPlus size={18} /> Upcoming
+                          </button>
+                          <button 
+                            onClick={() => setLiveSessionTab('REPLAYS')}
+                            className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-bold transition-all ${liveSessionTab === 'REPLAYS' ? 'bg-white text-slate-900 shadow-sm dark:bg-slate-700 dark:text-white' : 'text-slate-400 hover:text-slate-600 dark:text-slate-500'}`}
+                          >
+                              <History size={18} /> Past Replays
+                          </button>
+                      </div>
+
+                      {/* 3. Audience Filters (Team vs Global) */}
+                      <div className="flex gap-2 border-b border-slate-100 dark:border-slate-800 pb-2">
+                          <button 
+                            onClick={() => setLiveAudienceFilter('TEAM')}
+                            className={`px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-widest transition-all ${liveAudienceFilter === 'TEAM' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' : 'text-slate-400 hover:text-slate-600'}`}
+                          >
+                              Team Only
+                          </button>
+                          <button 
+                            onClick={() => setLiveAudienceFilter('GLOBAL')}
+                            className={`px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-widest transition-all ${liveAudienceFilter === 'GLOBAL' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' : 'text-slate-400 hover:text-slate-600'}`}
+                          >
+                              Global Hub
+                          </button>
+                      </div>
+
+                      {/* 4. Dynamic Content List */}
+                      <div className="space-y-6">
+                          {selectedReplay ? (
+                              <div className="animate-fade-in space-y-6">
+                                  <button 
+                                    onClick={() => setSelectedReplay(null)}
+                                    className="flex items-center gap-2 text-sm font-bold text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white transition-colors"
+                                  >
+                                      <ArrowLeft size={16} /> Back to Session List
+                                  </button>
+                                  
+                                  <div className="bg-white dark:bg-slate-800 rounded-[2.5rem] border border-slate-100 dark:border-slate-700 overflow-hidden shadow-sm">
+                                      <div className="aspect-video bg-black relative flex items-center justify-center group cursor-pointer">
+                                          <img src={selectedReplay.thumbnail} className="w-full h-full object-cover opacity-60 group-hover:scale-105 transition-transform duration-700" />
+                                          <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent"></div>
+                                          <PlayCircle size={64} className="text-white absolute z-10 drop-shadow-2xl" />
+                                      </div>
+                                      <div className="p-8 space-y-6">
+                                          <div>
+                                              <h4 className="text-2xl font-bold text-slate-900 dark:text-white font-heading leading-tight">{selectedReplay.title}</h4>
+                                              <p className="text-sm text-slate-500 mt-2 uppercase font-black tracking-widest text-[10px]">Coached by {selectedReplay.instructor}</p>
+                                          </div>
+                                          
+                                          <div className="bg-slate-50 dark:bg-slate-900/50 p-6 rounded-3xl space-y-4">
+                                              <div className="flex items-center gap-2 text-indigo-600 dark:text-indigo-400 font-black text-xs uppercase tracking-widest">
+                                                  <Info size={16} /> Key Training Notes
+                                              </div>
+                                              <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed font-medium">{selectedReplay.notes}</p>
+                                          </div>
+
+                                          <div className="space-y-4">
+                                              <div className="flex items-center gap-2 text-slate-400 font-black text-xs uppercase tracking-widest">
+                                                  <Clock size={16} /> Content Timestamps
+                                              </div>
+                                              <div className="grid grid-cols-1 gap-2">
+                                                  {selectedReplay.timestamps.map((ts: any, i: number) => (
+                                                      <button key={i} className="w-full px-5 py-3.5 bg-slate-100 dark:bg-slate-700 hover:bg-emerald-50 hover:text-emerald-700 rounded-2xl text-xs font-bold text-slate-600 dark:text-slate-300 transition-all flex items-center justify-between group">
+                                                          <div className="flex items-center gap-3">
+                                                              <Play size={12} className="group-hover:fill-current" />
+                                                              <span className="font-mono text-emerald-600 dark:text-emerald-400">{ts.time}</span>
+                                                              <span className="opacity-40">|</span>
+                                                              <span>{ts.label}</span>
+                                                          </div>
+                                                          <ChevronRight size={14} className="opacity-40 group-hover:opacity-100" />
+                                                      </button>
+                                                  ))}
+                                              </div>
+                                          </div>
+                                      </div>
+                                  </div>
+                              </div>
+                          ) : sessionsToShow.length > 0 ? (
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                  {sessionsToShow.map((session) => (
+                                      <div 
+                                        key={session.id} 
+                                        className="bg-white dark:bg-slate-800 rounded-[2rem] border border-slate-100 dark:border-slate-700 shadow-sm overflow-hidden group hover:shadow-xl transition-all flex flex-col"
+                                      >
+                                          <div className="relative h-44 overflow-hidden">
+                                              <img src={session.thumbnail} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                                              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
+                                              <div className="absolute top-4 right-4 flex gap-2">
+                                                  {session.type === 'LIVE' ? (
+                                                      <span className="bg-red-600 text-white px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest shadow-lg flex items-center gap-1.5">
+                                                          <div className="w-1.5 h-1.5 bg-white rounded-full animate-pulse"></div> LIVE NOW
+                                                      </span>
+                                                  ) : (
+                                                      <span className="bg-slate-900/60 backdrop-blur-md text-white px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border border-white/10">
+                                                          PAST REPLAY
+                                                      </span>
+                                                  )}
+                                              </div>
+                                              <div className="absolute bottom-4 left-4">
+                                                  <span className="bg-white/90 backdrop-blur px-2.5 py-1 rounded-lg text-[9px] font-black text-slate-900 uppercase tracking-tight">
+                                                      {session.platform || `${session.duration} MINS`}
+                                                  </span>
+                                              </div>
+                                          </div>
+                                          <div className="p-6 flex flex-col flex-1">
+                                              <div className="mb-4">
+                                                  <h4 className="font-bold text-slate-900 dark:text-white text-base leading-tight line-clamp-2 group-hover:text-emerald-600 transition-colors">{session.title}</h4>
+                                                  <div className="flex items-center gap-2 mt-3">
+                                                      <div className="w-6 h-6 rounded-lg bg-slate-100 dark:bg-slate-700 flex items-center justify-center font-black text-[10px] text-slate-400">
+                                                          {session.instructor.charAt(0)}
+                                                      </div>
+                                                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest truncate">{session.instructor}</span>
+                                                  </div>
+                                              </div>
+                                              
+                                              {session.type === 'LIVE' ? (
+                                                  <div className="mt-auto space-y-4">
+                                                      <div className="flex items-center justify-between text-[10px] font-black uppercase text-slate-400 border-t border-slate-50 dark:border-slate-700 pt-4">
+                                                          <div className="flex items-center gap-1"><CalendarDays size={12} /> {new Date(session.startTime).toLocaleDateString()}</div>
+                                                          <div className="flex items-center gap-1"><Clock size={12} /> {new Date(session.startTime).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</div>
+                                                      </div>
+                                                      <div className="flex gap-2">
+                                                          <a 
+                                                            href={session.link} 
+                                                            target="_blank" 
+                                                            rel="noopener noreferrer"
+                                                            className="flex-1 bg-emerald-600 text-white py-3.5 rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-lg active:scale-95 transition-all text-center"
+                                                          >
+                                                              Join Meeting
+                                                          </a>
+                                                          <button 
+                                                            onClick={() => handleAddToCalendar(session)}
+                                                            className="p-3.5 bg-slate-100 dark:bg-slate-700 rounded-2xl text-slate-600 dark:text-white hover:bg-emerald-50 transition-colors group/cal"
+                                                            title="Add to Google Calendar"
+                                                          >
+                                                              <CalendarPlus size={20} className="group-hover/cal:scale-110 transition-transform" />
+                                                          </button>
+                                                          <button 
+                                                            onClick={() => toggleReminder(session.id)}
+                                                            className={`p-3.5 rounded-2xl transition-all ${reminders.includes(session.id) ? 'bg-amber-100 text-amber-600' : 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-white'}`}
+                                                            title="Set Reminder"
+                                                          >
+                                                              <BellRing size={20} />
+                                                          </button>
+                                                      </div>
+                                                  </div>
+                                              ) : (
+                                                  <button 
+                                                    onClick={() => setSelectedReplay(session)}
+                                                    className="mt-auto w-full py-4 bg-slate-900 text-white dark:bg-slate-700 rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-lg hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-2 group/play"
+                                                  >
+                                                      <MonitorPlay size={18} className="group-hover/play:scale-110 transition-transform" /> Access Replay Content
+                                                  </button>
+                                              )}
+                                          </div>
+                                      </div>
+                                  ))}
+                              </div>
+                          ) : (
+                              <div className="text-center py-24 bg-slate-50/50 rounded-[3rem] border-2 border-dashed border-slate-200 dark:bg-slate-900/30 dark:border-slate-800 animate-fade-in">
+                                  <div className="w-24 h-24 bg-white rounded-[2rem] flex items-center justify-center mx-auto mb-8 shadow-sm dark:bg-slate-800">
+                                      <VideoIcon size={48} className="text-slate-200" />
+                                  </div>
+                                  <h4 className="font-bold text-xl text-slate-900 dark:text-white">No Sessions Available</h4>
+                                  <p className="text-sm text-slate-400 mt-2 max-w-xs mx-auto">Try switching between Team and Global Hub filters to find more content.</p>
+                              </div>
+                          )}
+                      </div>
+
+                      {/* Footer Tip */}
+                      <div className="bg-blue-50 border border-blue-100 p-5 rounded-3xl flex items-start gap-4 dark:bg-blue-900/20 dark:border-blue-800">
+                           <Lightbulb className="text-blue-600 shrink-0 mt-0.5" size={20} />
+                           <div>
+                               <h5 className="font-bold text-sm text-blue-900 dark:text-blue-300">Why Attend Live?</h5>
+                               <p className="text-xs text-blue-700 dark:text-blue-400 mt-1 leading-relaxed">
+                                   Live sessions allow for real-time Q&A, energy sharing, and immediate mentorship from top performing leaders.
+                               </p>
+                           </div>
+                      </div>
+                  </div>
+              </CustomModal>
+          );
+      }
+
       if (activeModal === 'ASSIGNMENTS') {
           // Logic to determine status for current user
           const getStatus = (a: Assignment) => {
@@ -1122,7 +1420,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                                   <button
                                       key={filter}
                                       onClick={() => setSalesFilter(filter as any)}
-                                      className={`px-4 py-2 rounded-lg text-xs font-bold whitespace-nowrap transition-colors border ${salesFilter === filter ? 'bg-slate-800 text-white border-slate-800 dark:bg-white dark:text-slate-900' : 'bg-white text-slate-500 border-slate-200 hover:bg-slate-50 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-400'}`}
+                                      className={`px-4 py-2 rounded-lg text-xs font-bold whitespace-nowrap transition-colors border ${salesFilter === filter ? 'bg-slate-800 text-white border-slate-800 dark:bg-white dark:text-slate-900' : 'bg-white text-slate-500 border-slate-200 hover:bg-slate-50 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-400 dark:hover:bg-slate-700'}`}
                                   >
                                       {filter.charAt(0) + filter.slice(1).toLowerCase()}
                                   </button>
@@ -2385,7 +2683,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                             title="Live Sessions" 
                             desc="Replays & Upcoming" 
                             icon={Video} 
-                            onClick={() => alert("Live trainings coming soon!")}
+                            onClick={() => setActiveModal('LIVE_SESSIONS')}
                         />
                         
                         <ShortcutItem 

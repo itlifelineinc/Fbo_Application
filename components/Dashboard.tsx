@@ -6,9 +6,8 @@ import { Student, UserRole, Course, CourseTrack, CourseStatus, MentorshipTemplat
 import { 
     Users, TrendingUp, Calendar, ArrowUpRight, Award, 
     BookOpen, DollarSign, CircleDollarSign, Target, MessageSquare, PlusCircle, 
-    // Added LayoutGrid to imports
     BarChart2, Zap, ArrowRight, Layout, LayoutGrid, ArrowLeft, Clock, Globe, UserPlus, Shield,
-    ShoppingCart, GraduationCap, Bell, Flag, Store, Lock, CheckCircle, X, PieChart as PieChartIcon, Activity, Lightbulb, ChevronLeft, HelpCircle, Hand, Medal, Gift, Hourglass, Megaphone, MessageCircle, Sparkles, Rocket, UserCheck, LayoutTemplate, CreditCard, Phone, MousePointerClick, Smartphone, Eye, Filter, ArrowDown, ExternalLink, Share2, Trash2, MoreHorizontal, Wallet, Check, Edit3, Trophy, Network, Book, Video, ClipboardCheck, PlayCircle, Search, Star, Layers, Briefcase, HeartPulse, Projector, AlertCircle, ChevronRight, VideoIcon, MonitorPlay, CalendarPlus, History, Info, Play, BellRing, CalendarDays, Bookmark, Quote, Volume2, Flame, Network as TreeIcon, ListChecks, Star as RecognitionIcon
+    ShoppingCart, GraduationCap, Bell, Flag, Store, Lock, CheckCircle, X, PieChart as PieChartIcon, Activity, Lightbulb, ChevronLeft, HelpCircle, Hand, Medal, Gift, Hourglass, Megaphone, MessageCircle, Sparkles, Rocket, UserCheck, LayoutTemplate, CreditCard, Phone, MousePointerClick, Smartphone, Eye, Filter, ArrowDown, ExternalLink, Share2, Trash2, MoreHorizontal, Wallet, Check, Edit3, Trophy, Network, Book, Video, ClipboardCheck, PlayCircle, Search, Star, Layers, Briefcase, HeartPulse, Projector, AlertCircle, ChevronRight, VideoIcon, MonitorPlay, CalendarPlus, History, Info, Play, BellRing, CalendarDays, Bookmark, Quote, Volume2, Flame, Network as TreeIcon, ListChecks, Star as RecognitionIcon, UserMinus, Workflow
 } from 'lucide-react';
 import { RANKS, RANK_ORDER } from '../constants';
 
@@ -585,7 +584,159 @@ const Dashboard: React.FC<DashboardProps> = ({
       // ----------------------------
       // TEAM HUB MODALS (New Sections)
       // ----------------------------
-      if (activeModal === 'TEAM_OVERVIEW') return renderSectionPlaceholder("Team Overview", LayoutGrid, "A high-level summary of your team's total activity, growth, and key metrics.");
+      if (activeModal === 'TEAM_OVERVIEW') {
+          // Team Overview Data Calculations
+          const totalSize = myDownline.length + 42; // Mock indirect downline
+          const activeCount = myDownline.filter(s => s.caseCredits > 0).length + 12; // Mock active indirects
+          const inactiveCount = totalSize - activeCount;
+          const newThisMonth = myDownline.filter(s => s.enrolledDate.startsWith(currentMonth)).length + 5; // Mock new indirects
+          const monthlyTeamCC = teamCC + 28.5; // Mock indirect CC
+          
+          const rankCounts = [
+              { name: 'Novus', value: 24, color: '#94a3b8' },
+              { name: 'AS Sup', value: 12, color: '#fbbf24' },
+              { name: 'Supervisor', value: 4, color: '#f59e0b' },
+              { name: 'Manager', value: 2, color: '#10b981' }
+          ];
+
+          return (
+              <CustomModal
+                  isOpen={true}
+                  onClose={() => setActiveModal('NONE')}
+                  title="Team Health Overview"
+                  icon={LayoutGrid}
+              >
+                  <div className="space-y-8 animate-fade-in pb-10">
+                      
+                      {/* 1. Pulse Header */}
+                      <div className="bg-emerald-600 rounded-[2.5rem] p-8 text-white relative overflow-hidden shadow-xl">
+                          <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+                              <div>
+                                  <div className="flex items-center gap-2 mb-2">
+                                      <div className="w-2 h-2 bg-white rounded-full animate-ping"></div>
+                                      <span className="text-[10px] font-black uppercase tracking-[0.2em] text-white/80">Real-Time Team Health</span>
+                                  </div>
+                                  <h2 className="text-3xl font-black font-heading tracking-tight">System Pulse: Strong</h2>
+                                  <p className="text-sm text-white/70 mt-1">Your organization is growing 15% faster than last month.</p>
+                              </div>
+                              <div className="flex gap-4">
+                                  <div className="text-center bg-white/10 backdrop-blur-md rounded-2xl px-5 py-3 border border-white/10">
+                                      <p className="text-2xl font-black leading-none">{totalSize}</p>
+                                      <p className="text-[9px] font-black uppercase mt-1 opacity-60 tracking-widest">Total FBOs</p>
+                                  </div>
+                                  <div className="text-center bg-white/10 backdrop-blur-md rounded-2xl px-5 py-3 border border-white/10">
+                                      <p className="text-2xl font-black leading-none">{monthlyTeamCC.toFixed(1)}</p>
+                                      <p className="text-[9px] font-black uppercase mt-1 opacity-60 tracking-widest">Team CC</p>
+                                  </div>
+                              </div>
+                          </div>
+                          <Activity size={180} className="absolute -right-8 -bottom-16 text-white/5 rotate-12" strokeWidth={1} />
+                      </div>
+
+                      {/* 2. Key Metrics Grid */}
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                          <div className="bg-white dark:bg-slate-800 p-5 rounded-3xl border border-slate-100 dark:border-slate-700 shadow-sm flex flex-col items-center text-center group transition-all hover:shadow-md">
+                              <div className="w-10 h-10 bg-blue-50 dark:bg-blue-900/30 rounded-xl flex items-center justify-center text-blue-600 dark:text-blue-400 mb-3 group-hover:scale-110 transition-transform"><UserCheck size={20} /></div>
+                              <p className="text-2xl font-black text-slate-900 dark:text-white leading-none">{activeCount}</p>
+                              <p className="text-[9px] font-black text-slate-400 uppercase mt-2 tracking-widest">Active Members</p>
+                          </div>
+                          <div className="bg-white dark:bg-slate-800 p-5 rounded-3xl border border-slate-100 dark:border-slate-700 shadow-sm flex flex-col items-center text-center group transition-all hover:shadow-md">
+                              <div className="w-10 h-10 bg-slate-50 dark:bg-slate-700 rounded-xl flex items-center justify-center text-slate-400 mb-3 group-hover:scale-110 transition-transform"><UserMinus size={20} /></div>
+                              <p className="text-2xl font-black text-slate-900 dark:text-white leading-none">{inactiveCount}</p>
+                              <p className="text-[9px] font-black text-slate-400 uppercase mt-2 tracking-widest">Dormant</p>
+                          </div>
+                          <div className="bg-white dark:bg-slate-800 p-5 rounded-3xl border border-slate-100 dark:border-slate-700 shadow-sm flex flex-col items-center text-center group transition-all hover:shadow-md">
+                              <div className="w-10 h-10 bg-orange-50 dark:bg-orange-900/30 rounded-xl flex items-center justify-center text-orange-600 dark:text-orange-400 mb-3 group-hover:scale-110 transition-transform"><UserPlus size={20} /></div>
+                              <p className="text-2xl font-black text-slate-900 dark:text-white leading-none">+{newThisMonth}</p>
+                              <p className="text-[9px] font-black text-slate-400 uppercase mt-2 tracking-widest">New This Month</p>
+                          </div>
+                          <div className="bg-white dark:bg-slate-800 p-5 rounded-3xl border border-slate-100 dark:border-slate-700 shadow-sm flex flex-col items-center text-center group transition-all hover:shadow-md">
+                              <div className="w-10 h-10 bg-emerald-50 dark:bg-emerald-900/30 rounded-xl flex items-center justify-center text-emerald-600 dark:text-emerald-400 mb-3 group-hover:scale-110 transition-transform"><Workflow size={20} /></div>
+                              <p className="text-2xl font-black text-slate-900 dark:text-white leading-none">3</p>
+                              <p className="text-[9px] font-black text-slate-400 uppercase mt-2 tracking-widest">Tree Depth (Levels)</p>
+                          </div>
+                      </div>
+
+                      {/* 3. Detailed Distribution Charts */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          {/* Rank Distribution */}
+                          <div className="bg-white dark:bg-slate-800 p-6 rounded-[2.5rem] border border-slate-100 dark:border-slate-700 shadow-sm">
+                              <div className="flex items-center justify-between mb-6">
+                                  <h3 className="text-sm font-black text-slate-400 uppercase tracking-widest">Rank Distribution</h3>
+                                  <Medal size={16} className="text-yellow-500" />
+                              </div>
+                              <div className="h-56 relative">
+                                  <ResponsiveContainer width="100%" height="100%">
+                                      <PieChart>
+                                          <Pie
+                                              data={rankCounts}
+                                              innerRadius={60}
+                                              outerRadius={80}
+                                              paddingAngle={8}
+                                              dataKey="value"
+                                              stroke="none"
+                                          >
+                                              {rankCounts.map((entry, index) => (
+                                                  <Cell key={`cell-${index}`} fill={entry.color} />
+                                              ))}
+                                          </Pie>
+                                          <Tooltip />
+                                      </PieChart>
+                                  </ResponsiveContainer>
+                                  <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                                      <p className="text-2xl font-black text-slate-900 dark:text-white">{totalSize}</p>
+                                      <p className="text-[8px] font-black text-slate-400 uppercase">Total</p>
+                                  </div>
+                              </div>
+                              <div className="grid grid-cols-2 gap-2 mt-4">
+                                  {rankCounts.map(rc => (
+                                      <div key={rc.name} className="flex items-center gap-2">
+                                          <div className="w-2 h-2 rounded-full" style={{ backgroundColor: rc.color }}></div>
+                                          <span className="text-[10px] font-bold text-slate-600 dark:text-slate-400 uppercase">{rc.name}: {rc.value}</span>
+                                      </div>
+                                  ))}
+                              </div>
+                          </div>
+
+                          {/* Activity Bar Chart */}
+                          <div className="bg-white dark:bg-slate-800 p-6 rounded-[2.5rem] border border-slate-100 dark:border-slate-700 shadow-sm">
+                              <div className="flex items-center justify-between mb-6">
+                                  <h3 className="text-sm font-black text-slate-400 uppercase tracking-widest">Daily Activity Rate</h3>
+                                  <TrendingUp size={16} className="text-emerald-500" />
+                              </div>
+                              <div className="h-56">
+                                  <ResponsiveContainer width="100%" height="100%">
+                                      <BarChart data={[
+                                          { name: 'Mon', v: 45 }, { name: 'Tue', v: 52 }, { name: 'Wed', v: 38 }, 
+                                          { name: 'Thu', v: 65 }, { name: 'Fri', v: 48 }, { name: 'Sat', v: 30 }, { name: 'Sun', v: 25 }
+                                      ]}>
+                                          <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                                          <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fontSize: 10}} />
+                                          <Tooltip cursor={{fill: '#f8fafc'}} />
+                                          <Bar dataKey="v" fill="#10b981" radius={[4, 4, 0, 0]} barSize={20} />
+                                      </BarChart>
+                                  </ResponsiveContainer>
+                              </div>
+                              <p className="text-[10px] text-center text-slate-400 mt-4 italic">% of team logging activity daily</p>
+                          </div>
+                      </div>
+
+                      {/* 4. Strategic Insight Card */}
+                      <div className="bg-blue-50 border border-blue-100 p-6 rounded-[2.5rem] dark:bg-blue-900/20 dark:border-blue-800 flex items-start gap-4">
+                          <div className="w-12 h-12 bg-white dark:bg-slate-800 rounded-2xl flex items-center justify-center text-blue-600 shrink-0 shadow-sm"><Lightbulb size={24} /></div>
+                          <div>
+                              <h4 className="font-bold text-blue-900 dark:text-blue-300">Leadership Strategy</h4>
+                              <p className="text-sm text-blue-700 dark:text-blue-400 mt-1 leading-relaxed">
+                                  Your team has a high "Novus" count (24). Focus this week on running an <strong>"Assistant Supervisor Launchpad"</strong> training to help them achieve their first 2CC and unlock higher commissions.
+                              </p>
+                          </div>
+                      </div>
+
+                  </div>
+              </CustomModal>
+          );
+      }
+
       if (activeModal === 'DOWNLINE_TREE') return renderSectionPlaceholder("Downline Tree", TreeIcon, "Visualize your entire team structure and see exactly how many levels deep your business spans.");
       if (activeModal === 'PERFORMANCE_TRACKING') return renderSectionPlaceholder("Performance & CC Tracking", TrendingUp, "Deep dive into the Case Credit contributions of every FBO in your organization.");
       if (activeModal === 'TRAINING_CONTROL') return renderSectionPlaceholder("Training & Assignment Control", ListChecks, "Monitor which courses your team is studying and assign mandatory tasks.");
@@ -1046,7 +1197,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                                   </div>
                               );
                           }) : (
-                              <div className="text-center py-20 bg-slate-50/50 rounded-3xl border-2 border-dashed border-slate-100 dark:bg-slate-900/30 dark:border-slate-800">
+                              <div className="text-center py-20 bg-slate-50/50 rounded-3xl border-2 border-dashed border-slate-200 dark:bg-slate-900/30 dark:border-slate-800">
                                   <ClipboardCheck size={48} className="mx-auto text-slate-200 mb-4" />
                                   <p className="text-slate-400 font-bold">No tasks found in this category.</p>
                               </div>
@@ -1497,7 +1648,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                                       </div>
                                   </div>
 
-                                  <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 dark:bg-slate-800 dark:border-slate-700">
+                                  <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800 dark:border-slate-700">
                                       <h3 className="font-bold text-slate-800 mb-4 dark:text-white">Customer Actions Funnel</h3>
                                       <div className="space-y-4">
                                           <div className="flex items-center gap-4">
@@ -2329,7 +2480,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                         <div className="bg-white dark:bg-slate-800 p-4 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm relative overflow-hidden">
                             <div className="absolute top-0 right-0 p-3 opacity-10"><Hourglass size={40} className="text-slate-500" /></div>
                             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wide mb-1">Pending Bonus</p>
-                            <p className="font-bold text-slate-700 dark:text-slate-300 text-sm leading-tight">{pendingBonus}</p>
+                            <p className="font-bold text-slate-700 dark:text-300 text-sm leading-tight">{pendingBonus}</p>
                             <p className="text-[10px] text-slate-400 mt-1">Unlocks at {nextRankDef?.name || 'Top Rank'}</p>
                         </div>
 

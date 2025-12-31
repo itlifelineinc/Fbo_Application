@@ -7,7 +7,7 @@ import {
     Users, TrendingUp, Calendar, ArrowUpRight, Award, 
     BookOpen, DollarSign, CircleDollarSign, Target, MessageSquare, PlusCircle, 
     BarChart2, Zap, ArrowRight, Layout, ArrowLeft, Clock, Globe, UserPlus, Shield,
-    ShoppingCart, GraduationCap, Bell, Flag, Store, Lock, CheckCircle, X, PieChart as PieChartIcon, Activity, Lightbulb, ChevronLeft, HelpCircle, Hand, Medal, Gift, Hourglass, Megaphone, MessageCircle, Sparkles, Rocket, UserCheck, LayoutTemplate, CreditCard, Phone, MousePointerClick, Smartphone, Eye, Filter, ArrowDown, ExternalLink, Share2, Trash2, MoreHorizontal, Wallet, Check, Edit3, Trophy, Network, Book, Video, ClipboardCheck
+    ShoppingCart, GraduationCap, Bell, Flag, Store, Lock, CheckCircle, X, PieChart as PieChartIcon, Activity, Lightbulb, ChevronLeft, HelpCircle, Hand, Medal, Gift, Hourglass, Megaphone, MessageCircle, Sparkles, Rocket, UserCheck, LayoutTemplate, CreditCard, Phone, MousePointerClick, Smartphone, Eye, Filter, ArrowDown, ExternalLink, Share2, Trash2, MoreHorizontal, Wallet, Check, Edit3, Trophy, Network, Book, Video, ClipboardCheck, PlayCircle
 } from 'lucide-react';
 import { RANKS, RANK_ORDER } from '../constants';
 
@@ -254,7 +254,7 @@ const Dashboard: React.FC<DashboardProps> = ({
     // Sales Section
     'MY_PAGES' | 'CREATE_PAGE' | 'LEADS' | 'ORDERS' | 'PAYMENTS' | 'SALES_ANALYTICS' |
     // Training Section
-    'MOMENTUM' // Placeholder for existing Business Momentum if needed, refactored
+    'MY_CLASSROOM' | 'MOMENTUM' 
   >('NONE');
   
   const [supportMenuOpen, setSupportMenuOpen] = useState<string | null>(null); // Stores ID of user whose menu is open
@@ -411,6 +411,123 @@ const Dashboard: React.FC<DashboardProps> = ({
 
   // --- RENDER MODALS ---
   const renderModals = () => {
+      // ----------------------------
+      // TRAINING HUB MODALS
+      // ----------------------------
+      if (activeModal === 'MY_CLASSROOM') {
+          // Calculate individual course progress for progress bars
+          const enrolledCoursesData = courses.filter(c => currentUser.enrolledCourses.includes(c.id)).map(course => {
+              const totalModules = course.modules.length;
+              if (totalModules === 0) return { ...course, progress: 0 };
+              const completedCount = course.modules.filter(m => currentUser.completedModules.includes(m.id)).length;
+              const progress = Math.round((completedCount / totalModules) * 100);
+              return { ...course, progress };
+          });
+
+          const inProgress = enrolledCoursesData.filter(c => c.progress < 100);
+          const completed = enrolledCoursesData.filter(c => c.progress === 100);
+          
+          // Resume Logic: Find the first in-progress course
+          const resumeCourse = inProgress[0];
+
+          return (
+              <CustomModal
+                  isOpen={true}
+                  onClose={() => setActiveModal('NONE')}
+                  title="My Classroom"
+                  icon={BookOpen}
+              >
+                  <div className="space-y-8 animate-fade-in">
+                      {/* Resume Learning Section */}
+                      {resumeCourse ? (
+                          <div className="bg-gradient-to-r from-emerald-600 to-teal-500 rounded-3xl p-6 text-white shadow-xl relative overflow-hidden group">
+                              <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+                                  <div>
+                                      <span className="text-[10px] font-black uppercase tracking-[0.2em] text-white/70">Pick up where you left off</span>
+                                      <h3 className="text-xl md:text-2xl font-bold mt-1 mb-2 font-heading">{resumeCourse.title}</h3>
+                                      <div className="flex items-center gap-4 text-xs font-bold text-white/80 uppercase">
+                                          <span>{resumeCourse.progress}% Completed</span>
+                                          <div className="w-24 h-1.5 bg-white/20 rounded-full overflow-hidden">
+                                              <div className="h-full bg-white rounded-full shadow-[0_0_8px_rgba(255,255,255,0.5)]" style={{ width: `${resumeCourse.progress}%` }}></div>
+                                          </div>
+                                      </div>
+                                  </div>
+                                  <button 
+                                      onClick={() => navigate(`/training/course/${resumeCourse.id}`)}
+                                      className="bg-white text-emerald-700 px-8 py-3.5 rounded-2xl font-black uppercase tracking-widest text-xs shadow-lg hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-2"
+                                  >
+                                      <PlayCircle size={18} fill="currentColor" /> Resume Learning
+                                  </button>
+                              </div>
+                              <Sparkles size={120} className="absolute -right-8 -bottom-8 text-white/10 rotate-12 group-hover:scale-110 transition-transform duration-500" />
+                          </div>
+                      ) : (
+                          <div className="bg-slate-50 dark:bg-slate-800 p-6 rounded-3xl border border-slate-200 dark:border-slate-700 text-center">
+                              <p className="text-slate-500 dark:text-slate-400 font-medium">You haven't started any courses yet.</p>
+                              <Link to="/classroom" className="mt-4 inline-block bg-emerald-600 text-white px-6 py-2 rounded-xl font-bold text-sm shadow-md">Explore Global Library</Link>
+                          </div>
+                      )}
+
+                      {/* Navigation Grid */}
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                          <button 
+                            onClick={() => navigate('/classroom', { state: { initialTab: 'STARTED' } })}
+                            className="bg-white dark:bg-slate-800 p-5 rounded-[2rem] border border-slate-100 dark:border-slate-700 shadow-sm hover:shadow-md transition-all text-left flex items-center gap-4 group"
+                          >
+                              <div className="w-12 h-12 rounded-2xl bg-blue-100 text-blue-600 flex items-center justify-center dark:bg-blue-900/30 dark:text-blue-400 shrink-0 group-hover:scale-110 transition-transform"><Clock size={24} /></div>
+                              <div>
+                                  <h4 className="font-bold text-slate-800 dark:text-white">In Progress</h4>
+                                  <p className="text-xs text-slate-500 dark:text-slate-400">{inProgress.length} courses active</p>
+                              </div>
+                          </button>
+
+                          <button 
+                            onClick={() => navigate('/classroom', { state: { initialTab: 'COMPLETED' } })}
+                            className="bg-white dark:bg-slate-800 p-5 rounded-[2rem] border border-slate-100 dark:border-slate-700 shadow-sm hover:shadow-md transition-all text-left flex items-center gap-4 group"
+                          >
+                              <div className="w-12 h-12 rounded-2xl bg-emerald-100 text-emerald-600 flex items-center justify-center dark:bg-emerald-900/30 dark:text-emerald-400 shrink-0 group-hover:scale-110 transition-transform"><CheckCircle size={24} /></div>
+                              <div>
+                                  <h4 className="font-bold text-slate-800 dark:text-white">Done</h4>
+                                  <p className="text-xs text-slate-500 dark:text-slate-400">{completed.length} courses completed</p>
+                              </div>
+                          </button>
+
+                          <button 
+                            onClick={() => navigate('/classroom', { state: { initialTab: 'TEAM' } })}
+                            className="bg-white dark:bg-slate-800 p-5 rounded-[2rem] border border-slate-100 dark:border-slate-700 shadow-sm hover:shadow-md transition-all text-left flex items-center gap-4 group"
+                          >
+                              <div className="w-12 h-12 rounded-2xl bg-purple-100 text-purple-600 flex items-center justify-center dark:bg-purple-900/30 dark:text-purple-400 shrink-0 group-hover:scale-110 transition-transform"><Users size={24} /></div>
+                              <div>
+                                  <h4 className="font-bold text-slate-800 dark:text-white">My Team</h4>
+                                  <p className="text-xs text-slate-500 dark:text-slate-400">Shared by sponsor</p>
+                              </div>
+                          </button>
+                      </div>
+
+                      {/* Course Progress Breakdown */}
+                      {inProgress.length > 0 && (
+                          <div className="space-y-4">
+                              <SectionHeader title="Live Progress" />
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                  {inProgress.slice(0, 4).map(course => (
+                                      <div key={course.id} className="bg-white dark:bg-slate-800 p-4 rounded-2xl border border-slate-100 dark:border-slate-700 flex flex-col justify-between">
+                                          <div className="flex justify-between items-start mb-4">
+                                              <h4 className="font-bold text-slate-800 dark:text-white text-sm line-clamp-1 flex-1 pr-4">{course.title}</h4>
+                                              <span className="text-xs font-black text-emerald-600 dark:text-emerald-400 shrink-0">{course.progress}%</span>
+                                          </div>
+                                          <div className="w-full h-2 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
+                                              <div className="h-full bg-emerald-500 rounded-full transition-all duration-1000" style={{ width: `${course.progress}%` }}></div>
+                                          </div>
+                                      </div>
+                                  ))}
+                              </div>
+                          </div>
+                      )}
+                  </div>
+              </CustomModal>
+          );
+      }
+
       // ----------------------------
       // SALES MODALS
       // ----------------------------
@@ -1018,7 +1135,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                             </div>
                         </div>
 
-                        <div className="p-5 bg-amber-50 rounded-2xl border border-amber-100 flex flex-col justify-between dark:bg-amber-900/10 dark:border-amber-800">
+                        <div className="p-5 bg-amber-50 rounded-2xl border border-amber-100 flex flex-col justify-between dark:bg-emerald-900/10 dark:border-emerald-800">
                             <div className="flex justify-between items-start mb-2">
                                 <div className="p-2 bg-amber-100 text-amber-600 rounded-lg dark:bg-amber-900/40 dark:text-amber-300">
                                     <Target size={20} />
@@ -1437,7 +1554,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                                     {/* User Info */}
                                     <div className="flex items-center gap-3 flex-1">
                                         <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center font-bold text-slate-500 dark:bg-slate-700 dark:text-slate-300 shrink-0">
-                                            {user.avatarUrl ? <img src={user.avatarUrl} className="w-full h-full rounded-full object-cover"/> : user.name.charAt(0)}
+                                            {user.avatarUrl ? <img src={user.avatarUrl} className="w-full h-full object-cover"/> : user.name.charAt(0)}
                                         </div>
                                         <div className="min-w-0">
                                             <h4 className="font-bold text-sm text-slate-900 dark:text-white truncate">{user.name}</h4>
@@ -1668,7 +1785,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                               title="Business Momentum" 
                               desc="Financial Snapshot" 
                               icon={Zap} 
-                              onClick={() => setActiveModal('MOMENTUM')}
+                              onClick={() => setActiveModal('MOMENT_UM')}
                           />
                           
                           <ShortcutItem 
@@ -1799,7 +1916,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                             title="My Classroom" 
                             desc="Ongoing Courses" 
                             icon={BookOpen} 
-                            to="/classroom"
+                            onClick={() => setActiveModal('MY_CLASSROOM')}
                         />
                         
                         <ShortcutItem 

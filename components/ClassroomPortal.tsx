@@ -1,6 +1,6 @@
 
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Course, CourseStatus, Student, UserRole } from '../types';
 import CourseCard from './CourseCard';
 import { Search, Lock, Filter, ArrowLeft, X } from 'lucide-react';
@@ -16,9 +16,19 @@ type TabType = 'ALL' | 'GLOBAL' | 'TEAM' | 'STARTED' | 'COMPLETED' | 'SAVED';
 
 const ClassroomPortal: React.FC<ClassroomPortalProps> = ({ courses, currentUser, onEnrollCourse, onToggleSave }) => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [activeTab, setActiveTab] = useState<TabType>('ALL');
   const [searchQuery, setSearchQuery] = useState('');
   const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
+
+  // Handle deep link from state
+  useEffect(() => {
+      if (location.state && (location.state as any).initialTab) {
+          setActiveTab((location.state as any).initialTab as TabType);
+          // Clear state to prevent tab reset on reload
+          window.history.replaceState({}, document.title);
+      }
+  }, [location.state]);
 
   // --- Utility: Check Completion ---
   const getProgress = (course: Course) => {
@@ -90,10 +100,6 @@ const ClassroomPortal: React.FC<ClassroomPortalProps> = ({ courses, currentUser,
 
   return (
     <div className="h-full flex flex-col bg-slate-50 dark:bg-slate-950 animate-fade-in">
-      {/* 
-          1. MOBILE CUSTOM HEADER (Facebook Style)
-          Visible only on mobile. Fixed at top within flex container.
-      */}
       <div className="md:hidden shrink-0 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-4 py-3 flex justify-between items-center z-50 shadow-sm transition-all duration-300">
          {!isMobileSearchOpen ? (
            <>
@@ -130,14 +136,8 @@ const ClassroomPortal: React.FC<ClassroomPortalProps> = ({ courses, currentUser,
          )}
       </div>
 
-      {/* 
-          SCROLLABLE CONTENT AREA
-          This allows scrolling even if the parent container (Layout main) has overflow-hidden.
-      */}
       <div className="flex-1 overflow-y-auto no-scrollbar scroll-smooth">
           <div className="max-w-7xl mx-auto px-4 md:px-8 pb-24 md:pb-12 pt-4 md:pt-8">
-              
-              {/* Desktop Header */}
               <div className="hidden md:flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
                   <div>
                     <h1 className="text-3xl font-bold text-slate-900 font-heading dark:text-white">Classroom</h1>
@@ -145,8 +145,6 @@ const ClassroomPortal: React.FC<ClassroomPortalProps> = ({ courses, currentUser,
                         Your centralized learning hub.
                     </p>
                   </div>
-
-                  {/* Desktop Search Bar */}
                   <div className="relative w-full md:w-72 lg:w-96">
                       <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
                       <input 
@@ -159,11 +157,6 @@ const ClassroomPortal: React.FC<ClassroomPortalProps> = ({ courses, currentUser,
                   </div>
               </div>
 
-              {/* 
-                  Sticky Tabs 
-                  Note: sticky works within the scrolling container.
-                  Top is 0 because the mobile header is outside this container.
-              */}
               <div className="sticky top-0 z-30 bg-slate-50/95 backdrop-blur-md pt-2 pb-4 -mx-4 px-4 md:-mx-8 md:px-8 border-b border-slate-200/50 dark:bg-slate-950/95 dark:border-slate-800 transition-all duration-300 mb-6">
                   <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
                       {tabs.map(tab => (
@@ -183,7 +176,6 @@ const ClassroomPortal: React.FC<ClassroomPortalProps> = ({ courses, currentUser,
                   </div>
               </div>
 
-              {/* Course Grid */}
               <div>
                 {filteredCourses.length === 0 ? (
                     <div className="flex flex-col items-center justify-center py-24 bg-white rounded-3xl border-2 border-dashed border-slate-200 dark:bg-slate-800 dark:border-slate-700">

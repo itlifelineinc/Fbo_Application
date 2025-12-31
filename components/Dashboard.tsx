@@ -7,17 +7,17 @@ import {
     Users, TrendingUp, Calendar, ArrowUpRight, Award, 
     BookOpen, DollarSign, CircleDollarSign, Target, MessageSquare, PlusCircle, 
     BarChart2, Zap, ArrowRight, Layout, ArrowLeft, Clock, Globe, UserPlus, Shield,
-    ShoppingCart, GraduationCap, Bell, Flag, Store, Lock, CheckCircle, X, PieChart as PieChartIcon, Activity, Lightbulb, ChevronLeft, HelpCircle, Hand, Medal, Gift, Hourglass, Megaphone, MessageCircle, Sparkles, Rocket, UserCheck, LayoutTemplate, CreditCard, Phone, MousePointerClick, Smartphone, Eye, Filter, ArrowDown, ExternalLink, Share2, Trash2, MoreHorizontal, Wallet, Check, Edit3, Trophy, Network, Book, Video, ClipboardCheck, PlayCircle, Search, Star, Layers, Briefcase, HeartPulse, Projector, AlertCircle, ChevronRight, VideoIcon, MonitorPlay, CalendarPlus, History, Info, Play, BellRing, CalendarDays
+    ShoppingCart, GraduationCap, Bell, Flag, Store, Lock, CheckCircle, X, PieChart as PieChartIcon, Activity, Lightbulb, ChevronLeft, HelpCircle, Hand, Medal, Gift, Hourglass, Megaphone, MessageCircle, Sparkles, Rocket, UserCheck, LayoutTemplate, CreditCard, Phone, MousePointerClick, Smartphone, Eye, Filter, ArrowDown, ExternalLink, Share2, Trash2, MoreHorizontal, Wallet, Check, Edit3, Trophy, Network, Book, Video, ClipboardCheck, PlayCircle, Search, Star, Layers, Briefcase, HeartPulse, Projector, AlertCircle, ChevronRight, VideoIcon, MonitorPlay, CalendarPlus, History, Info, Play, BellRing, CalendarDays, Bookmark, Quote, Volume2, Flame
 } from 'lucide-react';
 import { RANKS, RANK_ORDER } from '../constants';
 
-// --- MOCK LIVE DATA ---
+// --- MOCK DATA ---
 const MOCK_LIVE_SESSIONS = [
     {
         id: 'ls1',
         title: 'New Product Deep Dive: Aloe Body Care',
         instructor: 'Alice Freeman',
-        startTime: new Date(Date.now() + 1000 * 60 * 60 * 2).toISOString(), // 2 hours from now
+        startTime: new Date(Date.now() + 1000 * 60 * 60 * 2).toISOString(),
         duration: 45,
         audience: 'TEAM',
         type: 'LIVE',
@@ -29,7 +29,7 @@ const MOCK_LIVE_SESSIONS = [
         id: 'ls2',
         title: 'Global Marketing Plan Mastery',
         instructor: 'Senior Manager Sarah',
-        startTime: new Date(Date.now() + 1000 * 60 * 60 * 24).toISOString(), // Tomorrow
+        startTime: new Date(Date.now() + 1000 * 60 * 60 * 24).toISOString(),
         duration: 60,
         audience: 'GLOBAL',
         type: 'LIVE',
@@ -71,6 +71,53 @@ const MOCK_REPLAYS = [
             { time: '20:00', label: 'TikTok Funnels for FBOs' },
             { time: '45:00', label: 'Global Closing Masterclass' }
         ]
+    }
+];
+
+const MOCK_KNOWLEDGE_FEED = [
+    {
+        id: 'k1',
+        category: 'LEADER_TIPS',
+        author: 'Senior Manager Alice',
+        type: 'TEXT',
+        title: 'The 24-Hour Rule',
+        content: 'Always follow up with a lead within 24 hours of their first inquiry. The psychological desire for a solution drops by 60% after day one.',
+        timestamp: '1h ago',
+        isNew: true
+    },
+    {
+        id: 'k2',
+        category: 'PRODUCT_NEWS',
+        author: 'Forever Global HQ',
+        type: 'IMAGE',
+        title: 'Aloe Liquid Soap Update',
+        content: 'Our Aloe Liquid Soap has been restocked in the main warehouse. Ready for shipping in 48 hours.',
+        mediaUrl: 'https://images.unsplash.com/photo-1616394584738-fc6e612e71b9?q=80&w=800&auto=format&fit=crop',
+        timestamp: '3h ago',
+        isNew: true
+    },
+    {
+        id: 'k3',
+        category: 'BIZ_HACKS',
+        author: 'Elite Mentor John',
+        type: 'VOICE',
+        title: 'Handling Price Objections',
+        content: 'Listen to this 45-second drill on how to pivot a "it is too expensive" comment into a "value over time" conversation.',
+        duration: '0:45',
+        timestamp: '5h ago',
+        isNew: false
+    },
+    {
+        id: 'k4',
+        category: 'MICRO_LEARNING',
+        author: 'Training Team',
+        type: 'VIDEO',
+        title: '1-Minute Reels Drill',
+        content: 'Watch how to set up the perfect lighting for your product demo reels using just a window and a white sheet.',
+        mediaUrl: 'https://images.unsplash.com/photo-1492691527719-9d1e07e534b4?q=80&w=800&auto=format&fit=crop',
+        duration: '1:12',
+        timestamp: '1d ago',
+        isNew: false
     }
 ];
 
@@ -149,35 +196,6 @@ const CustomModal = ({
         </div>
     );
 };
-
-// --- ICONS ---
-const TrophyIcon = ({className}:{className?:string}) => (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className={className}>
-        <path fillRule="evenodd" d="M5.166 2.621v.858c-1.035.148-2.059.33-3.071.563A2 2 0 00.75 5.905l.274 2.769a6 6 0 006.276 5.636h.25a6.001 6.001 0 006.276-5.636l.274-2.769a2 2 0 00-1.345-1.863c-1.012-.232-2.036-.415-3.071-.563v-.858c0-.817-.631-1.48-1.432-1.524A43.87 43.87 0 0012 1.5c-2.483 0-4.965.23-7.411.693-.8.043-1.431.707-1.431 1.524zm9.358 13.917a8.97 8.97 0 01-2.524.462h-1.954c-.958 0-1.87-.167-2.524-.462q-.503.327-.928.71a2.25 2.25 0 00-.73 1.93l.342 3.096A2.25 2.25 0 008.303 24h5.443a2.25 2.25 0 002.134-1.66l.342-3.096a2.25 2.25 0 00-.73-1.93q-.425-.382-.928.71z" clipRule="evenodd" />
-    </svg>
-);
-
-// Custom Outline Icons (Thick Border)
-const MoneyBagIcon = ({ size, strokeWidth, className }: { size: number, strokeWidth: number, className?: string }) => (
-    <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" className={className}>
-        <path d="M6 9a6 6 0 0 1 12 0v2.3c0 2.6-1.5 4.9-3.9 6-1 .5-2.2.7-3.4.5a7.5 7.5 0 0 1-4.7-2.8c-1.1-1.5-1.7-3.4-1.7-5.3V9Z" />
-        <path d="M6 9h12" />
-        <path d="M10 14h4" />
-        <path d="M12 12v4" />
-        <path d="M10 5a2 2 0 1 1 4 0" />
-    </svg>
-);
-
-const AutoStoriesIcon = ({ size, strokeWidth, className }: { size: number, strokeWidth: number, className?: string }) => (
-    <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" className={className}>
-        <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
-        <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
-        <path d="M6 8h2" />
-        <path d="M6 12h2" />
-        <path d="M16 8h2" />
-        <path d="M16 12h2" />
-    </svg>
-);
 
 // --- SUB-COMPONENTS ---
 
@@ -357,7 +375,7 @@ const Dashboard: React.FC<DashboardProps> = ({
     // Sales Section
     'MY_PAGES' | 'CREATE_PAGE' | 'LEADS' | 'ORDERS' | 'PAYMENTS' | 'SALES_ANALYTICS' |
     // Training Section
-    'MY_CLASSROOM' | 'GLOBAL_LIBRARY' | 'TEAM_TRAINING' | 'ASSIGNMENTS' | 'LIVE_SESSIONS' | 'MOMENTUM' 
+    'MY_CLASSROOM' | 'GLOBAL_LIBRARY' | 'TEAM_TRAINING' | 'ASSIGNMENTS' | 'LIVE_SESSIONS' | 'KNOWLEDGE_FEED' | 'MOMENTUM' 
   >('NONE');
   
   const [supportMenuOpen, setSupportMenuOpen] = useState<string | null>(null); // Stores ID of user whose menu is open
@@ -380,6 +398,9 @@ const Dashboard: React.FC<DashboardProps> = ({
   const [liveAudienceFilter, setLiveAudienceFilter] = useState<'TEAM' | 'GLOBAL'>('TEAM');
   const [selectedReplay, setSelectedReplay] = useState<any | null>(null);
   const [reminders, setReminders] = useState<string[]>([]);
+
+  // NEW: Knowledge Feed States
+  const [knowledgeFilter, setKnowledgeFilter] = useState<'ALL' | 'LEADER_TIPS' | 'PRODUCT_NEWS' | 'BIZ_HACKS'>('ALL');
   
   // Mock Payment Status
   const [isPaymentSetup, setIsPaymentSetup] = useState(false);
@@ -545,6 +566,150 @@ const Dashboard: React.FC<DashboardProps> = ({
       // TRAINING HUB MODALS
       // ----------------------------
       
+      if (activeModal === 'KNOWLEDGE_FEED') {
+          const feedItems = knowledgeFilter === 'ALL' 
+            ? MOCK_KNOWLEDGE_FEED 
+            : MOCK_KNOWLEDGE_FEED.filter(item => item.category === knowledgeFilter);
+
+          return (
+              <CustomModal
+                  isOpen={true}
+                  onClose={() => setActiveModal('NONE')}
+                  title="Knowledge Feed"
+                  icon={Zap}
+              >
+                  <div className="space-y-8 animate-fade-in pb-10">
+                      
+                      {/* Daily Momentum / Pulse Ring */}
+                      <div className="bg-white dark:bg-slate-800 p-6 rounded-[2.5rem] border border-slate-100 dark:border-slate-700 shadow-sm flex items-center justify-between overflow-hidden relative group">
+                          <div className="relative z-10">
+                              <div className="flex items-center gap-2 mb-1">
+                                  <Flame className="text-orange-500 fill-current" size={16} />
+                                  <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Daily Knowledge Streak</span>
+                              </div>
+                              <h3 className="text-2xl font-black text-slate-900 dark:text-white font-heading tracking-tight">12 Days Active</h3>
+                              <p className="text-xs text-slate-500 mt-1">Visit daily for high-impact 1-min lessons.</p>
+                          </div>
+                          
+                          <div className="relative w-20 h-20 group-hover:scale-110 transition-transform">
+                                <ResponsiveContainer width="100%" height="100%">
+                                    <PieChart>
+                                        <Pie
+                                            data={[{v:80}, {v:20}]}
+                                            innerRadius={30}
+                                            outerRadius={38}
+                                            startAngle={90}
+                                            endAngle={-270}
+                                            paddingAngle={0}
+                                            dataKey="v"
+                                            stroke="none"
+                                        >
+                                            <Cell fill="#10b981" />
+                                            <Cell fill="#f1f5f9" className="dark:fill-slate-700" />
+                                        </Pie>
+                                    </PieChart>
+                                </ResponsiveContainer>
+                                <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                                    <span className="text-sm font-black text-emerald-600">80%</span>
+                                </div>
+                          </div>
+                          <Sparkles className="absolute -right-2 -top-2 text-emerald-100 opacity-20 rotate-12" size={80} />
+                      </div>
+
+                      {/* Filters */}
+                      <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1 border-b border-slate-100 dark:border-slate-800">
+                          {['ALL', 'LEADER_TIPS', 'PRODUCT_NEWS', 'BIZ_HACKS'].map(cat => (
+                              <button 
+                                key={cat}
+                                onClick={() => setKnowledgeFilter(cat as any)}
+                                className={`px-4 py-3 text-[10px] font-black uppercase tracking-[0.15em] transition-all relative whitespace-nowrap ${knowledgeFilter === cat ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400 hover:text-slate-600'}`}
+                              >
+                                  {cat.replace('_', ' ')}
+                                  {knowledgeFilter === cat && <div className="absolute bottom-0 left-0 right-0 h-1 bg-emerald-500 rounded-t-full"></div>}
+                              </button>
+                          ))}
+                      </div>
+
+                      {/* Feed Stack */}
+                      <div className="space-y-6">
+                          {feedItems.map((item) => (
+                              <div 
+                                key={item.id} 
+                                className="bg-white dark:bg-slate-800 rounded-[2rem] border border-slate-100 dark:border-slate-700 shadow-sm overflow-hidden group hover:shadow-xl transition-all"
+                              >
+                                  {/* Media Section */}
+                                  {item.type === 'IMAGE' && item.mediaUrl && (
+                                      <div className="aspect-[16/9] overflow-hidden">
+                                          <img src={item.mediaUrl} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
+                                      </div>
+                                  )}
+                                  {item.type === 'VIDEO' && item.mediaUrl && (
+                                      <div className="aspect-square md:aspect-video bg-black relative flex items-center justify-center overflow-hidden">
+                                          <img src={item.mediaUrl} className="w-full h-full object-cover opacity-60" />
+                                          <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
+                                          <PlayCircle size={48} className="text-white drop-shadow-2xl z-10" />
+                                          <div className="absolute bottom-4 left-4 bg-white/20 backdrop-blur px-2 py-0.5 rounded text-[9px] font-bold text-white uppercase">{item.duration} MIN DRILL</div>
+                                      </div>
+                                  )}
+                                  
+                                  <div className="p-6 space-y-4">
+                                      <div className="flex justify-between items-start">
+                                          <div>
+                                              <div className="flex items-center gap-2 mb-1.5">
+                                                  <span className="text-[9px] font-black uppercase tracking-widest text-emerald-600 dark:text-emerald-400">{item.category.replace('_', ' ')}</span>
+                                                  {item.isNew && <div className="w-1.5 h-1.5 bg-red-500 rounded-full"></div>}
+                                              </div>
+                                              <h4 className="text-lg font-black text-slate-900 dark:text-white leading-tight group-hover:text-emerald-600 transition-colors">{item.title}</h4>
+                                          </div>
+                                          <span className="text-[10px] font-bold text-slate-300 uppercase">{item.timestamp}</span>
+                                      </div>
+
+                                      {/* Voice Specific Rendering */}
+                                      {item.type === 'VOICE' && (
+                                          <div className="bg-slate-50 dark:bg-slate-900/50 p-4 rounded-2xl flex items-center gap-4 border border-slate-100 dark:border-slate-800">
+                                              <button className="w-10 h-10 rounded-full bg-emerald-500 text-white flex items-center justify-center shadow-lg active:scale-90 transition-transform">
+                                                  <Play size={18} fill="currentColor" />
+                                              </button>
+                                              <div className="flex-1">
+                                                  <div className="h-1 bg-slate-200 dark:bg-slate-700 rounded-full w-full relative">
+                                                      <div className="absolute inset-0 h-full w-1/3 bg-emerald-500 rounded-full"></div>
+                                                  </div>
+                                                  <div className="flex justify-between mt-1.5">
+                                                      <span className="text-bottom-4 pl-1 text-[10px] font-black text-slate-400">0:15 / {item.duration}</span>
+                                                      <Volume2 size={12} className="text-slate-300" />
+                                                  </div>
+                                              </div>
+                                          </div>
+                                      )}
+
+                                      {/* Text Content */}
+                                      <div className="relative">
+                                          {item.type === 'TEXT' && <Quote size={24} className="text-slate-100 dark:text-slate-700 absolute -top-2 -left-2 -z-0" fill="currentColor" />}
+                                          <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed relative z-10 font-medium">
+                                              {item.content}
+                                          </p>
+                                      </div>
+
+                                      {/* Footer */}
+                                      <div className="flex items-center justify-between pt-4 border-t border-slate-50 dark:border-slate-700/50">
+                                          <div className="flex items-center gap-2">
+                                              <div className="w-6 h-6 rounded-full bg-slate-100 dark:bg-slate-700 flex items-center justify-center font-black text-[9px] text-slate-500 uppercase">{item.author.charAt(0)}</div>
+                                              <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{item.author}</span>
+                                          </div>
+                                          <button className="p-2 text-slate-300 hover:text-emerald-500 transition-colors">
+                                              <Bookmark size={18} />
+                                          </button>
+                                      </div>
+                                  </div>
+                              </div>
+                          ))}
+                      </div>
+
+                  </div>
+              </CustomModal>
+          );
+      }
+
       if (activeModal === 'LIVE_SESSIONS') {
           const sessionsToShow = liveSessionTab === 'UPCOMING' 
               ? MOCK_LIVE_SESSIONS.filter(s => s.audience === liveAudienceFilter)
@@ -963,7 +1128,8 @@ const Dashboard: React.FC<DashboardProps> = ({
                       {/* 4. Team Leaderboard */}
                       <section className="bg-slate-50 dark:bg-slate-800/50 rounded-[2rem] p-8 border border-slate-100 dark:border-slate-700">
                           <div className="flex items-center gap-3 mb-8">
-                              <TrophyIcon className="w-6 h-6 text-yellow-500" />
+                              {/* Fix: TrophyIcon to Trophy */}
+                              <Trophy className="w-6 h-6 text-yellow-500" />
                               <h3 className="font-bold text-xl text-slate-900 dark:text-white uppercase tracking-widest font-heading">Team Superstars</h3>
                           </div>
                           
@@ -1709,7 +1875,8 @@ const Dashboard: React.FC<DashboardProps> = ({
                             <div className="p-6 rounded-2xl bg-blue-50 border border-blue-200 text-blue-900 flex flex-col gap-4 shadow-sm dark:bg-blue-900/20 dark:border-blue-800 dark:text-blue-100">
                                 <div className="flex items-start gap-4">
                                     <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 shrink-0 dark:bg-blue-900/50 dark:text-blue-300">
-                                        <TrophyIcon className="w-5 h-5"/>
+                                        {/* Fix: TrophyIcon to Trophy */}
+                                        <Trophy className="w-5 h-5"/>
                                     </div>
                                     <div>
                                         <h3 className="font-bold text-lg mb-1">Almost There</h3>
@@ -2690,7 +2857,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                             title="Knowledge Feed" 
                             desc="Quick Learning" 
                             icon={Zap} 
-                            onClick={() => alert("Knowledge feed coming soon!")}
+                            onClick={() => setActiveModal('KNOWLEDGE_FEED')}
                         />
 
                     </div>
@@ -2874,7 +3041,8 @@ const Dashboard: React.FC<DashboardProps> = ({
 
                 {/* Card 3: Earnings & Rewards */}
                 <div className="min-w-[85vw] snap-center">
-                    <InfoCard title="Earnings & Rewards" icon={MoneyBagIcon} bgIcon={Wallet} iconStyle="OUTLINE" colorClass="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400" className="h-48 justify-between">
+                    {/* Fix: MoneyBagIcon to DollarSign */}
+                    <InfoCard title="Earnings & Rewards" icon={DollarSign} bgIcon={Wallet} iconStyle="OUTLINE" colorClass="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400" className="h-48 justify-between">
                         <div className="mb-3">
                             <span className="text-2xl font-bold text-slate-900 dark:text-white font-heading">${monthlyEarnings.toLocaleString()}</span>
                             <p className="text-[10px] text-slate-400 uppercase font-bold mt-0.5">Est. Earnings</p>
@@ -2901,7 +3069,8 @@ const Dashboard: React.FC<DashboardProps> = ({
 
                 {/* Card 4: Learning Status */}
                 <div className="min-w-[85vw] snap-center">
-                    <InfoCard title="Learning Status" icon={AutoStoriesIcon} bgIcon={Book} iconStyle="OUTLINE" colorClass="bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400" className="h-48 justify-between">
+                    {/* Fix: AutoStoriesIcon to BookOpen */}
+                    <InfoCard title="Learning Status" icon={BookOpen} bgIcon={Book} iconStyle="OUTLINE" colorClass="bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400" className="h-48 justify-between">
                         <div className="grid grid-cols-3 gap-2 mb-3 text-center">
                             <div className="bg-purple-50 rounded-lg p-2 dark:bg-purple-900/10">
                                 <span className="block text-lg font-bold text-purple-700 dark:text-purple-300">{inProgressCourses}</span>
@@ -3037,7 +3206,8 @@ const Dashboard: React.FC<DashboardProps> = ({
                     </InfoCard>
 
                     {/* 3. Earnings & Rewards (Updated Icon Style) */}
-                    <InfoCard title="Earnings & Rewards" icon={MoneyBagIcon} bgIcon={Wallet} iconStyle="OUTLINE" colorClass="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400" className="h-40 lg:h-44 justify-between">
+                    {/* Fix: MoneyBagIcon to DollarSign */}
+                    <InfoCard title="Earnings & Rewards" icon={DollarSign} bgIcon={Wallet} iconStyle="OUTLINE" colorClass="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400" className="h-40 lg:h-44 justify-between">
                         <div className="mb-2 lg:mb-3">
                             <span className="text-xl lg:text-2xl font-bold text-slate-900 dark:text-white font-heading">${monthlyEarnings.toLocaleString()}</span>
                             <p className="text-[9px] lg:text-[10px] text-slate-400 uppercase font-bold mt-0.5">Est. Earnings</p>
@@ -3062,7 +3232,8 @@ const Dashboard: React.FC<DashboardProps> = ({
                     </InfoCard>
 
                     {/* 4. Learning & Activity (Updated Icon Style) */}
-                    <InfoCard title="Learning Status" icon={AutoStoriesIcon} bgIcon={Book} iconStyle="OUTLINE" colorClass="bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400" className="h-40 lg:h-44 justify-between">
+                    {/* Fix: AutoStoriesIcon to BookOpen */}
+                    <InfoCard title="Learning Status" icon={BookOpen} bgIcon={Book} iconStyle="OUTLINE" colorClass="bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400" className="h-40 lg:h-44 justify-between">
                         <div className="grid grid-cols-3 gap-2 mb-2 lg:mb-3 text-center">
                             <div className="bg-purple-50 rounded-lg p-1.5 lg:p-2 dark:bg-purple-900/10">
                                 <span className="block text-base lg:text-lg font-bold text-purple-700 dark:text-purple-300">{inProgressCourses}</span>

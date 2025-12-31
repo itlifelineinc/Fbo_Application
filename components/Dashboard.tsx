@@ -7,7 +7,7 @@ import {
     Users, TrendingUp, Calendar, ArrowUpRight, Award, 
     BookOpen, DollarSign, CircleDollarSign, Target, MessageSquare, PlusCircle, 
     BarChart2, Zap, ArrowRight, Layout, ArrowLeft, Clock, Globe, UserPlus, Shield,
-    ShoppingCart, GraduationCap, Bell, Flag, Store, Lock, CheckCircle, X, PieChart as PieChartIcon, Activity, Lightbulb, ChevronLeft, HelpCircle, Hand, Medal, Gift, Hourglass, Megaphone, MessageCircle, Sparkles, Rocket, UserCheck, LayoutTemplate, CreditCard, Phone, MousePointerClick, Smartphone, Eye, Filter, ArrowDown, ExternalLink, Share2, Trash2, MoreHorizontal, Wallet, Check, Edit3, Trophy, Network, Book, Video, ClipboardCheck, PlayCircle, Search, Star, Layers, Briefcase, HeartPulse
+    ShoppingCart, GraduationCap, Bell, Flag, Store, Lock, CheckCircle, X, PieChart as PieChartIcon, Activity, Lightbulb, ChevronLeft, HelpCircle, Hand, Medal, Gift, Hourglass, Megaphone, MessageCircle, Sparkles, Rocket, UserCheck, LayoutTemplate, CreditCard, Phone, MousePointerClick, Smartphone, Eye, Filter, ArrowDown, ExternalLink, Share2, Trash2, MoreHorizontal, Wallet, Check, Edit3, Trophy, Network, Book, Video, ClipboardCheck, PlayCircle, Search, Star, Layers, Briefcase, HeartPulse, Projector, AlertCircle, ChevronRight
 } from 'lucide-react';
 import { RANKS, RANK_ORDER } from '../constants';
 
@@ -294,7 +294,7 @@ const Dashboard: React.FC<DashboardProps> = ({
     // Sales Section
     'MY_PAGES' | 'CREATE_PAGE' | 'LEADS' | 'ORDERS' | 'PAYMENTS' | 'SALES_ANALYTICS' |
     // Training Section
-    'MY_CLASSROOM' | 'GLOBAL_LIBRARY' | 'TEAM_TRAINING' | 'MOMENTUM' 
+    'MY_CLASSROOM' | 'GLOBAL_LIBRARY' | 'TEAM_TRAINING' | 'ASSIGNMENTS' | 'MOMENTUM' 
   >('NONE');
   
   const [supportMenuOpen, setSupportMenuOpen] = useState<string | null>(null); // Stores ID of user whose menu is open
@@ -308,6 +308,9 @@ const Dashboard: React.FC<DashboardProps> = ({
   const [libraryLevel, setLibraryLevel] = useState<string>('ALL');
   const [libraryTrack, setLibraryTrack] = useState<string>('ALL');
   const [libraryFormat, setLibraryFormat] = useState<'ALL' | 'SHORT' | 'COURSE'>('ALL');
+
+  // NEW: Assignment Modal States
+  const [assignmentTab, setAssignmentTab] = useState<'ACTIVE' | 'COMPLETED' | 'UPCOMING'>('ACTIVE');
   
   // Mock Payment Status
   const [isPaymentSetup, setIsPaymentSetup] = useState(false);
@@ -460,6 +463,107 @@ const Dashboard: React.FC<DashboardProps> = ({
       // ----------------------------
       // TRAINING HUB MODALS
       // ----------------------------
+      
+      if (activeModal === 'ASSIGNMENTS') {
+          // Logic to determine status for current user
+          const getStatus = (a: Assignment) => {
+              const sub = currentUser.assignmentSubmissions?.find(s => s.assignmentId === a.id);
+              if (sub) return 'COMPLETED';
+              if (a.deadline && new Date(a.deadline).getTime() < Date.now()) return 'OVERDUE';
+              return 'ACTIVE';
+          };
+
+          const userAssignments = assignments.filter(a => a.assignedTo.includes(currentUser.handle));
+          
+          const activeList = userAssignments.filter(a => getStatus(a) === 'ACTIVE' || getStatus(a) === 'OVERDUE');
+          const completedList = userAssignments.filter(a => getStatus(a) === 'COMPLETED');
+          const upcomingList = assignments.filter(a => 
+            !a.assignedTo.includes(currentUser.handle) && 
+            a.status === 'ACTIVE' && 
+            a.authorHandle === currentUser.sponsorId
+          );
+
+          const listToShow = assignmentTab === 'ACTIVE' ? activeList : assignmentTab === 'COMPLETED' ? completedList : upcomingList;
+
+          return (
+              <CustomModal
+                  isOpen={true}
+                  onClose={() => setActiveModal('NONE')}
+                  title="Assignments & Challenges"
+                  icon={ClipboardCheck}
+              >
+                  <div className="space-y-8 animate-fade-in pb-10">
+                      
+                      {/* Summary Header */}
+                      <div className="grid grid-cols-3 gap-4">
+                          <div className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm text-center dark:bg-slate-800 dark:border-slate-700">
+                              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Active</p>
+                              <p className="text-2xl font-black text-blue-600 dark:text-blue-400">{activeList.length}</p>
+                          </div>
+                          <div className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm text-center dark:bg-slate-800 dark:border-slate-700">
+                              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Done</p>
+                              <p className="text-2xl font-black text-emerald-600 dark:text-emerald-400">{completedList.length}</p>
+                          </div>
+                          <div className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm text-center dark:bg-slate-800 dark:border-slate-700">
+                              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Next</p>
+                              <p className="text-2xl font-black text-orange-500 dark:text-orange-400">{upcomingList.length}</p>
+                          </div>
+                      </div>
+
+                      {/* Tab Navigation */}
+                      <div className="flex gap-2 border-b border-slate-100 dark:border-slate-800">
+                          {['ACTIVE', 'COMPLETED', 'UPCOMING'].map((tab) => (
+                              <button 
+                                key={tab}
+                                onClick={() => setAssignmentTab(tab as any)}
+                                className={`px-4 py-3 text-xs font-black uppercase tracking-widest transition-all relative ${assignmentTab === tab ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200'}`}
+                              >
+                                  {tab}
+                                  {assignmentTab === tab && <div className="absolute bottom-0 left-0 right-0 h-1 bg-emerald-500 rounded-t-full"></div>}
+                              </button>
+                          ))}
+                      </div>
+
+                      {/* List View */}
+                      <div className="space-y-3">
+                          {listToShow.length > 0 ? listToShow.map(a => {
+                              const status = getStatus(a);
+                              return (
+                                  <div 
+                                    key={a.id} 
+                                    onClick={() => navigate(`/assignments/${a.id}`)}
+                                    className="bg-white p-5 rounded-3xl border border-slate-100 shadow-sm flex items-center justify-between group cursor-pointer hover:border-emerald-300 transition-all dark:bg-slate-800 dark:border-slate-700"
+                                  >
+                                      <div className="flex-1 min-w-0 pr-4">
+                                          <div className="flex items-center gap-2 mb-1.5">
+                                              {status === 'OVERDUE' && <span className="bg-red-100 text-red-700 px-2 py-0.5 rounded text-[9px] font-black uppercase dark:bg-red-900/30 dark:text-red-400">Overdue</span>}
+                                              {status === 'COMPLETED' && <span className="bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded text-[9px] font-black uppercase dark:bg-emerald-900/30 dark:text-emerald-400">Success</span>}
+                                              <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">{a.authorHandle}</span>
+                                          </div>
+                                          <h4 className="font-bold text-slate-900 dark:text-white text-base truncate">{a.title}</h4>
+                                          <div className="flex items-center gap-4 mt-2 text-[10px] text-slate-500 font-bold uppercase tracking-tighter">
+                                              <span className="flex items-center gap-1"><Clock size={12} className="text-emerald-500" /> Due: {a.deadline ? new Date(a.deadline).toLocaleDateString() : 'ASAP'}</span>
+                                              <span>•</span>
+                                              <span>{a.questions.length} Steps</span>
+                                          </div>
+                                      </div>
+                                      <div className="w-10 h-10 rounded-2xl bg-slate-50 flex items-center justify-center text-slate-300 group-hover:bg-emerald-50 group-hover:text-emerald-600 transition-colors dark:bg-slate-900/50">
+                                          <ChevronRight size={20} />
+                                      </div>
+                                  </div>
+                              );
+                          }) : (
+                              <div className="text-center py-20 bg-slate-50/50 rounded-3xl border-2 border-dashed border-slate-100 dark:bg-slate-900/30 dark:border-slate-800">
+                                  <ClipboardCheck size={48} className="mx-auto text-slate-200 mb-4" />
+                                  <p className="text-slate-400 font-bold">No tasks found in this category.</p>
+                              </div>
+                          )}
+                      </div>
+                  </div>
+              </CustomModal>
+          );
+      }
+
       if (activeModal === 'TEAM_TRAINING') {
           const sponsor = students.find(s => s.handle === currentUser.sponsorId);
           const teamCourses = courses.filter(c => 
@@ -2029,7 +2133,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                             <div className={`h-full rounded-full transition-all duration-1000 ease-out ${progressColor} shadow-lg`} style={{width: `${pct}%`}}></div>
                         </div>
 
-                        {/* 5: Micro Message */}
+                        {/* 5: microMessage */}
                         <div className="flex items-center gap-3 text-sm font-bold text-slate-700 dark:text-slate-200 bg-slate-50 dark:bg-slate-900/50 p-4 rounded-2xl border border-slate-100 dark:border-slate-700/50">
                             <span className="text-xl">🚀</span>
                             <span>{microMessage}</span>
@@ -2274,7 +2378,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                             title="Assignments" 
                             desc="Tasks & Challenges" 
                             icon={ClipboardCheck} 
-                            to="/assignments"
+                            onClick={() => setActiveModal('ASSIGNMENTS')}
                         />
                         
                         <ShortcutItem 

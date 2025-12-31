@@ -7,7 +7,7 @@ import {
     Users, TrendingUp, Calendar, ArrowUpRight, Award, 
     BookOpen, DollarSign, CircleDollarSign, Target, MessageSquare, PlusCircle, 
     BarChart2, Zap, ArrowRight, Layout, ArrowLeft, Clock, Globe, UserPlus, Shield,
-    ShoppingCart, GraduationCap, Bell, Flag, Store, Lock, CheckCircle, X, PieChart as PieChartIcon, Activity, Lightbulb, ChevronLeft, HelpCircle, Hand, Medal, Gift, Hourglass, Megaphone, MessageCircle, Sparkles, Rocket, UserCheck, LayoutTemplate, CreditCard, Phone, MousePointerClick, Smartphone, Eye, Filter, ArrowDown, ExternalLink, Share2, Trash2, MoreHorizontal, Wallet, Check, Edit3, Trophy, Network, Book
+    ShoppingCart, GraduationCap, Bell, Flag, Store, Lock, CheckCircle, X, PieChart as PieChartIcon, Activity, Lightbulb, ChevronLeft, HelpCircle, Hand, Medal, Gift, Hourglass, Megaphone, MessageCircle, Sparkles, Rocket, UserCheck, LayoutTemplate, CreditCard, Phone, MousePointerClick, Smartphone, Eye, Filter, ArrowDown, ExternalLink, Share2, Trash2, MoreHorizontal, Wallet, Check, Edit3, Trophy, Network, Book, Video, ClipboardCheck
 } from 'lucide-react';
 import { RANKS, RANK_ORDER } from '../constants';
 
@@ -243,15 +243,18 @@ const Dashboard: React.FC<DashboardProps> = ({
   
   // Drawer States
   const [isBusinessDrawerOpen, setIsBusinessDrawerOpen] = useState(false);
-  const [isSalesDrawerOpen, setIsSalesDrawerOpen] = useState(false); // NEW: Sales Drawer
+  const [isSalesDrawerOpen, setIsSalesDrawerOpen] = useState(false);
+  const [isTrainingDrawerOpen, setIsTrainingDrawerOpen] = useState(false); // NEW: Training Hub Drawer
 
   // Combined Modal States
   const [activeModal, setActiveModal] = useState<
     'NONE' | 
     // Business Section
-    'OVERVIEW' | 'BREAKDOWN' | 'RANK_JOURNEY' | 'MOMENTUM' | 'DOWNLINE' | 'SUGGESTIONS' |
+    'OVERVIEW' | 'BREAKDOWN' | 'RANK_JOURNEY' | 'MOMENT_UM' | 'DOWNLINE' | 'SUGGESTIONS' |
     // Sales Section
-    'MY_PAGES' | 'CREATE_PAGE' | 'LEADS' | 'ORDERS' | 'PAYMENTS' | 'SALES_ANALYTICS'
+    'MY_PAGES' | 'CREATE_PAGE' | 'LEADS' | 'ORDERS' | 'PAYMENTS' | 'SALES_ANALYTICS' |
+    // Training Section
+    'MOMENTUM' // Placeholder for existing Business Momentum if needed, refactored
   >('NONE');
   
   const [supportMenuOpen, setSupportMenuOpen] = useState<string | null>(null); // Stores ID of user whose menu is open
@@ -894,7 +897,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                         )}
 
                         {/* 3. Sales Optimization Card (Generic suggestion) */}
-                        <div className="p-6 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-900 flex flex-col gap-4 shadow-sm dark:bg-emerald-900/20 dark:border-emerald-800 dark:text-emerald-100">
+                        <div className="p-6 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-900 flex flex-col gap-4 shadow-sm dark:bg-emerald-900/20 dark:border-blue-800 dark:text-emerald-100">
                             <div className="flex items-start gap-4">
                                 <div className="w-10 h-10 bg-emerald-100 rounded-full flex items-center justify-center text-emerald-600 shrink-0 dark:bg-emerald-900/50 dark:text-emerald-300">
                                     <TrendingUp size={20}/>
@@ -946,7 +949,6 @@ const Dashboard: React.FC<DashboardProps> = ({
       }
 
       if (activeModal === 'BREAKDOWN') {
-        // ... (Existing Breakdown Code) ...
         const cycleStart = new Date(rankProgress.cycleStartDate);
         const personalCC = (currentUser.salesHistory || [])
             .filter(s => new Date(s.date) >= cycleStart)
@@ -1767,6 +1769,82 @@ const Dashboard: React.FC<DashboardProps> = ({
       );
   };
 
+  // --- DRAWER COMPONENT: TRAINING HUB ---
+  const renderTrainingDrawer = () => {
+    return (
+        <div className={`fixed inset-0 z-[200] bg-slate-50 dark:bg-slate-950 overflow-y-auto transform transition-transform duration-300 ease-in-out ${isTrainingDrawerOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+            
+            {/* Sticky Header */}
+            <div className="sticky top-0 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md px-4 py-3 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center z-10">
+                <div className="flex items-center gap-3">
+                    <button 
+                      onClick={() => setIsTrainingDrawerOpen(false)} 
+                      className="p-2 -ml-2 hover:bg-slate-100 rounded-full dark:hover:bg-slate-800 transition-colors"
+                    >
+                        <ChevronLeft size={28} className="text-slate-900 dark:text-white" strokeWidth={3} />
+                    </button>
+                    <h1 className="text-xl font-bold text-slate-900 dark:text-white font-heading">Training Hub</h1>
+                </div>
+            </div>
+
+            <div className="max-w-7xl mx-auto p-4 md:p-8 space-y-6 pb-20">
+                
+                <SectionHeader title="Learning & Development" />
+
+                {/* Consolidated Card Wrapper */}
+                <div className="bg-white dark:bg-slate-800 rounded-[2rem] p-6 shadow-sm border border-slate-100 dark:border-slate-700">
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-6">
+                        
+                        <ShortcutItem 
+                            title="My Classroom" 
+                            desc="Ongoing Courses" 
+                            icon={BookOpen} 
+                            to="/classroom"
+                        />
+                        
+                        <ShortcutItem 
+                            title="Global Library" 
+                            desc="Fundamental Courses" 
+                            icon={Globe} 
+                            to="/training/global"
+                        />
+                        
+                        <ShortcutItem 
+                            title="Team Training" 
+                            desc="Leader Strategies" 
+                            icon={Users} 
+                            to="/training/team"
+                        />
+                        
+                        <ShortcutItem 
+                            title="Assignments" 
+                            desc="Tasks & Challenges" 
+                            icon={ClipboardCheck} 
+                            to="/assignments"
+                        />
+                        
+                        <ShortcutItem 
+                            title="Live Sessions" 
+                            desc="Replays & Upcoming" 
+                            icon={Video} 
+                            onClick={() => alert("Live trainings coming soon!")}
+                        />
+                        
+                        <ShortcutItem 
+                            title="Knowledge Feed" 
+                            desc="Quick Learning" 
+                            icon={Zap} 
+                            onClick={() => alert("Knowledge feed coming soon!")}
+                        />
+
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    );
+  };
+
   // --- VIEW: GOAL MONITORING (Desktop Sub-page) ---
   if (viewMode === 'GOALS') {
       const performanceData = [
@@ -1851,6 +1929,7 @@ const Dashboard: React.FC<DashboardProps> = ({
         {/* Full Screen Drawers */}
         {renderBusinessDrawer()}
         {renderSalesDrawer()}
+        {renderTrainingDrawer()}
 
         {/* Custom Modal Layer */}
         {renderModals()}
@@ -2012,10 +2091,10 @@ const Dashboard: React.FC<DashboardProps> = ({
                             onClick={() => setIsSalesDrawerOpen(true)}
                         />
                         <ShortcutItem 
-                            title="Training" 
+                            title="Training Hub" 
                             desc="Learn Skills"
                             icon={GraduationCap} 
-                            to="/classroom" 
+                            onClick={() => setIsTrainingDrawerOpen(true)} 
                         />
                         <ShortcutItem 
                             title="My Team" 
@@ -2237,7 +2316,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                                     title="Training Hub" 
                                     desc="Learn skills & products"
                                     icon={GraduationCap}
-                                    to="/classroom"
+                                    onClick={() => setIsTrainingDrawerOpen(true)}
                                 />
 
                                 <ShortcutItem 

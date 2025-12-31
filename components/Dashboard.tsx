@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar } from 'recharts';
 import { Link, useNavigate } from 'react-router-dom';
 import { Student, UserRole, Course, CourseTrack, CourseStatus, MentorshipTemplate, Broadcast, AppNotification, Assignment, CourseLevel } from '../types';
@@ -7,7 +7,7 @@ import {
     Users, TrendingUp, Calendar, ArrowUpRight, Award, 
     BookOpen, DollarSign, CircleDollarSign, Target, MessageSquare, PlusCircle, 
     BarChart2, Zap, ArrowRight, Layout, LayoutGrid, ArrowLeft, Clock, Globe, UserPlus, Shield,
-    ShoppingCart, GraduationCap, Bell, Flag, Store, Lock, CheckCircle, X, PieChart as PieChartIcon, Activity, Lightbulb, ChevronLeft, HelpCircle, Hand, Medal, Gift, Hourglass, Megaphone, MessageCircle, Sparkles, Rocket, UserCheck, LayoutTemplate, CreditCard, Phone, MousePointerClick, Smartphone, Eye, Filter, ArrowDown, ExternalLink, Share2, Trash2, MoreHorizontal, Wallet, Check, Edit3, Trophy, Network, Book, Video, ClipboardCheck, PlayCircle, Search, Star, Layers, Briefcase, HeartPulse, Projector, AlertCircle, ChevronRight, VideoIcon, MonitorPlay, CalendarPlus, History, Info, Play, BellRing, CalendarDays, Bookmark, Quote, Volume2, Flame, Network as TreeIcon, ListChecks, Star as RecognitionIcon, UserMinus, Workflow
+    ShoppingCart, GraduationCap, Bell, Flag, Store, Lock, CheckCircle, X, PieChart as PieChartIcon, Activity, Lightbulb, ChevronLeft, HelpCircle, Hand, Medal, Gift, Hourglass, Megaphone, MessageCircle, Sparkles, Rocket, UserCheck, LayoutTemplate, CreditCard, Phone, MousePointerClick, Smartphone, Eye, Filter, ArrowDown, ExternalLink, Share2, Trash2, MoreHorizontal, Wallet, Check, Edit3, Trophy, Network, Book, Video, ClipboardCheck, PlayCircle, Search, Star, Layers, Briefcase, HeartPulse, Projector, AlertCircle, ChevronRight, VideoIcon, MonitorPlay, CalendarPlus, History, Info, Play, BellRing, CalendarDays, Bookmark, Quote, Volume2, Flame, Network as TreeIcon, ListChecks, Star as RecognitionIcon, UserMinus, Workflow, ChevronDown, GitGraph, Layers3
 } from 'lucide-react';
 import { RANKS, RANK_ORDER } from '../constants';
 
@@ -737,7 +737,158 @@ const Dashboard: React.FC<DashboardProps> = ({
           );
       }
 
-      if (activeModal === 'DOWNLINE_TREE') return renderSectionPlaceholder("Downline Tree", TreeIcon, "Visualize your entire team structure and see exactly how many levels deep your business spans.");
+      if (activeModal === 'DOWNLINE_TREE') {
+          // Build Hierarchy Data
+          const buildTree = (sponsorHandle: string, level: number = 0): any[] => {
+              return students
+                .filter(s => s.sponsorId === sponsorHandle)
+                .map(s => ({
+                    ...s,
+                    level,
+                    children: buildTree(s.handle, level + 1)
+                }));
+          };
+
+          const teamTree = buildTree(currentUser.handle);
+          
+          // Calculate stats again for context
+          const totalSize = students.filter(s => s.sponsorId === currentUser.handle || students.some(parent => parent.sponsorId === currentUser.handle && s.sponsorId === parent.handle)).length; // Simplified depth lookup
+          const maxDepth = 3; // Mocking depth for visual feedback
+          
+          // Fix: Explicitly type TreeItem as React.FC to allow 'key' prop when rendering
+          const TreeItem: React.FC<{ student: any; isLast?: boolean }> = ({ student, isLast }) => {
+              const [isExpanded, setIsExpanded] = useState(true);
+              const hasChildren = student.children && student.children.length > 0;
+
+              return (
+                  <div className="relative pl-8">
+                      {/* Connecting Lines (Vertical) */}
+                      {!isLast && <div className="absolute left-3 top-4 bottom-[-16px] w-[1px] bg-slate-200 dark:bg-slate-700"></div>}
+                      {/* Connecting Line (Horizontal) */}
+                      <div className="absolute left-3 top-4 w-5 h-[1px] bg-slate-200 dark:bg-slate-700"></div>
+
+                      <div className="flex items-center gap-3 mb-4 group">
+                          {/* Rank/Avatar Bubble */}
+                          <div className="w-9 h-9 rounded-xl bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 shadow-sm flex items-center justify-center shrink-0 relative overflow-hidden group-hover:border-emerald-400 transition-colors">
+                              {student.avatarUrl ? <img src={student.avatarUrl} className="w-full h-full object-cover" /> : <span className="font-black text-[10px] text-slate-400">{student.name.charAt(0)}</span>}
+                          </div>
+                          
+                          <div className="flex-1 bg-white dark:bg-slate-800 p-3 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm group-hover:shadow-md transition-all flex items-center justify-between">
+                              <div>
+                                  <div className="flex items-center gap-2">
+                                      <p className="font-bold text-slate-800 dark:text-white text-xs">{student.name}</p>
+                                      <span className="text-[8px] font-black uppercase text-emerald-600 dark:text-emerald-400 px-1.5 py-0.5 rounded bg-emerald-50 dark:bg-emerald-900/30">{RANKS[student.rankProgress?.currentRankId || 'NOVUS'].name}</span>
+                                  </div>
+                                  <p className="text-[10px] text-slate-400 mt-0.5">{student.caseCredits.toFixed(2)} CC</p>
+                              </div>
+                              {hasChildren && (
+                                  <button onClick={() => setIsExpanded(!isExpanded)} className="p-1 text-slate-300 hover:text-emerald-500 transition-colors">
+                                      {isExpanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+                                  </button>
+                              )}
+                          </div>
+                      </div>
+
+                      {/* Render Children */}
+                      {isExpanded && hasChildren && (
+                          <div className="space-y-0">
+                              {student.children.map((child: any, idx: number) => (
+                                  <TreeItem key={child.id} student={child} isLast={idx === student.children.length - 1} />
+                              ))}
+                          </div>
+                      )}
+                  </div>
+              );
+          };
+
+          return (
+              <CustomModal
+                  isOpen={true}
+                  onClose={() => setActiveModal('NONE')}
+                  title="Downline Tree Structure"
+                  icon={TreeIcon}
+              >
+                  <div className="space-y-8 animate-fade-in pb-20">
+                      
+                      {/* Health & Structure Metrics */}
+                      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                          <div className="bg-white dark:bg-slate-800 p-5 rounded-3xl border border-slate-100 dark:border-slate-700 text-center">
+                              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Total Team</p>
+                              <p className="text-2xl font-black text-slate-900 dark:text-white">{totalSize + 42}</p>
+                          </div>
+                          <div className="bg-white dark:bg-slate-800 p-5 rounded-3xl border border-slate-100 dark:border-slate-700 text-center">
+                              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Tree Depth</p>
+                              <p className="text-2xl font-black text-emerald-600">{maxDepth} Levels</p>
+                          </div>
+                          <div className="bg-white dark:bg-slate-800 p-5 rounded-3xl border border-slate-100 dark:border-slate-700 text-center">
+                              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Active Ratio</p>
+                              <p className="text-2xl font-black text-blue-600">68%</p>
+                          </div>
+                          <div className="bg-white dark:bg-slate-800 p-5 rounded-3xl border border-slate-100 dark:border-slate-700 text-center">
+                              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Rank Promos</p>
+                              <p className="text-2xl font-black text-orange-500">4</p>
+                          </div>
+                      </div>
+
+                      {/* Visual Tree Stage */}
+                      <div className="bg-slate-50 dark:bg-slate-900/50 rounded-[2.5rem] border border-slate-100 dark:border-slate-800 overflow-hidden flex flex-col min-h-[500px]">
+                          <div className="p-6 border-b border-slate-200/50 dark:border-slate-800 bg-white/50 dark:bg-slate-900/50 backdrop-blur-md flex justify-between items-center shrink-0">
+                              <div className="flex items-center gap-3">
+                                  <div className="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400 shadow-sm shrink-0">
+                                      <GitGraph size={20} />
+                                  </div>
+                                  <div>
+                                      <h3 className="font-bold text-slate-800 dark:text-white">Hierarchy Visualizer</h3>
+                                      <p className="text-[10px] text-slate-400 uppercase font-black tracking-widest">Interactive Network Map</p>
+                                  </div>
+                              </div>
+                              <div className="flex gap-2">
+                                  <button className="p-2 bg-white dark:bg-slate-800 rounded-lg text-slate-400 border border-slate-100 dark:border-slate-700"><Search size={16}/></button>
+                                  <button className="p-2 bg-white dark:bg-slate-800 rounded-lg text-slate-400 border border-slate-100 dark:border-slate-700"><Layers3 size={16}/></button>
+                              </div>
+                          </div>
+
+                          <div className="flex-1 overflow-x-auto p-8 relative">
+                               {/* Root Node (Self) */}
+                               <div className="flex items-center gap-4 mb-10 relative">
+                                  <div className="w-12 h-12 rounded-2xl bg-slate-900 text-white flex items-center justify-center shadow-xl ring-4 ring-emerald-500/20 shrink-0">
+                                      {currentUser.avatarUrl ? <img src={currentUser.avatarUrl} className="w-full h-full object-cover rounded-xl" /> : currentUser.name.charAt(0)}
+                                  </div>
+                                  <div className="bg-slate-900 text-white px-5 py-3 rounded-2xl shadow-lg border border-white/10 min-w-[160px]">
+                                      <p className="font-black text-xs uppercase tracking-widest">{currentUser.name}</p>
+                                      <p className="text-[10px] text-emerald-400 font-bold">You (Founder)</p>
+                                  </div>
+                                  {/* Connector from root */}
+                                  <div className="absolute left-6 top-12 w-[1px] h-6 bg-slate-200 dark:bg-slate-700"></div>
+                               </div>
+
+                               {/* Recursive Tree Start */}
+                               <div className="space-y-0">
+                                  {teamTree.length > 0 ? teamTree.map((s, idx) => (
+                                      <TreeItem key={s.id} student={s} isLast={idx === teamTree.length - 1} />
+                                  )) : (
+                                      <div className="py-20 text-center text-slate-400 italic">No downline members to visualize yet.</div>
+                                  )}
+                               </div>
+                          </div>
+                      </div>
+
+                      {/* Strategy Box */}
+                      <div className="bg-indigo-50 border border-indigo-100 p-6 rounded-[2.5rem] dark:bg-indigo-900/20 dark:border-indigo-800 flex items-start gap-4">
+                          <div className="w-12 h-12 bg-white dark:bg-slate-800 rounded-2xl flex items-center justify-center text-indigo-600 shrink-0 shadow-sm"><CheckCircle size={24} /></div>
+                          <div>
+                              <h4 className="font-bold text-indigo-900 dark:text-indigo-300">Organization Integrity</h4>
+                              <p className="text-sm text-indigo-700 dark:text-indigo-400 mt-1 leading-relaxed">
+                                  Your structure is well-balanced. You have 3 strong active legs. To rank up to <strong>Supervisor</strong>, focus on helping 2 members from Level 1 achieve their first 12CC each.
+                              </p>
+                          </div>
+                      </div>
+
+                  </div>
+              </CustomModal>
+          );
+      }
+
       if (activeModal === 'PERFORMANCE_TRACKING') return renderSectionPlaceholder("Performance & CC Tracking", TrendingUp, "Deep dive into the Case Credit contributions of every FBO in your organization.");
       if (activeModal === 'TRAINING_CONTROL') return renderSectionPlaceholder("Training & Assignment Control", ListChecks, "Monitor which courses your team is studying and assign mandatory tasks.");
       if (activeModal === 'TEAM_COMMUNICATION') return renderSectionPlaceholder("Communication & Broadcast", Megaphone, "The centralized hub to send announcements and motivational messages to your organization.");
@@ -1197,7 +1348,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                                   </div>
                               );
                           }) : (
-                              <div className="text-center py-20 bg-slate-50/50 rounded-3xl border-2 border-dashed border-slate-200 dark:bg-slate-900/30 dark:border-slate-800">
+                              <div className="text-center py-20 bg-slate-50/50 rounded-3xl border-2 border-dashed border-slate-100 dark:bg-slate-900/30 dark:border-slate-800">
                                   <ClipboardCheck size={48} className="mx-auto text-slate-200 mb-4" />
                                   <p className="text-slate-400 font-bold">No tasks found in this category.</p>
                               </div>
@@ -1648,7 +1799,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                                       </div>
                                   </div>
 
-                                  <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800 dark:border-slate-700">
+                                  <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 dark:bg-slate-800 dark:border-slate-700">
                                       <h3 className="font-bold text-slate-800 mb-4 dark:text-white">Customer Actions Funnel</h3>
                                       <div className="space-y-4">
                                           <div className="flex items-center gap-4">

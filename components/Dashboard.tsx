@@ -6,8 +6,9 @@ import { Student, UserRole, Course, CourseTrack, CourseStatus, MentorshipTemplat
 import { 
     Users, TrendingUp, Calendar, ArrowUpRight, Award, 
     BookOpen, DollarSign, CircleDollarSign, Target, MessageSquare, PlusCircle, 
-    BarChart2, Zap, ArrowRight, Layout, ArrowLeft, Clock, Globe, UserPlus, Shield,
-    ShoppingCart, GraduationCap, Bell, Flag, Store, Lock, CheckCircle, X, PieChart as PieChartIcon, Activity, Lightbulb, ChevronLeft, HelpCircle, Hand, Medal, Gift, Hourglass, Megaphone, MessageCircle, Sparkles, Rocket, UserCheck, LayoutTemplate, CreditCard, Phone, MousePointerClick, Smartphone, Eye, Filter, ArrowDown, ExternalLink, Share2, Trash2, MoreHorizontal, Wallet, Check, Edit3, Trophy, Network, Book, Video, ClipboardCheck, PlayCircle, Search, Star, Layers, Briefcase, HeartPulse, Projector, AlertCircle, ChevronRight, VideoIcon, MonitorPlay, CalendarPlus, History, Info, Play, BellRing, CalendarDays, Bookmark, Quote, Volume2, Flame
+    // Added LayoutGrid to imports
+    BarChart2, Zap, ArrowRight, Layout, LayoutGrid, ArrowLeft, Clock, Globe, UserPlus, Shield,
+    ShoppingCart, GraduationCap, Bell, Flag, Store, Lock, CheckCircle, X, PieChart as PieChartIcon, Activity, Lightbulb, ChevronLeft, HelpCircle, Hand, Medal, Gift, Hourglass, Megaphone, MessageCircle, Sparkles, Rocket, UserCheck, LayoutTemplate, CreditCard, Phone, MousePointerClick, Smartphone, Eye, Filter, ArrowDown, ExternalLink, Share2, Trash2, MoreHorizontal, Wallet, Check, Edit3, Trophy, Network, Book, Video, ClipboardCheck, PlayCircle, Search, Star, Layers, Briefcase, HeartPulse, Projector, AlertCircle, ChevronRight, VideoIcon, MonitorPlay, CalendarPlus, History, Info, Play, BellRing, CalendarDays, Bookmark, Quote, Volume2, Flame, Network as TreeIcon, ListChecks, Star as RecognitionIcon
 } from 'lucide-react';
 import { RANKS, RANK_ORDER } from '../constants';
 
@@ -365,7 +366,8 @@ const Dashboard: React.FC<DashboardProps> = ({
   // Drawer States
   const [isBusinessDrawerOpen, setIsBusinessDrawerOpen] = useState(false);
   const [isSalesDrawerOpen, setIsSalesDrawerOpen] = useState(false);
-  const [isTrainingDrawerOpen, setIsTrainingDrawerOpen] = useState(false); // NEW: Training Hub Drawer
+  const [isTrainingDrawerOpen, setIsTrainingDrawerOpen] = useState(false); 
+  const [isTeamDrawerOpen, setIsTeamDrawerOpen] = useState(false); // NEW: Team Hub Drawer
 
   // Combined Modal States
   const [activeModal, setActiveModal] = useState<
@@ -375,7 +377,9 @@ const Dashboard: React.FC<DashboardProps> = ({
     // Sales Section
     'MY_PAGES' | 'CREATE_PAGE' | 'LEADS' | 'ORDERS' | 'PAYMENTS' | 'SALES_ANALYTICS' |
     // Training Section
-    'MY_CLASSROOM' | 'GLOBAL_LIBRARY' | 'TEAM_TRAINING' | 'ASSIGNMENTS' | 'LIVE_SESSIONS' | 'KNOWLEDGE_FEED' | 'MOMENTUM' 
+    'MY_CLASSROOM' | 'GLOBAL_LIBRARY' | 'TEAM_TRAINING' | 'ASSIGNMENTS' | 'LIVE_SESSIONS' | 'KNOWLEDGE_FEED' | 'MOMENTUM' |
+    // Team Section
+    'TEAM_OVERVIEW' | 'DOWNLINE_TREE' | 'PERFORMANCE_TRACKING' | 'TRAINING_CONTROL' | 'TEAM_COMMUNICATION' | 'TEAM_RECOGNITION'
   >('NONE');
   
   const [supportMenuOpen, setSupportMenuOpen] = useState<string | null>(null); // Stores ID of user whose menu is open
@@ -562,6 +566,32 @@ const Dashboard: React.FC<DashboardProps> = ({
 
   // --- RENDER MODALS ---
   const renderModals = () => {
+
+      const renderSectionPlaceholder = (title: string, icon: any, desc: string) => (
+          <CustomModal isOpen={true} onClose={() => setActiveModal('NONE')} title={title} icon={icon}>
+              <div className="flex flex-col items-center justify-center py-20 text-center animate-fade-in bg-white dark:bg-slate-800 rounded-[3rem] border-2 border-dashed border-slate-200 dark:border-slate-700 px-6">
+                  <div className="w-20 h-20 bg-slate-50 dark:bg-slate-900 rounded-3xl flex items-center justify-center text-slate-300 mb-6 shadow-sm border border-slate-100 dark:border-slate-700">
+                      {React.createElement(icon, { size: 40 })}
+                  </div>
+                  <h3 className="text-2xl font-black text-slate-900 dark:text-white uppercase tracking-tight">{title}</h3>
+                  <p className="text-slate-500 max-w-xs mx-auto mt-2 text-sm dark:text-slate-400">{desc}</p>
+                  <div className="mt-10 px-6 py-2 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400 rounded-full text-[10px] font-black uppercase tracking-widest flex items-center gap-2">
+                      <Clock size={14} /> Section UI Building...
+                  </div>
+              </div>
+          </CustomModal>
+      );
+
+      // ----------------------------
+      // TEAM HUB MODALS (New Sections)
+      // ----------------------------
+      if (activeModal === 'TEAM_OVERVIEW') return renderSectionPlaceholder("Team Overview", LayoutGrid, "A high-level summary of your team's total activity, growth, and key metrics.");
+      if (activeModal === 'DOWNLINE_TREE') return renderSectionPlaceholder("Downline Tree", TreeIcon, "Visualize your entire team structure and see exactly how many levels deep your business spans.");
+      if (activeModal === 'PERFORMANCE_TRACKING') return renderSectionPlaceholder("Performance & CC Tracking", TrendingUp, "Deep dive into the Case Credit contributions of every FBO in your organization.");
+      if (activeModal === 'TRAINING_CONTROL') return renderSectionPlaceholder("Training & Assignment Control", ListChecks, "Monitor which courses your team is studying and assign mandatory tasks.");
+      if (activeModal === 'TEAM_COMMUNICATION') return renderSectionPlaceholder("Communication & Broadcast", Megaphone, "The centralized hub to send announcements and motivational messages to your organization.");
+      if (activeModal === 'TEAM_RECOGNITION') return renderSectionPlaceholder("Recognition & Support", RecognitionIcon, "Celebrate milestones, rank-ups, and top performers to keep team energy high.");
+
       // ----------------------------
       // TRAINING HUB MODALS
       // ----------------------------
@@ -675,7 +705,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                                                       <div className="absolute inset-0 h-full w-1/3 bg-emerald-500 rounded-full"></div>
                                                   </div>
                                                   <div className="flex justify-between mt-1.5">
-                                                      <span className="text-bottom-4 pl-1 text-[10px] font-black text-slate-400">0:15 / {item.duration}</span>
+                                                      <span className="text-[10px] font-black text-slate-400">0:15 / {item.duration}</span>
                                                       <Volume2 size={12} className="text-slate-300" />
                                                   </div>
                                               </div>
@@ -1128,7 +1158,6 @@ const Dashboard: React.FC<DashboardProps> = ({
                       {/* 4. Team Leaderboard */}
                       <section className="bg-slate-50 dark:bg-slate-800/50 rounded-[2rem] p-8 border border-slate-100 dark:border-slate-700">
                           <div className="flex items-center gap-3 mb-8">
-                              {/* Fix: TrophyIcon to Trophy */}
                               <Trophy className="w-6 h-6 text-yellow-500" />
                               <h3 className="font-bold text-xl text-slate-900 dark:text-white uppercase tracking-widest font-heading">Team Superstars</h3>
                           </div>
@@ -1875,7 +1904,6 @@ const Dashboard: React.FC<DashboardProps> = ({
                             <div className="p-6 rounded-2xl bg-blue-50 border border-blue-200 text-blue-900 flex flex-col gap-4 shadow-sm dark:bg-blue-900/20 dark:border-blue-800 dark:text-blue-100">
                                 <div className="flex items-start gap-4">
                                     <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 shrink-0 dark:bg-blue-900/50 dark:text-blue-300">
-                                        {/* Fix: TrophyIcon to Trophy */}
                                         <Trophy className="w-5 h-5"/>
                                     </div>
                                     <div>
@@ -2691,7 +2719,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                               title="Business Momentum" 
                               desc="Financial Snapshot" 
                               icon={Zap} 
-                              onClick={() => setActiveModal('MOMENTUM')}
+                              onClick={() => setActiveModal('MOMENT_UM')}
                           />
                           
                           <ShortcutItem 
@@ -2868,6 +2896,82 @@ const Dashboard: React.FC<DashboardProps> = ({
     );
   };
 
+  // --- DRAWER COMPONENT: MY TEAM ---
+  const renderTeamDrawer = () => {
+      return (
+          <div className={`fixed inset-0 z-[200] bg-slate-50 dark:bg-slate-950 overflow-y-auto transform transition-transform duration-300 ease-in-out ${isTeamDrawerOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+              
+              {/* Sticky Header */}
+              <div className="sticky top-0 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md px-4 py-3 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center z-10">
+                  <div className="flex items-center gap-3">
+                      <button 
+                        onClick={() => setIsTeamDrawerOpen(false)} 
+                        className="p-2 -ml-2 hover:bg-slate-100 rounded-full dark:hover:bg-slate-800 transition-colors"
+                      >
+                          <ChevronLeft size={28} className="text-slate-900 dark:text-white" strokeWidth={3} />
+                      </button>
+                      <h1 className="text-xl font-bold text-slate-900 dark:text-white font-heading">My Team</h1>
+                  </div>
+              </div>
+
+              <div className="max-w-7xl mx-auto p-4 md:p-8 space-y-6 pb-20">
+                  
+                  <SectionHeader title="Team Hub" />
+
+                  {/* Consolidated Card Wrapper */}
+                  <div className="bg-white dark:bg-slate-800 rounded-[2rem] p-6 shadow-sm border border-slate-100 dark:border-slate-700">
+                      <div className="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-6">
+                          
+                          <ShortcutItem 
+                              title="Team Overview" 
+                              desc="Summary Stats" 
+                              icon={LayoutGrid} 
+                              onClick={() => setActiveModal('TEAM_OVERVIEW')}
+                          />
+                          
+                          <ShortcutItem 
+                              title="Downline Tree" 
+                              desc="Team Structure" 
+                              icon={TreeIcon} 
+                              onClick={() => setActiveModal('DOWNLINE_TREE')}
+                          />
+                          
+                          <ShortcutItem 
+                              title="Performance" 
+                              desc="CC Tracking" 
+                              icon={TrendingUp} 
+                              onClick={() => setActiveModal('PERFORMANCE_TRACKING')}
+                          />
+                          
+                          <ShortcutItem 
+                              title="Training Hub" 
+                              desc="Team Tasks" 
+                              icon={ListChecks} 
+                              onClick={() => setActiveModal('TRAINING_CONTROL')}
+                          />
+                          
+                          <ShortcutItem 
+                              title="Communication" 
+                              desc="Announcements" 
+                              icon={Megaphone} 
+                              onClick={() => setActiveModal('TEAM_COMMUNICATION')}
+                          />
+                          
+                          <ShortcutItem 
+                              title="Recognition" 
+                              desc="Milestones" 
+                              icon={RecognitionIcon} 
+                              onClick={() => setActiveModal('TEAM_RECOGNITION')}
+                          />
+
+                      </div>
+                  </div>
+
+              </div>
+          </div>
+      );
+  };
+
   // --- VIEW: GOAL MONITORING (Desktop Sub-page) ---
   if (viewMode === 'GOALS') {
       const performanceData = [
@@ -2953,6 +3057,7 @@ const Dashboard: React.FC<DashboardProps> = ({
         {renderBusinessDrawer()}
         {renderSalesDrawer()}
         {renderTrainingDrawer()}
+        {renderTeamDrawer()}
 
         {/* Custom Modal Layer */}
         {renderModals()}
@@ -3041,7 +3146,6 @@ const Dashboard: React.FC<DashboardProps> = ({
 
                 {/* Card 3: Earnings & Rewards */}
                 <div className="min-w-[85vw] snap-center">
-                    {/* Fix: MoneyBagIcon to DollarSign */}
                     <InfoCard title="Earnings & Rewards" icon={DollarSign} bgIcon={Wallet} iconStyle="OUTLINE" colorClass="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400" className="h-48 justify-between">
                         <div className="mb-3">
                             <span className="text-2xl font-bold text-slate-900 dark:text-white font-heading">${monthlyEarnings.toLocaleString()}</span>
@@ -3069,7 +3173,6 @@ const Dashboard: React.FC<DashboardProps> = ({
 
                 {/* Card 4: Learning Status */}
                 <div className="min-w-[85vw] snap-center">
-                    {/* Fix: AutoStoriesIcon to BookOpen */}
                     <InfoCard title="Learning Status" icon={BookOpen} bgIcon={Book} iconStyle="OUTLINE" colorClass="bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400" className="h-48 justify-between">
                         <div className="grid grid-cols-3 gap-2 mb-3 text-center">
                             <div className="bg-purple-50 rounded-lg p-2 dark:bg-purple-900/10">
@@ -3123,10 +3226,9 @@ const Dashboard: React.FC<DashboardProps> = ({
                         />
                         <ShortcutItem 
                             title="My Team" 
-                            desc="Manage"
+                            desc="Manage Hub"
                             icon={Users} 
-                            to="/students"
-                            disabled={!myDownline.length && currentUser.role === UserRole.STUDENT} // Visual disable example
+                            onClick={() => setIsTeamDrawerOpen(true)}
                         />
                         <ShortcutItem 
                             title="Goals" 
@@ -3206,7 +3308,6 @@ const Dashboard: React.FC<DashboardProps> = ({
                     </InfoCard>
 
                     {/* 3. Earnings & Rewards (Updated Icon Style) */}
-                    {/* Fix: MoneyBagIcon to DollarSign */}
                     <InfoCard title="Earnings & Rewards" icon={DollarSign} bgIcon={Wallet} iconStyle="OUTLINE" colorClass="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400" className="h-40 lg:h-44 justify-between">
                         <div className="mb-2 lg:mb-3">
                             <span className="text-xl lg:text-2xl font-bold text-slate-900 dark:text-white font-heading">${monthlyEarnings.toLocaleString()}</span>
@@ -3232,7 +3333,6 @@ const Dashboard: React.FC<DashboardProps> = ({
                     </InfoCard>
 
                     {/* 4. Learning & Activity (Updated Icon Style) */}
-                    {/* Fix: AutoStoriesIcon to BookOpen */}
                     <InfoCard title="Learning Status" icon={BookOpen} bgIcon={Book} iconStyle="OUTLINE" colorClass="bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400" className="h-40 lg:h-44 justify-between">
                         <div className="grid grid-cols-3 gap-2 mb-2 lg:mb-3 text-center">
                             <div className="bg-purple-50 rounded-lg p-1.5 lg:p-2 dark:bg-purple-900/10">
@@ -3348,10 +3448,9 @@ const Dashboard: React.FC<DashboardProps> = ({
 
                                 <ShortcutItem 
                                     title="My Team" 
-                                    desc="Monitor downline progress"
+                                    desc="Management Hub"
                                     icon={Users}
-                                    to="/students"
-                                    disabled={!myDownline.length && currentUser.role === UserRole.STUDENT} 
+                                    onClick={() => setIsTeamDrawerOpen(true)}
                                 />
 
                                 <ShortcutItem 

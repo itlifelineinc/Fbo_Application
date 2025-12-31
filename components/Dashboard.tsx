@@ -2,12 +2,12 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar } from 'recharts';
 import { Link, useNavigate } from 'react-router-dom';
-import { Student, UserRole, Course, CourseTrack, CourseStatus, MentorshipTemplate, Broadcast, AppNotification, Assignment } from '../types';
+import { Student, UserRole, Course, CourseTrack, CourseStatus, MentorshipTemplate, Broadcast, AppNotification, Assignment, CourseLevel } from '../types';
 import { 
     Users, TrendingUp, Calendar, ArrowUpRight, Award, 
     BookOpen, DollarSign, CircleDollarSign, Target, MessageSquare, PlusCircle, 
     BarChart2, Zap, ArrowRight, Layout, ArrowLeft, Clock, Globe, UserPlus, Shield,
-    ShoppingCart, GraduationCap, Bell, Flag, Store, Lock, CheckCircle, X, PieChart as PieChartIcon, Activity, Lightbulb, ChevronLeft, HelpCircle, Hand, Medal, Gift, Hourglass, Megaphone, MessageCircle, Sparkles, Rocket, UserCheck, LayoutTemplate, CreditCard, Phone, MousePointerClick, Smartphone, Eye, Filter, ArrowDown, ExternalLink, Share2, Trash2, MoreHorizontal, Wallet, Check, Edit3, Trophy, Network, Book, Video, ClipboardCheck, PlayCircle
+    ShoppingCart, GraduationCap, Bell, Flag, Store, Lock, CheckCircle, X, PieChart as PieChartIcon, Activity, Lightbulb, ChevronLeft, HelpCircle, Hand, Medal, Gift, Hourglass, Megaphone, MessageCircle, Sparkles, Rocket, UserCheck, LayoutTemplate, CreditCard, Phone, MousePointerClick, Smartphone, Eye, Filter, ArrowDown, ExternalLink, Share2, Trash2, MoreHorizontal, Wallet, Check, Edit3, Trophy, Network, Book, Video, ClipboardCheck, PlayCircle, Search, Star, Layers, Briefcase, HeartPulse
 } from 'lucide-react';
 import { RANKS, RANK_ORDER } from '../constants';
 
@@ -59,7 +59,7 @@ const CustomModal = ({
                 drawer-enter md:modal-enter
             `}>
                 {/* Header */}
-                <div className="px-6 py-4 md:py-5 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-white dark:bg-slate-900 shrink-0 z-10">
+                <div className="px-6 py-4 md:py-5 border-b border-slate-100 dark:border-slate-800 pb-4 mb-0 flex justify-between items-center bg-white dark:bg-slate-900 shrink-0 z-10">
                     <div className="flex items-center gap-3">
                         <button 
                             onClick={onClose} 
@@ -218,6 +218,46 @@ const ShortcutItem = ({
     return <div onClick={onClick} className="h-full">{content}</div>;
 };
 
+// Fix: Redefine LibraryCourseCard with React.FC to properly handle 'key' and React component types
+interface LibraryCourseCardProps {
+    course: Course;
+    onClick: () => void;
+}
+
+const LibraryCourseCard: React.FC<LibraryCourseCardProps> = ({ course, onClick }) => {
+    const totalMins = course.modules.reduce((acc, m) => acc + m.chapters.reduce((ca, ch) => ca + ch.durationMinutes, 0), 0);
+    const durationStr = totalMins > 60 ? `${Math.floor(totalMins / 60)}h ${totalMins % 60}m` : `${totalMins}m`;
+
+    return (
+        <div 
+            onClick={onClick}
+            className="group bg-white dark:bg-slate-800 rounded-3xl border border-slate-100 dark:border-slate-700 shadow-sm hover:shadow-xl transition-all cursor-pointer overflow-hidden flex flex-col h-full"
+        >
+            <div className="relative h-40 shrink-0">
+                <img src={course.thumbnailUrl} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" alt={course.title} />
+                <div className="absolute top-3 left-3 flex gap-2">
+                    <span className="bg-white/90 backdrop-blur text-slate-800 px-2 py-0.5 rounded-lg text-[9px] font-black uppercase tracking-wider shadow-sm">
+                        {course.level}
+                    </span>
+                </div>
+                <div className="absolute bottom-3 right-3 bg-black/60 backdrop-blur text-white px-2 py-0.5 rounded-lg text-[9px] font-black uppercase tracking-wider">
+                    {durationStr}
+                </div>
+            </div>
+            <div className="p-5 flex-1 flex flex-col justify-between">
+                <div>
+                    <h4 className="font-bold text-slate-900 dark:text-white text-base mb-1 line-clamp-1 group-hover:text-emerald-600 transition-colors">{course.title}</h4>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 leading-relaxed">{course.subtitle}</p>
+                </div>
+                <div className="mt-4 flex items-center justify-between border-t border-slate-50 dark:border-slate-700/50 pt-3">
+                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{course.track}</span>
+                    <ArrowRight size={14} className="text-slate-300 group-hover:text-emerald-500 transition-colors transform group-hover:translate-x-1" />
+                </div>
+            </div>
+        </div>
+    );
+};
+
 interface DashboardProps {
   students: Student[];
   currentUser: Student;
@@ -254,7 +294,7 @@ const Dashboard: React.FC<DashboardProps> = ({
     // Sales Section
     'MY_PAGES' | 'CREATE_PAGE' | 'LEADS' | 'ORDERS' | 'PAYMENTS' | 'SALES_ANALYTICS' |
     // Training Section
-    'MY_CLASSROOM' | 'MOMENTUM' 
+    'MY_CLASSROOM' | 'GLOBAL_LIBRARY' | 'TEAM_TRAINING' | 'MOMENTUM' 
   >('NONE');
   
   const [supportMenuOpen, setSupportMenuOpen] = useState<string | null>(null); // Stores ID of user whose menu is open
@@ -262,6 +302,12 @@ const Dashboard: React.FC<DashboardProps> = ({
   // NEW: Sales Page Management States
   const [selectedSalesPageId, setSelectedSalesPageId] = useState<string | null>(null);
   const [salesFilter, setSalesFilter] = useState<'ALL' | 'PUBLISHED' | 'DRAFT'>('ALL');
+
+  // NEW: Library Filter States
+  const [librarySearch, setLibrarySearch] = useState('');
+  const [libraryLevel, setLibraryLevel] = useState<string>('ALL');
+  const [libraryTrack, setLibraryTrack] = useState<string>('ALL');
+  const [libraryFormat, setLibraryFormat] = useState<'ALL' | 'SHORT' | 'COURSE'>('ALL');
   
   // Mock Payment Status
   const [isPaymentSetup, setIsPaymentSetup] = useState(false);
@@ -414,6 +460,297 @@ const Dashboard: React.FC<DashboardProps> = ({
       // ----------------------------
       // TRAINING HUB MODALS
       // ----------------------------
+      if (activeModal === 'TEAM_TRAINING') {
+          const sponsor = students.find(s => s.handle === currentUser.sponsorId);
+          const teamCourses = courses.filter(c => 
+              c.status === CourseStatus.PUBLISHED && 
+              c.settings.teamOnly && 
+              (c.authorHandle === currentUser.sponsorId || c.authorHandle === currentUser.handle)
+          );
+          
+          const teamAssignments = assignments.filter(a => 
+              a.authorHandle === currentUser.sponsorId && 
+              a.assignedTo.includes(currentUser.handle) &&
+              !currentUser.assignmentSubmissions?.some(s => s.assignmentId === a.id)
+          );
+
+          const teamLeaderboard = students
+            .filter(s => s.sponsorId === currentUser.sponsorId || s.handle === currentUser.sponsorId)
+            .sort((a, b) => b.caseCredits - a.caseCredits)
+            .slice(0, 5);
+
+          return (
+              <CustomModal
+                  isOpen={true}
+                  onClose={() => setActiveModal('NONE')}
+                  title="Team Training"
+                  icon={Users}
+              >
+                  <div className="space-y-10 animate-fade-in pb-10">
+                      
+                      {/* 1. Sponsor Welcome Card */}
+                      <div className="bg-gradient-to-br from-slate-900 to-slate-800 rounded-[2.5rem] p-8 text-white relative overflow-hidden shadow-xl">
+                          <div className="relative z-10 flex items-center gap-6">
+                              <div className="w-20 h-20 rounded-3xl bg-emerald-500 border-4 border-white/10 flex items-center justify-center text-3xl font-black shadow-2xl shrink-0 overflow-hidden">
+                                  {sponsor?.avatarUrl ? <img src={sponsor.avatarUrl} className="w-full h-full object-cover"/> : sponsor?.name.charAt(0)}
+                              </div>
+                              <div>
+                                  <span className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-400">Sponsor-Led Learning</span>
+                                  <h2 className="text-2xl font-bold mt-1 font-heading">{sponsor?.name || 'Your Team Leader'}</h2>
+                                  <p className="text-sm text-slate-400 mt-1">Directly guiding your success path.</p>
+                              </div>
+                          </div>
+                          <Sparkles size={140} className="absolute -right-10 -bottom-10 text-white/5 rotate-12 pointer-events-none" />
+                      </div>
+
+                      {/* 2. Team Assignments (Todo) */}
+                      <section>
+                          <div className="flex items-center justify-between mb-6">
+                              <div className="flex items-center gap-3">
+                                  <div className="p-2 bg-orange-100 text-orange-600 rounded-lg dark:bg-orange-900/30 dark:text-orange-400">
+                                      <ClipboardCheck size={18} />
+                                  </div>
+                                  <h3 className="font-bold text-lg text-slate-800 dark:text-white uppercase tracking-wider text-sm">Team Tasks</h3>
+                              </div>
+                              <Link to="/assignments" className="text-xs font-bold text-orange-600 hover:underline">View All</Link>
+                          </div>
+
+                          <div className="space-y-3">
+                              {teamAssignments.length > 0 ? teamAssignments.map(a => (
+                                  <div 
+                                    key={a.id} 
+                                    onClick={() => navigate(`/assignments/${a.id}`)}
+                                    className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between group cursor-pointer hover:border-orange-300 transition-all dark:bg-slate-800 dark:border-slate-700"
+                                  >
+                                      <div className="flex-1 min-w-0">
+                                          <h4 className="font-bold text-slate-900 dark:text-white text-sm truncate">{a.title}</h4>
+                                          <p className="text-[10px] text-orange-500 font-bold uppercase mt-1">Due: {a.deadline ? new Date(a.deadline).toLocaleDateString() : 'No Deadline'}</p>
+                                      </div>
+                                      <ArrowRight size={18} className="text-slate-300 group-hover:text-orange-500 transition-colors" />
+                                  </div>
+                              )) : (
+                                  <div className="text-center py-8 bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200 dark:bg-slate-900/30 dark:border-slate-700">
+                                      <p className="text-sm text-slate-400">No pending team tasks.</p>
+                                  </div>
+                              )}
+                          </div>
+                      </section>
+
+                      {/* 3. Team-Only Courses */}
+                      <section>
+                          <div className="flex items-center gap-3 mb-6">
+                              <div className="p-2 bg-purple-100 text-purple-600 rounded-lg dark:bg-purple-900/30 dark:text-purple-400">
+                                  <Lock size={18} />
+                              </div>
+                              <h3 className="font-bold text-lg text-slate-800 dark:text-white uppercase tracking-wider text-sm">Private Strategies</h3>
+                          </div>
+
+                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                              {teamCourses.length > 0 ? teamCourses.map(c => (
+                                  <LibraryCourseCard 
+                                    key={c.id} 
+                                    course={c} 
+                                    onClick={() => navigate(`/training/preview/${c.id}`)} 
+                                  />
+                              )) : (
+                                  <p className="text-sm text-slate-400 italic col-span-full py-4 px-2">No private team courses available yet.</p>
+                              )}
+                          </div>
+                      </section>
+
+                      {/* 4. Team Leaderboard */}
+                      <section className="bg-slate-50 dark:bg-slate-800/50 rounded-[2rem] p-8 border border-slate-100 dark:border-slate-700">
+                          <div className="flex items-center gap-3 mb-8">
+                              <TrophyIcon className="w-6 h-6 text-yellow-500" />
+                              <h3 className="font-bold text-xl text-slate-900 dark:text-white uppercase tracking-widest font-heading">Team Superstars</h3>
+                          </div>
+                          
+                          <div className="space-y-4">
+                              {teamLeaderboard.map((student, idx) => (
+                                  <div key={student.id} className="flex items-center justify-between p-4 bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm">
+                                      <div className="flex items-center gap-4">
+                                          <div className={`w-8 h-8 rounded-full flex items-center justify-center font-black text-xs ${idx === 0 ? 'bg-yellow-400 text-white' : 'bg-slate-100 text-slate-400 dark:bg-slate-800'}`}>
+                                              {idx + 1}
+                                          </div>
+                                          <div className="w-10 h-10 rounded-xl overflow-hidden bg-slate-100 dark:bg-slate-800">
+                                              {student.avatarUrl ? <img src={student.avatarUrl} className="w-full h-full object-cover"/> : <div className="w-full h-full flex items-center justify-center font-bold text-slate-400">{student.name.charAt(0)}</div>}
+                                          </div>
+                                          <div>
+                                              <p className="font-bold text-slate-800 dark:text-white text-sm">{student.name}</p>
+                                              <p className="text-[10px] text-slate-400 uppercase font-black tracking-widest">{RANKS[student.rankProgress?.currentRankId || 'NOVUS'].name}</p>
+                                          </div>
+                                      </div>
+                                      <div className="text-right">
+                                          <span className="text-sm font-black text-emerald-600 dark:text-emerald-400">{student.caseCredits.toFixed(2)} CC</span>
+                                      </div>
+                                  </div>
+                              ))}
+                          </div>
+                      </section>
+
+                  </div>
+              </CustomModal>
+          );
+      }
+
+      if (activeModal === 'GLOBAL_LIBRARY') {
+          const filteredCourses = courses.filter(c => {
+              if (c.status !== CourseStatus.PUBLISHED) return false;
+              if (c.settings.teamOnly) return false;
+
+              const matchesSearch = c.title.toLowerCase().includes(librarySearch.toLowerCase()) || 
+                                    c.subtitle.toLowerCase().includes(librarySearch.toLowerCase());
+              if (!matchesSearch) return false;
+
+              if (libraryLevel !== 'ALL' && c.level !== libraryLevel) return false;
+              if (libraryTrack !== 'ALL' && c.track !== libraryTrack) return false;
+              
+              if (libraryFormat === 'SHORT') {
+                  const totalMins = c.modules.reduce((acc, m) => acc + m.chapters.reduce((ca, ch) => ca + ch.durationMinutes, 0), 0);
+                  return totalMins <= 30;
+              }
+              if (libraryFormat === 'COURSE') {
+                  const totalMins = c.modules.reduce((acc, m) => acc + m.chapters.reduce((ca, ch) => ca + ch.durationMinutes, 0), 0);
+                  return totalMins > 30;
+              }
+
+              return true;
+          });
+
+          const basics = filteredCourses.filter(c => c.track === CourseTrack.BASICS);
+          const business = filteredCourses.filter(c => c.track === CourseTrack.BUSINESS || c.track === CourseTrack.SALES);
+          const health = filteredCourses.filter(c => c.track === CourseTrack.PRODUCT);
+          const recommended = filteredCourses.slice(0, 3); // Simple mock for system-wide recommendations
+
+          return (
+              <CustomModal
+                  isOpen={true}
+                  onClose={() => setActiveModal('NONE')}
+                  title="Global Training Library"
+                  icon={Globe}
+              >
+                  <div className="space-y-10 animate-fade-in pb-10">
+                      
+                      {/* Search & Intro */}
+                      <div className="space-y-4">
+                          <div className="relative">
+                              <Search className="absolute left-4 top-3.5 text-slate-400" size={20} />
+                              <input 
+                                  type="text" 
+                                  value={librarySearch}
+                                  onChange={(e) => setLibrarySearch(e.target.value)}
+                                  placeholder="Search products, skills, or topics..."
+                                  className="w-full pl-12 pr-4 py-4 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-sm outline-none focus:ring-2 focus:ring-emerald-500 transition-all font-medium"
+                              />
+                          </div>
+                          <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
+                              <select 
+                                  value={libraryLevel} 
+                                  onChange={e => setLibraryLevel(e.target.value)}
+                                  className="px-4 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-xs font-bold border-none outline-none text-slate-600 dark:text-slate-300"
+                              >
+                                  <option value="ALL">Difficulty: All</option>
+                                  <option value={CourseLevel.BEGINNER}>Beginner</option>
+                                  <option value={CourseLevel.INTERMEDIATE}>Intermediate</option>
+                                  <option value={CourseLevel.ADVANCED}>Advanced</option>
+                              </select>
+                              <select 
+                                  value={libraryTrack} 
+                                  onChange={e => setLibraryTrack(e.target.value)}
+                                  className="px-4 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-xs font-bold border-none outline-none text-slate-600 dark:text-slate-300"
+                              >
+                                  <option value="ALL">Focus: All</option>
+                                  <option value={CourseTrack.PRODUCT}>Product-based</option>
+                                  <option value={CourseTrack.BUSINESS}>Business-based</option>
+                                  <option value={CourseTrack.LEADERSHIP}>Leadership</option>
+                              </select>
+                              <select 
+                                  value={libraryFormat} 
+                                  onChange={e => setLibraryFormat(e.target.value as any)}
+                                  className="px-4 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-xs font-bold border-none outline-none text-slate-600 dark:text-slate-300"
+                              >
+                                  <option value="ALL">Format: All</option>
+                                  <option value="SHORT">Short Lessons (≤30m)</option>
+                                  <option value="COURSE">Full Courses (>30m)</option>
+                              </select>
+                          </div>
+                      </div>
+
+                      {/* 1. Forever Basics */}
+                      <section>
+                          <div className="flex items-center gap-3 mb-6">
+                              <div className="p-2 bg-blue-100 text-blue-600 rounded-lg dark:bg-blue-900/30 dark:text-blue-400">
+                                  <Layers size={18} />
+                              </div>
+                              <h3 className="font-bold text-lg text-slate-800 dark:text-white uppercase tracking-wider text-sm">Forever Basics</h3>
+                          </div>
+                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                              {basics.map(c => <LibraryCourseCard key={c.id} course={c} onClick={() => navigate(`/training/preview/${c.id}`)} />)}
+                              {basics.length === 0 && <p className="text-sm text-slate-400 italic col-span-full py-4 px-2">No basic training found for these filters.</p>}
+                          </div>
+                      </section>
+
+                      {/* 2. Business Skills */}
+                      <section>
+                          <div className="flex items-center gap-3 mb-6">
+                              <div className="p-2 bg-emerald-100 text-emerald-600 rounded-lg dark:bg-emerald-900/30 dark:text-emerald-400">
+                                  <Briefcase size={18} />
+                              </div>
+                              <h3 className="font-bold text-lg text-slate-800 dark:text-white uppercase tracking-wider text-sm">Business Skills</h3>
+                          </div>
+                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                              {business.map(c => <LibraryCourseCard key={c.id} course={c} onClick={() => navigate(`/training/preview/${c.id}`)} />)}
+                              {business.length === 0 && <p className="text-sm text-slate-400 italic col-span-full py-4 px-2">No skill courses found for these filters.</p>}
+                          </div>
+                      </section>
+
+                      {/* 3. Health Education */}
+                      <section>
+                          <div className="flex items-center gap-3 mb-6">
+                              <div className="p-2 bg-pink-100 text-pink-600 rounded-lg dark:bg-pink-900/30 dark:text-pink-400">
+                                  <HeartPulse size={18} />
+                              </div>
+                              <h3 className="font-bold text-lg text-slate-800 dark:text-white uppercase tracking-wider text-sm">Health Education</h3>
+                          </div>
+                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                              {health.map(c => <LibraryCourseCard key={c.id} course={c} onClick={() => navigate(`/training/preview/${c.id}`)} />)}
+                              {health.length === 0 && <p className="text-sm text-slate-400 italic col-span-full py-4 px-2">No health courses found for these filters.</p>}
+                          </div>
+                      </section>
+
+                      {/* 4. Recommendations */}
+                      <section className="bg-slate-900 dark:bg-black rounded-[2.5rem] p-8 text-white relative overflow-hidden">
+                          <div className="relative z-10">
+                              <div className="flex items-center gap-3 mb-8">
+                                  <Star className="text-yellow-400 fill-current" size={24} />
+                                  <h3 className="font-bold text-xl uppercase tracking-widest font-heading">Recommended for You</h3>
+                              </div>
+                              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                  {recommended.map(c => (
+                                      <button 
+                                        key={c.id}
+                                        onClick={() => navigate(`/training/preview/${c.id}`)}
+                                        className="bg-white/10 backdrop-blur-md border border-white/10 p-5 rounded-3xl text-left hover:bg-white/20 transition-all group"
+                                      >
+                                          <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest mb-1 block">Best for {c.level}s</span>
+                                          <h4 className="font-bold text-base leading-tight group-hover:text-emerald-400 transition-colors mb-2">{c.title}</h4>
+                                          <div className="flex items-center gap-3 text-[10px] text-white/60 font-bold uppercase tracking-tighter">
+                                              <span>{c.modules.length} Modules</span>
+                                              <span>•</span>
+                                              <span>{c.track}</span>
+                                          </div>
+                                      </button>
+                                  ))}
+                              </div>
+                          </div>
+                          <div className="absolute -right-20 -bottom-20 w-64 h-64 bg-emerald-500/20 rounded-full blur-[100px] pointer-events-none"></div>
+                      </section>
+
+                  </div>
+              </CustomModal>
+          );
+      }
+
       if (activeModal === 'MY_CLASSROOM') {
           // Calculate individual course progress for progress bars
           const enrolledCoursesData = courses.filter(c => currentUser.enrolledCourses.includes(c.id)).map(course => {
@@ -1024,7 +1361,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                                     <p className="text-sm opacity-90 leading-relaxed">
                                         Create a sales page to attract more customers automatically.
                                     </p>
-                                    <p className="text-xs text-emerald-700/80 mt-2 font-medium dark:text-emerald-300/80">FBOs with sales pages grow 2x faster.</p>
+                                    <p className="text-xs text-emerald-700/80 mt-2 font-medium dark:text-blue-300/80">FBOs with sales pages grow 2x faster.</p>
                                 </div>
                             </div>
                             <Link 
@@ -1785,7 +2122,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                               title="Business Momentum" 
                               desc="Financial Snapshot" 
                               icon={Zap} 
-                              onClick={() => setActiveModal('MOMENT_UM')}
+                              onClick={() => setActiveModal('MOMENTUM')}
                           />
                           
                           <ShortcutItem 
@@ -1923,14 +2260,14 @@ const Dashboard: React.FC<DashboardProps> = ({
                             title="Global Library" 
                             desc="Fundamental Courses" 
                             icon={Globe} 
-                            to="/training/global"
+                            onClick={() => setActiveModal('GLOBAL_LIBRARY')}
                         />
                         
                         <ShortcutItem 
                             title="Team Training" 
                             desc="Leader Strategies" 
                             icon={Users} 
-                            to="/training/team"
+                            onClick={() => setActiveModal('TEAM_TRAINING')}
                         />
                         
                         <ShortcutItem 

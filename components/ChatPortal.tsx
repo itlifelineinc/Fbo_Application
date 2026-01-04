@@ -207,11 +207,11 @@ const ChatPortal: React.FC<ChatPortalProps> = ({ currentUser, students, messages
       )}
 
       <div className={`w-full md:w-96 bg-white border-r border-slate-200 flex flex-col ${activeChatHandle && !isBroadcastMode ? 'hidden md:flex' : 'flex'} dark:bg-[#111b21] dark:border-slate-800`}>
-        <div className="md:hidden shrink-0 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-4 py-3 flex justify-between items-center z-50 shadow-sm">
+        <div className="md:hidden shrink-0 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-4 py-3 flex justify-between items-center z-50 shadow-sm transition-all duration-300">
             {!isMobileSearchOpen ? (
                 <div className="flex items-center gap-3 w-full">
-                    <button onClick={() => navigate('/dashboard')} className="p-1 -ml-1 text-slate-700 dark:text-slate-300 active:scale-95">
-                        <ChevronLeft size={24} strokeWidth={3} />
+                    <button onClick={() => navigate('/dashboard')} className="p-1 -ml-1 text-slate-700 dark:text-slate-300 active:scale-95 transition-transform">
+                        <ChevronLeft size={28} strokeWidth={3} />
                     </button>
                     <h1 className="text-2xl font-extrabold tracking-tight text-slate-900 dark:text-white font-heading">Chats</h1>
                     <div className="flex items-center gap-2 ml-auto">
@@ -261,7 +261,7 @@ const ChatPortal: React.FC<ChatPortalProps> = ({ currentUser, students, messages
             </div>
         </div>
         
-        <div className="flex-1 overflow-y-auto">
+        <div className="flex-1 overflow-y-auto no-scrollbar">
             {filteredChatList.map(chat => {
                 const hasUnread = messages.some(m => m.recipientHandle === currentUser.handle && m.senderHandle === chat.handle && !m.isRead);
                 return (
@@ -308,7 +308,7 @@ const ChatPortal: React.FC<ChatPortalProps> = ({ currentUser, students, messages
             {isBroadcastMode ? (
                 <div className="flex-1 flex flex-col p-4 bg-[#f0f2f5] dark:bg-[#0b141a] overflow-hidden">
                     <div className="flex items-center gap-2 mb-6 shrink-0">
-                        <button onClick={() => setIsBroadcastMode(false)} className="md:hidden text-slate-500"><ChevronLeft /></button>
+                        <button onClick={() => setIsBroadcastMode(false)} className="md:hidden text-slate-500"><ChevronLeftIcon /></button>
                         <h2 className="text-xl font-bold text-slate-800 dark:text-[#e9edef]">New Broadcast</h2>
                     </div>
                     <div className="bg-white p-4 rounded-xl shadow-sm mb-4 flex-1 overflow-y-auto dark:bg-[#202c33]">
@@ -354,7 +354,7 @@ const ChatPortal: React.FC<ChatPortalProps> = ({ currentUser, students, messages
                         </div>
                     </div>
 
-                    <div ref={messageContainerRef} className="flex-1 overflow-y-auto p-4 space-y-1 scroll-smooth min-h-0">
+                    <div ref={messageContainerRef} className="flex-1 overflow-y-auto p-4 space-y-1 scroll-smooth min-h-0 no-scrollbar">
                         {activeMessages.map((msg) => {
                             const isMe = msg.senderHandle === currentUser.handle;
                             return (
@@ -437,15 +437,15 @@ const ChatPortal: React.FC<ChatPortalProps> = ({ currentUser, students, messages
                                     </div>
                                     <div className={`absolute inset-0 bg-white dark:bg-[#233138] transition-transform duration-300 flex flex-col ${attachmentView === 'TEMPLATES' ? 'translate-x-0' : 'translate-x-full'}`}>
                                         <div className="flex items-center gap-2 p-3 border-b border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-[#111b21]"><button onClick={() => setAttachmentView('MAIN')} className="p-1"><ArrowLeft size={18} /></button><h3 className="font-bold text-sm">Templates</h3></div>
-                                        <div className="flex-1 overflow-y-auto p-2">{myTemplates.length > 0 ? myTemplates.map(t => (<button key={t.id} onClick={() => handleTemplateSelect(t)} className="w-full text-left p-3 hover:bg-slate-50 dark:hover:bg-slate-700 rounded-lg border-b border-slate-50 dark:border-slate-700 last:border-0"><p className="font-bold text-xs">{t.title}</p></button>)) : <div className="p-4 text-center text-slate-400 text-xs">No templates found.</div>}</div>
+                                        <div className="flex-1 overflow-y-auto p-2 no-scrollbar">{myTemplates.length > 0 ? myTemplates.map(t => (<button key={t.id} onClick={() => handleTemplateSelect(t)} className="w-full text-left p-3 hover:bg-slate-50 dark:hover:bg-slate-700 rounded-lg border-b border-slate-50 dark:border-slate-700 last:border-0"><p className="font-bold text-xs">{t.title}</p></button>)) : <div className="p-4 text-center text-slate-400 text-xs">No templates found.</div>}</div>
                                     </div>
                                     <div className={`absolute inset-0 bg-white dark:bg-[#233138] transition-transform duration-300 flex flex-col ${attachmentView === 'ASSIGNMENTS' ? 'translate-x-0' : 'translate-x-full'}`}>
                                         <div className="flex items-center gap-2 p-3 border-b border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-[#111b21]"><button onClick={() => setAttachmentView('MAIN')} className="p-1"><ArrowLeft size={18} /></button><h3 className="font-bold text-sm">Assignments</h3></div>
-                                        <div className="flex-1 overflow-y-auto p-2">{myAssignments.length > 0 ? myAssignments.map(a => (<button key={a.id} onClick={() => handleAssignmentSelect(a)} className="w-full text-left p-3 hover:bg-slate-50 dark:hover:bg-slate-700 rounded-lg border-b border-slate-50 dark:border-slate-700 last:border-0"><p className="font-bold text-xs">{a.title}</p></button>)) : <div className="p-4 text-center text-slate-400 text-xs">No assignments found.</div>}</div>
+                                        <div className="flex-1 overflow-y-auto p-2 no-scrollbar">{myAssignments.length > 0 ? myAssignments.map(a => (<button key={a.id} onClick={() => handleAssignmentSelect(a)} className="w-full text-left p-3 hover:bg-slate-50 dark:hover:bg-slate-700 rounded-lg border-b border-slate-50 dark:border-slate-700 last:border-0"><p className="font-bold text-xs">{a.title}</p></button>)) : <div className="p-4 text-center text-slate-400 text-xs">No assignments found.</div>}</div>
                                     </div>
                                     <div className={`absolute inset-0 bg-white dark:bg-[#233138] transition-transform duration-300 flex flex-col ${attachmentView === 'ANNOUNCEMENTS' ? 'translate-x-0' : 'translate-x-full'}`}>
                                         <div className="flex items-center gap-2 p-3 border-b border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-[#111b21]"><button onClick={() => setAttachmentView('MAIN')} className="p-1"><ArrowLeft size={18} /></button><h3 className="font-bold text-sm">Broadcasts</h3></div>
-                                        <div className="flex-1 overflow-y-auto p-2">{myBroadcasts.length > 0 ? myBroadcasts.map(b => (<button key={b.id} onClick={() => handleBroadcastSelect(b)} className="w-full text-left p-3 hover:bg-slate-50 dark:hover:bg-slate-700 rounded-lg border-b border-slate-50 dark:border-slate-700 last:border-0"><p className="font-bold text-xs">{b.title}</p></button>)) : <div className="p-4 text-center text-slate-400 text-xs">No broadcasts found.</div>}</div>
+                                        <div className="flex-1 overflow-y-auto p-2 no-scrollbar">{myBroadcasts.length > 0 ? myBroadcasts.map(b => (<button key={b.id} onClick={() => handleBroadcastSelect(b)} className="w-full text-left p-3 hover:bg-slate-50 dark:hover:bg-slate-700 rounded-lg border-b border-slate-50 dark:border-slate-700 last:border-0"><p className="font-bold text-xs">{b.title}</p></button>)) : <div className="p-4 text-center text-slate-400 text-xs">No broadcasts found.</div>}</div>
                                     </div>
                                 </div>
                             </div>
@@ -462,11 +462,11 @@ const ChatPortal: React.FC<ChatPortalProps> = ({ currentUser, students, messages
                                     <div className="pb-2 pl-2">
                                         <button onClick={() => { setShowAttachMenu(!showAttachMenu); setAttachmentView('MAIN'); }} className={`p-2 rounded-full transition-transform ${showAttachMenu ? 'rotate-45 text-slate-700 bg-slate-100' : 'text-slate-500'}`}><Plus size={24} /></button>
                                     </div>
-                                    <textarea ref={textareaRef} rows={1} value={newMessage} onChange={(e) => setNewMessage(e.target.value)} onKeyDown={handleKeyDown} placeholder="Type a message" className="w-full py-3 px-4 md:pl-2 border-none focus:ring-0 outline-none bg-transparent resize-none overflow-hidden max-h-[120px] dark:text-[#e9edef] dark:placeholder-[#8696a0]" style={{ minHeight: '24px' }} />
-                                    <div className="hidden md:flex absolute right-2 bottom-2"><button onClick={startRecording} className="p-2 text-slate-500"><Mic size={20} /></button></div>
+                                    <textarea ref={textareaRef} rows={1} value={newMessage} onChange={(e) => setNewMessage(e.target.value)} onKeyDown={handleKeyDown} placeholder="Type a message" className="w-full py-3 px-4 md:pl-2 border-none focus:ring-0 outline-none bg-transparent resize-none overflow-hidden max-h-[120px] dark:text-[#e9edef] dark:placeholder-[#8696a0] leading-relaxed text-[15px]" style={{ minHeight: '24px' }} />
+                                    <div className="hidden md:flex absolute right-2 bottom-2"><button onClick={startRecording} className="p-2 text-slate-500 hover:text-red-500 transition-colors"><Mic size={20} /></button></div>
                                 </div>
                             )}
-                            <button onClick={(!newMessage.trim() && !pendingAttachment) ? startRecording : handleSend} className="p-3 mb-1 bg-[#00a884] text-white rounded-full shadow-sm flex items-center justify-center">
+                            <button onClick={(!newMessage.trim() && !pendingAttachment) ? startRecording : handleSend} className="p-3 mb-1 bg-[#00a884] text-white rounded-full shadow-sm flex items-center justify-center transition-colors hover:bg-[#008f6f]">
                                 {(!newMessage.trim() && !pendingAttachment) ? <Mic size={20} className="md:hidden" /> : <PaperAirplaneIcon />}
                                 {(!newMessage.trim() && !pendingAttachment) && <PaperAirplaneIcon className="hidden md:block" />}
                             </button>
@@ -477,7 +477,7 @@ const ChatPortal: React.FC<ChatPortalProps> = ({ currentUser, students, messages
                 <div className="flex-1 flex flex-col items-center justify-center text-slate-400 p-8 text-center bg-[#f0f2f5] border-b-[6px] border-[#25d366] dark:bg-[#222e35] dark:border-[#00a884]">
                     <div className="w-64 h-64 opacity-60 mb-8 dark:opacity-40"><ChatBubbleLeftRightIcon /></div>
                     <h3 className="text-3xl font-light text-[#41525d] mb-4 dark:text-[#e9edef]">FBO Team Chat</h3>
-                    <p className="max-w-md text-sm leading-6">Select a team member or a topic channel to start a conversation.</p>
+                    <p className="max-w-md text-sm leading-6 dark:text-[#8696a0]">Select a team member or a topic channel to start a conversation.</p>
                 </div>
             )}
         </div>
@@ -489,6 +489,12 @@ const ChatPortal: React.FC<ChatPortalProps> = ({ currentUser, students, messages
 const PaperAirplaneIcon = () => (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5 transform translate-x-0.5 -translate-y-0.5">
         <path d="M3.478 2.405a.75.75 0 00-.926.94l2.432 7.905H13.5a.75.75 0 010 1.5H4.984l-2.432 7.905a.75.75 0 00.926.94 60.519 60.519 0 0018.445-8.986.75.75 0 000-1.218A60.517 60.517 0 003.478 2.405z" />
+    </svg>
+);
+
+const ChevronLeftIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="currentColor" className="w-6 h-6">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
     </svg>
 );
 

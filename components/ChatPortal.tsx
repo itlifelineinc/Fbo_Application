@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Student, Message, UserRole, MessageStatus, Attachment, MentorshipTemplate, Assignment, Broadcast } from '../types';
@@ -309,7 +308,7 @@ const ChatPortal: React.FC<ChatPortalProps> = ({ currentUser, students, messages
             {isBroadcastMode ? (
                 <div className="flex-1 flex flex-col p-4 bg-[#f0f2f5] dark:bg-[#0b141a] overflow-hidden">
                     <div className="flex items-center gap-2 mb-6 shrink-0">
-                        <button onClick={() => setIsBroadcastMode(false)} className="md:hidden text-slate-500"><ChevronLeft /></button>
+                        <button onClick={() => setIsBroadcastMode(false)} className="md:hidden text-slate-500"><ChevronLeftIcon /></button>
                         <h2 className="text-xl font-bold text-slate-800 dark:text-[#e9edef]">New Broadcast</h2>
                     </div>
                     <div className="bg-white p-4 rounded-xl shadow-sm mb-4 flex-1 overflow-y-auto dark:bg-[#202c33]">
@@ -489,7 +488,7 @@ const ChatPortal: React.FC<ChatPortalProps> = ({ currentUser, students, messages
 
 const PaperAirplaneIcon = () => (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5 transform translate-x-0.5 -translate-y-0.5">
-        <path d="M3.478 2.405a.75.75 0 00-.926.94 60.519 60.519 0 0018.445-8.986.75.75 0 000-1.218A60.517 60.517 0 003.478 2.405z" />
+        <path d="M3.478 2.405a.75.75 0 00-.926.94l2.432 7.905H13.5a.75.75 0 010 1.5H4.984l-2.432 7.905a.75.75 0 00.926.94 60.519 60.519 0 0018.445-8.986.75.75 0 000-1.218A60.517 60.517 0 003.478 2.405z" />
     </svg>
 );
 

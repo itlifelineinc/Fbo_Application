@@ -129,7 +129,7 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
   return (
     <div className="flex h-screen bg-[#f3f4f6] dark:bg-[#0f172a] overflow-hidden transition-colors duration-300 font-sans">
       
-      {/* 1. LOGOUT CONFIRMATION MODAL/DRAWER */}
+      {/* LOGOUT CONFIRMATION MODAL */}
       {isLogoutModalOpen && (
         <div className="fixed inset-0 z-[500] flex justify-center md:items-center md:justify-center p-0 md:p-6">
             <style>{`
@@ -152,7 +152,7 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
                     </div>
                     <h3 className="text-2xl font-black text-slate-900 dark:text-white font-heading mb-2">Sign Out?</h3>
                     <p className="text-slate-500 dark:text-slate-400 text-sm leading-relaxed mb-8">
-                        Are you sure you want to log out? You will need to sign in again to access your team dashboard and courses.
+                        Are you sure you want to log out? You will need to sign in again to access your team dashboard.
                     </p>
                     <div className="flex flex-col w-full gap-3">
                         <button 
@@ -178,7 +178,6 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
         className={`fixed inset-0 z-[200] transition-all duration-500 ${isSidebarOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}
       >
          <div className="absolute inset-0 bg-slate-900/20 backdrop-blur-md" onClick={() => setIsSidebarOpen(false)}></div>
-         
          <div 
             ref={sidebarRef}
             className={`
@@ -189,27 +188,17 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
          >
             <div className="px-8 py-8 flex justify-between items-center shrink-0">
                 <h2 className="text-3xl font-black text-slate-900 dark:text-white font-heading tracking-tight">Nexu</h2>
-                <button 
-                  onClick={() => setIsSidebarOpen(false)} 
-                  className="p-2 text-slate-900 dark:text-white hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors"
-                >
+                <button onClick={() => setIsSidebarOpen(false)} className="p-2 text-slate-900 dark:text-white hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors">
                   <BoldXIcon />
                 </button>
             </div>
-
             <div className="flex-1 flex flex-col px-8 overflow-hidden">
                 <nav className="flex-1 overflow-y-auto no-scrollbar flex flex-col gap-2 py-2">
                     <NavItem to="/dashboard" label="Home" icon={Home} active={isActive('/dashboard')} />
                     <NavItem to="/chat" label="Team Chat" icon={MessageCircle} active={isActive('/chat')} />
                     <NavItem to="/classroom" label="Classroom" icon={BookOpen} active={isActive('/classroom') || location.pathname.startsWith('/training')} />
-                    
                     <div className="py-1">
-                      <button 
-                        onClick={() => setIsSalesMenuOpen(!isSalesMenuOpen)}
-                        className={`flex items-center justify-between w-full py-3 text-xl font-bold transition-all ${
-                          location.pathname.startsWith('/sales') ? 'text-emerald-600' : 'text-slate-700 dark:text-slate-300'
-                        }`}
-                      >
+                      <button onClick={() => setIsSalesMenuOpen(!isSalesMenuOpen)} className={`flex items-center justify-between w-full py-3 text-xl font-bold transition-all ${location.pathname.startsWith('/sales') ? 'text-emerald-600' : 'text-slate-700 dark:text-slate-300'}`}>
                         <div className="flex items-center gap-4">
                             <ShoppingCart size={24} strokeWidth={3} className={location.pathname.startsWith('/sales') ? 'text-emerald-600' : 'text-slate-400'} />
                             <span>Sales & CC</span>
@@ -223,16 +212,10 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
                         </div>
                       </div>
                     </div>
-
                     <NavItem to="/community" label="Community" icon={Globe} active={isActive('/community')} />
-                    {!currentUser.role.includes('STUDENT') && (
-                        <NavItem to="/students" label={isAdminOrSuper ? "Students" : "My Team"} icon={Users} active={isActive('/students')} />
-                    )}
-                    {canBuildCourses && (
-                        <NavItem to="/builder" label="Builder" icon={Layers} active={isActive('/builder')} />
-                    )}
+                    {!currentUser.role.includes('STUDENT') && <NavItem to="/students" label={isAdminOrSuper ? "Students" : "My Team"} icon={Users} active={isActive('/students')} />}
+                    {canBuildCourses && <NavItem to="/builder" label="Builder" icon={Layers} active={isActive('/builder')} />}
                 </nav>
-                
                 <div className="mt-auto pt-6 border-t border-slate-100 dark:border-slate-800 pb-10 shrink-0">
                   <button onClick={handleLogoutClick} className="flex items-center gap-4 text-left py-3 text-xl font-bold text-red-500 hover:text-red-600 transition-colors w-full">
                     <LogOut size={24} strokeWidth={3} />
@@ -247,15 +230,10 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
         {!hasCustomHeader && (
             <header className={`${!isDashboard ? 'hidden md:flex' : 'flex'} h-16 md:h-20 bg-white dark:bg-slate-900 items-center justify-between px-4 md:px-8 shrink-0 z-40 relative shadow-md transition-all duration-300`}>
                 <div className="flex items-center gap-4">
-                    <button 
-                        onClick={toggleSidebar}
-                        className="p-2.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-900 dark:text-white transition-all active:scale-95"
-                    >
+                    <button onClick={toggleSidebar} className="p-2.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-900 dark:text-white transition-all active:scale-95">
                         <Menu size={28} strokeWidth={3} />
                     </button>
-                    <div className="md:hidden">
-                        <Logo className="w-10 h-10" showText={false} />
-                    </div>
+                    <div className="md:hidden"><Logo className="w-10 h-10" showText={false} /></div>
                     <div className="flex flex-col">
                         <span className="text-[10px] md:text-xs font-bold text-slate-400 uppercase tracking-widest hidden md:block">Nexu Academy</span>
                         <h1 className="text-lg font-bold text-slate-800 dark:text-white capitalize leading-tight">
@@ -263,21 +241,12 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
                         </h1>
                     </div>
                 </div>
-
                 <div className="flex items-center gap-3 md:gap-6">
                     <div className="relative">
-                        <button 
-                            onClick={() => setIsNotificationMenuOpen(!isNotificationMenuOpen)}
-                            className={`p-2.5 rounded-full transition-colors relative ${isNotificationMenuOpen ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400' : 'hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400'}`}
-                        >
+                        <button onClick={() => setIsNotificationMenuOpen(!isNotificationMenuOpen)} className={`p-2.5 rounded-full transition-colors relative ${isNotificationMenuOpen ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400' : 'hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400'}`}>
                             <Bell size={22} strokeWidth={2.5} />
-                            {unreadCount > 0 && (
-                                <span className="absolute top-1 right-1.5 w-4 h-4 bg-red-500 border-2 border-white dark:border-slate-900 rounded-full flex items-center justify-center text-[9px] font-bold text-white">
-                                    {unreadCount}
-                                </span>
-                            )}
+                            {unreadCount > 0 && <span className="absolute top-1 right-1.5 w-4 h-4 bg-red-500 border-2 border-white dark:border-slate-900 rounded-full flex items-center justify-center text-[9px] font-bold text-white">{unreadCount}</span>}
                         </button>
-
                         {isNotificationMenuOpen && (
                             <div ref={notificationMenuRef} className="absolute right-0 mt-3 w-[320px] md:w-[380px] bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border border-slate-100 dark:border-slate-800 z-[150] overflow-hidden animate-fade-in">
                                 <div className="p-5 border-b border-slate-50 dark:border-slate-800 flex justify-between items-center bg-slate-50/50 dark:bg-slate-800/50">
@@ -290,7 +259,7 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
                                             <Link key={n.id} to={n.link} className="block p-4 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors border-b border-slate-50 dark:border-slate-800 last:border-0" onClick={() => setIsNotificationMenuOpen(false)}>
                                                 <div className="flex gap-3">
                                                     <div className="w-10 h-10 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center text-emerald-600 shrink-0">
-                                                        {n.avatarUrl ? <img src={n.avatarUrl} className="w-full h-full rounded-full object-cover" /> : <Bell size={18} />}
+                                                        {n.avatarUrl ? <img src={n.avatarUrl} className="w-full h-full rounded-full object-cover" alt="" /> : <Bell size={18} />}
                                                     </div>
                                                     <div className="flex-1 min-w-0">
                                                         <p className={`text-sm ${n.isRead ? 'text-slate-600 dark:text-slate-400' : 'font-bold text-slate-900 dark:text-white'}`}>{n.title}</p>
@@ -312,38 +281,27 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
                             </div>
                         )}
                     </div>
-
                     <div className="relative">
-                        <button 
-                            ref={profileBtnRef}
-                            onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
-                            className={`flex items-center justify-center rounded-full transition-all focus:outline-none ${isProfileMenuOpen ? 'ring-4 ring-emerald-500/20' : 'hover:ring-4 ring-slate-100 dark:ring-slate-800'}`}
-                        >
+                        <button ref={profileBtnRef} onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)} className={`flex items-center justify-center rounded-full transition-all focus:outline-none ${isProfileMenuOpen ? 'ring-4 ring-emerald-500/20' : 'hover:ring-4 ring-slate-100 dark:ring-slate-800'}`}>
                             <div className="w-10 h-10 rounded-full bg-emerald-600 text-white flex items-center justify-center font-bold text-sm shadow-md ring-2 ring-white dark:ring-slate-900 overflow-hidden transition-transform active:scale-95">
-                                {currentUser.avatarUrl ? <img src={currentUser.avatarUrl} className="w-full h-full object-cover" /> : currentUser.name.charAt(0)}
+                                {currentUser.avatarUrl ? <img src={currentUser.avatarUrl} className="w-full h-full object-cover" alt="" /> : currentUser.name.charAt(0)}
                             </div>
                         </button>
-
                         {isProfileMenuOpen && (
                             <div ref={profileMenuRef} className="absolute right-0 mt-3 w-64 bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border border-slate-100 dark:border-slate-800 z-[150] overflow-hidden animate-fade-in">
                                 <div className="p-2 pt-4">
                                     <Link to={`/students/${currentUser.id}`} className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 text-sm font-bold text-slate-700 dark:text-slate-300 transition-colors" onClick={() => setIsProfileMenuOpen(false)}>
                                         <User size={18} className="text-slate-400" /> View Profile
                                     </Link>
-                                    
                                     <div className="flex items-center justify-between px-4 py-3 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors group">
                                         <div className="flex items-center gap-3 text-sm font-bold text-slate-700 dark:text-slate-300">
                                             {theme === 'light' ? <Sun size={18} className="text-amber-500" /> : <Moon size={18} className="text-slate-400" />}
                                             {theme === 'light' ? 'Light Mode' : 'Dark Mode'}
                                         </div>
-                                        <button 
-                                            onClick={(e) => { e.stopPropagation(); onToggleTheme(); }}
-                                            className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none ${theme === 'dark' ? 'bg-emerald-600' : 'bg-slate-200 dark:bg-slate-700'}`}
-                                        >
+                                        <button onClick={(e) => { e.stopPropagation(); onToggleTheme(); }} className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none ${theme === 'dark' ? 'bg-emerald-600' : 'bg-slate-200 dark:bg-slate-700'}`}>
                                             <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform ${theme === 'dark' ? 'translate-x-4.5' : 'translate-x-1'}`} />
                                         </button>
                                     </div>
-
                                     <Link to={`/students/${currentUser.id}`} onClick={() => setIsProfileMenuOpen(false)} className="w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 text-sm font-bold text-slate-700 dark:text-slate-300 transition-colors">
                                         <Settings size={18} className="text-slate-400" /> Settings
                                     </Link>

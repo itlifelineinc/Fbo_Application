@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Student, CommunityPost, Cohort, UserRole, CommunityComment, Poll, PostMedia } from '../types';
@@ -431,6 +430,12 @@ const CommunityPortal: React.FC<CommunityPortalProps> = ({
               {/* Custom Header */}
               <div className="flex justify-between items-center px-4 py-3 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 shrink-0">
                    <div className="flex items-center gap-3">
+                       <button 
+                          onClick={() => navigate('/dashboard')}
+                          className="p-1 -ml-1 text-slate-700 dark:text-slate-300 active:scale-95"
+                       >
+                          <ChevronLeft size={24} strokeWidth={3} />
+                       </button>
                        <h1 className="text-2xl font-bold font-heading text-slate-900 dark:text-white tracking-tight">ForYou</h1>
                    </div>
                    <div className="flex items-center gap-4">
@@ -800,7 +805,7 @@ const CommunityPortal: React.FC<CommunityPortalProps> = ({
                           <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Cover Image</label>
                           <div 
                             onClick={() => coverInputRef.current?.click()}
-                            className={`relative w-full h-32 rounded-xl border-2 border-dashed flex flex-col items-center justify-center cursor-pointer transition-all overflow-hidden ${newCohortCover ? 'border-transparent' : 'border-slate-300 hover:border-emerald-400 hover:bg-slate-50 dark:border-slate-600 dark:hover:bg-slate-700'}`}
+                            className="relative w-full h-32 rounded-xl border-2 border-dashed flex flex-col items-center justify-center cursor-pointer transition-all overflow-hidden border-slate-300 hover:border-emerald-400 hover:bg-slate-50 dark:border-slate-600 dark:hover:bg-slate-700"
                           >
                               {newCohortCover ? (
                                   <>

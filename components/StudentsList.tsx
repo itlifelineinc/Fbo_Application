@@ -1,8 +1,7 @@
-
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Student, UserRole } from '../types';
-import { Search, X, ChevronRight, ChevronUp, User, Shield, Key, Trash2, Award } from 'lucide-react';
+import { Search, X, ChevronRight, ChevronUp, User, Shield, Key, Trash2, Award, ChevronLeft } from 'lucide-react';
 
 interface StudentsListProps {
   students: Student[];
@@ -26,6 +25,7 @@ const INPUT_CLASS = "w-full bg-slate-100 dark:bg-slate-800 border border-slate-3
 const LABEL_CLASS = "block text-xs font-bold text-slate-500 dark:text-slate-400 mb-1.5 ml-1 uppercase tracking-wider";
 
 const StudentsList: React.FC<StudentsListProps> = ({ students, onAddStudent, currentUser, onUpdateStudent, onDeleteStudent }) => {
+  const navigate = useNavigate();
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [newStudentName, setNewStudentName] = useState('');
   const [newStudentEmail, setNewStudentEmail] = useState('');
@@ -143,9 +143,17 @@ const StudentsList: React.FC<StudentsListProps> = ({ students, onAddStudent, cur
        <div className="md:hidden shrink-0 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-4 py-3 flex justify-between items-center z-50 shadow-sm transition-all duration-300 sticky top-0">
           {!isMobileSearchOpen ? (
             <>
-              <h1 className="text-xl font-extrabold tracking-tight text-slate-900 dark:text-white font-heading">
-                Team
-              </h1>
+              <div className="flex items-center gap-3">
+                  <button 
+                    onClick={() => navigate('/dashboard')}
+                    className="p-1 -ml-1 text-slate-700 dark:text-slate-300 active:scale-95"
+                  >
+                    <ChevronLeft size={24} strokeWidth={3} />
+                  </button>
+                  <h1 className="text-xl font-extrabold tracking-tight text-slate-900 dark:text-white font-heading">
+                    Team
+                  </h1>
+              </div>
               <div className="flex items-center gap-3">
                   <button 
                     onClick={() => setIsFormOpen(true)}

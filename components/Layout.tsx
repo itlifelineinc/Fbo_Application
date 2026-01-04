@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Student, UserRole, Course, AppNotification } from '../types';
@@ -47,6 +46,8 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
   const isAdminOrSuper = currentUser.role === UserRole.SUPER_ADMIN || currentUser.role === UserRole.ADMIN;
   const canBuildCourses = isAdminOrSuper || currentUser.role === UserRole.SPONSOR;
   const unreadCount = notifications.filter(n => !n.isRead).length;
+
+  const isDashboard = location.pathname === '/dashboard';
 
   // Global Outside Click Handler
   useEffect(() => {
@@ -117,7 +118,7 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
       className={`flex items-center gap-4 py-3 text-xl font-bold transition-all duration-300 hover:translate-x-1 ${
         active 
           ? 'text-emerald-600 dark:text-emerald-400' 
-          : 'text-slate-700 dark:text-slate-300 hover:text-emerald-500'
+          : 'text-slate-700 dark:text-slate-300 hover:text-emerald-50'
       }`}
     >
       <Icon size={24} strokeWidth={3} className={active ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400'} />
@@ -244,7 +245,7 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
 
       <div className="flex-1 flex flex-col h-full overflow-hidden relative">
         {!hasCustomHeader && (
-            <header className="flex h-16 md:h-20 bg-white dark:bg-slate-900 items-center justify-between px-4 md:px-8 shrink-0 z-40 relative shadow-md transition-all duration-300">
+            <header className={`${!isDashboard ? 'hidden md:flex' : 'flex'} h-16 md:h-20 bg-white dark:bg-slate-900 items-center justify-between px-4 md:px-8 shrink-0 z-40 relative shadow-md transition-all duration-300`}>
                 <div className="flex items-center gap-4">
                     <button 
                         onClick={toggleSidebar}
@@ -362,7 +363,7 @@ const Layout: React.FC<LayoutProps> = ({ children, currentUser, onLogout, theme,
             {children}
         </main>
 
-        {!hasCustomHeader && (
+        {!hasCustomHeader && isDashboard && (
             <div className="md:hidden fixed bottom-6 left-0 right-0 z-[160] flex justify-center pointer-events-none">
                 <div 
                     ref={dockRef}

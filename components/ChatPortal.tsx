@@ -1,8 +1,7 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Student, Message, UserRole, MessageStatus, Attachment, MentorshipTemplate, Assignment, Broadcast } from '../types';
-import { MoreVertical, Trash2, ChevronDown, Reply, Copy, ArrowRight, X, Search, MessageSquarePlus, Hash, Plus, Paperclip, LayoutTemplate, ClipboardCheck, Megaphone, Image as ImageIcon, FileText, Mic, Link as LinkIcon, Download, Play, Pause, ExternalLink, LayoutGrid, StopCircle, ArrowLeft } from 'lucide-react';
+import { MoreVertical, Trash2, ChevronDown, Reply, Copy, ArrowRight, X, Search, MessageSquarePlus, Hash, Plus, Paperclip, LayoutTemplate, ClipboardCheck, Megaphone, Image as ImageIcon, FileText, Mic, Link as LinkIcon, Download, Play, Pause, ExternalLink, LayoutGrid, StopCircle, ArrowLeft, ChevronLeft } from 'lucide-react';
 
 interface ChatPortalProps {
   currentUser: Student;
@@ -531,14 +530,20 @@ const ChatPortal: React.FC<ChatPortalProps> = ({ currentUser, students, messages
         {/* Custom Mobile Header */}
         <div className="md:hidden shrink-0 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-4 py-3 flex justify-between items-center z-50 shadow-sm">
             {!isMobileSearchOpen ? (
-                <>
+                <div className="flex items-center gap-3 w-full">
+                    <button 
+                        onClick={() => navigate('/dashboard')}
+                        className="p-1 -ml-1 text-slate-700 dark:text-slate-300 active:scale-95"
+                    >
+                        <ChevronLeft size={24} strokeWidth={3} />
+                    </button>
                     <h1 className="text-2xl font-extrabold tracking-tight text-slate-900 dark:text-white font-heading">
                         Chats
                     </h1>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 ml-auto">
                         <button 
                             onClick={() => setIsMobileSearchOpen(true)} 
-                            className="w-10 h-10 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center text-slate-700 dark:text-slate-200 transition-colors active:scale-95"
+                            className="w-10 h-10 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center text-slate-700 dark:text-slate-200 transition-colors active:scale-95 hover:bg-slate-200 dark:hover:bg-slate-700"
                         >
                             <Search size={20} />
                         </button>
@@ -557,7 +562,7 @@ const ChatPortal: React.FC<ChatPortalProps> = ({ currentUser, students, messages
                             </button>
                         )}
                     </div>
-                </>
+                </div>
             ) : (
                 <div className="flex items-center gap-3 w-full animate-fade-in">
                     <div className="relative flex-1">
@@ -582,7 +587,7 @@ const ChatPortal: React.FC<ChatPortalProps> = ({ currentUser, students, messages
         </div>
 
         {/* Modern Sidebar Header with Search (Desktop Only) */}
-        <div className="hidden md:flex bg-[#f0f2f5] dark:bg-[#202c33] dark:border-[#202c33] border-b border-slate-200 flex-col shrink-0">
+        <div className="hidden md:flex bg-[#f0f2f5] dark:bg-[#202c33] dark:border-[#202c33] border-b border-slate-200 flex flex-col shrink-0">
             {/* Top Row: Title & Actions */}
             <div className="px-4 py-3 flex justify-between items-center">
                 <h2 className="font-bold text-xl text-slate-800 dark:text-[#e9edef]">Chats</h2>
@@ -739,7 +744,7 @@ const ChatPortal: React.FC<ChatPortalProps> = ({ currentUser, students, messages
                         />
                         <div className="flex justify-end mt-2">
                             <button 
-                                onClick={handleSend}
+                                onClick={handleSend} 
                                 disabled={selectedBroadcastUsers.length === 0 || !newMessage.trim()}
                                 className="bg-[#00a884] text-white px-6 py-2 rounded-full font-bold hover:bg-[#008f6f] disabled:opacity-60 transition-all flex items-center gap-2 shadow-sm"
                             >
@@ -1013,7 +1018,7 @@ const ChatPortal: React.FC<ChatPortalProps> = ({ currentUser, students, messages
                                                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1">Mentorship Tools</p>
                                                 <div className="grid grid-cols-3 gap-2">
                                                     <AttachmentOption 
-                                                        icon={LayoutTemplate} label="Templates" color="bg-indigo-500" 
+                                                        icon={LayoutTemplate} label="Templates" color="bg-indigo-50" 
                                                         onClick={() => setAttachmentView('TEMPLATES')} 
                                                     />
                                                     <AttachmentOption 
@@ -1065,7 +1070,7 @@ const ChatPortal: React.FC<ChatPortalProps> = ({ currentUser, students, messages
                                                 <button 
                                                     key={t.id}
                                                     onClick={() => handleTemplateSelect(t)}
-                                                    className="w-full text-left p-3 hover:bg-slate-50 dark:hover:bg-slate-700 rounded-lg transition-colors border border-transparent hover:border-slate-100 dark:hover:border-slate-600 group"
+                                                    className="w-full text-left p-3 hover:bg-slate-50 dark:hover:bg-slate-700 rounded-lg transition-colors border border-transparent hover:border-slate-100 dark:hover:bg-slate-600 group"
                                                 >
                                                     <p className="font-bold text-xs text-slate-800 dark:text-white mb-0.5">{t.title}</p>
                                                     <p className="text-[10px] text-slate-500 dark:text-slate-400 line-clamp-2">{t.blocks.map(b => b.content).join(' ')}</p>

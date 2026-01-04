@@ -1,7 +1,8 @@
-
 import React, { useState, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Student, SaleRecord } from '../types';
 import { analyzeReceipt } from '../services/geminiService';
+import { ChevronLeft } from 'lucide-react';
 
 interface SalesPortalProps {
   currentUser: Student;
@@ -9,6 +10,7 @@ interface SalesPortalProps {
 }
 
 const SalesPortal: React.FC<SalesPortalProps> = ({ currentUser, onSubmitSale }) => {
+  const navigate = useNavigate();
   const [amount, setAmount] = useState<string>('');
   const [transactionId, setTransactionId] = useState('');
   const [saleType, setSaleType] = useState<'RETAIL' | 'WHOLESALE'>('RETAIL');
@@ -83,7 +85,15 @@ const SalesPortal: React.FC<SalesPortalProps> = ({ currentUser, onSubmitSale }) 
     <div className="h-full flex flex-col bg-slate-50 dark:bg-slate-950 animate-fade-in">
       {/* Mobile Custom Header */}
       <div className="md:hidden shrink-0 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-4 py-3 flex justify-between items-center sticky top-0 z-50">
-          <h1 className="text-xl font-extrabold text-slate-900 dark:text-white font-heading">Sale Log</h1>
+          <div className="flex items-center gap-3">
+              <button 
+                  onClick={() => navigate('/dashboard')}
+                  className="p-1 -ml-1 text-slate-700 dark:text-slate-300 active:scale-95"
+              >
+                  <ChevronLeft size={24} strokeWidth={3} />
+              </button>
+              <h1 className="text-xl font-extrabold text-slate-900 dark:text-white font-heading">Sale Log</h1>
+          </div>
           <div className="bg-emerald-100 text-emerald-800 px-3 py-1 rounded-full text-xs font-bold border border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-300 dark:border-emerald-800">
              {currentUser.caseCredits.toFixed(2)} CC
           </div>

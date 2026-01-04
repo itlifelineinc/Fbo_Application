@@ -1,9 +1,8 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Course, CourseStatus, Student, UserRole } from '../types';
 import CourseCard from './CourseCard';
-import { Search, Lock, Filter, ArrowLeft, X } from 'lucide-react';
+import { Search, Lock, Filter, ArrowLeft, X, ChevronLeft } from 'lucide-react';
 
 interface ClassroomPortalProps {
   courses: Course[];
@@ -103,9 +102,17 @@ const ClassroomPortal: React.FC<ClassroomPortalProps> = ({ courses, currentUser,
       <div className="md:hidden shrink-0 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-4 py-3 flex justify-between items-center z-50 shadow-sm transition-all duration-300">
          {!isMobileSearchOpen ? (
            <>
-             <h1 className="text-2xl font-extrabold tracking-tight text-slate-900 dark:text-white font-heading">
-               Classroom
-             </h1>
+             <div className="flex items-center gap-3">
+               <button 
+                  onClick={() => navigate('/dashboard')}
+                  className="p-1 -ml-1 text-slate-700 dark:text-slate-300 active:scale-95"
+               >
+                  <ChevronLeft size={24} strokeWidth={3} />
+               </button>
+               <h1 className="text-2xl font-extrabold tracking-tight text-slate-900 dark:text-white font-heading">
+                 Classroom
+               </h1>
+             </div>
              <button 
                 onClick={() => setIsMobileSearchOpen(true)} 
                 className="w-10 h-10 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center text-slate-700 dark:text-slate-200 transition-colors active:scale-95 hover:bg-slate-200 dark:hover:bg-slate-700"
